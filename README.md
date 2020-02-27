@@ -1,11 +1,9 @@
-# Knative Sample Controller
+# Knative `net-istio`
 
-[![GoDoc](https://godoc.org/knative.dev/sample-controller?status.svg)](https://godoc.org/knative.dev/sample-controller)
-[![Go Report Card](https://goreportcard.com/badge/knative/sample-controller)](https://goreportcard.com/report/knative/sample-controller)
+[![GoDoc](https://godoc.org/knative.dev/net-istio?status.svg)](https://godoc.org/knative.dev/net-istio)
+[![Go Report Card](https://goreportcard.com/badge/knative/net-istio)](https://goreportcard.com/report/knative/net-istio)
 
-Knative `sample-controller` defines a few simple resources that are validated by
-webhook and managed by a controller to demonstrate the canonical style in which
-Knative writes controllers.
+Knative `net-istio` defines a KIngress controller for Istio.
 
 To learn more about Knative, please visit our
 [Knative docs](https://github.com/knative/docs) repository.

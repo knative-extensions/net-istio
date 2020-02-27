@@ -17,96 +17,27 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"fmt"
-
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"knative.dev/pkg/configmap"
-	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection/sharedmain"
-	"knative.dev/pkg/logging"
-	"knative.dev/pkg/metrics"
 	"knative.dev/pkg/signals"
-	"knative.dev/pkg/system"
 	"knative.dev/pkg/webhook"
-	"knative.dev/pkg/webhook/certificates"
-	"knative.dev/pkg/webhook/configmaps"
-	"knative.dev/pkg/webhook/resourcesemantics"
-	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
-	"knative.dev/pkg/webhook/resourcesemantics/validation"
-
-	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 )
 
-var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
-	// List the types to validate.
-	v1alpha1.SchemeGroupVersion.WithKind("AddressableService"): &v1alpha1.AddressableService{},
-}
+// TODO(nghia): Validate config-istio
+// func NewConfigValidationController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
+// 	return configmaps.NewAdmissionController(ctx,
 
-func NewDefaultingAdmissionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
-	return defaulting.NewAdmissionController(ctx,
+// 		// Name of the configmap webhook.
+// 		fmt.Sprintf("config.webhook.%s.knative.dev", system.Namespace()),
 
-		// Name of the resource webhook.
-		fmt.Sprintf("defaulting.webhook.%s.knative.dev", system.Namespace()),
+// 		// The path on which to serve the webhook.
+// 		"/config-validation",
 
-		// The path on which to serve the webhook.
-		"/defaulting",
-
-		// The resources to validate and default.
-		types,
-
-		// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
-		func(ctx context.Context) context.Context {
-			// Here is where you would infuse the context with state
-			// (e.g. attach a store with configmap data)
-			return ctx
-		},
-
-		// Whether to disallow unknown fields.
-		true,
-	)
-}
-
-func NewValidationAdmissionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
-	return validation.NewAdmissionController(ctx,
-
-		// Name of the resource webhook.
-		fmt.Sprintf("validation.webhook.%s.knative.dev", system.Namespace()),
-
-		// The path on which to serve the webhook.
-		"/resource-validation",
-
-		// The resources to validate and default.
-		types,
-
-		// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
-		func(ctx context.Context) context.Context {
-			// Here is where you would infuse the context with state
-			// (e.g. attach a store with configmap data)
-			return ctx
-		},
-
-		// Whether to disallow unknown fields.
-		true,
-	)
-}
-
-func NewConfigValidationController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
-	return configmaps.NewAdmissionController(ctx,
-
-		// Name of the configmap webhook.
-		fmt.Sprintf("config.webhook.%s.knative.dev", system.Namespace()),
-
-		// The path on which to serve the webhook.
-		"/config-validation",
-
-		// The configmaps to validate.
-		configmap.Constructors{
-			logging.ConfigMapName(): logging.NewConfigFromConfigMap,
-			metrics.ConfigMapName(): metrics.NewObservabilityConfigFromConfigMap,
-		},
-	)
-}
+// 		// The configmaps to validate.
+// 		configmap.Constructors{
+// 			logging.ConfigMapName(): logging.NewConfigFromConfigMap,
+// 		},
+// 	)
+// }
 
 func main() {
 	ctx := webhook.WithOptions(signals.NewContext(), webhook.Options{
@@ -115,10 +46,8 @@ func main() {
 		SecretName:  "webhook-certs",
 	})
 
-	sharedmain.MainWithContext(ctx, "webhook",
-		certificates.NewController,
-		NewDefaultingAdmissionController,
-		NewValidationAdmissionController,
-		NewConfigValidationController,
+	sharedmain.MainWithContext(
+		ctx, "webhook",
+		// TODO(nghia): NewConfigValidationController,
 	)
 }
