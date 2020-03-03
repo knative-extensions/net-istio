@@ -136,6 +136,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:416b666cb79f02526f115d16aba8b318b854f3c964107081311e9df6a08b39a9"
+  name = "github.com/gobuffalo/envy"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "3dbe4c98c1c77e4a8fac053251c262a85e048f21"
+  version = "v1.9.0"
+
+[[projects]]
   digest = "1:b38ab1b8cf42d089d9f31d4918c57c2dd47d42f3e7fc50e12142140228cf81a9"
   name = "github.com/gogo/protobuf"
   packages = [
@@ -304,11 +312,27 @@
   revision = "c2b33e84"
 
 [[projects]]
+  digest = "1:da62aa6632d04e080b8a8b85a59ed9ed1550842a0099a55f3ae3a20d02a3745a"
+  name = "github.com/joho/godotenv"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "23d116af351c84513e1946b527c88823e476be13"
+  version = "v1.3.0"
+
+[[projects]]
   digest = "1:0243cffa4a3410f161ee613dfdd903a636d07e838a42d341da95d81f42cd1d41"
   name = "github.com/json-iterator/go"
   packages = ["."]
   pruneopts = "NUT"
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
+
+[[projects]]
+  digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
+  name = "github.com/markbates/inflect"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "24b83195037b3bc61fcda2d28b7b0518bce293b6"
+  version = "v1.0.4"
 
 [[projects]]
   digest = "1:5985ef4caf91ece5d54817c11ea25f182697534f8ae6521eadcd628c142ac4b6"
@@ -384,6 +408,18 @@
   ]
   pruneopts = "NUT"
   revision = "a7aeb8df3389edaf53efcc319ad0063cb27c3960"
+
+[[projects]]
+  digest = "1:e09ada96a5a41deda4748b1659cc8953961799e798aea557257b56baee4ecaf3"
+  name = "github.com/rogpeppe/go-internal"
+  packages = [
+    "modfile",
+    "module",
+    "semver",
+  ]
+  pruneopts = "NUT"
+  revision = "bc89b17ba21ce5b8a495fa55a94e3fe32ecf4ed8"
+  version = "v1.5.2"
 
 [[projects]]
   digest = "1:d917313f309bda80d27274d53985bc65651f81a5b66b820749ac7f8ef061fd04"
@@ -1146,6 +1182,7 @@
     "changeset",
     "client/injection/kube/client",
     "client/injection/kube/client/fake",
+    "client/injection/kube/informers/admissionregistration/v1beta1/mutatingwebhookconfiguration",
     "client/injection/kube/informers/core/v1/endpoints",
     "client/injection/kube/informers/core/v1/endpoints/fake",
     "client/injection/kube/informers/core/v1/pod",
@@ -1186,7 +1223,10 @@
     "tracker",
     "version",
     "webhook",
+    "webhook/certificates",
     "webhook/certificates/resources",
+    "webhook/resourcesemantics",
+    "webhook/resourcesemantics/defaulting",
   ]
   pruneopts = "T"
   revision = "312b1be35ceb863caf610109960158898d23a502"
@@ -1319,6 +1359,7 @@
     "golang.org/x/sync/errgroup",
     "istio.io/api/networking/v1alpha3",
     "istio.io/client-go/pkg/apis/networking/v1alpha3",
+    "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/equality",
     "k8s.io/apimachinery/pkg/api/errors",
@@ -1378,6 +1419,9 @@
     "knative.dev/pkg/system/testing",
     "knative.dev/pkg/tracker",
     "knative.dev/pkg/webhook",
+    "knative.dev/pkg/webhook/certificates",
+    "knative.dev/pkg/webhook/resourcesemantics",
+    "knative.dev/pkg/webhook/resourcesemantics/defaulting",
     "knative.dev/serving/pkg/apis/config",
     "knative.dev/serving/pkg/apis/networking",
     "knative.dev/serving/pkg/apis/networking/v1alpha1",
