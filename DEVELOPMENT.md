@@ -1,7 +1,7 @@
 # Development
 
 This doc explains how to setup a development environment so you can get started
-[contributing](https://github.com/knative/docs/blob/master/community/CONTRIBUTING.md)
+[contributing](https://www.knative.dev/contributing/)
 to Knative `net-istio`. Also take a look at:
 
 - [The pull request workflow](https://github.com/knative/docs/blob/master/community/CONTRIBUTING.md#pull-requests)
