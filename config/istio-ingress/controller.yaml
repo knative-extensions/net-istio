@@ -41,7 +41,7 @@ spec:
       - name: networking-istio
         # This is the Go import path for the binary that is containerized
         # and substituted here.
-        image: knative.dev/serving/cmd/networking/istio
+        image: knative.dev/net-istio/cmd/networking/istio
 
         resources:
           requests:
@@ -63,7 +63,7 @@ spec:
 
         # TODO(https://github.com/knative/pkg/pull/953): Remove stackdriver specific config
         - name: METRICS_DOMAIN
-          value: knative.dev/serving
+          value: knative.dev/net-istio
 
         securityContext:
           allowPrivilegeEscalation: false

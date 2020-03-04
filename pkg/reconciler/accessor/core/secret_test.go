@@ -28,11 +28,11 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 
+	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	fakesecretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/ptr"
-	kaccessor "knative.dev/serving/pkg/reconciler/accessor"
 
 	. "knative.dev/pkg/reconciler/testing"
 )

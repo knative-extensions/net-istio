@@ -25,11 +25,11 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
 	istioclientset "knative.dev/serving/pkg/client/istio/clientset/versioned"
 	istiolisters "knative.dev/serving/pkg/client/istio/listers/networking/v1alpha3"
-	kaccessor "knative.dev/serving/pkg/reconciler/accessor"
 )
 
 // VirtualServiceAccessor is an interface for accessing VirtualService.

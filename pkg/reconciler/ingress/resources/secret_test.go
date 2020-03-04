@@ -28,10 +28,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubeinformers "k8s.io/client-go/informers"
 	fakek8s "k8s.io/client-go/kubernetes/fake"
+	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	. "knative.dev/pkg/logging/testing"
 	"knative.dev/serving/pkg/apis/networking"
 	"knative.dev/serving/pkg/apis/networking/v1alpha1"
-	"knative.dev/serving/pkg/reconciler/ingress/config"
 )
 
 var testSecret = corev1.Secret{
