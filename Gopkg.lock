@@ -2,18 +2,13 @@
 
 
 [[projects]]
-  digest = "1:1fcfe718410c4fa878eca5e13fd79abc2e897e68f92cd8ca9c05328e3d93c34e"
+  digest = "1:f35566aa630edc74e86b7988a724dbdfe0c5bef21b7cbd401338328cbc233cd5"
   name = "cloud.google.com/go"
   packages = [
     "compute/metadata",
     "container/apiv1",
-    "iam",
-    "internal",
-    "internal/optional",
-    "internal/trace",
     "internal/version",
     "monitoring/apiv3",
-    "storage",
     "trace/apiv2",
   ]
   pruneopts = "NUT"
@@ -141,22 +136,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:53becd66889185091b58ea3fc49294996f2179fb05a89702f4de7d15e581b509"
-  name = "github.com/go-logr/logr"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "9fb12b3b21c5415d16ac18dc5cd42c1cfdd40c4e"
-  version = "v0.1.0"
-
-[[projects]]
-  digest = "1:416b666cb79f02526f115d16aba8b318b854f3c964107081311e9df6a08b39a9"
-  name = "github.com/gobuffalo/envy"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "3dbe4c98c1c77e4a8fac053251c262a85e048f21"
-  version = "v1.9.0"
-
-[[projects]]
   digest = "1:b38ab1b8cf42d089d9f31d4918c57c2dd47d42f3e7fc50e12142140228cf81a9"
   name = "github.com/gogo/protobuf"
   packages = [
@@ -170,14 +149,6 @@
   pruneopts = "NUT"
   revision = "5628607bb4c51c3157aacc3a50f0ab707582b805"
   version = "v1.3.1"
-
-[[projects]]
-  branch = "master"
-  digest = "1:e2b86e41f3d669fc36b50d31d32d22c8ac656c75aa5ea89717ce7177e134ff2a"
-  name = "github.com/golang/glog"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
 
 [[projects]]
   branch = "master"
@@ -222,34 +193,11 @@
   revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
 
 [[projects]]
-  digest = "1:95d081f0982a0eb3a9d5b3444a9f41f36a5f7703110e4d2d173faca26ce58c7a"
+  digest = "1:10aa62acd56f635de190110a836aa261b3774e697b2b6a7af27d8263cf856d47"
   name = "github.com/google/go-containerregistry"
-  packages = [
-    "pkg/authn",
-    "pkg/internal/retry",
-    "pkg/internal/retry/wait",
-    "pkg/logs",
-    "pkg/name",
-    "pkg/v1/remote/transport",
-  ]
+  packages = ["pkg/name"]
   pruneopts = "NUT"
   revision = "b02d448a3705facf11018efff34f1d2830be5724"
-
-[[projects]]
-  digest = "1:09fa06250b4e0c69472fadcdf07a29ffcdbd92da94845f8f3cd0dcd19c5f1334"
-  name = "github.com/google/go-github"
-  packages = ["github"]
-  pruneopts = "NUT"
-  revision = "2e3e74fa920e7d6278b7a9737ab5c8b7b1480294"
-  version = "v29.0.3"
-
-[[projects]]
-  digest = "1:a63cff6b5d8b95638bfe300385d93b2a6d9d687734b863da8e09dc834510a690"
-  name = "github.com/google/go-querystring"
-  packages = ["query"]
-  pruneopts = "NUT"
-  revision = "44c6ddd0a2342c386950e880b658017258da92fc"
-  version = "v1.0.0"
 
 [[projects]]
   digest = "1:3ec6c8e4b700377066dbb5ab3155c55f97109ab6147fee9423a68506d79bbafa"
@@ -273,23 +221,6 @@
   ]
   pruneopts = "NUT"
   revision = "c2a262e3078ad90718f59866f1ec18601b2fee1b"
-
-[[projects]]
-  digest = "1:d7736b4372fa7b6d447118aca5a9a6d90a61d4e0d467316ac631e4ba58458ae4"
-  name = "github.com/google/mako"
-  packages = [
-    "clients/proto/analyzers/threshold_analyzer_go_proto",
-    "clients/proto/analyzers/utest_analyzer_go_proto",
-    "clients/proto/analyzers/window_deviation_go_proto",
-    "go/quickstore",
-    "internal/go/common",
-    "internal/quickstore_microservice/proto/quickstore_go_proto",
-    "proto/quickstore/quickstore_go_proto",
-    "spec/proto/mako_go_proto",
-  ]
-  pruneopts = "NUT"
-  revision = "122f8dcef9e3906310e7dba05849cedb5be43b24"
-  version = "0.1.0"
 
 [[projects]]
   digest = "1:ab3ec1fe3e39bac4b3ab63390767766622be35b7cab03f47f787f9ec60522a53"
@@ -318,14 +249,6 @@
   pruneopts = "NUT"
   revision = "7c663266750e7d82587642f65e60bc4083f1f84e"
   version = "v0.2.0"
-
-[[projects]]
-  digest = "1:d5344bb08f1d8dc55f9a513ac4f971a9c8baeb73690b7cde56f4fe8a9143ef62"
-  name = "github.com/gorilla/websocket"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "c3e18be99d19e6b3e8f1559eea2c161a665c4b6b"
-  version = "v1.4.1"
 
 [[projects]]
   digest = "1:aad54f418843097fa40957329625da7662b2916b7d07e2fda181935273167ec1"
@@ -359,14 +282,6 @@
   version = "v0.3.7"
 
 [[projects]]
-  digest = "1:333e1f196b9ac47c4a9df13127abb44a49bb82b960a5074fa1c6d03dc5991ec5"
-  name = "github.com/influxdata/tdigest"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "3fbb3e34b87fe64262cbf10ac00562f36ae98235"
-  version = "v0.0.1"
-
-[[projects]]
   digest = "1:1e59759b895f57302df03c5632dc6bbedcdf6782a2b6259246ff653dd214ac45"
   name = "github.com/jetstack/cert-manager"
   packages = [
@@ -389,64 +304,11 @@
   revision = "c2b33e84"
 
 [[projects]]
-  digest = "1:da62aa6632d04e080b8a8b85a59ed9ed1550842a0099a55f3ae3a20d02a3745a"
-  name = "github.com/joho/godotenv"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "23d116af351c84513e1946b527c88823e476be13"
-  version = "v1.3.0"
-
-[[projects]]
   digest = "1:0243cffa4a3410f161ee613dfdd903a636d07e838a42d341da95d81f42cd1d41"
   name = "github.com/json-iterator/go"
   packages = ["."]
   pruneopts = "NUT"
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
-
-[[projects]]
-  branch = "master"
-  digest = "1:cf68a79fd02ab0f6942b9567d03d054b6568212fcc22de2a4afdefd096923749"
-  name = "github.com/kballard/go-shellquote"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "95032a82bc518f77982ea72343cc1ade730072f0"
-
-[[projects]]
-  digest = "1:08c58ac78a8c1f61e9a96350066d30fe194b8779799bd932a79932a5166a173f"
-  name = "github.com/kelseyhightower/envconfig"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "0b417c4ec4a8a82eecc22a1459a504aa55163d61"
-  version = "v1.4.0"
-
-[[projects]]
-  digest = "1:ccd47a2baadab5827ecb362ff9b4389a02cfbdc4d8e7651264771a6622ee1cbe"
-  name = "github.com/mailru/easyjson"
-  packages = [
-    ".",
-    "buffer",
-    "jlexer",
-    "jwriter",
-  ]
-  pruneopts = "NUT"
-  revision = "8edcc4e51f39ddbd3505a3386aff3f435a7fd028"
-  version = "v0.7.1"
-
-[[projects]]
-  digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
-  name = "github.com/markbates/inflect"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "24b83195037b3bc61fcda2d28b7b0518bce293b6"
-  version = "v1.0.4"
-
-[[projects]]
-  branch = "master"
-  digest = "1:0e9bfc47ab9941ecc3344e580baca5deb4091177e84dd9773b48b38ec26b93d5"
-  name = "github.com/mattbaird/jsonpatch"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "81af80346b1a01caae0cbc27fd3c1ba5b11e189f"
 
 [[projects]]
   digest = "1:5985ef4caf91ece5d54817c11ea25f182697534f8ae6521eadcd628c142ac4b6"
@@ -473,14 +335,6 @@
   version = "1.0.1"
 
 [[projects]]
-  digest = "1:c01e66557785d9d75328704d11c44c26582980cd78209475cb141b3eedd11e9f"
-  name = "github.com/openzipkin/zipkin-go"
-  packages = ["model"]
-  pruneopts = "NUT"
-  revision = "c29478e51bfb2e9c93e0e9f5e015e5993a490399"
-  version = "v0.2.2"
-
-[[projects]]
   digest = "1:4047c378584616813d610c9f993bf90dd0d07aed8d94bd3bc299cd35ececdcba"
   name = "github.com/pkg/errors"
   packages = ["."]
@@ -489,11 +343,9 @@
   version = "v0.9.1"
 
 [[projects]]
-  digest = "1:d6d2e9980470e8f0067dddfc56a52803fe6d3441d67ad6885a1ac2b99e650355"
+  digest = "1:09fd8d3e830bac0a0e2d1f7009fe33a0c435ee14ae818be9cc9ceb5f77da18ae"
   name = "github.com/prometheus/client_golang"
   packages = [
-    "api",
-    "api/prometheus/v1",
     "prometheus",
     "prometheus/internal",
     "prometheus/promhttp",
@@ -534,18 +386,6 @@
   revision = "a7aeb8df3389edaf53efcc319ad0063cb27c3960"
 
 [[projects]]
-  digest = "1:e09ada96a5a41deda4748b1659cc8953961799e798aea557257b56baee4ecaf3"
-  name = "github.com/rogpeppe/go-internal"
-  packages = [
-    "modfile",
-    "module",
-    "semver",
-  ]
-  pruneopts = "NUT"
-  revision = "bc89b17ba21ce5b8a495fa55a94e3fe32ecf4ed8"
-  version = "v1.5.2"
-
-[[projects]]
   digest = "1:d917313f309bda80d27274d53985bc65651f81a5b66b820749ac7f8ef061fd04"
   name = "github.com/sergi/go-diff"
   packages = ["diffmatchpatch"]
@@ -560,14 +400,6 @@
   pruneopts = "NUT"
   revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
   version = "v1.0.3"
-
-[[projects]]
-  branch = "master"
-  digest = "1:e2db575fa149cf5673f7af67680269ba4883bc9b0c8bb94828d19fab6ccf4597"
-  name = "github.com/tsenart/vegeta"
-  packages = ["lib"]
-  pruneopts = "NUT"
-  revision = "7232e921ca2001e87fb39c3df6934e951faf59fa"
 
 [[projects]]
   digest = "1:0e3fd52087079d1289983e4fef32268ca965973f5370b69204e2934185527baa"
@@ -631,18 +463,9 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:991580c38dc517fe91ce3c165958a4fc2d2d7bcc0d3594883df296ed29b2ffad"
+  digest = "1:3f3a05ae0b95893d90b9b3b5afdb79a9b3d96e4e36e099d841ae602e4aca0da8"
   name = "golang.org/x/crypto"
-  packages = [
-    "cast5",
-    "openpgp",
-    "openpgp/armor",
-    "openpgp/elgamal",
-    "openpgp/errors",
-    "openpgp/packet",
-    "openpgp/s2k",
-    "ssh/terminal",
-  ]
+  packages = ["ssh/terminal"]
   pruneopts = "NUT"
   revision = "182538f80094b6a8efaade63a8fd8e0d9d5843dd"
 
@@ -753,18 +576,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:cb76986735afb1a74a110db2715fe0beaed978015640d5a40171c698277a4d25"
+  digest = "1:f287c9d58e1a591510d69f14e2cebce953e003e0acdcca900bf2d7bc5627c06a"
   name = "google.golang.org/api"
   packages = [
-    "dns/v1",
-    "gensupport",
-    "googleapi",
-    "googleapi/internal/uritemplates",
     "googleapi/transport",
     "internal",
     "iterator",
     "option",
-    "storage/v1",
     "support/bundler",
     "transport",
     "transport/grpc",
@@ -796,7 +614,7 @@
   version = "v1.4.0"
 
 [[projects]]
-  digest = "1:0a17eda92a03c3e0843832503aae4610abf8d8ed4c3a7adfc72015cf6b688502"
+  digest = "1:cdd51a140120ceb49a810515f07666763a30da9e2506bb592c9924401dd4ff7c"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/api",
@@ -808,9 +626,7 @@
     "googleapis/api/monitoredres",
     "googleapis/container/v1",
     "googleapis/devtools/cloudtrace/v2",
-    "googleapis/iam/v1",
     "googleapis/monitoring/v3",
-    "googleapis/rpc/code",
     "googleapis/rpc/status",
     "protobuf/field_mask",
   ]
@@ -1016,7 +832,7 @@
   version = "kubernetes-1.16.4"
 
 [[projects]]
-  digest = "1:1fb85b8e92f6f47ca0543bfa10df14c2a7a47e2aa4f1d155f1fad0fac3523f09"
+  digest = "1:364aa5bd7fbb75ef29a472cd7b36ebfa8d288017a3d59bb57bb0fd855adfbc13"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -1195,12 +1011,9 @@
     "pkg/apis/clientauthentication/v1beta1",
     "pkg/version",
     "plugin/pkg/client/auth/exec",
-    "plugin/pkg/client/auth/gcp",
-    "plugin/pkg/client/auth/oidc",
     "rest",
     "rest/watch",
     "testing",
-    "third_party/forked/golang/template",
     "tools/auth",
     "tools/cache",
     "tools/clientcmd",
@@ -1219,7 +1032,6 @@
     "util/connrotation",
     "util/flowcontrol",
     "util/homedir",
-    "util/jsonpath",
     "util/keyutil",
     "util/retry",
     "util/workqueue",
@@ -1335,7 +1147,6 @@
     "changeset",
     "client/injection/kube/client",
     "client/injection/kube/client/fake",
-    "client/injection/kube/informers/apps/v1/deployment",
     "client/injection/kube/informers/core/v1/endpoints",
     "client/injection/kube/informers/core/v1/endpoints/fake",
     "client/injection/kube/informers/core/v1/pod",
@@ -1373,40 +1184,16 @@
     "signals",
     "system",
     "system/testing",
-    "test",
-    "test/cmd",
-    "test/ghutil",
-    "test/helpers",
-    "test/ingress",
-    "test/logging",
-    "test/logstream",
-    "test/mako",
-    "test/mako/alerter",
-    "test/mako/alerter/github",
-    "test/mako/alerter/slack",
-    "test/mako/config",
-    "test/monitoring",
-    "test/prometheus",
-    "test/slackutil",
-    "test/spoof",
-    "test/vegeta/pacers",
-    "test/webhook-apicoverage/coveragecalculator",
-    "test/webhook-apicoverage/resourcetree",
-    "test/webhook-apicoverage/tools",
-    "test/webhook-apicoverage/view",
-    "test/webhook-apicoverage/webhook",
-    "test/zipkin",
     "tracker",
     "version",
     "webhook",
     "webhook/certificates/resources",
-    "webhook/resourcesemantics",
   ]
   pruneopts = "T"
   revision = "73701f1aa50ece37d044bd843a13cac6a84e3939"
 
 [[projects]]
-  digest = "1:a19dcec69a423ffdc2759cdbfbf03f67f72f50547d63dc2814ce1b88bbb3cd8f"
+  digest = "1:a25bde55cad6fd1ec6c1484d0c3923721f52cfa7ce9ade4029b2082e3ca4ddc6"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1463,7 +1250,6 @@
     "pkg/client/injection/informers/networking/v1alpha1/certificate/fake",
     "pkg/client/injection/informers/networking/v1alpha1/ingress",
     "pkg/client/injection/informers/networking/v1alpha1/ingress/fake",
-    "pkg/client/injection/informers/networking/v1alpha1/serverlessservice",
     "pkg/client/injection/reconciler/networking/v1alpha1/ingress",
     "pkg/client/istio/clientset/versioned",
     "pkg/client/istio/clientset/versioned/fake",
@@ -1488,11 +1274,9 @@
     "pkg/client/listers/serving/v1",
     "pkg/client/listers/serving/v1alpha1",
     "pkg/client/listers/serving/v1beta1",
-    "pkg/gc",
     "pkg/network",
     "pkg/network/ingress",
     "pkg/network/status",
-    "pkg/pool",
     "pkg/reconciler",
     "pkg/reconciler/accessor",
     "pkg/reconciler/accessor/core",
@@ -1501,33 +1285,8 @@
     "pkg/reconciler/ingress/config",
     "pkg/reconciler/ingress/resources",
     "pkg/reconciler/ingress/resources/names",
-    "pkg/reconciler/revision/resources/names",
-    "pkg/reconciler/route/config",
-    "pkg/reconciler/route/domains",
-    "pkg/reconciler/route/resources/labels",
-    "pkg/reconciler/route/resources/names",
-    "pkg/reconciler/service/resources/names",
     "pkg/reconciler/testing/v1",
     "pkg/resources",
-    "pkg/testing/v1",
-    "pkg/testing/v1alpha1",
-    "pkg/testing/v1beta1",
-    "test",
-    "test/apicoverage/image/common",
-    "test/apicoverage/image/rules",
-    "test/apicoverage/image/webhook",
-    "test/conformance/certificate",
-    "test/conformance/ingress",
-    "test/e2e",
-    "test/e2e/autotls/config",
-    "test/performance",
-    "test/performance/metrics",
-    "test/test_images/grpc-ping/proto",
-    "test/test_images/runtime/handlers",
-    "test/types",
-    "test/v1",
-    "test/v1alpha1",
-    "test/v1beta1",
   ]
   pruneopts = "NUT"
   revision = "804b3bb854ea94a17f4348f8afca48c8b413c566"
@@ -1535,16 +1294,10 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ed2bc53a52c6d986713ba16c92bdd64ad910403d92735db9a2056d9152c75299"
+  digest = "1:e7ea104eff9c91ce48f1730ab8b4098faa1ea519162ccbbbca68c205428f0e21"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
-    "shared/common",
-    "shared/gcs",
-    "shared/junit",
-    "shared/performance",
-    "shared/prow",
-    "shared/testgrid",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
@@ -1562,39 +1315,18 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/davecgh/go-spew/spew",
-    "github.com/ghodss/yaml",
     "github.com/gogo/protobuf/proto",
     "github.com/gogo/protobuf/types",
-    "github.com/golang/protobuf/proto",
     "github.com/google/go-cmp/cmp",
-    "github.com/google/go-cmp/cmp/cmpopts",
-    "github.com/google/go-containerregistry/pkg/name",
-    "github.com/google/go-containerregistry/pkg/v1/remote/transport",
-    "github.com/google/mako/clients/proto/analyzers/threshold_analyzer_go_proto",
-    "github.com/google/mako/go/quickstore",
-    "github.com/google/mako/spec/proto/mako_go_proto",
-    "github.com/gorilla/websocket",
-    "github.com/kelseyhightower/envconfig",
-    "github.com/mattbaird/jsonpatch",
-    "github.com/tsenart/vegeta/lib",
     "go.uber.org/zap",
     "go.uber.org/zap/zaptest",
-    "golang.org/x/net/context",
-    "golang.org/x/net/http2",
-    "golang.org/x/net/http2/h2c",
-    "golang.org/x/oauth2",
-    "golang.org/x/oauth2/google",
     "golang.org/x/sync/errgroup",
-    "google.golang.org/api/dns/v1",
-    "google.golang.org/grpc",
     "istio.io/api/networking/v1alpha3",
     "istio.io/client-go/pkg/apis/networking/v1alpha3",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/equality",
     "k8s.io/apimachinery/pkg/api/errors",
-    "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured",
     "k8s.io/apimachinery/pkg/labels",
@@ -1606,18 +1338,13 @@
     "k8s.io/apimachinery/pkg/util/sets/types",
     "k8s.io/apimachinery/pkg/util/validation",
     "k8s.io/apimachinery/pkg/util/wait",
-    "k8s.io/apimachinery/pkg/watch",
     "k8s.io/client-go/dynamic",
     "k8s.io/client-go/informers",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/fake",
     "k8s.io/client-go/listers/core/v1",
-    "k8s.io/client-go/plugin/pkg/client/auth/gcp",
-    "k8s.io/client-go/plugin/pkg/client/auth/oidc",
-    "k8s.io/client-go/rest",
     "k8s.io/client-go/testing",
     "k8s.io/client-go/tools/cache",
-    "k8s.io/client-go/tools/clientcmd",
     "k8s.io/code-generator/cmd/client-gen",
     "k8s.io/code-generator/cmd/deepcopy-gen",
     "k8s.io/code-generator/cmd/defaulter-gen",
@@ -1628,7 +1355,6 @@
     "knative.dev/pkg/apis/duck/v1",
     "knative.dev/pkg/client/injection/kube/client",
     "knative.dev/pkg/client/injection/kube/client/fake",
-    "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment",
     "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints",
     "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints/fake",
     "knative.dev/pkg/client/injection/kube/informers/core/v1/pod",
@@ -1653,45 +1379,19 @@
     "knative.dev/pkg/signals",
     "knative.dev/pkg/system",
     "knative.dev/pkg/system/testing",
-    "knative.dev/pkg/test",
-    "knative.dev/pkg/test/helpers",
-    "knative.dev/pkg/test/ingress",
-    "knative.dev/pkg/test/logging",
-    "knative.dev/pkg/test/logstream",
-    "knative.dev/pkg/test/mako",
-    "knative.dev/pkg/test/prometheus",
-    "knative.dev/pkg/test/spoof",
-    "knative.dev/pkg/test/vegeta/pacers",
-    "knative.dev/pkg/test/webhook-apicoverage/coveragecalculator",
-    "knative.dev/pkg/test/webhook-apicoverage/resourcetree",
-    "knative.dev/pkg/test/webhook-apicoverage/tools",
-    "knative.dev/pkg/test/webhook-apicoverage/view",
-    "knative.dev/pkg/test/webhook-apicoverage/webhook",
     "knative.dev/pkg/tracker",
     "knative.dev/pkg/webhook",
-    "knative.dev/pkg/webhook/resourcesemantics",
-    "knative.dev/serving/pkg/apis/autoscaling",
     "knative.dev/serving/pkg/apis/autoscaling/v1alpha1",
     "knative.dev/serving/pkg/apis/config",
     "knative.dev/serving/pkg/apis/networking",
     "knative.dev/serving/pkg/apis/networking/v1alpha1",
     "knative.dev/serving/pkg/apis/serving",
-    "knative.dev/serving/pkg/apis/serving/v1",
-    "knative.dev/serving/pkg/apis/serving/v1alpha1",
-    "knative.dev/serving/pkg/apis/serving/v1beta1",
-    "knative.dev/serving/pkg/autoscaler/config",
     "knative.dev/serving/pkg/client/clientset/versioned",
-    "knative.dev/serving/pkg/client/clientset/versioned/typed/networking/v1alpha1",
-    "knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1",
-    "knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1alpha1",
-    "knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1beta1",
-    "knative.dev/serving/pkg/client/injection/client",
     "knative.dev/serving/pkg/client/injection/client/fake",
     "knative.dev/serving/pkg/client/injection/ducks/autoscaling/v1alpha1/podscalable/fake",
     "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/certificate/fake",
     "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress",
     "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress/fake",
-    "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/serverlessservice",
     "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress",
     "knative.dev/serving/pkg/client/istio/clientset/versioned",
     "knative.dev/serving/pkg/client/istio/clientset/versioned/fake",
@@ -1707,41 +1407,13 @@
     "knative.dev/serving/pkg/network",
     "knative.dev/serving/pkg/network/ingress",
     "knative.dev/serving/pkg/network/status",
-    "knative.dev/serving/pkg/pool",
     "knative.dev/serving/pkg/reconciler/ingress",
     "knative.dev/serving/pkg/reconciler/ingress/config",
     "knative.dev/serving/pkg/reconciler/ingress/resources",
     "knative.dev/serving/pkg/reconciler/ingress/resources/names",
-    "knative.dev/serving/pkg/reconciler/revision/resources/names",
-    "knative.dev/serving/pkg/reconciler/route/resources/labels",
-    "knative.dev/serving/pkg/reconciler/route/resources/names",
-    "knative.dev/serving/pkg/reconciler/service/resources/names",
     "knative.dev/serving/pkg/reconciler/testing/v1",
     "knative.dev/serving/pkg/resources",
-    "knative.dev/serving/pkg/testing/v1",
-    "knative.dev/serving/pkg/testing/v1alpha1",
-    "knative.dev/serving/pkg/testing/v1beta1",
-    "knative.dev/serving/test",
-    "knative.dev/serving/test/apicoverage/image/common",
-    "knative.dev/serving/test/apicoverage/image/rules",
-    "knative.dev/serving/test/apicoverage/image/webhook",
-    "knative.dev/serving/test/conformance/certificate",
-    "knative.dev/serving/test/conformance/ingress",
-    "knative.dev/serving/test/e2e",
-    "knative.dev/serving/test/e2e/autotls/config",
-    "knative.dev/serving/test/performance",
-    "knative.dev/serving/test/performance/metrics",
-    "knative.dev/serving/test/test_images/grpc-ping/proto",
-    "knative.dev/serving/test/test_images/runtime/handlers",
-    "knative.dev/serving/test/types",
-    "knative.dev/serving/test/v1",
-    "knative.dev/serving/test/v1alpha1",
-    "knative.dev/serving/test/v1beta1",
     "knative.dev/test-infra/scripts",
-    "knative.dev/test-infra/shared/junit",
-    "knative.dev/test-infra/shared/performance",
-    "knative.dev/test-infra/shared/prow",
-    "knative.dev/test-infra/shared/testgrid",
     "knative.dev/test-infra/tools/dep-collector",
   ]
   solver-name = "gps-cdcl"
