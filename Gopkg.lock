@@ -1535,7 +1535,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:373bd3ce4902108c2e444cb90fd1488f5aea425e37f82fffe51fe511059f286a"
+  digest = "1:ed2bc53a52c6d986713ba16c92bdd64ad910403d92735db9a2056d9152c75299"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
@@ -1547,7 +1547,7 @@
     "shared/testgrid",
     "tools/dep-collector",
   ]
-  pruneopts = "NUT"
+  pruneopts = "UT"
   revision = "b4deb6a1442513c00523d9d6e271df74cd5f4a03"
 
 [[projects]]
