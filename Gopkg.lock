@@ -193,11 +193,11 @@
   revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
 
 [[projects]]
-  digest = "1:10aa62acd56f635de190110a836aa261b3774e697b2b6a7af27d8263cf856d47"
+  digest = "1:ecc8bd577aaaa8ce2c3ad060e61e1daeadbab1d14a0934f019ad2995c3a666b0"
   name = "github.com/google/go-containerregistry"
   packages = ["pkg/name"]
   pruneopts = "NUT"
-  revision = "b02d448a3705facf11018efff34f1d2830be5724"
+  revision = "ba53fa10e72c7373ef8068e21c9f102f0c20a940"
 
 [[projects]]
   digest = "1:3ec6c8e4b700377066dbb5ab3155c55f97109ab6147fee9423a68506d79bbafa"
@@ -1192,6 +1192,7 @@
   revision = "73701f1aa50ece37d044bd843a13cac6a84e3939"
 
 [[projects]]
+  branch = "master"
   digest = "1:f6291aa74a8591945ad0b93b1843c41362b23eec63f183baf8edb2fd2addf11b"
   name = "knative.dev/serving"
   packages = [
@@ -1286,8 +1287,7 @@
     "pkg/resources",
   ]
   pruneopts = "NUT"
-  revision = "804b3bb854ea94a17f4348f8afca48c8b413c566"
-  version = "v0.13.0"
+  revision = "f49043ce4d78d6e6c28dadffc8cb1e9f8c6dff18"
 
 [[projects]]
   branch = "master"
@@ -1326,17 +1326,25 @@
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/labels",
     "k8s.io/apimachinery/pkg/runtime",
+    "k8s.io/apimachinery/pkg/runtime/schema",
+    "k8s.io/apimachinery/pkg/runtime/serializer",
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/intstr",
+    "k8s.io/apimachinery/pkg/util/runtime",
     "k8s.io/apimachinery/pkg/util/sets",
     "k8s.io/apimachinery/pkg/util/validation",
     "k8s.io/apimachinery/pkg/util/wait",
+    "k8s.io/apimachinery/pkg/watch",
+    "k8s.io/client-go/discovery",
+    "k8s.io/client-go/discovery/fake",
     "k8s.io/client-go/informers",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/fake",
     "k8s.io/client-go/listers/core/v1",
+    "k8s.io/client-go/rest",
     "k8s.io/client-go/testing",
     "k8s.io/client-go/tools/cache",
+    "k8s.io/client-go/util/flowcontrol",
     "k8s.io/code-generator/cmd/client-gen",
     "k8s.io/code-generator/cmd/deepcopy-gen",
     "k8s.io/code-generator/cmd/defaulter-gen",
@@ -1398,7 +1406,6 @@
     "knative.dev/serving/pkg/reconciler",
     "knative.dev/serving/pkg/reconciler/ingress",
     "knative.dev/serving/pkg/reconciler/testing/v1",
-    "knative.dev/serving/pkg/resources",
     "knative.dev/test-infra/scripts",
     "knative.dev/test-infra/tools/dep-collector",
   ]

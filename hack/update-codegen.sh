@@ -27,3 +27,15 @@ KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT}; ls -d -1 ./vendor/
 
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT}/hack/update-deps.sh
+
+# Generate our own client for istio (otherwise injection won't work)
+${CODEGEN_PKG}/generate-groups.sh "client,informer,lister" \
+  knative.dev/net-istio/pkg/client/istio istio.io/client-go/pkg/apis \
+  "networking:v1alpha3" \
+  --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
+
+# Depends on generate-groups.sh to install bin/deepcopy-gen
+${GOPATH}/bin/deepcopy-gen \
+  -O zz_generated.deepcopy \
+  --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt \
+  -i knative.dev/net-istio/pkg/reconciler/ingress/config
