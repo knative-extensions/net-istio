@@ -37,6 +37,8 @@ import (
 	"knative.dev/serving/pkg/reconciler/ingress/config"
 	"knative.dev/serving/pkg/reconciler/ingress/resources"
 
+	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -44,11 +46,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
 	corev1listers "k8s.io/client-go/listers/core/v1"
+	coreaccessor "knative.dev/net-istio/pkg/reconciler/accessor/core"
+	istioaccessor "knative.dev/net-istio/pkg/reconciler/accessor/istio"
 	ingressreconciler "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 	istioclientset "knative.dev/serving/pkg/client/istio/clientset/versioned"
-	kaccessor "knative.dev/serving/pkg/reconciler/accessor"
-	coreaccessor "knative.dev/serving/pkg/reconciler/accessor/core"
-	istioaccessor "knative.dev/serving/pkg/reconciler/accessor/istio"
 )
 
 const (

@@ -32,6 +32,10 @@ required = [
   name = "knative.dev/pkg"
   branch = "release-0.13"
 
+[[override]]
+  name = "knative.dev/serving"
+  branch = "release-0.13"
+
 [[constraint]]
   name = "knative.dev/caching"
   branch = "master"
@@ -48,10 +52,6 @@ required = [
   name = "github.com/google/go-containerregistry"
   # HEAD as of 2019-09-10
   revision = "b02d448a3705facf11018efff34f1d2830be5724"
-
-[[constraint]]
-  name = "github.com/jetstack/cert-manager"
-  version = "v0.12.0"
 
 [[constraint]]
   name = "github.com/gogo/protobuf"
@@ -157,10 +157,6 @@ required = [
 [[override]]
   name = "contrib.go.opencensus.io/exporter/zipkin"
   version = "0.1.1"
-
-[[constraint]]
-  name = "go.opencensus.io"
-  version = "0.22.0"
 
 [[override]]
   name = "github.com/census-instrumentation/opencensus-proto"
