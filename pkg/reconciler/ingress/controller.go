@@ -19,6 +19,7 @@ package ingress
 import (
 	"context"
 
+	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	endpointsinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
@@ -39,7 +40,6 @@ import (
 	"knative.dev/serving/pkg/network"
 	"knative.dev/serving/pkg/network/status"
 	servingreconciler "knative.dev/serving/pkg/reconciler"
-	"knative.dev/serving/pkg/reconciler/ingress/config"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"

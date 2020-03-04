@@ -24,12 +24,12 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/serving/pkg/apis/networking/v1alpha1"
 	clientset "knative.dev/serving/pkg/client/clientset/versioned"
 	listers "knative.dev/serving/pkg/client/listers/networking/v1alpha1"
-	kaccessor "knative.dev/serving/pkg/reconciler/accessor"
 )
 
 // CertificateAccessor is an interface for accessing Knative Certificate.

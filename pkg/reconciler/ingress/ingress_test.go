@@ -62,6 +62,8 @@ import (
 	"knative.dev/pkg/kmeta"
 	pkgreconciler "knative.dev/pkg/reconciler"
 
+	"knative.dev/net-istio/pkg/reconciler/ingress/config"
+	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
 	pkgnet "knative.dev/pkg/network"
 	"knative.dev/pkg/system"
 	_ "knative.dev/pkg/system/testing"
@@ -71,8 +73,6 @@ import (
 	"knative.dev/serving/pkg/apis/serving"
 	ingressreconciler "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 	"knative.dev/serving/pkg/network"
-	"knative.dev/serving/pkg/reconciler/ingress/config"
-	"knative.dev/serving/pkg/reconciler/ingress/resources"
 	presources "knative.dev/serving/pkg/resources"
 
 	. "knative.dev/pkg/reconciler/testing"

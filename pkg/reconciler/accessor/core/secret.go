@@ -26,9 +26,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	corev1listers "k8s.io/client-go/listers/core/v1"
+	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
-	kaccessor "knative.dev/serving/pkg/reconciler/accessor"
 )
 
 // SecretAccessor is an interface for accessing Secret.
