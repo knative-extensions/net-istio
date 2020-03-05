@@ -1170,7 +1170,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:65776685a16dfccc0e9c3845092c38ec253c13101365c37a9ce11d876461fad5"
+  digest = "1:a9aa7a5ad419267c02187ee99a14adc1ea60c069154d1ad4026b551a853ff382"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1229,11 +1229,11 @@
     "webhook/resourcesemantics/defaulting",
   ]
   pruneopts = "T"
-  revision = "312b1be35ceb863caf610109960158898d23a502"
+  revision = "4e71646b1e9301ad8445bc69c5a7398534bc30e0"
 
 [[projects]]
   branch = "master"
-  digest = "1:0de4910841a8cb0dd305f1afba40b2b99a15a98765b3ca4e62830f46b090f25a"
+  digest = "1:47446b05ac0b9a4f5213fccd8d8f26bb0e77fb983a59ba9fecd4134e5c54b829"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1316,13 +1316,6 @@
     "pkg/network/ingress",
     "pkg/network/status",
     "pkg/reconciler",
-    "pkg/reconciler/accessor",
-    "pkg/reconciler/accessor/core",
-    "pkg/reconciler/accessor/istio",
-    "pkg/reconciler/ingress",
-    "pkg/reconciler/ingress/config",
-    "pkg/reconciler/ingress/resources",
-    "pkg/reconciler/ingress/resources/names",
     "pkg/reconciler/testing/v1",
   ]
   pruneopts = "NUT"
@@ -1447,7 +1440,6 @@
     "knative.dev/serving/pkg/network/ingress",
     "knative.dev/serving/pkg/network/status",
     "knative.dev/serving/pkg/reconciler",
-    "knative.dev/serving/pkg/reconciler/ingress",
     "knative.dev/serving/pkg/reconciler/testing/v1",
     "knative.dev/test-infra/scripts",
     "knative.dev/test-infra/tools/dep-collector",
