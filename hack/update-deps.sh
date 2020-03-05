@@ -27,6 +27,7 @@ cd ${ROOT_DIR}
 # float forward in this repository.
 FLOATING_DEPS=(
   "knative.dev/pkg"
+  "knative.dev/serving"
   "knative.dev/test-infra"
 )
 
