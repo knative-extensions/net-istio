@@ -17,13 +17,12 @@ limitations under the License.
 package main
 
 import (
+	"knative.dev/net-istio/pkg/reconciler/ingress"
+
 	// This defines the shared main for injected controllers.
 	"knative.dev/pkg/injection/sharedmain"
 )
 
 func main() {
-	sharedmain.Main(
-		"controller",
-		// TODO(nghia): Istio ingress controller
-	)
+	sharedmain.Main("istiocontroller", ingress.NewController)
 }
