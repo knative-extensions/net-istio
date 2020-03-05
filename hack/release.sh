@@ -22,7 +22,7 @@ source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/release.sh
 # Yaml files to generate, and the source config dir for them.
 declare -A COMPONENTS
 COMPONENTS=(
-  ["net-istio.yaml"]="config/istio-ingress"
+  ["net-istio.yaml"]="config"
 )
 readonly COMPONENTS
 
