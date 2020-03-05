@@ -61,10 +61,17 @@ func (r *IstioDeployment) SetDefaults(ctx context.Context) {
 		r.Spec.Template.Labels = make(map[string]string)
 	}
 
-	r.Labels[RevisionLabelKey] = r.Labels[serving.RevisionLabelKey]
-	r.Labels[ServiceLabelKey] = r.servingName()
-	r.Spec.Template.Labels[RevisionLabelKey] = r.Labels[serving.RevisionLabelKey]
-	r.Spec.Template.Labels[ServiceLabelKey] = r.servingName()
+	revisionName := r.Labels[serving.RevisionLabelKey]
+	if revisionName != "" {
+		r.Labels[RevisionLabelKey] = revisionName
+		r.Spec.Template.Labels[RevisionLabelKey] = revisionName
+	}
+
+	servingName := r.servingName()
+	if servingName != "" {
+		r.Labels[ServiceLabelKey] = servingName
+		r.Spec.Template.Labels[ServiceLabelKey] = servingName
+	}
 }
 
 func (r *IstioDeployment) servingName() string {
@@ -91,10 +98,6 @@ func (r *IstioDeployment) Validate(ctx context.Context) *apis.FieldError {
 
 // DeepCopyObject returns a deep copy of this object
 func (r *IstioDeployment) DeepCopyObject() runtime.Object {
-	if r == nil {
-		return nil
-	}
-
 	out := &IstioDeployment{}
 
 	r.Deployment.DeepCopyInto(&out.Deployment)
