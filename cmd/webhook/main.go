@@ -17,9 +17,21 @@ limitations under the License.
 package main
 
 import (
+	"context"
+
+	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"knative.dev/net-istio/pkg/defaults"
+	"knative.dev/pkg/configmap"
+	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection/sharedmain"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/signals"
 	"knative.dev/pkg/webhook"
+	"knative.dev/pkg/webhook/certificates"
+	"knative.dev/pkg/webhook/resourcesemantics"
+	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
+	defaultconfig "knative.dev/serving/pkg/apis/config"
 )
 
 // TODO(nghia): Validate config-istio
@@ -39,15 +51,48 @@ import (
 // 	)
 // }
 
+var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
+	appsv1.SchemeGroupVersion.WithKind("Deployment"): &defaults.IstioDeployment{},
+}
+
+// NewDefaultingAdmissionController adds default values to the watched types
+func NewDefaultingAdmissionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
+	// Decorate contexts with the current state of the config.
+	store := defaultconfig.NewStore(logging.FromContext(ctx).Named("config-store"))
+	store.WatchConfigs(cmw)
+
+	return defaulting.NewAdmissionController(ctx,
+
+		// Name of the resource webhook.
+		"webhook.istio.networking.internal.knative.dev",
+
+		// The path on which to serve the webhook.
+		"/defaulting",
+
+		// The resources to validate and default.
+		types,
+
+		// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
+		func(ctx context.Context) context.Context {
+			return ctx
+		},
+
+		// Whether to disallow unknown fields.
+		true,
+	)
+}
+
 func main() {
 	ctx := webhook.WithOptions(signals.NewContext(), webhook.Options{
-		ServiceName: "webhook",
+		ServiceName: "istio-webhook",
 		Port:        8443,
-		SecretName:  "webhook-certs",
+		SecretName:  "istio-webhook-certs",
 	})
 
-	sharedmain.MainWithContext(
-		ctx, "webhook",
+	sharedmain.WebhookMainWithContext(
+		ctx, "istio-webhook",
+		certificates.NewController,
+		NewDefaultingAdmissionController,
 		// TODO(nghia): NewConfigValidationController,
 	)
 }
