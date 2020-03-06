@@ -22,6 +22,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/net-istio/pkg/defaults"
+	istioconfig "knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection/sharedmain"
@@ -29,27 +30,27 @@ import (
 	"knative.dev/pkg/signals"
 	"knative.dev/pkg/webhook"
 	"knative.dev/pkg/webhook/certificates"
+	"knative.dev/pkg/webhook/configmaps"
 	"knative.dev/pkg/webhook/resourcesemantics"
 	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
 	defaultconfig "knative.dev/serving/pkg/apis/config"
 )
 
-// TODO(nghia): Validate config-istio
-// func NewConfigValidationController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
-// 	return configmaps.NewAdmissionController(ctx,
+func NewConfigValidationController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
+	return configmaps.NewAdmissionController(ctx,
 
-// 		// Name of the configmap webhook.
-// 		fmt.Sprintf("config.webhook.%s.knative.dev", system.Namespace()),
+		// Name of the resource webhook.
+		"config.webhook.istio.networking.internal.knative.dev",
 
-// 		// The path on which to serve the webhook.
-// 		"/config-validation",
+		// The path on which to serve the webhook.
+		"/config-validation",
 
-// 		// The configmaps to validate.
-// 		configmap.Constructors{
-// 			logging.ConfigMapName(): logging.NewConfigFromConfigMap,
-// 		},
-// 	)
-// }
+		// The configmaps to validate.
+		configmap.Constructors{
+			istioconfig.IstioConfigName: istioconfig.NewIstioFromConfigMap,
+		},
+	)
+}
 
 var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
 	appsv1.SchemeGroupVersion.WithKind("Deployment"): &defaults.IstioDeployment{},
@@ -93,6 +94,6 @@ func main() {
 		ctx, "istio-webhook",
 		certificates.NewController,
 		NewDefaultingAdmissionController,
-		// TODO(nghia): NewConfigValidationController,
+		NewConfigValidationController,
 	)
 }
