@@ -1206,7 +1206,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:54440beb15b5090023808ac49ba0fc895cebde34b9cebac9f5ca0ddb5f52dc75"
+  digest = "1:af30f32b9caae9e7c28eb5223eef83b00f0b47b6dc0b2d3838f3c3204d50d23e"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1219,6 +1219,7 @@
     "client/injection/kube/client",
     "client/injection/kube/client/fake",
     "client/injection/kube/informers/admissionregistration/v1beta1/mutatingwebhookconfiguration",
+    "client/injection/kube/informers/admissionregistration/v1beta1/validatingwebhookconfiguration",
     "client/injection/kube/informers/core/v1/endpoints",
     "client/injection/kube/informers/core/v1/endpoints/fake",
     "client/injection/kube/informers/core/v1/pod",
@@ -1269,11 +1270,12 @@
     "webhook",
     "webhook/certificates",
     "webhook/certificates/resources",
+    "webhook/configmaps",
     "webhook/resourcesemantics",
     "webhook/resourcesemantics/defaulting",
   ]
   pruneopts = "T"
-  revision = "fc857aa77f79902f0099e5e4ef403a18c31b45ea"
+  revision = "d1665814487e0f9a731e1874fce8d318918622f1"
 
 [[projects]]
   branch = "master"
@@ -1374,7 +1376,7 @@
     "test/v1alpha1",
   ]
   pruneopts = "NUT"
-  revision = "6aa2eae67d8382fc9a847ef5a1b01908fd2278c6"
+  revision = "4825236f95844b4b93838db6fbf8b58791c11bc6"
 
 [[projects]]
   branch = "master"
@@ -1471,6 +1473,7 @@
     "knative.dev/pkg/tracker",
     "knative.dev/pkg/webhook",
     "knative.dev/pkg/webhook/certificates",
+    "knative.dev/pkg/webhook/configmaps",
     "knative.dev/pkg/webhook/resourcesemantics",
     "knative.dev/pkg/webhook/resourcesemantics/defaulting",
     "knative.dev/serving/pkg/apis/config",
