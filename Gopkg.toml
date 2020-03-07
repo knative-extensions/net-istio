@@ -69,5 +69,9 @@ required = [
   non-go = false
 
 [[prune.project]]
+  name = "knative.dev/serving"
+  non-go = false
+
+[[prune.project]]
   name = "knative.dev/test-infra"
   non-go = false
