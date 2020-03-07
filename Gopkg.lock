@@ -1279,7 +1279,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f4fac2e0eb5af1afc59e9711ae0ae880b40f535f7b4853ce20679b8dd05d6c48"
+  digest = "1:c411aad5d713304c741351b98a21e1f6c151a3f90fc1d1aaa62830604bee9fb6"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1372,11 +1372,13 @@
     "pkg/reconciler/testing/v1",
     "pkg/testing/v1alpha1",
     "test",
+    "test/conformance/ingress",
     "test/e2e",
+    "test/types",
     "test/v1alpha1",
   ]
-  pruneopts = "NUT"
-  revision = "4825236f95844b4b93838db6fbf8b58791c11bc6"
+  pruneopts = "U"
+  revision = "2ea8445c67defbedfaf3ce31d4ce106a1834548b"
 
 [[projects]]
   branch = "master"
@@ -1387,7 +1389,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "0c681e1f1df96322a62976d05d0add50bd50632e"
+  revision = "b0442a32a47ab9a35aaa98151bc4970f457d1c23"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
@@ -1503,6 +1505,7 @@
     "knative.dev/serving/pkg/reconciler",
     "knative.dev/serving/pkg/reconciler/testing/v1",
     "knative.dev/serving/test",
+    "knative.dev/serving/test/conformance/ingress",
     "knative.dev/serving/test/e2e",
     "knative.dev/serving/test/v1alpha1",
     "knative.dev/test-infra/scripts",

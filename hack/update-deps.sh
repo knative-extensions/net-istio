@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-readonly ROOT_DIR=$(dirname $0)/..
+readonly ROOT_DIR="$( cd "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P )"
 source ${ROOT_DIR}/vendor/knative.dev/test-infra/scripts/library.sh
 
 set -o errexit
@@ -46,7 +46,13 @@ readonly DEP_FLAGS
 # Ensure we have everything we need under vendor/
 dep ensure ${DEP_FLAGS[@]}
 
+# Make the OWNER check robot happy.
+# TODO: Fix the robot to ignore vendor/ instead.
 rm -rf $(find vendor/ -name 'OWNERS')
-rm -rf $(find vendor/ -name '*_test.go')
+
+# Remove unit tests.
+rm -rf $(find vendor/ -path '*/pkg/*_test.go')
+# Remove e2e tests
+rm -rf $(find vendor/ -path '*/e2e/*_test.go')
 
 update_licenses third_party/VENDOR-LICENSE "$(find ./cmd -type d | grep -v kodata | grep -vE 'cmd$')"
