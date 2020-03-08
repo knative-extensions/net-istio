@@ -59,14 +59,19 @@ required = [
   non-go = true
 
 [[prune.project]]
+  name = "k8s.io/code-generator"
+  unused-packages = false
+  non-go = false
+
+[[prune.project]]
   name = "knative.dev/pkg"
   unused-packages = false
   non-go = false
 
 [[prune.project]]
-  name = "k8s.io/code-generator"
-  unused-packages = false
+  name = "knative.dev/serving"
   non-go = false
+  go-tests = false
 
 [[prune.project]]
   name = "knative.dev/test-infra"
