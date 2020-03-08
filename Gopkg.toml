@@ -9,8 +9,12 @@ required = [
   "k8s.io/code-generator/cmd/lister-gen",
   "knative.dev/pkg/codegen/cmd/injection-gen",
   "knative.dev/serving/test/conformance/ingress",
+  "knative.dev/serving/test/test_images/flaky",
   "knative.dev/serving/test/test_images/grpc-ping",
+  "knative.dev/serving/test/test_images/httpproxy",
   "knative.dev/serving/test/test_images/runtime",
+  "knative.dev/serving/test/test_images/timeout",
+  "knative.dev/serving/test/test_images/wsserver",
   "knative.dev/test-infra/scripts",
   "knative.dev/test-infra/tools/dep-collector",
 ]

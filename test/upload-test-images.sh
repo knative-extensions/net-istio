@@ -29,6 +29,7 @@ function upload_test_images() {
     fi
 
     for yaml in $(find ${image_dir} -name '*.yaml'); do
+      # Rewrite image reference to use vendor.
       sed "s@knative.dev/serving@knative.dev/net-istio/vendor/knative.dev/serving@g" $yaml \
         `# ko resolve is being used for the side-effect of publishing images,` \
         `# so the resulting yaml produced is ignored.` \

@@ -1206,7 +1206,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:af30f32b9caae9e7c28eb5223eef83b00f0b47b6dc0b2d3838f3c3204d50d23e"
+  digest = "1:1f5f6634308701e44054d1671e3c6ddbae3d0f5279300755f8dae6387bc83405"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1275,11 +1275,11 @@
     "webhook/resourcesemantics/defaulting",
   ]
   pruneopts = "T"
-  revision = "d1665814487e0f9a731e1874fce8d318918622f1"
+  revision = "00f0de3a183efe88ed578a8e7d4a2db8fb7b121b"
 
 [[projects]]
   branch = "master"
-  digest = "1:5f3d5ac116e9a5e3a7006839831f20b6224eb89fe455fc8304ba1b788488e8a1"
+  digest = "1:bf3ce7f79cfa2319385cffffd0a6dfbeab657b0ddbf6ab9fbd10334a40ef6e56"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1374,26 +1374,30 @@
     "test",
     "test/conformance/ingress",
     "test/e2e",
+    "test/test_images/flaky",
     "test/test_images/grpc-ping",
     "test/test_images/grpc-ping/proto",
+    "test/test_images/httpproxy",
     "test/test_images/runtime",
     "test/test_images/runtime/handlers",
+    "test/test_images/timeout",
+    "test/test_images/wsserver",
     "test/types",
     "test/v1alpha1",
   ]
   pruneopts = "U"
-  revision = "2ea8445c67defbedfaf3ce31d4ce106a1834548b"
+  revision = "fa25711825a83f6f3cd928c201b63ccd4ad3e90d"
 
 [[projects]]
   branch = "master"
-  digest = "1:dd8432987142e8a917e58bac0137c287f54399fa68b0760936d52dce04eb639b"
+  digest = "1:3d0c703375017dde28d1ee030d7f82ea838ab023841890ead18e91c8c9aded80"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "b0442a32a47ab9a35aaa98151bc4970f457d1c23"
+  revision = "7a8eea898f66fc7cd5fec6bb7c0fa2a80eeb702e"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
@@ -1511,8 +1515,12 @@
     "knative.dev/serving/test",
     "knative.dev/serving/test/conformance/ingress",
     "knative.dev/serving/test/e2e",
+    "knative.dev/serving/test/test_images/flaky",
     "knative.dev/serving/test/test_images/grpc-ping",
+    "knative.dev/serving/test/test_images/httpproxy",
     "knative.dev/serving/test/test_images/runtime",
+    "knative.dev/serving/test/test_images/timeout",
+    "knative.dev/serving/test/test_images/wsserver",
     "knative.dev/serving/test/v1alpha1",
     "knative.dev/test-infra/scripts",
     "knative.dev/test-infra/tools/dep-collector",
