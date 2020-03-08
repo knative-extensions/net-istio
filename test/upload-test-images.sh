@@ -28,10 +28,12 @@ function upload_test_images() {
       tag_option="--tags $docker_tag,latest"
     fi
 
-    # ko resolve is being used for the side-effect of publishing images,
-    # so the resulting yaml produced is ignored.
-    sed "s|ko://knative.dev/serving|ko://knative.dev/net-istio/vendor|g" ${image_dir}/**/*.yaml |
-    ko resolve ${tag_option} -RBf "${image_dir}" > /dev/null
+    for yaml in $(find ${image_dir} -name '*.yaml'); do
+      sed "s@knative.dev/serving@knative.dev/net-istio/vendor/knative.dev/serving@g" $yaml \
+        `# ko resolve is being used for the side-effect of publishing images,` \
+        `# so the resulting yaml produced is ignored.` \
+        | ko resolve ${tag_option} -RBf- > /dev/null
+    done
   )
 }
 
