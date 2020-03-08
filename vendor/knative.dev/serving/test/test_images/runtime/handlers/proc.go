@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Knative Authors
+Copyright 2019 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,10 +13,25 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package test
+
+package handlers
 
 import (
-	// Import the conformance ingress tests so that they show up in
-	// knative.dev/net-istio/vendor/
-	_ "knative.dev/serving/test/conformance/ingress"
+	"io"
+	"os"
+
+	"knative.dev/serving/test/types"
 )
+
+// stdin attempts to read bytes from the stdin file descriptor and returns the result.
+func stdin() *types.Stdin {
+	_, err := os.Stdin.Read(make([]byte, 1))
+	if err == io.EOF {
+		return &types.Stdin{EOF: &yes}
+	}
+	if err != nil {
+		return &types.Stdin{Error: err.Error()}
+	}
+
+	return &types.Stdin{EOF: &no}
+}

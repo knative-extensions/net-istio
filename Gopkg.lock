@@ -1279,7 +1279,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c411aad5d713304c741351b98a21e1f6c151a3f90fc1d1aaa62830604bee9fb6"
+  digest = "1:5f3d5ac116e9a5e3a7006839831f20b6224eb89fe455fc8304ba1b788488e8a1"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1374,6 +1374,10 @@
     "test",
     "test/conformance/ingress",
     "test/e2e",
+    "test/test_images/grpc-ping",
+    "test/test_images/grpc-ping/proto",
+    "test/test_images/runtime",
+    "test/test_images/runtime/handlers",
     "test/types",
     "test/v1alpha1",
   ]
@@ -1507,6 +1511,8 @@
     "knative.dev/serving/test",
     "knative.dev/serving/test/conformance/ingress",
     "knative.dev/serving/test/e2e",
+    "knative.dev/serving/test/test_images/grpc-ping",
+    "knative.dev/serving/test/test_images/runtime",
     "knative.dev/serving/test/v1alpha1",
     "knative.dev/test-infra/scripts",
     "knative.dev/test-infra/tools/dep-collector",

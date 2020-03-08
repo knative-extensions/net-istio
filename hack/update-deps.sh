@@ -44,15 +44,17 @@ done
 readonly DEP_FLAGS
 
 # Ensure we have everything we need under vendor/
-dep ensure ${DEP_FLAGS[@]}
+set +e
+for try in $(seq 1 5); do
+  dep ensure ${DEP_FLAGS[@]} && break
+done
+set -e
 
 # Make the OWNER check robot happy.
 # TODO: Fix the robot to ignore vendor/ instead.
 rm -rf $(find vendor/ -name 'OWNERS')
-
-# Remove unit tests.
+# Remove unit tests & e2e tests.
 rm -rf $(find vendor/ -path '*/pkg/*_test.go')
-# Remove e2e tests
 rm -rf $(find vendor/ -path '*/e2e/*_test.go')
 
 update_licenses third_party/VENDOR-LICENSE "$(find ./cmd -type d | grep -v kodata | grep -vE 'cmd$')"
