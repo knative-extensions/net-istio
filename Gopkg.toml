@@ -2,12 +2,15 @@
 # for detailed Gopkg.toml documentation.
 
 required = [
+  "k8s.io/code-generator/cmd/client-gen",
   "k8s.io/code-generator/cmd/deepcopy-gen",
   "k8s.io/code-generator/cmd/defaulter-gen",
-  "k8s.io/code-generator/cmd/client-gen",
-  "k8s.io/code-generator/cmd/lister-gen",
   "k8s.io/code-generator/cmd/informer-gen",
+  "k8s.io/code-generator/cmd/lister-gen",
   "knative.dev/pkg/codegen/cmd/injection-gen",
+  "knative.dev/serving/test/conformance/ingress",
+  "knative.dev/serving/test/test_images/grpc-ping",
+  "knative.dev/serving/test/test_images/runtime",
   "knative.dev/test-infra/scripts",
   "knative.dev/test-infra/tools/dep-collector",
 ]

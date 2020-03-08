@@ -46,13 +46,46 @@ readonly DEP_FLAGS
 # Ensure we have everything we need under vendor/
 dep ensure ${DEP_FLAGS[@]}
 
+# # Patch in additional Serving code needed for conformance testing.
+# (
+#   # Figure out the SHA of knative.dev/serving that we need.
+#   SERVING_REVISION=$(
+#     $ROOT_DIR/hack/gopkg-versions.awk $ROOT_DIR/Gopkg.lock \
+#       | grep "knative.dev/serving" \
+#       | cut -f 2
+#   )
+#   # Download the code into a tmp dir.
+#   TMPDIR=$(mktemp -d) && trap "rm -rf $TMPDIR" EXIT
+#   (
+#     cd $TMPDIR
+#     git init --quiet
+#     git remote add origin https://github.com/knative/serving.git
+#     git fetch origin $SERVING_REVISION --depth=1 --quiet
+#     git reset --hard FETCH_HEAD --quiet
+#   )
+#   # Pick what we need and copy them.
+#   NEEDED_FILES=(
+#     "test/test_images/runtime"
+#     "test/test_images/grpc-ping"
+#   )
+#   for FILE in ${NEEDED_FILES[@]}; do
+#     PARENT=$(dirname $FILE)
+#     mkdir -p "$ROOT_DIR/$PARENT"
+#     rsync -ar "$TMPDIR/$FILE" "$ROOT_DIR/$PARENT"
+#   done
+
+#   # Update image location.
+#   sed -i "s/knative.dev\/serving/knative.dev\/net-istio/g" $ROOT_DIR/test/test_images/*/*.yaml
+# )
+
+# # Ensure we have everything we need under vendor/ for test_images.
+# dep ensure ${DEP_FLAGS[@]}
+
 # Make the OWNER check robot happy.
 # TODO: Fix the robot to ignore vendor/ instead.
 rm -rf $(find vendor/ -name 'OWNERS')
-
-# Remove unit tests.
+# Remove unit tests & e2e tests.
 rm -rf $(find vendor/ -path '*/pkg/*_test.go')
-# Remove e2e tests
 rm -rf $(find vendor/ -path '*/e2e/*_test.go')
 
 update_licenses third_party/VENDOR-LICENSE "$(find ./cmd -type d | grep -v kodata | grep -vE 'cmd$')"
