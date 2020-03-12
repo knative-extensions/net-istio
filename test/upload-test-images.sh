@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright 2018 The Knative Authors
+# Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ function upload_test_images() {
     fi
 
     for yaml in $(find ${image_dir} -name '*.yaml'); do
+      # Rewrite image reference to use vendor.
       sed "s@knative.dev/serving@knative.dev/net-istio/vendor/knative.dev/serving@g" $yaml \
         `# ko resolve is being used for the side-effect of publishing images,` \
         `# so the resulting yaml produced is ignored.` \
