@@ -20,7 +20,10 @@ metadata:
     serving.knative.dev/controller: "true"
 rules:
   - apiGroups: [""]
-    resources: ["configmaps"]
+    resources: ["configmaps", "endpoints", "pods", "secrets", "services"]
+    verbs: ["get", "list", "create", "update", "delete", "patch", "watch"]
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
     verbs: ["get", "list", "create", "update", "delete", "patch", "watch"]
   - apiGroups: ["networking.internal.knative.dev"]
     resources: ["*", "*/status", "*/finalizers"]
