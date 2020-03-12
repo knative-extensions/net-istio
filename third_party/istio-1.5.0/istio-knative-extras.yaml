@@ -18,6 +18,13 @@ metadata:
   name: istio-multi
   namespace: istio-system
 ---
+# Source: istio/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: istio-reader
+  namespace: istio-system
+---
 # Source: istio/templates/clusterrole.yaml
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -37,7 +44,7 @@ kind: ClusterRoleBinding
 metadata:
   name: istio-multi
   labels:
-    chart: istio-1.4.4
+    chart: istio-1.5.0
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -45,6 +52,22 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: istio-multi
+  namespace: istio-system
+---
+# Source: istio/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: istio-reader
+  labels:
+    chart: istio-1.5.0
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: istio-reader
+subjects:
+- kind: ServiceAccount
+  name: istio-reader
   namespace: istio-system
 ---
 # Source: istio/charts/gateways/templates/service.yaml
@@ -113,7 +136,7 @@ spec:
       serviceAccountName: cluster-local-gateway-service-account
       containers:
         - name: istio-proxy
-          image: "docker.io/istio/proxyv2:1.4.4"
+          image: "docker.io/istio/proxyv2:1.5.0"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 15020
@@ -189,6 +212,8 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: spec.serviceAccountName
+          - name: ISTIO_AUTO_MTLS_ENABLED
+            value: "true"
           - name: ISTIO_META_POD_NAME
             valueFrom:
               fieldRef:
