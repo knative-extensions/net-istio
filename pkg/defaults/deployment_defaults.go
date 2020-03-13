@@ -20,7 +20,6 @@ import (
 	"context"
 
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"knative.dev/pkg/apis"
 
 	"knative.dev/serving/pkg/apis/serving"
@@ -38,6 +37,8 @@ const (
 	// which Service they are created.
 	ServiceLabelKey = GroupName + "/canonical-service"
 )
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // IstioDeployment is a wrapper around Deployment for setting Istio specific defaults
 type IstioDeployment struct {
@@ -94,13 +95,4 @@ func (r *IstioDeployment) servingName() string {
 // Validate returns nil due to no need for validation
 func (r *IstioDeployment) Validate(ctx context.Context) *apis.FieldError {
 	return nil
-}
-
-// DeepCopyObject returns a deep copy of this object
-func (r *IstioDeployment) DeepCopyObject() runtime.Object {
-	out := &IstioDeployment{}
-
-	r.Deployment.DeepCopyInto(&out.Deployment)
-
-	return out
 }
