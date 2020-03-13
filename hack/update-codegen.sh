@@ -38,4 +38,5 @@ ${CODEGEN_PKG}/generate-groups.sh "client,informer,lister" \
 ${GOPATH}/bin/deepcopy-gen \
   -O zz_generated.deepcopy \
   --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt \
-  -i knative.dev/net-istio/pkg/reconciler/ingress/config
+  -i knative.dev/net-istio/pkg/reconciler/ingress/config \
+  -i knative.dev/net-istio/pkg/defaults
