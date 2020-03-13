@@ -33,12 +33,34 @@ import (
 	"knative.dev/serving/pkg/apis/networking"
 	"knative.dev/serving/pkg/apis/networking/v1alpha1"
 	"knative.dev/serving/pkg/apis/serving"
+	"knative.dev/serving/pkg/network/ingress"
 )
 
 var (
 	defaultMaxRevisionTimeout = time.Duration(apiconfig.DefaultMaxRevisionTimeoutSeconds) * time.Second
 	defaultGateways           = makeGatewayMap([]string{"gateway"}, []string{"private-gateway"})
-	defaultIngress            = v1alpha1.Ingress{
+	defaultIngressRuleValue   = &v1alpha1.HTTPIngressRuleValue{
+		Paths: []v1alpha1.HTTPIngressPath{
+			{
+				Timeout: &metav1.Duration{time.Minute},
+				Splits: []v1alpha1.IngressBackendSplit{
+					{
+						Percent: 100,
+						IngressBackend: v1alpha1.IngressBackend{
+							ServiceNamespace: "test",
+							ServiceName:      "test.svc.cluster.local",
+							ServicePort:      intstr.FromInt(8080),
+						},
+					},
+				},
+				Retries: &v1alpha1.HTTPRetry{
+					Attempts:      3,
+					PerTryTimeout: &metav1.Duration{time.Minute},
+				},
+			},
+		},
+	}
+	defaultIngress = v1alpha1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-ingress",
 			Namespace: system.Namespace(),
@@ -47,7 +69,7 @@ var (
 			Hosts: []string{
 				"test-route.test-ns.svc.cluster.local",
 			},
-			HTTP: &v1alpha1.HTTPIngressRuleValue{},
+			HTTP: defaultIngressRuleValue,
 		}}},
 	}
 )
@@ -202,6 +224,93 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 	}
 }
 
+func TestMakeVirtualServicesSpec_CorrectGateways(t *testing.T) {
+
+	tests := []struct {
+		name             string
+		ingress          *v1alpha1.Ingress
+		gateways         map[v1alpha1.IngressVisibility]sets.String
+		expectedGateways sets.String
+	}{
+		{
+			name: "local visibility",
+			ingress: &v1alpha1.Ingress{
+				Spec: v1alpha1.IngressSpec{
+					Rules: []v1alpha1.IngressRule{
+						{
+							Hosts:      []string{"test.svc.cluster.local"},
+							Visibility: v1alpha1.IngressVisibilityClusterLocal,
+							HTTP:       defaultIngressRuleValue,
+						},
+					},
+					Visibility: v1alpha1.IngressVisibilityClusterLocal,
+				},
+			},
+			gateways: map[v1alpha1.IngressVisibility]sets.String{
+				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("cluster-local-gateway/knative-serving"),
+				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("knative-ingress-gateway/knative-serving"),
+			},
+			expectedGateways: sets.NewString("cluster-local-gateway/knative-serving"),
+		},
+		{
+			name: "public visibility",
+			ingress: &v1alpha1.Ingress{
+				Spec: v1alpha1.IngressSpec{
+					Rules: []v1alpha1.IngressRule{
+						{
+							Hosts:      []string{"test.example.com"},
+							Visibility: v1alpha1.IngressVisibilityExternalIP,
+							HTTP:       defaultIngressRuleValue,
+						},
+					},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+				},
+			},
+			gateways: map[v1alpha1.IngressVisibility]sets.String{
+				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("cluster-local-gateway/knative-serving"),
+				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("knative-ingress-gateway/knative-serving"),
+			},
+			expectedGateways: sets.NewString("knative-ingress-gateway/knative-serving"),
+		},
+		{
+			name: "local and public visibility",
+			ingress: &v1alpha1.Ingress{
+				Spec: v1alpha1.IngressSpec{
+					Rules: []v1alpha1.IngressRule{
+						{
+							Hosts:      []string{"test.example.com"},
+							Visibility: v1alpha1.IngressVisibilityExternalIP,
+							HTTP:       defaultIngressRuleValue,
+						},
+						{
+							Hosts:      []string{"test.svc.cluster.local"},
+							Visibility: v1alpha1.IngressVisibilityClusterLocal,
+							HTTP:       defaultIngressRuleValue,
+						},
+					},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+				},
+			},
+			gateways: map[v1alpha1.IngressVisibility]sets.String{
+				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("cluster-local-gateway/knative-serving"),
+				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("knative-ingress-gateway/knative-serving"),
+			},
+			expectedGateways: sets.NewString("knative-ingress-gateway/knative-serving",
+				"cluster-local-gateway/knative-serving"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			vs := makeVirtualServiceSpec(tc.ingress, tc.gateways, ingress.ExpandedHosts(getHosts(tc.ingress)))
+			actualGateways := sets.NewString(vs.Gateways...)
+			if !actualGateways.Equal(tc.expectedGateways) {
+				t.Fatalf("Got gateways %v, expected %v", actualGateways.List(), tc.expectedGateways.List())
+			}
+		})
+	}
+}
+
 func TestMakeMeshVirtualServiceSpec_CorrectGateways(t *testing.T) {
 	ci := &v1alpha1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
@@ -218,7 +327,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectGateways(t *testing.T) {
 					"test-route.test-ns.svc.cluster.local",
 				},
 				Visibility: v1alpha1.IngressVisibilityExternalIP,
-				HTTP:       &v1alpha1.HTTPIngressRuleValue{},
+				HTTP:       defaultIngressRuleValue,
 			}}},
 	}
 	expected := []string{"mesh"}
@@ -451,16 +560,10 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 }
 
 func TestMakeIngressVirtualServiceSpec_CorrectGateways(t *testing.T) {
-	ci := &v1alpha1.Ingress{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-ingress",
-			Namespace: system.Namespace(),
-			Labels: map[string]string{
-				serving.RouteLabelKey:          "test-route",
-				serving.RouteNamespaceLabelKey: "test-ns",
-			},
-		},
-		Spec: v1alpha1.IngressSpec{},
+	ci := defaultIngress.DeepCopy()
+	// We add public gateways, so make sure that the rules have ExternalIP visibility.
+	for idx := range ci.Spec.Rules {
+		ci.Spec.Rules[idx].Visibility = v1alpha1.IngressVisibilityExternalIP
 	}
 	expected := []string{"knative-testing/gateway-one", "knative-testing/gateway-two"}
 	gateways := MakeIngressVirtualService(ci, makeGatewayMap([]string{"knative-testing/gateway-one", "knative-testing/gateway-two"}, nil)).Spec.Gateways
