@@ -133,20 +133,28 @@ func MakeVirtualServices(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVis
 }
 
 func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, hosts sets.String) *istiov1alpha3.VirtualService {
-	gw := sets.String{}.Union(gateways[v1alpha1.IngressVisibilityClusterLocal]).Union(gateways[v1alpha1.IngressVisibilityExternalIP])
 	spec := istiov1alpha3.VirtualService{
-		Gateways: gw.List(),
-		Hosts:    hosts.List(),
+		Hosts: hosts.List(),
 	}
 
+	gw := sets.String{}
 	for _, rule := range ing.Spec.Rules {
 		for _, p := range rule.HTTP.Paths {
 			hosts := hosts.Intersection(sets.NewString(rule.Hosts...))
 			if hosts.Len() != 0 {
-				spec.Http = append(spec.Http, makeVirtualServiceRoute(hosts, &p, gateways, rule.Visibility))
+				http := makeVirtualServiceRoute(hosts, &p, gateways, rule.Visibility)
+				// Add all the Gateways that exist inside the http.match section of
+				// the VirtualService.
+				// This ensures that we are only using the Gateways that actually appear
+				// in VirtualService routes.
+				for _, m := range http.Match {
+					gw = gw.Union(sets.NewString(m.Gateways...))
+				}
+				spec.Http = append(spec.Http, http)
 			}
 		}
 	}
+	spec.Gateways = gw.List()
 	return &spec
 }
 
