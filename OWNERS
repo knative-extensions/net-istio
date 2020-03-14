@@ -5,7 +5,10 @@ approvers:
 - evankanderson
 - mattmoor
 - vaikas
-# Networking WG Leads
-- tcnghia
+# Networking Approvers
+- markusthoemmes
 - mdemirhan
-# TODO(nghia): Add networking approvers here.
+- nak3
+- tcnghia
+- vagababov
+- ZhiminXiang
