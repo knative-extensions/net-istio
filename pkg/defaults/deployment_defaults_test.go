@@ -65,15 +65,15 @@ func TestIstioDeploymentDefaulting(t *testing.T) {
 			appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						serving.ServiceLabelKey:              "foo-service",
-						"service.istio.io/canonical-service": "foo-service",
+						serving.ServiceLabelKey:           "foo-service",
+						"service.istio.io/canonical-name": "foo-service",
 					},
 				},
 				Spec: appsv1.DeploymentSpec{
 					Template: v1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{
-								"service.istio.io/canonical-service": "foo-service",
+								"service.istio.io/canonical-name": "foo-service",
 							},
 						},
 					},
@@ -95,15 +95,15 @@ func TestIstioDeploymentDefaulting(t *testing.T) {
 			appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						serving.ConfigurationLabelKey:        "foo-config",
-						"service.istio.io/canonical-service": "foo-config",
+						serving.ConfigurationLabelKey:     "foo-config",
+						"service.istio.io/canonical-name": "foo-config",
 					},
 				},
 				Spec: appsv1.DeploymentSpec{
 					Template: v1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{
-								"service.istio.io/canonical-service": "foo-config",
+								"service.istio.io/canonical-name": "foo-config",
 							},
 						},
 					},
@@ -161,7 +161,7 @@ func TestIstioDeploymentDefaulting(t *testing.T) {
 						serving.RevisionLabelKey:              "foo-revision",
 						serving.ServiceLabelKey:               "foo-service",
 						"service.istio.io/canonical-revision": "foo-revision",
-						"service.istio.io/canonical-service":  "foo-service",
+						"service.istio.io/canonical-name":     "foo-service",
 					},
 				},
 				Spec: appsv1.DeploymentSpec{
@@ -169,7 +169,7 @@ func TestIstioDeploymentDefaulting(t *testing.T) {
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{
 								"service.istio.io/canonical-revision": "foo-revision",
-								"service.istio.io/canonical-service":  "foo-service",
+								"service.istio.io/canonical-name":     "foo-service",
 							},
 						},
 					},
