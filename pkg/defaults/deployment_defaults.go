@@ -29,13 +29,11 @@ const (
 	// GroupName is the group name for istio labels and annotations
 	GroupName = "service.istio.io"
 
-	// RevisionLabelKey is the label key attached to k8s resources to indicate
-	// which Revision triggered their creation.
+	// RevisionLabelKey is the label key to define the canonical revision name used by istio.
 	RevisionLabelKey = GroupName + "/canonical-revision"
 
-	// ServiceLabelKey is the label key attached to a Route and Configuration indicating by
-	// which Service they are created.
-	ServiceLabelKey = GroupName + "/canonical-service"
+	// ServiceLabelKey is the label key to define the canonical service name used by istio.
+	ServiceLabelKey = GroupName + "/canonical-name"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
