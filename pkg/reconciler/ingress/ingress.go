@@ -197,9 +197,6 @@ func (r *Reconciler) reconcileCertSecrets(ctx context.Context, ing *v1alpha1.Ing
 			certSecret.Labels[networking.OriginSecretNamespaceLabelKey],
 			certSecret.Labels[networking.OriginSecretNameLabelKey]), ing)
 		if _, err := coreaccessor.ReconcileSecret(ctx, nil, certSecret, r); err != nil {
-			if kaccessor.IsNotOwned(err) {
-				ing.Status.MarkResourceNotOwned("Secret", certSecret.Name)
-			}
 			return err
 		}
 	}
