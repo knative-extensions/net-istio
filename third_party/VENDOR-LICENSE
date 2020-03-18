@@ -6044,7 +6044,7 @@ Import: knative.dev/net-istio/vendor/istio.io/api
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright 2016-2019 Istio Authors
+   Copyright 2016-2020 Istio Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -6252,7 +6252,7 @@ Import: knative.dev/net-istio/vendor/istio.io/client-go
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright 2016-2019 Istio Authors
+   Copyright 2016-2020 Istio Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -6460,7 +6460,7 @@ Import: knative.dev/net-istio/vendor/istio.io/gogo-genproto
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright 2016-2019 Istio Authors
+   Copyright 2016-2020 Istio Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
