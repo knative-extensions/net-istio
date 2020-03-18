@@ -48,7 +48,7 @@ func GetSecrets(ing *v1alpha1.Ingress, secretLister corev1listers.SecretLister) 
 
 // MakeSecrets makes copies of the origin Secrets under the namespace of Istio gateway service.
 func MakeSecrets(ctx context.Context, originSecrets map[string]*corev1.Secret, accessor kmeta.OwnerRefableAccessor) ([]*corev1.Secret, error) {
-	nameNamespaces, err := getIngressGatewaySvcNameNamespaces(ctx)
+	nameNamespaces, err := GetIngressGatewaySvcNameNamespaces(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -71,14 +71,18 @@ func makeSecret(originSecret *corev1.Secret, targetNamespace string, accessor km
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      targetSecret(originSecret, accessor),
 			Namespace: targetNamespace,
-			Labels: map[string]string{
-				networking.OriginSecretNameLabelKey:      originSecret.Name,
-				networking.OriginSecretNamespaceLabelKey: originSecret.Namespace,
-			},
-			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(accessor)},
+			Labels:    MakeTargetSecretLabels(originSecret.Name, originSecret.Namespace),
 		},
 		Data: originSecret.Data,
 		Type: originSecret.Type,
+	}
+}
+
+// MakeTargetSecretLabels returns the labels used in target secret.
+func MakeTargetSecretLabels(originSecretName, originSecretNamespace string) map[string]string {
+	return map[string]string{
+		networking.OriginSecretNameLabelKey:      originSecretName,
+		networking.OriginSecretNamespaceLabelKey: originSecretNamespace,
 	}
 }
 

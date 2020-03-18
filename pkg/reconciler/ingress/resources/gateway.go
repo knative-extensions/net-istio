@@ -140,7 +140,7 @@ func makeIngressGateway(ctx context.Context, ing *v1alpha1.Ingress, originSecret
 }
 
 func getGatewayServices(ctx context.Context, svcLister corev1listers.ServiceLister) ([]*corev1.Service, error) {
-	ingressSvcMetas, err := getIngressGatewaySvcNameNamespaces(ctx)
+	ingressSvcMetas, err := GetIngressGatewaySvcNameNamespaces(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +232,8 @@ func ServiceNamespaceFromURL(svc string) (string, error) {
 }
 
 // TODO(nghia):  Remove this by parsing at config parsing time.
-func getIngressGatewaySvcNameNamespaces(ctx context.Context) ([]metav1.ObjectMeta, error) {
+// GetIngressGatewaySvcNameNamespaces gets the Istio ingress namespaces from ConfigMap.
+func GetIngressGatewaySvcNameNamespaces(ctx context.Context) ([]metav1.ObjectMeta, error) {
 	cfg := config.FromContext(ctx).Istio
 	nameNamespaces := make([]metav1.ObjectMeta, len(cfg.IngressGateways))
 	for i, ingressgateway := range cfg.IngressGateways {

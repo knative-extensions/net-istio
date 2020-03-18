@@ -54,7 +54,7 @@ func ReconcileSecret(ctx context.Context, owner kmeta.Accessor, desired *corev1.
 		recorder.Eventf(owner, corev1.EventTypeNormal, "Created", "Created Secret %s/%s", desired.Namespace, desired.Name)
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to get Secret: %w", err)
-	} else if !metav1.IsControlledBy(secret, owner) {
+	} else if owner != nil && !metav1.IsControlledBy(secret, owner) {
 		// Return an error with NotControlledBy information.
 		return nil, kaccessor.NewAccessorError(
 			fmt.Errorf("owner: %s with Type %T does not own Secret: %s", owner.GetName(), owner, secret.Name),

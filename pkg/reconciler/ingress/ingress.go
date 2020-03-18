@@ -196,7 +196,7 @@ func (r *Reconciler) reconcileCertSecrets(ctx context.Context, ing *v1alpha1.Ing
 		r.tracker.Track(resources.SecretRef(
 			certSecret.Labels[networking.OriginSecretNamespaceLabelKey],
 			certSecret.Labels[networking.OriginSecretNameLabelKey]), ing)
-		if _, err := coreaccessor.ReconcileSecret(ctx, ing, certSecret, r); err != nil {
+		if _, err := coreaccessor.ReconcileSecret(ctx, nil, certSecret, r); err != nil {
 			if kaccessor.IsNotOwned(err) {
 				ing.Status.MarkResourceNotOwned("Secret", certSecret.Name)
 			}
@@ -261,6 +261,33 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, ing *v1alpha1.Ingress) pk
 		for _, gw := range gws {
 			if err := r.reconcileIngressServers(ctx, ing, gw, []*istiov1alpha3.Server{}); err != nil {
 				return err
+			}
+		}
+	}
+
+	return r.reconcileDeletion(ctx, ing)
+}
+
+func (r *Reconciler) reconcileDeletion(ctx context.Context, ing *v1alpha1.Ingress) error {
+	if !r.shouldReconcileTLS(ing) {
+		return nil
+	}
+
+	for _, tls := range ing.Spec.TLS {
+		nameNamespaces, err := resources.GetIngressGatewaySvcNameNamespaces(ctx)
+		if err != nil {
+			return err
+		}
+		for _, nameNamespace := range nameNamespaces {
+			secrets, err := r.GetSecretLister().Secrets(nameNamespace.Namespace).List(labels.SelectorFromSet(
+				resources.MakeTargetSecretLabels(tls.SecretName, tls.SecretNamespace)))
+			if err != nil {
+				return err
+			}
+			for _, secret := range secrets {
+				if err := r.GetKubeClient().CoreV1().Secrets(secret.Namespace).Delete(secret.Name, &metav1.DeleteOptions{}); err != nil {
+					return err
+				}
 			}
 		}
 	}
