@@ -41,6 +41,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
 	corev1listers "k8s.io/client-go/listers/core/v1"
@@ -270,26 +271,28 @@ func (r *Reconciler) reconcileDeletion(ctx context.Context, ing *v1alpha1.Ingres
 		return nil
 	}
 
+	errs := []error{}
 	for _, tls := range ing.Spec.TLS {
 		nameNamespaces, err := resources.GetIngressGatewaySvcNameNamespaces(ctx)
 		if err != nil {
-			return err
+			errs = append(errs, err)
+			continue
 		}
 		for _, nameNamespace := range nameNamespaces {
 			secrets, err := r.GetSecretLister().Secrets(nameNamespace.Namespace).List(labels.SelectorFromSet(
 				resources.MakeTargetSecretLabels(tls.SecretName, tls.SecretNamespace)))
 			if err != nil {
-				return err
+				errs = append(errs, err)
+				continue
 			}
 			for _, secret := range secrets {
 				if err := r.GetKubeClient().CoreV1().Secrets(secret.Namespace).Delete(secret.Name, &metav1.DeleteOptions{}); err != nil {
-					return err
+					errs = append(errs, err)
 				}
 			}
 		}
 	}
-
-	return nil
+	return errors.NewAggregate(errs)
 }
 
 func (r *Reconciler) reconcileIngressServers(ctx context.Context, ing *v1alpha1.Ingress, gw config.Gateway, desired []*istiov1alpha3.Server) error {
