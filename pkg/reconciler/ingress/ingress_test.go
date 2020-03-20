@@ -24,6 +24,10 @@ import (
 	"time"
 
 	// Inject our fakes
+	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
+	fakeistioclient "knative.dev/net-istio/pkg/client/istio/injection/client/fake"
+	_ "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/gateway/fake"
+	_ "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice/fake"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints/fake"
@@ -35,10 +39,6 @@ import (
 	servingclient "knative.dev/serving/pkg/client/injection/client/fake"
 	_ "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
 	fakeingressinformer "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
-	istioclient "knative.dev/serving/pkg/client/istio/injection/client"
-	fakeistioclient "knative.dev/serving/pkg/client/istio/injection/client/fake"
-	_ "knative.dev/serving/pkg/client/istio/injection/informers/networking/v1alpha3/gateway/fake"
-	_ "knative.dev/serving/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice/fake"
 	"knative.dev/serving/pkg/network/ingress"
 
 	proto "github.com/gogo/protobuf/proto"
@@ -74,8 +74,8 @@ import (
 	ingressreconciler "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 	"knative.dev/serving/pkg/network"
 
+	. "knative.dev/net-istio/pkg/reconciler/testing"
 	. "knative.dev/pkg/reconciler/testing"
-	. "knative.dev/serving/pkg/reconciler/testing/v1"
 )
 
 const (
