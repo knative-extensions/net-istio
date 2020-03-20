@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"testing"
 
-	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/system"
 
 	"github.com/google/go-cmp/cmp"
@@ -158,7 +157,6 @@ func TestMakeSecrets(t *testing.T) {
 					networking.OriginSecretNameLabelKey:      "test-secret",
 					networking.OriginSecretNamespaceLabelKey: "knative-serving",
 				},
-				OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(&ci)},
 			},
 			Data: map[string][]byte{
 				"test-data": []byte("abcd"),

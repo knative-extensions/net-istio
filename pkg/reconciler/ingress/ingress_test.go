@@ -745,6 +745,37 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 		},
 		Key: "test-ns/reconciling-ingress",
 	}, {
+		Name:                    "delete Ingress with leftover secrets",
+		SkipNamespaceValidation: true,
+		Objects: []runtime.Object{
+			ingressWithFinalizers("reconciling-ingress", 1234, ingressTLS, []string{ingressFinalizer}, &deletionTime),
+			// ingressHTTPRedirectServer should not be deleted when deleting ingress related TLS server..
+			gateway(networking.KnativeIngressGateway, system.Namespace(), []*istiov1alpha3.Server{irrelevantServer, ingressTLSServer, ingressHTTPRedirectServer}),
+			targetSecret("istio-system", "targetSecret", resources.MakeTargetSecretLabels("secret0", "istio-system")),
+		},
+		WantCreates: []runtime.Object{
+			// The creation of gateways are triggered when setting up the test.
+			gateway(networking.KnativeIngressGateway, system.Namespace(), []*istiov1alpha3.Server{irrelevantServer, ingressTLSServer, ingressHTTPRedirectServer}),
+		},
+		WantUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: gateway(networking.KnativeIngressGateway, system.Namespace(), []*istiov1alpha3.Server{ingressHTTPRedirectServer, irrelevantServer}),
+		}},
+		WantPatches: []clientgotesting.PatchActionImpl{
+			patchAddFinalizerAction("reconciling-ingress", ""),
+		},
+		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: "istio-system",
+				Verb:      "delete",
+			},
+			Name: "targetSecret",
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "Updated", "Updated Gateway %s/%s", system.Namespace(), networking.KnativeIngressGateway),
+			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
+		},
+		Key: "test-ns/reconciling-ingress",
+	}, {
 		Name:                    "TLS Secret is not in the namespace of Istio gateway service",
 		SkipNamespaceValidation: true,
 		Objects: []runtime.Object{
@@ -764,7 +795,7 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 				makeGatewayMap([]string{"knative-testing/" + networking.KnativeIngressGateway}, nil)),
 
 			// The secret copy under istio-system.
-			secret("istio-system", targetSecretName, map[string]string{
+			targetSecret("istio-system", targetSecretName, map[string]string{
 				networking.OriginSecretNameLabelKey:      "secret0",
 				networking.OriginSecretNamespaceLabelKey: "knative-serving",
 			}),
@@ -841,9 +872,6 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 						networking.OriginSecretNameLabelKey:      "secret0",
 						networking.OriginSecretNamespaceLabelKey: "knative-serving",
 					},
-					OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(
-						ingressWithTLS("reconciling-ingress", 1234, ingressTLSWithSecretNamespace("knative-serving")),
-					)},
 				},
 				Data: map[string][]byte{
 					"wrong_data": []byte("wrongdata"),
@@ -866,9 +894,6 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 						networking.OriginSecretNameLabelKey:      "secret0",
 						networking.OriginSecretNamespaceLabelKey: "knative-serving",
 					},
-					OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(
-						ingressWithTLS("reconciling-ingress", 1234, ingressTLSWithSecretNamespace("knative-serving")),
-					)},
 				},
 				// The data is expected to be updated to the right one.
 				Data: map[string][]byte{
@@ -1056,6 +1081,12 @@ func gateway(name, namespace string, servers []*istiov1alpha3.Server) *v1alpha3.
 func originSecret(namespace, name string) *corev1.Secret {
 	tmp := secret(namespace, name, map[string]string{})
 	tmp.UID = "uid"
+	return tmp
+}
+
+func targetSecret(namespace, name string, labels map[string]string) *corev1.Secret {
+	tmp := secret(namespace, name, labels)
+	tmp.OwnerReferences = []metav1.OwnerReference{}
 	return tmp
 }
 
