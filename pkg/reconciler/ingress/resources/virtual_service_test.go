@@ -550,7 +550,6 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 			Attempts:      int32(networking.DefaultRetryCount),
 			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
 		},
-		WebsocketUpgrade: true,
 	}}
 
 	routes := MakeMeshVirtualService(ci, defaultGateways).Spec.Http
@@ -683,7 +682,6 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 			Attempts:      int32(networking.DefaultRetryCount),
 			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
 		},
-		WebsocketUpgrade: true,
 	}, {
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Uri: &istiov1alpha3.StringMatch{
@@ -714,7 +712,6 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 			Attempts:      int32(networking.DefaultRetryCount),
 			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
 		},
-		WebsocketUpgrade: true,
 	}}
 
 	routes := MakeIngressVirtualService(ci, makeGatewayMap([]string{"gateway.public"}, []string{"gateway.private"})).Spec.Http
@@ -767,7 +764,6 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 			Attempts:      int32(networking.DefaultRetryCount),
 			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
 		},
-		WebsocketUpgrade: true,
 	}
 	if diff := cmp.Diff(expected, route); diff != "" {
 		t.Errorf("Unexpected route  (-want +got): %v", diff)
@@ -825,7 +821,6 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 			Attempts:      int32(networking.DefaultRetryCount),
 			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
 		},
-		WebsocketUpgrade: true,
 	}
 	if diff := cmp.Diff(expected, route); diff != "" {
 		t.Errorf("Unexpected route  (-want +got): %v", diff)
