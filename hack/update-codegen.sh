@@ -28,7 +28,7 @@ KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT}; ls -d -1 ./vendor/
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT}/hack/update-deps.sh
 
-# Knative Injection (foar istio)
+# Knative Injection (for istio)
 ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   knative.dev/net-istio/pkg/client/istio istio.io/client-go/pkg/apis \
   "networking:v1alpha3" \
