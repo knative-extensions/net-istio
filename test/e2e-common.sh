@@ -17,6 +17,21 @@
 # This script includes common functions for testing setup and teardown.
 source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/e2e-tests.sh
 
+# Default to Istio 'stable' version.
+ISTIO_VERSION="stable"
+
+# Parse our custom flags.
+function parse_flags() {
+  case "$1" in
+    --istio-version)
+      readonly ISTIO_VERSION=$2
+      readonly INGRESS_CLASS="istio.ingress.networking.knative.dev"
+      return 2
+      ;;
+  esac
+  return 0
+}
+
 # Setup resources.
 function test_setup() {
   echo ">> Setting up logging..."
@@ -39,10 +54,11 @@ function test_setup() {
   # Bringing up controllers.
   echo ">> Bringing up Istio"
   echo ">> Running Istio CRD installer"
-  kubectl apply -f third_party/istio-latest/istio-crds.yaml || return 1
+  local istio_dir=third_party/istio-${ISTIO_VERSION}
+  kubectl apply -f ${istio_dir}/istio-crds.yaml || return 1
   wait_until_batch_job_complete istio-system || return 1
   echo ">> Running Istio"
-  kubectl apply -f third_party/istio-latest/istio-ci-no-mesh.yaml || return 1
+  kubectl apply -f ${istio_dir}/istio-ci-no-mesh.yaml || return 1
   echo ">> Bringing up net-istio Ingress Controller"
   ko apply -f config/ || return 1
 
