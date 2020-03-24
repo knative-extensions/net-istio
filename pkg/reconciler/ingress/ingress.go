@@ -28,7 +28,7 @@ import (
 
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/tracker"
-	istiolisters "knative.dev/serving/pkg/client/istio/listers/networking/v1alpha3"
+	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
 
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
@@ -49,7 +49,7 @@ import (
 	coreaccessor "knative.dev/net-istio/pkg/reconciler/accessor/core"
 	istioaccessor "knative.dev/net-istio/pkg/reconciler/accessor/istio"
 	ingressreconciler "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
-	istioclientset "knative.dev/serving/pkg/client/istio/clientset/versioned"
+	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
 )
 
 const (

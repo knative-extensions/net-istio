@@ -195,7 +195,7 @@
   version = "v1.3.2"
 
 [[projects]]
-  digest = "1:010d46ea3c1e730897e53058d1013a963f3f987675dda87df64f891b945281db"
+  digest = "1:f0ae868d945753df81e797524bb7f3c577bcf751ce515c18162d259ca3ff8de7"
   name = "github.com/google/go-cmp"
   packages = [
     "cmp",
@@ -206,14 +206,15 @@
     "cmp/internal/value",
   ]
   pruneopts = "NUT"
-  revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
+  revision = "5a6f75716e1203a923a78c9efb94089d857df0f6"
+  version = "v0.4.0"
 
 [[projects]]
   digest = "1:ecc8bd577aaaa8ce2c3ad060e61e1daeadbab1d14a0934f019ad2995c3a666b0"
   name = "github.com/google/go-containerregistry"
   packages = ["pkg/name"]
   pruneopts = "NUT"
-  revision = "ba53fa10e72c7373ef8068e21c9f102f0c20a940"
+  revision = "955bf358a3d8d1ebfa6204338ef3fe364255cd85"
 
 [[projects]]
   digest = "1:3ec6c8e4b700377066dbb5ab3155c55f97109ab6147fee9423a68506d79bbafa"
@@ -304,21 +305,6 @@
   pruneopts = "NUT"
   revision = "7c29201646fa3de8506f701213473dd407f19646"
   version = "v0.3.7"
-
-[[projects]]
-  digest = "1:1e59759b895f57302df03c5632dc6bbedcdf6782a2b6259246ff653dd214ac45"
-  name = "github.com/jetstack/cert-manager"
-  packages = [
-    "pkg/apis/acme",
-    "pkg/apis/acme/v1alpha2",
-    "pkg/apis/certmanager",
-    "pkg/apis/certmanager/v1alpha2",
-    "pkg/apis/meta",
-    "pkg/apis/meta/v1",
-  ]
-  pruneopts = "NUT"
-  revision = "0e384f5d0d2afd8bb9caf10b165aa80c2d3fbd7e"
-  version = "v0.12.0"
 
 [[projects]]
   digest = "1:1f2aebae7e7c856562355ec0198d8ca2fa222fb05e5b1b66632a1fce39631885"
@@ -635,6 +621,17 @@
   revision = "7ca132754999accbaa5c1735eda29e7ce0f3bf03"
 
 [[projects]]
+  branch = "master"
+  digest = "1:325a1b73817aa79fc85f10376ed41ea607f7dd7f6c6bfa46df6a28ef2857941f"
+  name = "golang.org/x/xerrors"
+  packages = [
+    ".",
+    "internal",
+  ]
+  pruneopts = "NUT"
+  revision = "9bdfabe68543c54f90421aeb9a60ef8061b5b544"
+
+[[projects]]
   digest = "1:79c5b7c79609e7e2d0c5a6509cc5894bb8ee9c2ca6e741214f8aa4317beeea59"
   name = "gomodules.xyz/jsonpatch"
   packages = ["v2"]
@@ -899,13 +896,12 @@
   version = "kubernetes-1.16.4"
 
 [[projects]]
-  digest = "1:1fb85b8e92f6f47ca0543bfa10df14c2a7a47e2aa4f1d155f1fad0fac3523f09"
+  digest = "1:bc3b442d5bf174f7c4bd5d9bb2a1a6efdeaa2edda7d4c278314c4785b7426455"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
     "discovery/fake",
     "dynamic",
-    "dynamic/fake",
     "informers",
     "informers/admissionregistration",
     "informers/admissionregistration/v1",
@@ -1187,26 +1183,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1b7acca267c36b27fe00fcaa37547b12f8c29592cea8f738cf8cd093a7afa59d"
-  name = "knative.dev/caching"
-  packages = [
-    "pkg/apis/caching",
-    "pkg/apis/caching/v1alpha1",
-    "pkg/client/clientset/versioned",
-    "pkg/client/clientset/versioned/fake",
-    "pkg/client/clientset/versioned/scheme",
-    "pkg/client/clientset/versioned/typed/caching/v1alpha1",
-    "pkg/client/clientset/versioned/typed/caching/v1alpha1/fake",
-    "pkg/client/injection/client",
-    "pkg/client/injection/client/fake",
-    "pkg/client/listers/caching/v1alpha1",
-  ]
-  pruneopts = "NUT"
-  revision = "6acd3ce6bd9f31ca759439b97a7e24a112bbc29c"
-
-[[projects]]
-  branch = "master"
-  digest = "1:1f5f6634308701e44054d1671e3c6ddbae3d0f5279300755f8dae6387bc83405"
+  digest = "1:7912249df5f43ca10fa1c3f8a3febdc3c0f7b320698787fa73c9fb1920a832d6"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1237,8 +1214,8 @@
     "configmap/testing",
     "controller",
     "injection",
-    "injection/clients/dynamicclient",
-    "injection/clients/dynamicclient/fake",
+    "injection/clients/namespacedkube/informers/core/v1/secret",
+    "injection/clients/namespacedkube/informers/factory",
     "injection/sharedmain",
     "kmeta",
     "kmp",
@@ -1275,11 +1252,11 @@
     "webhook/resourcesemantics/defaulting",
   ]
   pruneopts = "T"
-  revision = "00f0de3a183efe88ed578a8e7d4a2db8fb7b121b"
+  revision = "0840da9555a3a75f801abc1d654fb00dfe9a687a"
 
 [[projects]]
   branch = "master"
-  digest = "1:bf3ce7f79cfa2319385cffffd0a6dfbeab657b0ddbf6ab9fbd10334a40ef6e56"
+  digest = "1:ff42f05ceab09a0df281dc39f5959eccd4654b950205ad39ae6a89f3469cae6f"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1292,17 +1269,6 @@
     "pkg/apis/serving/v1alpha1",
     "pkg/apis/serving/v1beta1",
     "pkg/autoscaler/config",
-    "pkg/client/certmanager/clientset/versioned",
-    "pkg/client/certmanager/clientset/versioned/fake",
-    "pkg/client/certmanager/clientset/versioned/scheme",
-    "pkg/client/certmanager/clientset/versioned/typed/acme/v1alpha2",
-    "pkg/client/certmanager/clientset/versioned/typed/acme/v1alpha2/fake",
-    "pkg/client/certmanager/clientset/versioned/typed/certmanager/v1alpha2",
-    "pkg/client/certmanager/clientset/versioned/typed/certmanager/v1alpha2/fake",
-    "pkg/client/certmanager/injection/client",
-    "pkg/client/certmanager/injection/client/fake",
-    "pkg/client/certmanager/listers/acme/v1alpha2",
-    "pkg/client/certmanager/listers/certmanager/v1alpha2",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/fake",
     "pkg/client/clientset/versioned/scheme",
@@ -1336,23 +1302,8 @@
     "pkg/client/injection/informers/networking/v1alpha1/ingress/fake",
     "pkg/client/injection/reconciler/networking/v1alpha1/ingress",
     "pkg/client/istio/clientset/versioned",
-    "pkg/client/istio/clientset/versioned/fake",
     "pkg/client/istio/clientset/versioned/scheme",
     "pkg/client/istio/clientset/versioned/typed/networking/v1alpha3",
-    "pkg/client/istio/clientset/versioned/typed/networking/v1alpha3/fake",
-    "pkg/client/istio/informers/externalversions",
-    "pkg/client/istio/informers/externalversions/internalinterfaces",
-    "pkg/client/istio/informers/externalversions/networking",
-    "pkg/client/istio/informers/externalversions/networking/v1alpha3",
-    "pkg/client/istio/injection/client",
-    "pkg/client/istio/injection/client/fake",
-    "pkg/client/istio/injection/informers/factory",
-    "pkg/client/istio/injection/informers/factory/fake",
-    "pkg/client/istio/injection/informers/networking/v1alpha3/gateway",
-    "pkg/client/istio/injection/informers/networking/v1alpha3/gateway/fake",
-    "pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice",
-    "pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice/fake",
-    "pkg/client/istio/listers/networking/v1alpha3",
     "pkg/client/listers/autoscaling/v1alpha1",
     "pkg/client/listers/networking/v1alpha1",
     "pkg/client/listers/serving/v1",
@@ -1369,7 +1320,6 @@
     "pkg/reconciler/route/resources/labels",
     "pkg/reconciler/route/resources/names",
     "pkg/reconciler/service/resources/names",
-    "pkg/reconciler/testing/v1",
     "pkg/testing/v1alpha1",
     "test",
     "test/conformance/ingress",
@@ -1386,18 +1336,18 @@
     "test/v1alpha1",
   ]
   pruneopts = "U"
-  revision = "fa25711825a83f6f3cd928c201b63ccd4ad3e90d"
+  revision = "ce10070bb7ef12eefc20abcb01b14d8910692336"
 
 [[projects]]
   branch = "master"
-  digest = "1:3d0c703375017dde28d1ee030d7f82ea838ab023841890ead18e91c8c9aded80"
+  digest = "1:b86423d5da68ffa9c7b91e809f2b62972c61af0adfc74971b6eeeb9285ad142a"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "7a8eea898f66fc7cd5fec6bb7c0fa2a80eeb702e"
+  revision = "d81c66eea4e627ad7ad7ae578c03f317307b1246"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
@@ -1429,6 +1379,7 @@
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/runtime/serializer",
     "k8s.io/apimachinery/pkg/types",
+    "k8s.io/apimachinery/pkg/util/errors",
     "k8s.io/apimachinery/pkg/util/intstr",
     "k8s.io/apimachinery/pkg/util/runtime",
     "k8s.io/apimachinery/pkg/util/sets",
@@ -1444,6 +1395,7 @@
     "k8s.io/client-go/rest",
     "k8s.io/client-go/testing",
     "k8s.io/client-go/tools/cache",
+    "k8s.io/client-go/tools/record",
     "k8s.io/client-go/util/flowcontrol",
     "k8s.io/code-generator/cmd/client-gen",
     "k8s.io/code-generator/cmd/deepcopy-gen",
@@ -1466,6 +1418,7 @@
     "knative.dev/pkg/configmap",
     "knative.dev/pkg/configmap/testing",
     "knative.dev/pkg/controller",
+    "knative.dev/pkg/injection",
     "knative.dev/pkg/injection/sharedmain",
     "knative.dev/pkg/kmeta",
     "knative.dev/pkg/logging",
@@ -1491,27 +1444,17 @@
     "knative.dev/serving/pkg/apis/networking/v1alpha1",
     "knative.dev/serving/pkg/apis/serving",
     "knative.dev/serving/pkg/client/clientset/versioned",
+    "knative.dev/serving/pkg/client/clientset/versioned/fake",
     "knative.dev/serving/pkg/client/injection/client/fake",
     "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/certificate/fake",
     "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress",
     "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress/fake",
     "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress",
-    "knative.dev/serving/pkg/client/istio/clientset/versioned",
-    "knative.dev/serving/pkg/client/istio/clientset/versioned/fake",
-    "knative.dev/serving/pkg/client/istio/informers/externalversions",
-    "knative.dev/serving/pkg/client/istio/injection/client",
-    "knative.dev/serving/pkg/client/istio/injection/client/fake",
-    "knative.dev/serving/pkg/client/istio/injection/informers/networking/v1alpha3/gateway",
-    "knative.dev/serving/pkg/client/istio/injection/informers/networking/v1alpha3/gateway/fake",
-    "knative.dev/serving/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice",
-    "knative.dev/serving/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice/fake",
-    "knative.dev/serving/pkg/client/istio/listers/networking/v1alpha3",
     "knative.dev/serving/pkg/client/listers/networking/v1alpha1",
     "knative.dev/serving/pkg/network",
     "knative.dev/serving/pkg/network/ingress",
     "knative.dev/serving/pkg/network/status",
     "knative.dev/serving/pkg/reconciler",
-    "knative.dev/serving/pkg/reconciler/testing/v1",
     "knative.dev/serving/test",
     "knative.dev/serving/test/conformance/ingress",
     "knative.dev/serving/test/e2e",
