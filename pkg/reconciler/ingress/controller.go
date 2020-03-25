@@ -19,6 +19,9 @@ package ingress
 import (
 	"context"
 
+	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
+	gatewayinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/gateway"
+	virtualserviceinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	endpointsinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
@@ -34,9 +37,6 @@ import (
 	"knative.dev/serving/pkg/apis/networking/v1alpha1"
 	ingressinformer "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress"
 	ingressreconciler "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
-	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
-	gatewayinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/gateway"
-	virtualserviceinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice"
 	"knative.dev/serving/pkg/network"
 	"knative.dev/serving/pkg/network/status"
 	servingreconciler "knative.dev/serving/pkg/reconciler"
