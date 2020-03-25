@@ -26,9 +26,9 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 
+	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/tracker"
-	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
 
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
@@ -45,11 +45,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
 	corev1listers "k8s.io/client-go/listers/core/v1"
+	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
 	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
 	coreaccessor "knative.dev/net-istio/pkg/reconciler/accessor/core"
 	istioaccessor "knative.dev/net-istio/pkg/reconciler/accessor/istio"
 	ingressreconciler "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
-	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
 )
 
 const (
