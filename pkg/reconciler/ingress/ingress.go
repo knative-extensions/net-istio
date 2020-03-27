@@ -97,7 +97,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ingress *v1alpha1.Ingres
 
 	reconcileErr := r.reconcileIngress(ctx, ingress)
 	if reconcileErr != nil {
-		logger.Errorf("Failed to reconcile Ingress %s", ingress.Name, reconcileErr)
+		logger.Errorf("Failed to reconcile Ingress %s: %v", ingress.Name, reconcileErr)
 		ingress.Status.MarkIngressNotReady(notReconciledReason, notReconciledMessage)
 		return reconcileErr
 	}
