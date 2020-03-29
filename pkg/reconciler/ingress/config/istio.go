@@ -88,7 +88,7 @@ func parseGateways(configMap *corev1.ConfigMap, prefix string) ([]Gateway, error
 			continue
 		}
 		gatewayName, serviceURL := k[len(prefix):], v
-		if errs := validation.IsDNS1123Subdomain(serviceURL); len(errs) > 0 {
+		if errs := validation.IsDNS1123Subdomain(strings.TrimSuffix(serviceURL, ".")); len(errs) > 0 {
 			return nil, fmt.Errorf("invalid gateway format: %v", errs)
 		}
 		gatewayNames = append(gatewayNames, gatewayName)
