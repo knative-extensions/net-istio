@@ -104,6 +104,26 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 	}, {
+		name:    "gateway configuration with valid url having a dot at the end",
+		wantErr: false,
+		wantIstio: &Istio{
+			IngressGateways: []Gateway{{
+				Namespace:  "knative-testing",
+				Name:       "knative-ingress-freeway",
+				ServiceURL: "istio-ingressfreeway.istio-system.svc.cluster.local.",
+			}},
+			LocalGateways: defaultLocalGateways(),
+		},
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"gateway.knative-ingress-freeway": "istio-ingressfreeway.istio-system.svc.cluster.local.",
+			},
+		},
+	}, {
 		name:    "gateway configuration in custom namespace with valid url",
 		wantErr: false,
 		wantIstio: &Istio{
