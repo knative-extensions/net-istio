@@ -30,13 +30,9 @@ import (
 
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
-	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	fakeserviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
-	"knative.dev/pkg/kmeta"
-	rtesting "knative.dev/pkg/reconciler/testing"
 	"knative.dev/pkg/system"
-	"knative.dev/serving/pkg/apis/networking"
 	"knative.dev/serving/pkg/apis/networking/v1alpha1"
 	"knative.dev/serving/pkg/network"
 )
@@ -528,152 +524,6 @@ func TestUpdateGateway(t *testing.T) {
 			g := UpdateGateway(&c.original, c.newServers, c.existingServers)
 			if diff := cmp.Diff(&c.expected, g); diff != "" {
 				t.Errorf("Unexpected gateway (-want, +got): %v", diff)
-			}
-		})
-	}
-}
-
-func TestMakeIngressGateways(t *testing.T) {
-	cases := []struct {
-		name           string
-		ia             *v1alpha1.Ingress
-		originSecrets  map[string]*corev1.Secret
-		gatewayService *corev1.Service
-		want           []*v1alpha3.Gateway
-		wantErr        bool
-	}{{
-		name:          "happy path: secret namespace is the different from the gateway service namespace",
-		ia:            &ingressResource,
-		originSecrets: originSecrets,
-		gatewayService: &corev1.Service{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "istio-ingressgateway",
-				Namespace: "istio-system",
-			},
-			Spec: corev1.ServiceSpec{
-				Selector: selector,
-			},
-		},
-		want: []*v1alpha3.Gateway{{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:            fmt.Sprintf("ingress-%d", adler32.Checksum([]byte("istio-system/istio-ingressgateway"))),
-				Namespace:       "test-ns",
-				OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(&ingressResource)},
-				Labels: map[string]string{
-					networking.IngressLabelKey: "ingress",
-				},
-			},
-			Spec: istiov1alpha3.Gateway{
-				Selector: selector,
-				Servers: []*istiov1alpha3.Server{{
-					Hosts: []string{"host1.example.com"},
-					Port: &istiov1alpha3.Port{
-						Name:     "test-ns/ingress:0",
-						Number:   443,
-						Protocol: "HTTPS",
-					},
-					Tls: &istiov1alpha3.Server_TLSOptions{
-						Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
-						ServerCertificate: corev1.TLSCertKey,
-						PrivateKey:        corev1.TLSPrivateKeyKey,
-						CredentialName:    targetSecret(&secret, &ingressResource),
-					},
-				}, {
-					Hosts: []string{"host1.example.com"},
-					Port: &istiov1alpha3.Port{
-						Name:     httpServerPortName,
-						Number:   80,
-						Protocol: "HTTP",
-					},
-				}},
-			},
-		}},
-	}, {
-		name:          "happy path: secret namespace is the same as the gateway service namespace",
-		ia:            &ingressResource,
-		originSecrets: originSecrets,
-		// The namespace of gateway service is the same as the secrets.
-		gatewayService: &corev1.Service{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "istio-ingressgateway",
-				Namespace: system.Namespace(),
-			},
-			Spec: corev1.ServiceSpec{
-				Selector: selector,
-			},
-		},
-		want: []*v1alpha3.Gateway{{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:            fmt.Sprintf("ingress-%d", adler32.Checksum([]byte(system.Namespace()+"/istio-ingressgateway"))),
-				Namespace:       "test-ns",
-				OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(&ingressResource)},
-				Labels: map[string]string{
-					networking.IngressLabelKey: "ingress",
-				},
-			},
-			Spec: istiov1alpha3.Gateway{
-				Selector: selector,
-				Servers: []*istiov1alpha3.Server{{
-					Hosts: []string{"host1.example.com"},
-					Port: &istiov1alpha3.Port{
-						Name:     "test-ns/ingress:0",
-						Number:   443,
-						Protocol: "HTTPS",
-					},
-					Tls: &istiov1alpha3.Server_TLSOptions{
-						Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
-						ServerCertificate: corev1.TLSCertKey,
-						PrivateKey:        corev1.TLSPrivateKeyKey,
-						CredentialName:    secret.Name,
-					},
-				}, {
-					Hosts: []string{"host1.example.com"},
-					Port: &istiov1alpha3.Port{
-						Name:     httpServerPortName,
-						Number:   80,
-						Protocol: "HTTP",
-					},
-				}},
-			},
-		}},
-	}, {
-		name:          "error to make gateway because of incorrect originSecrets",
-		ia:            &ingressResource,
-		originSecrets: map[string]*corev1.Secret{},
-		gatewayService: &corev1.Service{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "istio-ingressgateway",
-				Namespace: "istio-system",
-			},
-			Spec: corev1.ServiceSpec{
-				Selector: selector,
-			},
-		},
-		wantErr: true,
-	}}
-
-	for _, c := range cases {
-		ctx, cancel, _ := rtesting.SetupFakeContextWithCancel(t)
-		defer cancel()
-		svcLister := serviceLister(ctx, c.gatewayService)
-		ctx = config.ToContext(context.Background(), &config.Config{
-			Istio: &config.Istio{
-				IngressGateways: []config.Gateway{{
-					Name:       networking.KnativeIngressGateway,
-					ServiceURL: fmt.Sprintf("%s.%s.svc.cluster.local", c.gatewayService.Name, c.gatewayService.Namespace),
-				}},
-			},
-			Network: &network.Config{
-				HTTPProtocol: network.HTTPEnabled,
-			},
-		})
-		t.Run(c.name, func(t *testing.T) {
-			got, err := MakeIngressGateways(ctx, c.ia, c.originSecrets, svcLister)
-			if (err != nil) != c.wantErr {
-				t.Fatalf("Test: %s; MakeIngressGateways error = %v, WantErr %v", c.name, err, c.wantErr)
-			}
-			if diff := cmp.Diff(c.want, got); diff != "" {
-				t.Errorf("Unexpected Gateways (-want, +got): %v", diff)
 			}
 		})
 	}

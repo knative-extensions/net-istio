@@ -29,11 +29,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
-	corev1listers "k8s.io/client-go/listers/core/v1"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/pkg/kmeta"
-	"knative.dev/pkg/system"
-	"knative.dev/serving/pkg/apis/networking"
 	"knative.dev/serving/pkg/apis/networking/v1alpha1"
 	"knative.dev/serving/pkg/network"
 )
@@ -89,70 +86,6 @@ func SortServers(servers []*istiov1alpha3.Server) []*istiov1alpha3.Server {
 		return strings.Compare(servers[i].Port.Name, servers[j].Port.Name) < 0
 	})
 	return servers
-}
-
-// MakeIngressGateways creates Gateways for a given Ingress.
-func MakeIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, originSecrets map[string]*corev1.Secret, svcLister corev1listers.ServiceLister) ([]*v1alpha3.Gateway, error) {
-	gatewayServices, err := getGatewayServices(ctx, svcLister)
-	if err != nil {
-		return nil, err
-	}
-	gateways := make([]*v1alpha3.Gateway, len(gatewayServices))
-	for i, gatewayService := range gatewayServices {
-		gateway, err := makeIngressGateway(ctx, ing, originSecrets, gatewayService.Spec.Selector, gatewayService)
-		if err != nil {
-			return nil, err
-		}
-		gateways[i] = gateway
-	}
-	return gateways, nil
-}
-
-func makeIngressGateway(ctx context.Context, ing *v1alpha1.Ingress, originSecrets map[string]*corev1.Secret, selector map[string]string, gatewayService *corev1.Service) (*v1alpha3.Gateway, error) {
-	ns := ing.GetNamespace()
-	if len(ns) == 0 {
-		ns = system.Namespace()
-	}
-	servers, err := MakeTLSServers(ing, gatewayService.Namespace, originSecrets)
-	if err != nil {
-		return nil, err
-	}
-	hosts := sets.String{}
-	for _, rule := range ing.Spec.Rules {
-		hosts.Insert(rule.Hosts...)
-	}
-	servers = append(servers, MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, hosts.List()))
-	return &v1alpha3.Gateway{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:            GatewayName(ing, gatewayService),
-			Namespace:       ns,
-			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
-			Labels: map[string]string{
-				// We need this label to find out all of Gateways of a given Ingress.
-				networking.IngressLabelKey: ing.GetName(),
-			},
-		},
-		Spec: istiov1alpha3.Gateway{
-			Selector: selector,
-			Servers:  servers,
-		},
-	}, nil
-}
-
-func getGatewayServices(ctx context.Context, svcLister corev1listers.ServiceLister) ([]*corev1.Service, error) {
-	ingressSvcMetas, err := GetIngressGatewaySvcNameNamespaces(ctx)
-	if err != nil {
-		return nil, err
-	}
-	services := make([]*corev1.Service, len(ingressSvcMetas))
-	for i, ingressSvcMeta := range ingressSvcMetas {
-		svc, err := svcLister.Services(ingressSvcMeta.Namespace).Get(ingressSvcMeta.Name)
-		if err != nil {
-			return nil, err
-		}
-		services[i] = svc
-	}
-	return services, nil
 }
 
 // GatewayName create a name for the Gateway that is built based on the given Ingress and bonds to the
