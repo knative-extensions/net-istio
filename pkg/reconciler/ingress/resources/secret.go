@@ -70,13 +70,15 @@ func MakeSecrets(ctx context.Context, originSecrets map[string]*corev1.Secret, a
 	return secrets, nil
 }
 
-func MakeWildcardSecrets(ctx context.Context, wildcardSecrets map[string]*corev1.Secret) ([]*corev1.Secret, error) {
+// MakeWildcardSecrets copies wildcard certificates from origin namespace to the namespace of gateway servicess so they could
+// consumed by Istio ingress.
+func MakeWildcardSecrets(ctx context.Context, originWildcardCerts map[string]*corev1.Secret) ([]*corev1.Secret, error) {
 	nameNamespaces, err := GetIngressGatewaySvcNameNamespaces(ctx)
 	if err != nil {
 		return nil, err
 	}
 	secrets := []*corev1.Secret{}
-	for _, secret := range wildcardSecrets {
+	for _, secret := range originWildcardCerts {
 		for _, meta := range nameNamespaces {
 			if meta.Namespace == secret.Namespace {
 				// no need to copy secret when the target namespace is the same

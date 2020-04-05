@@ -193,6 +193,75 @@ func TestMakeSecrets(t *testing.T) {
 	}
 }
 
+func TestMakeWildcardSecrets(t *testing.T) {
+	ctx := TestContextWithLogger(t)
+	ctx = config.ToContext(ctx, &config.Config{
+		Istio: &config.Istio{
+			IngressGateways: []config.Gateway{{
+				Name: "test-gateway",
+				// The namespace of Istio gateway service is istio-system.
+				ServiceURL: "istio-ingressgateway.istio-system.svc.cluster.local",
+			}},
+		},
+	})
+
+	cases := []struct {
+		name         string
+		originSecret *corev1.Secret
+		expected     []*corev1.Secret
+		wantErr      bool
+	}{{
+		name: "target secret namespace (istio-system) is the same as the origin secret namespace (istio-system).",
+		originSecret: &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-secret",
+				Namespace: "istio-system",
+				UID:       "1234",
+			},
+			Data: map[string][]byte{
+				"test-data": []byte("abcd"),
+			}},
+		expected: []*corev1.Secret{},
+	}, {
+		name: "target secret namespace (istio-system) is different from the origin secret namespace (knative-serving).",
+		originSecret: &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-secret",
+				Namespace: "knative-serving",
+				UID:       "1234",
+			},
+			Data: map[string][]byte{
+				"test-data": []byte("abcd"),
+			}},
+		expected: []*corev1.Secret{{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-secret",
+				// Expected secret should be in istio-system which is
+				// the ns of Istio gateway service.
+				Namespace: "istio-system",
+				Labels:    map[string]string{},
+			},
+			Data: map[string][]byte{
+				"test-data": []byte("abcd"),
+			},
+		}},
+	}}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			originSecrets := map[string]*corev1.Secret{
+				fmt.Sprintf("%s/%s", c.originSecret.Namespace, c.originSecret.Name): c.originSecret,
+			}
+			secrets, err := MakeWildcardSecrets(ctx, originSecrets)
+			if (err != nil) != c.wantErr {
+				t.Fatalf("Test: %q; MakeWildcardSecrets() error = %v, WantErr %v", c.name, err, c.wantErr)
+			}
+			if diff := cmp.Diff(c.expected, secrets); diff != "" {
+				t.Errorf("Unexpected secrets (-want, +got): %v", diff)
+			}
+		})
+	}
+}
+
 func TestCategorizeSecrets(t *testing.T) {
 	cases := []struct {
 		name            string
