@@ -17,8 +17,17 @@ limitations under the License.
 package resources
 
 import (
+	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"fmt"
+	"math/big"
+	"net"
 	"testing"
+	"time"
 
 	"knative.dev/pkg/system"
 
@@ -33,29 +42,34 @@ import (
 	"knative.dev/serving/pkg/apis/networking/v1alpha1"
 )
 
-var testSecret = corev1.Secret{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "secret0",
-		Namespace: "knative-serving",
-	},
-	Data: map[string][]byte{
-		"test": []byte("abcd"),
-	},
-}
+var (
+	testSecret = corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "secret0",
+			Namespace: "knative-serving",
+		},
+		Data: map[string][]byte{
+			"test": []byte("abcd"),
+		},
+	}
 
-var ci = v1alpha1.Ingress{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "ingress",
-		Namespace: system.Namespace(),
-	},
-	Spec: v1alpha1.IngressSpec{
-		TLS: []v1alpha1.IngressTLS{{
-			Hosts:           []string{"example.com"},
-			SecretName:      "secret0",
-			SecretNamespace: "knative-serving",
-		}},
-	},
-}
+	ci = v1alpha1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "ingress",
+			Namespace: system.Namespace(),
+		},
+		Spec: v1alpha1.IngressSpec{
+			TLS: []v1alpha1.IngressTLS{{
+				Hosts:           []string{"example.com"},
+				SecretName:      "secret0",
+				SecretNamespace: "knative-serving",
+			}},
+		},
+	}
+
+	wildcardCert, _    = generateCertificate("*.example.com", "wildcard")
+	nonWildcardCert, _ = generateCertificate("test.example.com", "nonWildcard")
+)
 
 func TestGetSecrets(t *testing.T) {
 	kubeClient := fakek8s.NewSimpleClientset()
@@ -177,4 +191,137 @@ func TestMakeSecrets(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCategorizeSecrets(t *testing.T) {
+	cases := []struct {
+		name            string
+		secrets         map[string]*corev1.Secret
+		wantNonWildcard map[string]*corev1.Secret
+		wantWildcard    map[string]*corev1.Secret
+		wantErr         bool
+	}{{
+		name: "work correctly",
+		secrets: map[string]*corev1.Secret{
+			"wildcard":    wildcardCert,
+			"nonwildcard": nonWildcardCert,
+		},
+		wantNonWildcard: map[string]*corev1.Secret{
+			"nonwildcard": nonWildcardCert,
+		},
+		wantWildcard: map[string]*corev1.Secret{
+			"wildcard": wildcardCert,
+		},
+	}, {
+		name: "invalid secret",
+		secrets: map[string]*corev1.Secret{
+			"invalidSecret": &testSecret,
+		},
+		wantErr: true,
+	}}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			gotNonWildcard, gotWildcard, err := CategorizeSecrets(c.secrets)
+			if gotErr := (err != nil); c.wantErr != gotErr {
+				t.Fatalf("Test: %q; CategorizeSecrets() error = %v, WantErr %v", c.name, err, c.wantErr)
+			}
+			if diff := cmp.Diff(c.wantNonWildcard, gotNonWildcard); diff != "" {
+				t.Fatalf("Unexpected non-wildcard secrets (-want, +got): %s", diff)
+			}
+			if diff := cmp.Diff(c.wantWildcard, gotWildcard); diff != "" {
+				t.Fatalf("Unexpected wildcard secrets (-want, +got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestGetHostsFromCertSecret(t *testing.T) {
+	cases := []struct {
+		name      string
+		secret    *corev1.Secret
+		wantHosts []string
+		wantErr   bool
+	}{{
+		name:      "wildcard host",
+		secret:    wildcardCert,
+		wantHosts: []string{"*.example.com"},
+	}, {
+		name:      "non-wildcard host",
+		secret:    nonWildcardCert,
+		wantHosts: []string{"test.example.com"},
+	}, {
+		name:    "invalid cert",
+		secret:  &testSecret,
+		wantErr: true,
+	}}
+	for _, c := range cases {
+		hosts, err := GetHostsFromCertSecret(c.secret)
+		if gotErr := (err != nil); c.wantErr != gotErr {
+			t.Fatalf("Test: %q; GetHostsFromCertSecret() error = %v, WantErr %v", c.name, err, c.wantErr)
+		}
+		if diff := cmp.Diff(c.wantHosts, hosts); diff != "" {
+			t.Fatalf("Unexpected hosts (-want, +got): %s", diff)
+		}
+	}
+}
+
+func generateCertificate(host string, secretName string) (*corev1.Secret, error) {
+	priv, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate private key: %v", err)
+	}
+
+	notBefore := time.Now().Add(-5 * time.Minute)
+	notAfter := notBefore.Add(2 * time.Hour)
+
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate serial number: %v", err)
+	}
+
+	template := x509.Certificate{
+		SerialNumber: serialNumber,
+		Subject: pkix.Name{
+			Organization: []string{"Knative Serving"},
+		},
+		NotBefore: notBefore,
+		NotAfter:  notAfter,
+
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+	}
+
+	if ip := net.ParseIP(host); ip != nil {
+		template.IPAddresses = append(template.IPAddresses, ip)
+	} else {
+		template.DNSNames = append(template.DNSNames, host)
+	}
+
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create the certificate: %v", err)
+	}
+
+	var certBuf bytes.Buffer
+	if err := pem.Encode(&certBuf, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
+		return nil, fmt.Errorf("failed to encode the certificate: %v", err)
+	}
+
+	var keyBuf bytes.Buffer
+	if err := pem.Encode(&keyBuf, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)}); err != nil {
+		return nil, fmt.Errorf("failed to encode the private key: %v", err)
+	}
+
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: secretName,
+		},
+		Data: map[string][]byte{
+			corev1.TLSCertKey:       certBuf.Bytes(),
+			corev1.TLSPrivateKeyKey: keyBuf.Bytes(),
+		},
+	}, nil
 }
