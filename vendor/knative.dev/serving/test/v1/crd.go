@@ -14,14 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package test
+package v1
 
 import (
-	"os"
-
-	"knative.dev/pkg/system"
+	"github.com/davecgh/go-spew/spew"
+	pkgTest "knative.dev/pkg/test"
+	v1 "knative.dev/serving/pkg/apis/serving/v1"
 )
 
-func init() {
-	os.Setenv(system.NamespaceEnvKey, "knative-serving")
+// ResourceObjects holds types of the resource objects.
+type ResourceObjects struct {
+	Route    *v1.Route
+	Config   *v1.Configuration
+	Service  *v1.Service
+	Revision *v1.Revision
+}
+
+// LogResourceObject logs the resource object with the resource name and value
+func LogResourceObject(t pkgTest.T, value ResourceObjects) {
+	t.Log("", "resource", spew.Sprint(value))
 }
