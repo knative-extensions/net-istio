@@ -214,7 +214,7 @@
   name = "github.com/google/go-containerregistry"
   packages = ["pkg/name"]
   pruneopts = "NUT"
-  revision = "955bf358a3d8d1ebfa6204338ef3fe364255cd85"
+  revision = "3d03ed9b1ca2ad5d78d43832e8e46adc31d2b961"
 
 [[projects]]
   digest = "1:3ec6c8e4b700377066dbb5ab3155c55f97109ab6147fee9423a68506d79bbafa"
@@ -1182,8 +1182,8 @@
   revision = "5008bf6f8cd62f4b52816cfa99163fedb053d0be"
 
 [[projects]]
-  branch = "master"
-  digest = "1:7912249df5f43ca10fa1c3f8a3febdc3c0f7b320698787fa73c9fb1920a832d6"
+  branch = "release-0.14"
+  digest = "1:20ae66cd133413ed130ba9bd3b63143b87b103647971c2956410e5b109f0ae13"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1252,11 +1252,11 @@
     "webhook/resourcesemantics/defaulting",
   ]
   pruneopts = "T"
-  revision = "0840da9555a3a75f801abc1d654fb00dfe9a687a"
+  revision = "0c36abbff9e5ad06cbea50d55c0989485c236180"
 
 [[projects]]
   branch = "master"
-  digest = "1:ff42f05ceab09a0df281dc39f5959eccd4654b950205ad39ae6a89f3469cae6f"
+  digest = "1:981bc0d68438f382c17280c6bc7ec8886b541deff89e92f46c30fda0967bc797"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1320,6 +1320,7 @@
     "pkg/reconciler/route/resources/labels",
     "pkg/reconciler/route/resources/names",
     "pkg/reconciler/service/resources/names",
+    "pkg/testing/v1",
     "pkg/testing/v1alpha1",
     "test",
     "test/conformance/ingress",
@@ -1333,21 +1334,22 @@
     "test/test_images/timeout",
     "test/test_images/wsserver",
     "test/types",
+    "test/v1",
     "test/v1alpha1",
   ]
   pruneopts = "U"
-  revision = "ce10070bb7ef12eefc20abcb01b14d8910692336"
+  revision = "da0adb62305e8f0f7cf1c7c0e24293a2948cf7e6"
 
 [[projects]]
   branch = "master"
-  digest = "1:b86423d5da68ffa9c7b91e809f2b62972c61af0adfc74971b6eeeb9285ad142a"
+  digest = "1:50482e6fd500cf50c4a29d640cda026206145c6716dff72e4368a5e57fdb7095"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "d81c66eea4e627ad7ad7ae578c03f317307b1246"
+  revision = "9fa5882b65c5fe7e177bb74874e9a5ac87b84e98"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
