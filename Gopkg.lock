@@ -1341,7 +1341,7 @@
   revision = "f87352b72c48286f164838ddc6684c805ea082a9"
 
 [[projects]]
-  branch = "master"
+  branch = "release-0.14"
   digest = "1:50482e6fd500cf50c4a29d640cda026206145c6716dff72e4368a5e57fdb7095"
   name = "knative.dev/test-infra"
   packages = [
