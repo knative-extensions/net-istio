@@ -1183,7 +1183,7 @@
 
 [[projects]]
   branch = "release-0.14"
-  digest = "1:20ae66cd133413ed130ba9bd3b63143b87b103647971c2956410e5b109f0ae13"
+  digest = "1:f806eb7e5629d594362dc18905d092888b1d56fbfe026a597d25b86e846f2d53"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1252,11 +1252,11 @@
     "webhook/resourcesemantics/defaulting",
   ]
   pruneopts = "T"
-  revision = "0c36abbff9e5ad06cbea50d55c0989485c236180"
+  revision = "2a1db869228ceaca9df34790b49cdf4893a5d39d"
 
 [[projects]]
-  branch = "master"
-  digest = "1:981bc0d68438f382c17280c6bc7ec8886b541deff89e92f46c30fda0967bc797"
+  branch = "release-0.14"
+  digest = "1:9f503c04b1253ff9a61091004a0c7e35e17f460bd9cd918bd9e68552f1610dff"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1338,7 +1338,7 @@
     "test/v1alpha1",
   ]
   pruneopts = "U"
-  revision = "da0adb62305e8f0f7cf1c7c0e24293a2948cf7e6"
+  revision = "f87352b72c48286f164838ddc6684c805ea082a9"
 
 [[projects]]
   branch = "master"
