@@ -48,6 +48,10 @@ required = [
   branch = "release-0.14"
 
 [[override]]
+  name = "knative.dev/test-infra"
+  branch = "release-0.14"
+
+[[override]]
   name = "knative.dev/serving"
   branch = "release-0.14"
 
