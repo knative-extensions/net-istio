@@ -18,7 +18,10 @@ package resources
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -60,18 +63,40 @@ func MakeSecrets(ctx context.Context, originSecrets map[string]*corev1.Secret, a
 				// as the origin namespace
 				continue
 			}
-			secrets = append(secrets, makeSecret(originSecret, meta.Namespace, accessor))
+			secrets = append(secrets, makeSecret(originSecret, targetSecret(originSecret, accessor), meta.Namespace,
+				MakeTargetSecretLabels(originSecret.Name, originSecret.Namespace)))
 		}
 	}
 	return secrets, nil
 }
 
-func makeSecret(originSecret *corev1.Secret, targetNamespace string, accessor kmeta.OwnerRefableAccessor) *corev1.Secret {
+// MakeWildcardSecrets copies wildcard certificates from origin namespace to the namespace of gateway servicess so they could
+// consumed by Istio ingress.
+func MakeWildcardSecrets(ctx context.Context, originWildcardCerts map[string]*corev1.Secret) ([]*corev1.Secret, error) {
+	nameNamespaces, err := GetIngressGatewaySvcNameNamespaces(ctx)
+	if err != nil {
+		return nil, err
+	}
+	secrets := []*corev1.Secret{}
+	for _, secret := range originWildcardCerts {
+		for _, meta := range nameNamespaces {
+			if meta.Namespace == secret.Namespace {
+				// no need to copy secret when the target namespace is the same
+				// as the origin namespace
+				continue
+			}
+			secrets = append(secrets, makeSecret(secret, secret.Name, meta.Namespace, map[string]string{}))
+		}
+	}
+	return secrets, nil
+}
+
+func makeSecret(originSecret *corev1.Secret, name, namespace string, labels map[string]string) *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      targetSecret(originSecret, accessor),
-			Namespace: targetNamespace,
-			Labels:    MakeTargetSecretLabels(originSecret.Name, originSecret.Namespace),
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
 		},
 		Data: originSecret.Data,
 		Type: originSecret.Type,
@@ -106,4 +131,55 @@ func SecretRef(namespace, name string) corev1.ObjectReference {
 // Generates the k8s secret key with the given TLS.
 func secretKey(tls v1alpha1.IngressTLS) string {
 	return fmt.Sprintf("%s/%s", tls.SecretNamespace, tls.SecretName)
+}
+
+// CategorizeSecrets categorizes secrets into two sets: wildcard cert secrets and non-wildcard cert secrets.
+func CategorizeSecrets(secrets map[string]*corev1.Secret) (map[string]*corev1.Secret, map[string]*corev1.Secret, error) {
+	nonWildcardSecrets := map[string]*corev1.Secret{}
+	wildcardSecrets := map[string]*corev1.Secret{}
+	for k, secret := range secrets {
+		isWildcard, err := isWildcardSecret(secret)
+		if err != nil {
+			return nil, nil, err
+		}
+		if isWildcard {
+			wildcardSecrets[k] = secret
+		} else {
+			nonWildcardSecrets[k] = secret
+		}
+	}
+	return nonWildcardSecrets, wildcardSecrets, nil
+}
+
+func isWildcardSecret(secret *corev1.Secret) (bool, error) {
+	hosts, err := GetHostsFromCertSecret(secret)
+	if err != nil {
+		return false, err
+	}
+	return isWildcardHost(hosts[0])
+}
+
+func isWildcardHost(domain string) (bool, error) {
+	splits := strings.Split(domain, ".")
+	if len(splits) <= 1 {
+		return false, fmt.Errorf("incorrect domain format, got domain %s", domain)
+	}
+	return splits[0] == "*", nil
+}
+
+// GetHostsFromCertSecret gets cert hosts from cert secret.
+func GetHostsFromCertSecret(secret *corev1.Secret) ([]string, error) {
+	block, _ := pem.Decode(secret.Data[corev1.TLSCertKey])
+	if block == nil {
+		return nil, fmt.Errorf("failed to decode PEM data for secret %s/%s", secret.Namespace, secret.Name)
+	}
+
+	certData, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse certificate for secret %s/%s: %w", secret.Namespace, secret.Name, err)
+	}
+	if len(certData.DNSNames) == 0 {
+		return nil, fmt.Errorf("certificate should have DNS names, but it has %d", len(certData.DNSNames))
+	}
+	return certData.DNSNames, nil
 }
