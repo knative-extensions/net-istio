@@ -24,6 +24,7 @@ import (
 	"strconv"
 
 	"go.uber.org/zap"
+	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -139,6 +140,10 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) (
 			}
 			tURL.Scheme = "http"
 		case "HTTPS":
+			if server.GetTls().GetMode() == istiov1alpha3.Server_TLSOptions_MUTUAL {
+				l.logger.Infof("Skipping Server %q because HTTPS with TLS mode MUTUAL is not supported", server.Port.Name)
+				continue
+			}
 			tURL.Scheme = "https"
 		default:
 			l.logger.Infof("Skipping Server %q because protocol %q is not supported", server.Port.Name, server.Port.Protocol)
