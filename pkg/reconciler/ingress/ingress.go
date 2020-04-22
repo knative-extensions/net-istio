@@ -97,11 +97,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ingress *v1alpha1.Ingres
 
 	reconcileErr := r.reconcileIngress(ctx, ingress)
 	if reconcileErr != nil {
-		logger.Errorf("Failed to reconcile Ingress %s: %v", ingress.Name, reconcileErr)
+		logger.Errorf("Failed to reconcile Ingress: %v", reconcileErr)
 		ingress.Status.MarkIngressNotReady(notReconciledReason, notReconciledMessage)
 		return reconcileErr
 	}
-	return pkgreconciler.NewEvent(corev1.EventTypeNormal, "IngressTypeReconciled", "IngressType reconciled: \"%s/%s\"", ingress.Namespace, ingress.Name)
+	return pkgreconciler.NewEvent(corev1.EventTypeNormal, "IngressTypeReconciled", `IngressType reconciled: "%s/%s"`, ingress.Namespace, ingress.Name)
 }
 
 func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress) error {
@@ -123,7 +123,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	}
 
 	// First, create the VirtualServices.
-	logger.Infof("Creating/Updating VirtualServices")
+	logger.Info("Creating/Updating VirtualServices")
 	ing.Status.ObservedGeneration = ing.GetGeneration()
 	if err := r.reconcileVirtualServices(ctx, ing, vses); err != nil {
 		ing.Status.MarkLoadBalancerFailed(virtualServiceNotReconciled, err.Error())
@@ -254,7 +254,7 @@ func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1
 func (r *Reconciler) FinalizeKind(ctx context.Context, ing *v1alpha1.Ingress) pkgreconciler.Event {
 	logger := logging.FromContext(ctx)
 	istiocfg := config.FromContext(ctx).Istio
-	logger.Infof("Cleaning up Gateway Servers for Ingress %s", ing.GetName())
+	logger.Info("Cleaning up Gateway Servers")
 	for _, gws := range [][]config.Gateway{istiocfg.IngressGateways, istiocfg.LocalGateways} {
 		for _, gw := range gws {
 			if err := r.reconcileIngressServers(ctx, ing, gw, []*istiov1alpha3.Server{}); err != nil {
@@ -406,7 +406,7 @@ func privateGatewayServiceURLFromContext(ctx context.Context) string {
 	return ""
 }
 
-// getLBStatus get LB Status
+// getLBStatus gets the LB Status.
 func getLBStatus(gatewayServiceURL string) []v1alpha1.LoadBalancerIngressStatus {
 	// The Ingress isn't load-balanced by any particular
 	// Service, but through a Service mesh.
@@ -423,5 +423,5 @@ func getLBStatus(gatewayServiceURL string) []v1alpha1.LoadBalancerIngressStatus 
 func (r *Reconciler) shouldReconcileTLS(ing *v1alpha1.Ingress) bool {
 	// We should keep reconciling the Ingress whose TLS has been reconciled before
 	// to make sure deleting IngressTLS will clean up the TLS server in the Gateway.
-	return (ing.IsPublic() && len(ing.Spec.TLS) > 0)
+	return ing.IsPublic() && (len(ing.Spec.TLS) > 0)
 }
