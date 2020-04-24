@@ -610,7 +610,7 @@ func TestReconcile(t *testing.T) {
 						Name:      "reconcile-virtualservice",
 						Namespace: testNS,
 						Labels: map[string]string{
-							serving.RouteLabelKey: "reconcile-virtualservice",
+							serving.RouteLabelKey: "test-route",
 						},
 						Annotations:     map[string]string{networking.IngressClassAnnotationKey: network.IstioIngressClassName},
 						OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing("reconcile-virtualservice", 1234))},

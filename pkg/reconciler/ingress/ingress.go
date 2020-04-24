@@ -226,8 +226,8 @@ func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1
 
 	// Now, remove the extra ones.
 	selectors := map[string]string{
-		networking.IngressLabelKey: ing.GetName(), // VS created since 0.12
-		serving.RouteLabelKey:      ing.GetName(), // VS created before 0.12
+		networking.IngressLabelKey: ing.GetName(),                          // VS created from 0.12 on
+		serving.RouteLabelKey:      ing.GetLabels()[serving.RouteLabelKey], // VS created before 0.12
 	}
 	for k, v := range selectors {
 		vses, err := r.virtualServiceLister.VirtualServices(ing.GetNamespace()).List(
