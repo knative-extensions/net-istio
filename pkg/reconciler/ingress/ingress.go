@@ -34,6 +34,7 @@ import (
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
 	"knative.dev/serving/pkg/apis/networking"
 	"knative.dev/serving/pkg/apis/networking/v1alpha1"
+	"knative.dev/serving/pkg/apis/serving"
 	"knative.dev/serving/pkg/network"
 	"knative.dev/serving/pkg/network/status"
 
@@ -224,28 +225,34 @@ func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1
 	}
 
 	// Now, remove the extra ones.
-	vses, err := r.virtualServiceLister.VirtualServices(ing.GetNamespace()).List(
-		labels.SelectorFromSet(labels.Set{networking.IngressLabelKey: ing.GetName()}))
-	if err != nil {
-		return fmt.Errorf("failed to get VirtualServices: %w", err)
+	selectors := map[string]string{
+		networking.IngressLabelKey: ing.GetName(), // VS created since 0.12
+		serving.RouteLabelKey:      ing.GetName(), // VS created before 0.12
 	}
-
-	// Sort the virtual services by their name to get a stable deletion order.
-	sort.Slice(vses, func(i, j int) bool {
-		return vses[i].Name < vses[j].Name
-	})
-
-	for _, vs := range vses {
-		n, ns := vs.Name, vs.Namespace
-		if kept.Has(n) {
-			continue
+	for k, v := range selectors {
+		vses, err := r.virtualServiceLister.VirtualServices(ing.GetNamespace()).List(
+			labels.SelectorFromSet(labels.Set{k: v}))
+		if err != nil {
+			return fmt.Errorf("failed to get VirtualServices: %w", err)
 		}
-		if !metav1.IsControlledBy(vs, ing) {
-			// We shouldn't remove resources not controlled by us.
-			continue
-		}
-		if err = r.istioClientSet.NetworkingV1alpha3().VirtualServices(ns).Delete(n, &metav1.DeleteOptions{}); err != nil {
-			return fmt.Errorf("failed to delete VirtualService: %w", err)
+
+		// Sort the virtual services by their name to get a stable deletion order.
+		sort.Slice(vses, func(i, j int) bool {
+			return vses[i].Name < vses[j].Name
+		})
+
+		for _, vs := range vses {
+			n, ns := vs.Name, vs.Namespace
+			if kept.Has(n) {
+				continue
+			}
+			if !metav1.IsControlledBy(vs, ing) {
+				// We shouldn't remove resources not controlled by us.
+				continue
+			}
+			if err = r.istioClientSet.NetworkingV1alpha3().VirtualServices(ns).Delete(n, &metav1.DeleteOptions{}); err != nil {
+				return fmt.Errorf("failed to delete VirtualService: %w", err)
+			}
 		}
 	}
 	return nil
