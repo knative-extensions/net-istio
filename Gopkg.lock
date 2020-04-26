@@ -1182,8 +1182,8 @@
   revision = "5008bf6f8cd62f4b52816cfa99163fedb053d0be"
 
 [[projects]]
-  branch = "release-0.14"
-  digest = "1:f806eb7e5629d594362dc18905d092888b1d56fbfe026a597d25b86e846f2d53"
+  branch = "master"
+  digest = "1:04f788ac12f571fa1ca01efc29cff6ae68de257287c7f3aa4485f768cceaf1b1"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1252,11 +1252,11 @@
     "webhook/resourcesemantics/defaulting",
   ]
   pruneopts = "T"
-  revision = "2a1db869228ceaca9df34790b49cdf4893a5d39d"
+  revision = "7b6e21a57a3169cfe4acf71b2fa34ca0f6e3898e"
 
 [[projects]]
-  branch = "release-0.14"
-  digest = "1:9f503c04b1253ff9a61091004a0c7e35e17f460bd9cd918bd9e68552f1610dff"
+  branch = "master"
+  digest = "1:4c5cc33e31a9f7b5956f7a38c5683189fab2d23ea3f01c7aaa2651735e55025c"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1320,6 +1320,7 @@
     "pkg/reconciler/route/resources/labels",
     "pkg/reconciler/route/resources/names",
     "pkg/reconciler/service/resources/names",
+    "pkg/resources",
     "pkg/testing/v1",
     "pkg/testing/v1alpha1",
     "test",
@@ -1338,18 +1339,18 @@
     "test/v1alpha1",
   ]
   pruneopts = "U"
-  revision = "f87352b72c48286f164838ddc6684c805ea082a9"
+  revision = "7ad5cc721f86524b52faafb849888a58a811b692"
 
 [[projects]]
-  branch = "release-0.14"
-  digest = "1:50482e6fd500cf50c4a29d640cda026206145c6716dff72e4368a5e57fdb7095"
+  branch = "master"
+  digest = "1:4d8d06fc8e0f7dbfad243aa377651234d422d523c2a3297366343b9ff5165922"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "9fa5882b65c5fe7e177bb74874e9a5ac87b84e98"
+  revision = "e6e89d29e93a3f4dba44c4a694d704e3e8921c64"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
