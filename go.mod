@@ -26,7 +26,7 @@ require (
 	k8s.io/apimachinery v0.17.4
 	k8s.io/client-go v0.17.4
 	knative.dev/caching v0.0.0-20200427234751-64d6830ca6dd // indirect
-	knative.dev/pkg v0.0.0-20200427190051-6b9ee63b4aad
-	knative.dev/serving v0.14.1-0.20200426043050-7ad5cc721f86
-	knative.dev/test-infra v0.0.0-20200424202250-e6e89d29e93a
+	knative.dev/pkg v0.0.0-20200428133551-22b961371934
+	knative.dev/serving v0.14.1-0.20200428090951-cac3287054fa
+	knative.dev/test-infra v0.0.0-20200427211351-bf3e6802597a
 )
