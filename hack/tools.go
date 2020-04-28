@@ -19,6 +19,7 @@ limitations under the License.
 package tools
 
 import (
+	_ "knative.dev/pkg/hack"
 	_ "knative.dev/test-infra/scripts"
 	_ "knative.dev/test-infra/tools/dep-collector"
 
