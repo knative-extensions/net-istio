@@ -23,8 +23,6 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT}; ls -d -1 ./vendor/k8s.io/code-gene
 
 KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT}; ls -d -1 ./vendor/knative.dev/pkg 2>/dev/null || echo ../pkg)}
 
-# TODO(nghia): Generate Istio injection clients here.
-
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT}/hack/update-deps.sh
 

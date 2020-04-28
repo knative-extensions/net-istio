@@ -23,32 +23,40 @@ set -o pipefail
 
 cd ${ROOT_DIR}
 
+# We need these flags for things to work properly.
+export GO111MODULE=on
+export GOFLAGS=-mod=vendor
+
+# This controls the release branch we track.
+VERSION="master"
+
 # The list of dependencies that we track at HEAD and periodically
 # float forward in this repository.
 FLOATING_DEPS=(
-  "knative.dev/pkg"
-  "knative.dev/serving"
-  "knative.dev/test-infra"
+  "knative.dev/test-infra@${VERSION}"
+  "knative.dev/pkg@${VERSION}"
+  "knative.dev/serving@${VERSION}"
 )
 
 # Parse flags to determine any we should pass to dep.
-DEP_FLAGS=()
+GO_GET=0
 while [[ $# -ne 0 ]]; do
   parameter=$1
   case ${parameter} in
-    --upgrade) DEP_FLAGS=( -update ${FLOATING_DEPS[@]} ) ;;
+    --upgrade) GO_GET=1 ;;
     *) abort "unknown option ${parameter}" ;;
   esac
   shift
 done
-readonly DEP_FLAGS
+readonly GO_GET
 
-# Ensure we have everything we need under vendor/
-set +e
-for try in $(seq 1 5); do
-  dep ensure ${DEP_FLAGS[@]} && break
-done
-set -e
+if (( GO_GET )); then
+  go get -d ${FLOATING_DEPS[@]}
+fi
+
+# Prune modules.
+go mod tidy
+go mod vendor
 
 # Make the OWNER check robot happy.
 # TODO: Fix the robot to ignore vendor/ instead.
@@ -56,5 +64,8 @@ rm -rf $(find vendor/ -name 'OWNERS')
 # Remove unit tests & e2e tests.
 rm -rf $(find vendor/ -path '*/pkg/*_test.go')
 rm -rf $(find vendor/ -path '*/e2e/*_test.go')
+
+# Add permission for shell scripts
+chmod +x $(find vendor -name '*.sh')
 
 update_licenses third_party/VENDOR-LICENSE "$(find ./cmd -type d | grep -v kodata | grep -vE 'cmd$')"
