@@ -65,4 +65,7 @@ rm -rf $(find vendor/ -name 'OWNERS')
 rm -rf $(find vendor/ -path '*/pkg/*_test.go')
 rm -rf $(find vendor/ -path '*/e2e/*_test.go')
 
+# Add permission for shell scripts
+chmod +x $(find vendor -name '*.sh')
+
 update_licenses third_party/VENDOR-LICENSE "$(find ./cmd -type d | grep -v kodata | grep -vE 'cmd$')"
