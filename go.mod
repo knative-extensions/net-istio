@@ -21,3 +21,12 @@ require (
 	knative.dev/serving v0.14.1-0.20200429184706-f0288152683e
 	knative.dev/test-infra v0.0.0-20200429132042-cb2fc4ae428f
 )
+
+replace (
+	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.2
+	k8s.io/api => k8s.io/api v0.16.4
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.16.4
+	k8s.io/apimachinery => k8s.io/apimachinery v0.16.4
+	k8s.io/client-go => k8s.io/client-go v0.16.4
+	k8s.io/code-generator => k8s.io/code-generator v0.16.4
+)

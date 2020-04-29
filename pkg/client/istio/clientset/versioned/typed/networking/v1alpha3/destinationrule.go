@@ -19,7 +19,6 @@ limitations under the License.
 package v1alpha3
 
 import (
-	"context"
 	"time"
 
 	v1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -38,14 +37,14 @@ type DestinationRulesGetter interface {
 
 // DestinationRuleInterface has methods to work with DestinationRule resources.
 type DestinationRuleInterface interface {
-	Create(ctx context.Context, destinationRule *v1alpha3.DestinationRule, opts v1.CreateOptions) (*v1alpha3.DestinationRule, error)
-	Update(ctx context.Context, destinationRule *v1alpha3.DestinationRule, opts v1.UpdateOptions) (*v1alpha3.DestinationRule, error)
-	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
-	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha3.DestinationRule, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha3.DestinationRuleList, error)
-	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha3.DestinationRule, err error)
+	Create(*v1alpha3.DestinationRule) (*v1alpha3.DestinationRule, error)
+	Update(*v1alpha3.DestinationRule) (*v1alpha3.DestinationRule, error)
+	Delete(name string, options *v1.DeleteOptions) error
+	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
+	Get(name string, options v1.GetOptions) (*v1alpha3.DestinationRule, error)
+	List(opts v1.ListOptions) (*v1alpha3.DestinationRuleList, error)
+	Watch(opts v1.ListOptions) (watch.Interface, error)
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.DestinationRule, err error)
 	DestinationRuleExpansion
 }
 
@@ -64,20 +63,20 @@ func newDestinationRules(c *NetworkingV1alpha3Client, namespace string) *destina
 }
 
 // Get takes name of the destinationRule, and returns the corresponding destinationRule object, and an error if there is any.
-func (c *destinationRules) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha3.DestinationRule, err error) {
+func (c *destinationRules) Get(name string, options v1.GetOptions) (result *v1alpha3.DestinationRule, err error) {
 	result = &v1alpha3.DestinationRule{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("destinationrules").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
+		Do().
 		Into(result)
 	return
 }
 
 // List takes label and field selectors, and returns the list of DestinationRules that match those selectors.
-func (c *destinationRules) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha3.DestinationRuleList, err error) {
+func (c *destinationRules) List(opts v1.ListOptions) (result *v1alpha3.DestinationRuleList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -88,13 +87,13 @@ func (c *destinationRules) List(ctx context.Context, opts v1.ListOptions) (resul
 		Resource("destinationrules").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Do(ctx).
+		Do().
 		Into(result)
 	return
 }
 
 // Watch returns a watch.Interface that watches the requested destinationRules.
-func (c *destinationRules) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+func (c *destinationRules) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -105,74 +104,71 @@ func (c *destinationRules) Watch(ctx context.Context, opts v1.ListOptions) (watc
 		Resource("destinationrules").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Watch(ctx)
+		Watch()
 }
 
 // Create takes the representation of a destinationRule and creates it.  Returns the server's representation of the destinationRule, and an error, if there is any.
-func (c *destinationRules) Create(ctx context.Context, destinationRule *v1alpha3.DestinationRule, opts v1.CreateOptions) (result *v1alpha3.DestinationRule, err error) {
+func (c *destinationRules) Create(destinationRule *v1alpha3.DestinationRule) (result *v1alpha3.DestinationRule, err error) {
 	result = &v1alpha3.DestinationRule{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("destinationrules").
-		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(destinationRule).
-		Do(ctx).
+		Do().
 		Into(result)
 	return
 }
 
 // Update takes the representation of a destinationRule and updates it. Returns the server's representation of the destinationRule, and an error, if there is any.
-func (c *destinationRules) Update(ctx context.Context, destinationRule *v1alpha3.DestinationRule, opts v1.UpdateOptions) (result *v1alpha3.DestinationRule, err error) {
+func (c *destinationRules) Update(destinationRule *v1alpha3.DestinationRule) (result *v1alpha3.DestinationRule, err error) {
 	result = &v1alpha3.DestinationRule{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("destinationrules").
 		Name(destinationRule.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(destinationRule).
-		Do(ctx).
+		Do().
 		Into(result)
 	return
 }
 
 // Delete takes name of the destinationRule and deletes it. Returns an error if one occurs.
-func (c *destinationRules) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *destinationRules) Delete(name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("destinationrules").
 		Name(name).
-		Body(&opts).
-		Do(ctx).
+		Body(options).
+		Do().
 		Error()
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *destinationRules) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+func (c *destinationRules) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
+	if listOptions.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("destinationrules").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
+		VersionedParams(&listOptions, scheme.ParameterCodec).
 		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
+		Body(options).
+		Do().
 		Error()
 }
 
 // Patch applies the patch and returns the patched destinationRule.
-func (c *destinationRules) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha3.DestinationRule, err error) {
+func (c *destinationRules) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha3.DestinationRule, err error) {
 	result = &v1alpha3.DestinationRule{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("destinationrules").
-		Name(name).
 		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
+		Name(name).
 		Body(data).
-		Do(ctx).
+		Do().
 		Into(result)
 	return
 }
