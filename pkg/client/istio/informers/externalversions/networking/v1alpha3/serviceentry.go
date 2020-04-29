@@ -19,6 +19,7 @@ limitations under the License.
 package v1alpha3
 
 import (
+	"context"
 	time "time"
 
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -61,13 +62,13 @@ func NewFilteredServiceEntryInformer(client versioned.Interface, namespace strin
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.NetworkingV1alpha3().ServiceEntries(namespace).List(options)
+				return client.NetworkingV1alpha3().ServiceEntries(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.NetworkingV1alpha3().ServiceEntries(namespace).Watch(options)
+				return client.NetworkingV1alpha3().ServiceEntries(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&networkingv1alpha3.ServiceEntry{},
