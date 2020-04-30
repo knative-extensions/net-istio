@@ -14,23 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package handlers
-
-import (
-	"net/http"
-	"time"
-
-	"knative.dev/serving/test/types"
-)
-
-func requestInfo(r *http.Request) *types.RequestInfo {
-	return &types.RequestInfo{
-		Ts:         time.Now(),
-		URI:        r.RequestURI,
-		Host:       r.Host,
-		Method:     r.Method,
-		Headers:    r.Header,
-		ProtoMajor: r.ProtoMajor,
-		ProtoMinor: r.ProtoMinor,
-	}
-}
+// Package resources contains various utilities for dealing with Kubernetes resources.
+package resources
