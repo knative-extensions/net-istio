@@ -23,7 +23,7 @@ import (
 	_ "knative.dev/test-infra/scripts"
 	_ "knative.dev/test-infra/tools/dep-collector"
 
-	_ "knative.dev/serving/test/conformance/certificate/http01"
+	_ "knative.dev/serving/test/conformance/ingress"
 	_ "knative.dev/serving/test/test_images/flaky"
 	_ "knative.dev/serving/test/test_images/grpc-ping"
 	_ "knative.dev/serving/test/test_images/httpproxy"
