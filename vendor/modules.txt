@@ -739,7 +739,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/pkg v0.0.0-20200429171842-47137cdc301d
+# knative.dev/pkg v0.0.0-20200429233442-1ebb4d56f726
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
 knative.dev/pkg/apis/duck/v1
@@ -805,7 +805,7 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/configmaps
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
-# knative.dev/serving v0.14.1-0.20200429184706-f0288152683e
+# knative.dev/serving v0.14.0
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
 knative.dev/serving/pkg/apis/config
@@ -867,7 +867,6 @@ knative.dev/serving/pkg/reconciler/route/domains
 knative.dev/serving/pkg/reconciler/route/resources/labels
 knative.dev/serving/pkg/reconciler/route/resources/names
 knative.dev/serving/pkg/reconciler/service/resources/names
-knative.dev/serving/pkg/resources
 knative.dev/serving/pkg/testing/v1
 knative.dev/serving/pkg/testing/v1alpha1
 knative.dev/serving/test
