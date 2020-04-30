@@ -46,23 +46,13 @@ function install_latest_release() {
 
   install_knative_serving "${RELEASE_YAML}" \
       || fail_test "Knative latest release installation failed"
-  wait_until_pods_running ${SYSTEM_NAMESPACE}
+  wait_until_pods_running ${E2E_SYSTEM_NAMESPACE}
 }
 
 function install_head() {
   header "Installing Knative head release"
   install_knative_serving || fail_test "Knative head release installation failed"
-  wait_until_pods_running ${SYSTEM_NAMESPACE}
-
-  echo "Running storage migration job"
-  local MIGRATION_YAML=${TMP_DIR}/${SERVING_STORAGE_VERSION_MIGRATE_YAML##*/}
-  sed "s/namespace: ${KNATIVE_DEFAULT_NAMESPACE}/namespace: ${SYSTEM_NAMESPACE}/g" ${SERVING_STORAGE_VERSION_MIGRATE_YAML} > ${MIGRATION_YAML}
-
-  kubectl delete -f ${MIGRATION_YAML} --ignore-not-found
-  kubectl apply -f ${MIGRATION_YAML}
-  wait_until_batch_job_complete ${SYSTEM_NAMESPACE}
-  echo "Finished running storage migration job"
-  kubectl get jobs -A
+  wait_until_pods_running ${E2E_SYSTEM_NAMESPACE}
 }
 
 function knative_setup() {
@@ -79,7 +69,7 @@ TIMEOUT=10m
 header "Running preupgrade tests"
 
 go_test_e2e -tags=preupgrade -timeout=${TIMEOUT} ./test/upgrade \
-  --resolvabledomain=$(use_resolvable_domain) || fail_test
+  --resolvabledomain=$(use_resolvable_domain) --systemNamespace=${E2E_SYSTEM_NAMESPACE} || fail_test
 
 header "Starting prober test"
 
@@ -87,7 +77,7 @@ header "Starting prober test"
 rm -f /tmp/prober-signal
 
 go_test_e2e -tags=probe -timeout=${TIMEOUT} ./test/upgrade \
-  --resolvabledomain=$(use_resolvable_domain) &
+  --resolvabledomain=$(use_resolvable_domain) --systemNamespace=${E2E_SYSTEM_NAMESPACE} &
 PROBER_PID=$!
 echo "Prober PID is ${PROBER_PID}"
 
@@ -95,13 +85,13 @@ install_head
 
 header "Running postupgrade tests"
 go_test_e2e -tags=postupgrade -timeout=${TIMEOUT} ./test/upgrade \
-  --resolvabledomain=$(use_resolvable_domain) || fail_test
+  --resolvabledomain=$(use_resolvable_domain) --systemNamespace=${E2E_SYSTEM_NAMESPACE} || fail_test
 
 install_latest_release
 
 header "Running postdowngrade tests"
 go_test_e2e -tags=postdowngrade -timeout=${TIMEOUT} ./test/upgrade \
-  --resolvabledomain=$(use_resolvable_domain) || fail_test
+  --resolvabledomain=$(use_resolvable_domain) --systemNamespace=${E2E_SYSTEM_NAMESPACE} || fail_test
 
 # The prober is blocking on /tmp/prober-signal to know when it should exit.
 #
