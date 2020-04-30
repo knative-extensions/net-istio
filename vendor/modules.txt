@@ -114,7 +114,7 @@ github.com/google/go-cmp/cmp/internal/value
 github.com/google/go-containerregistry/pkg/name
 # github.com/google/gofuzz v1.1.0
 github.com/google/gofuzz
-# github.com/google/licenseclassifier v0.0.0-20190103191631-c2a262e3078a
+# github.com/google/licenseclassifier v0.0.0-20190926221455-842c0d70d702
 github.com/google/licenseclassifier
 github.com/google/licenseclassifier/internal/sets
 github.com/google/licenseclassifier/stringclassifier

@@ -7,12 +7,12 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/google/go-cmp v0.4.0
 	github.com/google/go-containerregistry v0.0.0-20200331213917-3d03ed9b1ca2 // indirect
-	github.com/google/licenseclassifier v0.0.0-20190103191631-c2a262e3078a // indirect
+	github.com/google/go-licenses v0.0.0-20200227160636-0fa8c766a591 // indirect
+	github.com/google/licenseclassifier v0.0.0-20190926221455-842c0d70d702 // indirect
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.12.2 // indirect
 	github.com/influxdata/tdigest v0.0.1 // indirect
 	github.com/rogpeppe/go-internal v1.5.2 // indirect
-	github.com/sergi/go-diff v1.0.0 // indirect
 	go.uber.org/zap v1.10.0
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
 	gomodules.xyz/jsonpatch/v2 v2.1.0 // indirect
