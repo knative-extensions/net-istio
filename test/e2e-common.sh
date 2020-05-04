@@ -69,7 +69,7 @@ function test_setup() {
   wait_until_pods_running knative-serving || return 1
 
   # Wait for static IP to be through
-  wait_for_static_ip istio-system istio-ingressgateway
+  wait_until_service_has_external_http_address istio-system istio-ingressgateway
 }
 
 function wait_for_static_ip() {
