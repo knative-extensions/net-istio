@@ -69,34 +69,7 @@ function test_setup() {
   wait_until_pods_running knative-serving || return 1
 
   # Wait for static IP to be through
-  wait_for_static_ip istio-system istio-ingressgateway
-}
-
-function wait_for_static_ip() {
-  local ns=$1
-  local svc=$2
-  local sleep_seconds=20
-  local attempts=100
-
-  STATIC_IP=""
-  for try in $(seq 1 $attempts); do
-    STATIC_IP=$(kubectl get svc $svc -n $ns -ojsonpath={.status.loadBalancer.ingress[0].ip})
-    STATUS_CODE=""
-    if [[ $STATIC_IP != "" ]]; then
-      echo ">> Probing $STATIC_IP"
-      STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://$STATIC_IP)
-      if [[ $STATUS_CODE != "" && $STATUS_CODE != "000" ]]; then
-        echo ">> $STATIC_IP is ready: prober observed HTTP $STATUS_CODE"
-        return
-      else
-        echo ">> $STATIC_IP is not ready: prober observed HTTP $STATUS_CODE"
-      fi
-    else
-      echo ">> Service $ns/$svc does not have an IP address."
-    fi
-    sleep $sleep_seconds
-  done
-  echo ">> Error waiting for ip address '$STATIC_IP' to be ready"
+  wait_until_service_has_external_http_address istio-system istio-ingressgateway
 }
 
 # Add function call to trap
