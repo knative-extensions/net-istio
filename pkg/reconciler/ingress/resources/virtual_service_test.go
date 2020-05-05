@@ -407,7 +407,38 @@ func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
 			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
 		},
 	}, {
-		name: "disabling retries",
+		name: "no per-try timeout",
+		ci: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-ingress",
+				Namespace: system.Namespace(),
+				Labels: map[string]string{
+					serving.RouteLabelKey:          "test-route",
+					serving.RouteNamespaceLabelKey: "test-ns",
+				},
+			},
+			Spec: v1alpha1.IngressSpec{
+				Rules: []v1alpha1.IngressRule{{
+					Hosts: []string{
+						"test-route.test-ns.svc.cluster.local",
+					},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
+							Retries: &v1alpha1.HTTPRetry{
+								Attempts: networking.DefaultRetryCount,
+							},
+						}},
+					},
+				}}},
+		},
+		expected: &istiov1alpha3.HTTPRetry{
+			RetryOn:  retriableConditions,
+			Attempts: int32(networking.DefaultRetryCount),
+		},
+	}, {
+		name: "retry attempt=0",
 		ci: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-ingress",
@@ -430,6 +461,31 @@ func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
 								PerTryTimeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
 								Attempts:      0,
 							},
+						}},
+					},
+				}}},
+		},
+		expected: nil,
+	}, {
+		name: "disabling retries",
+		ci: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-ingress",
+				Namespace: system.Namespace(),
+				Labels: map[string]string{
+					serving.RouteLabelKey:          "test-route",
+					serving.RouteNamespaceLabelKey: "test-ns",
+				},
+			},
+			Spec: v1alpha1.IngressSpec{
+				Rules: []v1alpha1.IngressRule{{
+					Hosts: []string{
+						"test-route.test-ns.svc.cluster.local",
+					},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
 						}},
 					},
 				}}},

@@ -211,11 +211,13 @@ func makeVirtualServiceRoute(hosts sets.String, http *v1alpha1.HTTPIngressPath, 
 		Headers: h,
 	}
 
-	if http.Retries.Attempts > 0 {
+	if http.Retries != nil && http.Retries.Attempts > 0 {
 		route.Retries = &istiov1alpha3.HTTPRetry{
-			RetryOn:       retriableConditions,
-			Attempts:      int32(http.Retries.Attempts),
-			PerTryTimeout: types.DurationProto(http.Retries.PerTryTimeout.Duration),
+			RetryOn:  retriableConditions,
+			Attempts: int32(http.Retries.Attempts),
+		}
+		if http.Retries.PerTryTimeout != nil {
+			route.Retries.PerTryTimeout = types.DurationProto(http.Retries.PerTryTimeout.Duration)
 		}
 	}
 	return route
