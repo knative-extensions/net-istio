@@ -434,11 +434,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
 					},
 				}}},
 		},
-		expected: &istiov1alpha3.HTTPRetry{
-			RetryOn:       "",
-			Attempts:      int32(0),
-			PerTryTimeout: nil,
-		},
+		expected: nil,
 	}} {
 		t.Run(tc.name, func(t *testing.T) {
 			for _, h := range MakeMeshVirtualService(tc.ci, defaultGateways).Spec.Http {

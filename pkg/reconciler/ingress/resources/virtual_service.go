@@ -204,27 +204,21 @@ func makeVirtualServiceRoute(hosts sets.String, http *v1alpha1.HTTPIngressPath, 
 		}
 	}
 
-	// TODO(https://github.com/knative/serving/issues/6367): Allow customization of this.
-	retryOn := retriableConditions
-	perTryTimeout := types.DurationProto(http.Retries.PerTryTimeout.Duration)
-
-	// retry config must be empty when retry is disabled by setting attempt to 0. Otherwise, istio galley validation check fails.
-	if http.Retries.Attempts == 0 {
-		retryOn = ""
-		perTryTimeout = nil
-	}
-
-	return &istiov1alpha3.HTTPRoute{
+	route := &istiov1alpha3.HTTPRoute{
 		Match:   matches,
 		Route:   weights,
 		Timeout: types.DurationProto(http.Timeout.Duration),
-		Retries: &istiov1alpha3.HTTPRetry{
-			RetryOn:       retryOn,
-			Attempts:      int32(http.Retries.Attempts),
-			PerTryTimeout: perTryTimeout,
-		},
 		Headers: h,
 	}
+
+	if http.Retries.Attempts > 0 {
+		route.Retries = &istiov1alpha3.HTTPRetry{
+			RetryOn:       retriableConditions,
+			Attempts:      int32(http.Retries.Attempts),
+			PerTryTimeout: types.DurationProto(http.Retries.PerTryTimeout.Duration),
+		}
+	}
+	return route
 }
 
 func keepLocalHostnames(hosts sets.String) sets.String {
