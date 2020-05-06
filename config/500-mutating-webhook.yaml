@@ -18,6 +18,7 @@ metadata:
   name: webhook.istio.networking.internal.knative.dev
   labels:
     serving.knative.dev/release: devel
+    networking.knative.dev/ingress-provider: istio
 webhooks:
 - admissionReviewVersions:
   - v1beta1
