@@ -20,6 +20,7 @@ metadata:
   labels:
     role: istio-webhook
     serving.knative.dev/release: devel
+    networking.knative.dev/ingress-provider: istio
 spec:
   ports:
   # Define metrics and profiling for them to be accessible within service meshes.
