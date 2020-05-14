@@ -63,6 +63,7 @@ rm -rf $(find vendor/ -name 'OWNERS')
 # Remove unit tests & e2e tests.
 rm -rf $(find vendor/ -path '*/pkg/*_test.go')
 rm -rf $(find vendor/ -path '*/e2e/*_test.go')
+rm -rf $(find vendor/ -path '*/test/e2e/*.go')
 
 # Add permission for shell scripts
 chmod +x $(find vendor -name '*.sh')
