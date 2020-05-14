@@ -41,9 +41,10 @@ var (
 
 // ValidateObjectMetadata validates that `metadata` stanza of the
 // resources is correct.
-func ValidateObjectMetadata(meta metav1.Object) *apis.FieldError {
+func ValidateObjectMetadata(ctx context.Context, meta metav1.Object) *apis.FieldError {
+	allowZeroInitialScale := config.FromContextOrDefaults(ctx).Autoscaler.AllowZeroInitialScale
 	return apis.ValidateObjectMetadata(meta).
-		Also(autoscaling.ValidateAnnotations(meta.GetAnnotations()).
+		Also(autoscaling.ValidateAnnotations(allowZeroInitialScale, meta.GetAnnotations()).
 			Also(validateKnativeAnnotations(meta.GetAnnotations())).
 			ViaField("annotations"))
 }
@@ -94,9 +95,15 @@ func ValidateTimeoutSeconds(ctx context.Context, timeoutSeconds int64) *apis.Fie
 func ValidateContainerConcurrency(ctx context.Context, containerConcurrency *int64) *apis.FieldError {
 	if containerConcurrency != nil {
 		cfg := config.FromContextOrDefaults(ctx).Defaults
-		if *containerConcurrency < 0 || *containerConcurrency > cfg.ContainerConcurrencyMaxLimit {
+
+		var minContainerConcurrency int64 = 0
+		if !cfg.AllowContainerConcurrencyZero {
+			minContainerConcurrency = 1
+		}
+
+		if *containerConcurrency < minContainerConcurrency || *containerConcurrency > cfg.ContainerConcurrencyMaxLimit {
 			return apis.ErrOutOfBoundsValue(
-				*containerConcurrency, 0, cfg.ContainerConcurrencyMaxLimit, apis.CurrentField)
+				*containerConcurrency, minContainerConcurrency, cfg.ContainerConcurrencyMaxLimit, apis.CurrentField)
 		}
 	}
 	return nil
