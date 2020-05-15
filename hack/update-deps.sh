@@ -53,6 +53,14 @@ if (( GO_GET )); then
   go get -d ${FLOATING_DEPS[@]}
 fi
 
+# Create a copy of the knative.dev/serving conformace/ingress test suite.
+go mod vendor
+SERVING_MODULE="$(go list -f '{{.Dir}}' -mod=readonly -m knative.dev/serving)"
+mkdir -p test/conformance/ingress
+rm -rf test/conformance/ingress/*
+rsync -r "$SERVING_MODULE"/test/conformance/ingress/ test/conformance/ingress
+chmod a+w -R test/conformance/ingress
+
 # Prune modules.
 go mod tidy
 go mod vendor
@@ -64,6 +72,7 @@ rm -rf $(find vendor/ -name 'OWNERS')
 rm -rf $(find vendor/ -path '*/pkg/*_test.go')
 rm -rf $(find vendor/ -path '*/e2e/*_test.go')
 rm -rf $(find vendor/ -path '*/test/e2e/*.go')
+
 
 # Add permission for shell scripts
 chmod +x $(find vendor -name '*.sh')
