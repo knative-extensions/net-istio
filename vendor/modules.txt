@@ -752,7 +752,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/pkg v0.0.0-20200514181100-e80bcb7e6628
+# knative.dev/pkg v0.0.0-20200515002500-16d7b963416f
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -818,7 +818,7 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/configmaps
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
-# knative.dev/serving v0.14.1-0.20200514211000-a090ac076770
+# knative.dev/serving v0.14.1-0.20200515044100-3d827ca18c00
 ## explicit
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
@@ -894,7 +894,7 @@ knative.dev/serving/test/test_images/timeout
 knative.dev/serving/test/test_images/wsserver
 knative.dev/serving/test/types
 knative.dev/serving/test/v1alpha1
-# knative.dev/test-infra v0.0.0-20200514145159-54e90aaa6d5b
+# knative.dev/test-infra v0.0.0-20200514223200-ef4fd3ad398f
 ## explicit
 knative.dev/test-infra/scripts
 knative.dev/test-infra/tools/dep-collector
