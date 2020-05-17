@@ -108,6 +108,86 @@ func MakeIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, originSecre
 	return gateways, nil
 }
 
+// MakeWildcardGateways creates gateways with wildcard hosts based on the wildcard secret information.
+// For each public ingress service, we will create a list of Gateways. Each Gateway of the list corresponds to a wildcard cert secret.
+func MakeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]*corev1.Secret,
+	svcLister corev1listers.ServiceLister) ([]*v1alpha3.Gateway, error) {
+	gatewayServices, err := getGatewayServices(ctx, svcLister)
+	if err != nil {
+		return nil, err
+	}
+	gateways := []*v1alpha3.Gateway{}
+	for _, gatewayService := range gatewayServices {
+		gws, err := makeWildcardGateways(ctx, originWildcardSecrets, gatewayService)
+		if err != nil {
+			return nil, err
+		}
+		gateways = append(gateways, gws...)
+	}
+	return gateways, nil
+}
+
+func makeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]*corev1.Secret,
+	gatewayService *corev1.Service) ([]*v1alpha3.Gateway, error) {
+	gateways := make([]*v1alpha3.Gateway, 0, len(originWildcardSecrets))
+	for _, secret := range originWildcardSecrets {
+		hosts, err := GetHostsFromCertSecret(secret)
+		if err != nil {
+			return nil, err
+		}
+		// If the origin secret is not in the target namespace, then it should have been
+		// copied into the target namespace. So we use the name of the copy.
+		credentialName := wildcardSecretName(secret.Name, secret.Namespace)
+		if secret.Namespace == gatewayService.Namespace {
+			credentialName = secret.Name
+		}
+		servers := []*istiov1alpha3.Server{{
+			Hosts: hosts,
+			Port: &istiov1alpha3.Port{
+				Name:     "https",
+				Number:   443,
+				Protocol: "HTTPS",
+			},
+			Tls: &istiov1alpha3.Server_TLSOptions{
+				Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+				ServerCertificate: corev1.TLSCertKey,
+				PrivateKey:        corev1.TLSPrivateKeyKey,
+				CredentialName:    credentialName,
+			},
+		}}
+		httpServer := MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, hosts)
+		if httpServer != nil {
+			servers = append(servers, httpServer)
+		}
+		gateways = append(gateways, &v1alpha3.Gateway{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:            WildcardGatewayName(secret.Name, gatewayService.Namespace, gatewayService.Name),
+				Namespace:       secret.Namespace,
+				OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(secret, secret.GroupVersionKind())},
+			},
+			Spec: istiov1alpha3.Gateway{
+				Selector: gatewayService.Spec.Selector,
+				Servers:  servers,
+			},
+		})
+	}
+	return gateways, nil
+}
+
+// WildcardGatewayName creates the name of wildcard Gateway.
+func WildcardGatewayName(secretName, gatewayServiceNamespace, gatewayServiceName string) string {
+	return fmt.Sprintf("wildcard-%x", adler32.Checksum([]byte(secretName+"-"+gatewayServiceNamespace+"-"+gatewayServiceName)))
+}
+
+// GetQualifiedGatewayNames return the qualified Gateway names for the given Gateways.
+func GetQualifiedGatewayNames(gateways []*v1alpha3.Gateway) []string {
+	result := make([]string, 0, len(gateways))
+	for _, gw := range gateways {
+		result = append(result, gw.Namespace+"/"+gw.Name)
+	}
+	return result
+}
+
 func makeIngressGateway(ctx context.Context, ing *v1alpha1.Ingress, originSecrets map[string]*corev1.Secret, selector map[string]string, gatewayService *corev1.Service) (*v1alpha3.Gateway, error) {
 	ns := ing.GetNamespace()
 	if len(ns) == 0 {
@@ -121,7 +201,10 @@ func makeIngressGateway(ctx context.Context, ing *v1alpha1.Ingress, originSecret
 	for _, rule := range ing.Spec.Rules {
 		hosts.Insert(rule.Hosts...)
 	}
-	servers = append(servers, MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, hosts.List()))
+	httpServer := MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, hosts.List())
+	if httpServer != nil {
+		servers = append(servers, httpServer)
+	}
 	return &v1alpha3.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            GatewayName(ing, gatewayService),
