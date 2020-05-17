@@ -137,7 +137,7 @@ func makeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]
 		}
 		// If the origin secret is not in the target namespace, then it should have been
 		// copied into the target namespace. So we use the name of the copy.
-		credentialName := wildcardSecretName(secret.Name, secret.Namespace)
+		credentialName := targetWildcardSecretName(secret.Name, secret.Namespace)
 		if secret.Namespace == gatewayService.Namespace {
 			credentialName = secret.Name
 		}

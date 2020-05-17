@@ -235,7 +235,7 @@ func TestMakeWildcardSecrets(t *testing.T) {
 			}},
 		expected: []*corev1.Secret{{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: wildcardSecretName("test-secret", "knative-serving"),
+				Name: targetWildcardSecretName("test-secret", "knative-serving"),
 				// Expected secret should be in istio-system which is
 				// the ns of Istio gateway service.
 				Namespace: "istio-system",

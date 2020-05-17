@@ -577,7 +577,7 @@ func TestMakeWildcardGateways(t *testing.T) {
 						Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
 						ServerCertificate: corev1.TLSCertKey,
 						PrivateKey:        corev1.TLSPrivateKeyKey,
-						CredentialName:    wildcardSecretName(wildcardSecret.Name, wildcardSecret.Namespace),
+						CredentialName:    targetWildcardSecretName(wildcardSecret.Name, wildcardSecret.Namespace),
 					},
 				}, {
 					Hosts: []string{"*.example.com"},
