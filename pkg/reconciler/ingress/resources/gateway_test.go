@@ -51,6 +51,12 @@ var secret = corev1.Secret{
 	},
 }
 
+var wildcardSecret, _ = generateCertificate("*.example.com", "secret0", system.Namespace())
+
+var wildcardSecrets = map[string]*corev1.Secret{
+	fmt.Sprintf("%s/secret0", system.Namespace()): wildcardSecret,
+}
+
 var originSecrets = map[string]*corev1.Secret{
 	fmt.Sprintf("%s/secret0", system.Namespace()): &secret,
 }
@@ -530,6 +536,154 @@ func TestUpdateGateway(t *testing.T) {
 				t.Errorf("Unexpected gateway (-want, +got): %v", diff)
 			}
 		})
+	}
+}
+
+func TestMakeWildcardGateways(t *testing.T) {
+	testCases := []struct {
+		name            string
+		wildcardSecrets map[string]*corev1.Secret
+		gatewayService  *corev1.Service
+		want            []*v1alpha3.Gateway
+		wantErr         bool
+	}{{
+		name:            "happy path: secret namespace is the different from the gateway service namespace",
+		wildcardSecrets: wildcardSecrets,
+		gatewayService: &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "istio-ingressgateway",
+				Namespace: "istio-system",
+			},
+			Spec: corev1.ServiceSpec{
+				Selector: selector,
+			},
+		},
+		want: []*v1alpha3.Gateway{{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:            WildcardGatewayName(wildcardSecret.Name, "istio-system", "istio-ingressgateway"),
+				Namespace:       system.Namespace(),
+				OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(wildcardSecret, wildcardSecret.GroupVersionKind())},
+			},
+			Spec: istiov1alpha3.Gateway{
+				Selector: selector,
+				Servers: []*istiov1alpha3.Server{{
+					Hosts: []string{"*.example.com"},
+					Port: &istiov1alpha3.Port{
+						Name:     "https",
+						Number:   443,
+						Protocol: "HTTPS",
+					},
+					Tls: &istiov1alpha3.Server_TLSOptions{
+						Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+						ServerCertificate: corev1.TLSCertKey,
+						PrivateKey:        corev1.TLSPrivateKeyKey,
+						CredentialName:    targetWildcardSecretName(wildcardSecret.Name, wildcardSecret.Namespace),
+					},
+				}, {
+					Hosts: []string{"*.example.com"},
+					Port: &istiov1alpha3.Port{
+						Name:     httpServerPortName,
+						Number:   80,
+						Protocol: "HTTP",
+					},
+				}},
+			},
+		}},
+	}, {
+		name:            "happy path: secret namespace is the same as the gateway service namespace",
+		wildcardSecrets: wildcardSecrets,
+		gatewayService: &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "istio-ingressgateway",
+				Namespace: system.Namespace(),
+			},
+			Spec: corev1.ServiceSpec{
+				Selector: selector,
+			},
+		},
+		want: []*v1alpha3.Gateway{{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:            WildcardGatewayName(wildcardSecret.Name, system.Namespace(), "istio-ingressgateway"),
+				Namespace:       system.Namespace(),
+				OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(wildcardSecret, wildcardSecret.GroupVersionKind())},
+			},
+			Spec: istiov1alpha3.Gateway{
+				Selector: selector,
+				Servers: []*istiov1alpha3.Server{{
+					Hosts: []string{"*.example.com"},
+					Port: &istiov1alpha3.Port{
+						Name:     "https",
+						Number:   443,
+						Protocol: "HTTPS",
+					},
+					Tls: &istiov1alpha3.Server_TLSOptions{
+						Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+						ServerCertificate: corev1.TLSCertKey,
+						PrivateKey:        corev1.TLSPrivateKeyKey,
+						CredentialName:    wildcardSecret.Name,
+					},
+				}, {
+					Hosts: []string{"*.example.com"},
+					Port: &istiov1alpha3.Port{
+						Name:     httpServerPortName,
+						Number:   80,
+						Protocol: "HTTP",
+					},
+				}},
+			},
+		}},
+	}, {
+		name:            "error to make gateway because of incorrect originSecrets",
+		wildcardSecrets: map[string]*corev1.Secret{"": &secret},
+		gatewayService: &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "istio-ingressgateway",
+				Namespace: "istio-system",
+			},
+			Spec: corev1.ServiceSpec{
+				Selector: selector,
+			},
+		},
+		wantErr: true,
+	}}
+
+	for _, tc := range testCases {
+		ctx, cancel, _ := rtesting.SetupFakeContextWithCancel(t)
+		defer cancel()
+		svcLister := serviceLister(ctx, tc.gatewayService)
+		ctx = config.ToContext(context.Background(), &config.Config{
+			Istio: &config.Istio{
+				IngressGateways: []config.Gateway{{
+					Name:       networking.KnativeIngressGateway,
+					ServiceURL: fmt.Sprintf("%s.%s.svc.cluster.local", tc.gatewayService.Name, tc.gatewayService.Namespace),
+				}},
+			},
+			Network: &network.Config{
+				HTTPProtocol: network.HTTPEnabled,
+			},
+		})
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := MakeWildcardGateways(ctx, tc.wildcardSecrets, svcLister)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("Test: %s; MakeWildcardGateways error = %v, WantErr %v", tc.name, err, tc.wantErr)
+			}
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("Unexpected Gateways (-want, +got): %v", diff)
+			}
+		})
+	}
+}
+
+func TestGetQualifiedGatewayNames(t *testing.T) {
+	gateways := []*v1alpha3.Gateway{{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "istio-ingress-gateway",
+			Namespace: "knative-serving",
+		},
+	}}
+	want := []string{"knative-serving/istio-ingress-gateway"}
+	if got := GetQualifiedGatewayNames(gateways); cmp.Diff(want, got) != "" {
+		t.Fatalf("GetQualifiedGatewayNames failed. Want: %v, got: %v", want, got)
 	}
 }
 

@@ -67,8 +67,8 @@ var (
 		},
 	}
 
-	wildcardCert, _    = generateCertificate("*.example.com", "wildcard")
-	nonWildcardCert, _ = generateCertificate("test.example.com", "nonWildcard")
+	wildcardCert, _    = generateCertificate("*.example.com", "wildcard", "")
+	nonWildcardCert, _ = generateCertificate("test.example.com", "nonWildcard", "")
 )
 
 func TestGetSecrets(t *testing.T) {
@@ -235,7 +235,7 @@ func TestMakeWildcardSecrets(t *testing.T) {
 			}},
 		expected: []*corev1.Secret{{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "test-secret",
+				Name: targetWildcardSecretName("test-secret", "knative-serving"),
 				// Expected secret should be in istio-system which is
 				// the ns of Istio gateway service.
 				Namespace: "istio-system",
@@ -335,7 +335,7 @@ func TestGetHostsFromCertSecret(t *testing.T) {
 	}
 }
 
-func generateCertificate(host string, secretName string) (*corev1.Secret, error) {
+func generateCertificate(host string, secretName string, namespace string) (*corev1.Secret, error) {
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate private key: %v", err)
@@ -386,7 +386,8 @@ func generateCertificate(host string, secretName string) (*corev1.Secret, error)
 
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: secretName,
+			Name:      secretName,
+			Namespace: namespace,
 		},
 		Data: map[string][]byte{
 			corev1.TLSCertKey:       certBuf.Bytes(),
