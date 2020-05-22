@@ -28,6 +28,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
@@ -159,11 +160,12 @@ func makeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]
 		if httpServer != nil {
 			servers = append(servers, httpServer)
 		}
+		gvk := schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
 		gateways = append(gateways, &v1alpha3.Gateway{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:            WildcardGatewayName(secret.Name, gatewayService.Namespace, gatewayService.Name),
 				Namespace:       secret.Namespace,
-				OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(secret, secret.GroupVersionKind())},
+				OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(secret, gvk)},
 			},
 			Spec: istiov1alpha3.Gateway{
 				Selector: gatewayService.Spec.Selector,
