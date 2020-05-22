@@ -119,19 +119,6 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	ing.Status.InitializeConditions()
 	logger.Infof("Reconciling ingress: %#v", ing)
 
-	gatewayNames := qualifiedGatewayNamesFromContext(ctx)
-	vses, err := resources.MakeVirtualServices(ing, gatewayNames)
-	if err != nil {
-		return err
-	}
-
-	// First, create the VirtualServices.
-	logger.Info("Creating/Updating VirtualServices")
-	ing.Status.ObservedGeneration = ing.GetGeneration()
-	if err := r.reconcileVirtualServices(ctx, ing, vses); err != nil {
-		ing.Status.MarkLoadBalancerFailed(virtualServiceNotReconciled, err.Error())
-		return err
-	}
 	wildcardGatewayNames := []string{}
 	if r.shouldReconcileTLS(ing) {
 		originSecrets, err := resources.GetSecrets(ing, r.secretLister)
@@ -199,6 +186,21 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 			}
 		}
 	}
+
+	gatewayNames := qualifiedGatewayNamesFromContext(ctx)
+	gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(wildcardGatewayNames...)
+	vses, err := resources.MakeVirtualServices(ing, gatewayNames)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("Creating/Updating VirtualServices")
+	ing.Status.ObservedGeneration = ing.GetGeneration()
+	if err := r.reconcileVirtualServices(ctx, ing, vses); err != nil {
+		ing.Status.MarkLoadBalancerFailed(virtualServiceNotReconciled, err.Error())
+		return err
+	}
+
 	// Update status
 	ing.Status.MarkNetworkConfigured()
 
