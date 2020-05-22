@@ -308,7 +308,7 @@ func MakeHTTPServer(httpProtocol network.HTTPProtocol, hosts []string) *istiov1a
 func GetNonWildcardIngressTLS(ingressTLS []v1alpha1.IngressTLS, nonWildcardSecrest map[string]*corev1.Secret) []v1alpha1.IngressTLS {
 	result := []v1alpha1.IngressTLS{}
 	for _, tls := range ingressTLS {
-		if ok := nonWildcardSecrest[secretKey(tls)]; ok {
+		if _, ok := nonWildcardSecrest[secretKey(tls)]; ok {
 			result = append(result, tls)
 		}
 	}

@@ -150,7 +150,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 				return err
 			}
 
-			nonWildcardIngressTLS := resources.GetNonWildcardIngressTLS(ingressTLS, nonWildcardSecrets)
+			nonWildcardIngressTLS := resources.GetNonWildcardIngressTLS(ing.Spec.TLS, nonWildcardSecrets)
 			// For Ingress TLS referencing non-wildcard certificate, we reconcile user provided Gateway to enforce the TLS configuration regularly.
 			desiredIngressServer, err := resources.MakeTLSServers(ing, nonWildcardIngressTLS, ns, nonWildcardSecrets)
 			if err != nil {
