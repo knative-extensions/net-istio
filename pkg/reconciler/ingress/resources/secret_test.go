@@ -17,17 +17,8 @@ limitations under the License.
 package resources
 
 import (
-	"bytes"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
-	"crypto/x509/pkix"
-	"encoding/pem"
 	"fmt"
-	"math/big"
-	"net"
 	"testing"
-	"time"
 
 	"knative.dev/pkg/system"
 
@@ -67,8 +58,8 @@ var (
 		},
 	}
 
-	wildcardCert, _    = generateCertificate("*.example.com", "wildcard", "")
-	nonWildcardCert, _ = generateCertificate("test.example.com", "nonWildcard", "")
+	wildcardCert, _    = GenerateCertificate("*.example.com", "wildcard", "")
+	nonWildcardCert, _ = GenerateCertificate("test.example.com", "nonWildcard", "")
 )
 
 func TestGetSecrets(t *testing.T) {
@@ -333,65 +324,4 @@ func TestGetHostsFromCertSecret(t *testing.T) {
 			t.Fatalf("Unexpected hosts (-want, +got): %s", diff)
 		}
 	}
-}
-
-func generateCertificate(host string, secretName string, namespace string) (*corev1.Secret, error) {
-	priv, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate private key: %v", err)
-	}
-
-	notBefore := time.Now().Add(-5 * time.Minute)
-	notAfter := notBefore.Add(2 * time.Hour)
-
-	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
-	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate serial number: %v", err)
-	}
-
-	template := x509.Certificate{
-		SerialNumber: serialNumber,
-		Subject: pkix.Name{
-			Organization: []string{"Knative Serving"},
-		},
-		NotBefore: notBefore,
-		NotAfter:  notAfter,
-
-		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		BasicConstraintsValid: true,
-	}
-
-	if ip := net.ParseIP(host); ip != nil {
-		template.IPAddresses = append(template.IPAddresses, ip)
-	} else {
-		template.DNSNames = append(template.DNSNames, host)
-	}
-
-	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create the certificate: %v", err)
-	}
-
-	var certBuf bytes.Buffer
-	if err := pem.Encode(&certBuf, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
-		return nil, fmt.Errorf("failed to encode the certificate: %v", err)
-	}
-
-	var keyBuf bytes.Buffer
-	if err := pem.Encode(&keyBuf, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)}); err != nil {
-		return nil, fmt.Errorf("failed to encode the private key: %v", err)
-	}
-
-	return &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
-			Namespace: namespace,
-		},
-		Data: map[string][]byte{
-			corev1.TLSCertKey:       certBuf.Bytes(),
-			corev1.TLSPrivateKeyKey: keyBuf.Bytes(),
-		},
-	}, nil
 }
