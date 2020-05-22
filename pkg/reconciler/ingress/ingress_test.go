@@ -51,6 +51,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -87,7 +88,33 @@ const (
 
 var (
 	nonWildcardCert, _ = resources.GenerateCertificate("host-1.example.com", "secret0", "istio-system")
-
+	wildcardCert, _    = resources.GenerateCertificate("*.example.com", "secret0", "istio-system")
+	selector           = map[string]string{
+		"istio": "ingress",
+	}
+	ingressService = &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "istio-ingressgateway",
+			Namespace: "istio-system",
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: selector,
+		},
+	}
+	wildcardTLSServer = &istiov1alpha3.Server{
+		Hosts: []string{"*.example.com"},
+		Port: &istiov1alpha3.Port{
+			Name:     "https",
+			Number:   443,
+			Protocol: "HTTPS",
+		},
+		Tls: &istiov1alpha3.Server_TLSOptions{
+			Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+			ServerCertificate: corev1.TLSCertKey,
+			PrivateKey:        corev1.TLSPrivateKeyKey,
+			CredentialName:    "secret0",
+		},
+	}
 	originGateways = map[string]string{
 		"gateway.knative-test-gateway": originDomainInternal,
 	}
@@ -766,6 +793,73 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 		},
 		Key: "test-ns/reconciling-ingress",
 	}, {
+		Name:                    "new Ingress using wildcard certificate",
+		SkipNamespaceValidation: true,
+		Objects: []runtime.Object{
+			ingressWithTLS("reconciling-ingress", 1234, ingressTLS),
+			// No Gateway servers match the given TLS of Ingress.
+			gateway(networking.KnativeIngressGateway, system.Namespace(), []*istiov1alpha3.Server{irrelevantServer}),
+			wildcardCert,
+			ingressService,
+		},
+		WantCreates: []runtime.Object{
+			// The creation of gateways are triggered when setting up the test.
+			gateway(networking.KnativeIngressGateway, system.Namespace(), []*istiov1alpha3.Server{irrelevantServer}),
+			wildcardGateway(resources.WildcardGatewayName(wildcardCert.Name, ingressService.Namespace, ingressService.Name), "istio-system",
+				[]*istiov1alpha3.Server{wildcardTLSServer}, selector),
+
+			resources.MakeMeshVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", 1234, ingressTLS)), ingressGateway),
+			resources.MakeIngressVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", 1234, ingressTLS)),
+				makeGatewayMap([]string{"knative-testing/" + networking.KnativeIngressGateway}, nil)),
+		},
+		WantPatches: []clientgotesting.PatchActionImpl{
+			patchAddFinalizerAction("reconciling-ingress", ingressFinalizer),
+		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ingressWithTLSAndStatus("reconciling-ingress", 1234,
+				ingressTLS,
+				v1alpha1.IngressStatus{
+					LoadBalancer: &v1alpha1.LoadBalancerStatus{
+						Ingress: []v1alpha1.LoadBalancerIngressStatus{
+							{DomainInternal: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system")},
+						},
+					},
+					PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
+						Ingress: []v1alpha1.LoadBalancerIngressStatus{
+							{DomainInternal: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system")},
+						},
+					},
+					PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{
+						Ingress: []v1alpha1.LoadBalancerIngressStatus{
+							{MeshOnly: true},
+						},
+					},
+					Status: duckv1.Status{
+						Conditions: duckv1.Conditions{{
+							Type:     v1alpha1.IngressConditionLoadBalancerReady,
+							Status:   corev1.ConditionTrue,
+							Severity: apis.ConditionSeverityError,
+						}, {
+							Type:     v1alpha1.IngressConditionNetworkConfigured,
+							Status:   corev1.ConditionTrue,
+							Severity: apis.ConditionSeverityError,
+						}, {
+							Type:     v1alpha1.IngressConditionReady,
+							Status:   corev1.ConditionTrue,
+							Severity: apis.ConditionSeverityError,
+						}},
+					},
+				},
+			),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
+			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", `IngressType reconciled: "test-ns/reconciling-ingress"`),
+		},
+		Key: "test-ns/reconciling-ingress",
+	}, {
 		Name: "No preinstalled Gateways",
 		Objects: []runtime.Object{
 			ingressWithTLS("reconciling-ingress", 1234, ingressTLS),
@@ -1107,6 +1201,7 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			virtualServiceLister: listers.GetVirtualServiceLister(),
 			gatewayLister:        listers.GetGatewayLister(),
 			secretLister:         listers.GetSecretLister(),
+			svcLister:            listers.GetK8sServiceLister(),
 			tracker:              &NullTracker{},
 			finalizer:            ingressFinalizer,
 			statusManager: &fakeStatusManager{
@@ -1158,6 +1253,14 @@ func gateway(name, namespace string, servers []*istiov1alpha3.Server) *v1alpha3.
 			Servers: servers,
 		},
 	}
+}
+
+func wildcardGateway(name, namespace string, servers []*istiov1alpha3.Server, selector map[string]string) *v1alpha3.Gateway {
+	gw := gateway(name, namespace, servers)
+	gvk := schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
+	gw.OwnerReferences = []metav1.OwnerReference{*metav1.NewControllerRef(wildcardCert, gvk)}
+	gw.Spec.Selector = selector
+	return gw
 }
 
 func originSecret(namespace, name string) *corev1.Secret {
