@@ -113,6 +113,9 @@ func MakeIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, originSecre
 // For each public ingress service, we will create a list of Gateways. Each Gateway of the list corresponds to a wildcard cert secret.
 func MakeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]*corev1.Secret,
 	svcLister corev1listers.ServiceLister) ([]*v1alpha3.Gateway, error) {
+	if len(originWildcardSecrets) == 0 {
+		return []*v1alpha3.Gateway{}, nil
+	}
 	gatewayServices, err := getGatewayServices(ctx, svcLister)
 	if err != nil {
 		return nil, err
