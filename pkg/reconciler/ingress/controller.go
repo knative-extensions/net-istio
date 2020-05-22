@@ -69,6 +69,7 @@ func newControllerWithOptions(
 	virtualServiceInformer := virtualserviceinformer.Get(ctx)
 	gatewayInformer := gatewayinformer.Get(ctx)
 	secretInformer := secretinformer.Get(ctx)
+	serviceInformer := serviceinformer.Get(ctx)
 	ingressInformer := ingressinformer.Get(ctx)
 
 	c := &Reconciler{
@@ -77,6 +78,7 @@ func newControllerWithOptions(
 		virtualServiceLister: virtualServiceInformer.Lister(),
 		gatewayLister:        gatewayInformer.Lister(),
 		secretLister:         secretInformer.Lister(),
+		svcLister:            serviceInformer.Lister(),
 		finalizer:            ingressFinalizer,
 	}
 	myFilterFunc := reconciler.AnnotationFilterFunc(networking.IngressClassAnnotationKey, network.IstioIngressClassName, true)
@@ -109,7 +111,6 @@ func newControllerWithOptions(
 
 	logger.Info("Setting up statusManager")
 	endpointsInformer := endpointsinformer.Get(ctx)
-	serviceInformer := serviceinformer.Get(ctx)
 	podInformer := podinformer.Get(ctx)
 	resyncOnIngressReady := func(ing *v1alpha1.Ingress) {
 		impl.EnqueueKey(types.NamespacedName{Namespace: ing.GetNamespace(), Name: ing.GetName()})
