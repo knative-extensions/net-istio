@@ -146,12 +146,13 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 
 		for _, gw := range config.FromContext(ctx).Istio.IngressGateways {
 			ns, err := resources.ServiceNamespaceFromURL(gw.ServiceURL)
-			nonWildcardIngressTLS, _ := resources.CategorizeTLS(ing.Spec.TLS, nonWildcardSecrets, wildcardSecrets)
 			if err != nil {
 				return err
 			}
+
+			nonWildcardIngressTLS := resources.GetNonWildcardIngressTLS(ingressTLS, nonWildcardSecrets)
 			// For Ingress TLS referencing non-wildcard certificate, we reconcile user provided Gateway to enforce the TLS configuration regularly.
-			desiredIngressServer, err := resources.MakeTLSServers(nonWildcardIngressTLS, ns, nonWildcardSecrets)
+			desiredIngressServer, err := resources.MakeTLSServers(ing, nonWildcardIngressTLS, ns, nonWildcardSecrets)
 			if err != nil {
 				return err
 			}
@@ -369,7 +370,7 @@ func (r *Reconciler) reconcileIngressServers(ctx context.Context, ing *v1alpha1.
 		return fmt.Errorf("failed to get Gateway: %w", err)
 	}
 	existing := resources.GetServers(gateway, ing)
-	return r.reconcileUserProvidedGateway(ctx, ing, gateway, existing, desired)
+	return r.reconcileGateway(ctx, ing, gateway, existing, desired)
 }
 
 func (r *Reconciler) reconcileHTTPServer(ctx context.Context, ing *v1alpha1.Ingress, gw config.Gateway, desiredHTTP *istiov1alpha3.Server) error {
@@ -387,10 +388,10 @@ func (r *Reconciler) reconcileHTTPServer(ctx context.Context, ing *v1alpha1.Ingr
 	if desiredHTTP != nil {
 		desired = append(desired, desiredHTTP)
 	}
-	return r.reconcileUserProvidedGateway(ctx, ing, gateway, existing, desired)
+	return r.reconcileGateway(ctx, ing, gateway, existing, desired)
 }
 
-func (r *Reconciler) reconcileUserProvidedGateway(ctx context.Context, ing *v1alpha1.Ingress, gateway *v1alpha3.Gateway, existing []*istiov1alpha3.Server, desired []*istiov1alpha3.Server) error {
+func (r *Reconciler) reconcileGateway(ctx context.Context, ing *v1alpha1.Ingress, gateway *v1alpha3.Gateway, existing []*istiov1alpha3.Server, desired []*istiov1alpha3.Server) error {
 	if equality.Semantic.DeepEqual(existing, desired) {
 		return nil
 	}

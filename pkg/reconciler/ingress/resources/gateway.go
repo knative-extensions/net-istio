@@ -193,7 +193,7 @@ func makeIngressGateway(ctx context.Context, ing *v1alpha1.Ingress, originSecret
 	if len(ns) == 0 {
 		ns = system.Namespace()
 	}
-	servers, err := MakeTLSServers(ing, gatewayService.Namespace, originSecrets)
+	servers, err := MakeTLSServers(ing, ing.Spec.TLS, gatewayService.Namespace, originSecrets)
 	if err != nil {
 		return nil, err
 	}
@@ -245,12 +245,12 @@ func GatewayName(accessor kmeta.Accessor, gatewaySvc *corev1.Service) string {
 	return fmt.Sprintf("%s-%d", accessor.GetName(), adler32.Checksum([]byte(gatewayServiceKey)))
 }
 
-// MakeTLSServers creates the expected Gateway TLS `Servers` based on the given Ingress.
-func MakeTLSServers(ing *v1alpha1.Ingress, gatewayServiceNamespace string, originSecrets map[string]*corev1.Secret) ([]*istiov1alpha3.Server, error) {
-	servers := make([]*istiov1alpha3.Server, len(ing.Spec.TLS))
+// MakeTLSServers creates the expected Gateway TLS `Servers` based on the given IngressTLS.
+func MakeTLSServers(ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, gatewayServiceNamespace string, originSecrets map[string]*corev1.Secret) ([]*istiov1alpha3.Server, error) {
+	servers := make([]*istiov1alpha3.Server, len(ingressTLS))
 	// TODO(zhiminx): for the hosts that does not included in the IngressTLS but listed in the IngressRule,
 	// do we consider them as hosts for HTTP?
-	for i, tls := range ing.Spec.TLS {
+	for i, tls := range ingressTLS {
 		credentialName := tls.SecretName
 		// If the origin secret is not in the target namespace, then it should have been
 		// copied into the target namespace. So we use the name of the copy.
@@ -302,6 +302,17 @@ func MakeHTTPServer(httpProtocol network.HTTPProtocol, hosts []string) *istiov1a
 		}
 	}
 	return server
+}
+
+// GetNonWildcardIngressTLS gets Ingress TLS that do not reference wildcard certificates.
+func GetNonWildcardIngressTLS(ingressTLS []v1alpha1.IngressTLS, nonWildcardSecrest map[string]*corev1.Secret) []v1alpha1.IngressTLS {
+	result := []v1alpha1.IngressTLS{}
+	for _, tls := range ingressTLS {
+		if ok := nonWildcardSecrest[secretKey(tls)]; ok {
+			result = append(result, tls)
+		}
+	}
+	return result
 }
 
 // ServiceNamespaceFromURL extracts the namespace part from the service URL.
