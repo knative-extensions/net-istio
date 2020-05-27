@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"istio.io/api/networking/v1alpha3"
 	"knative.dev/net-istio/pkg/reconciler/ingress"
 
 	// This defines the shared main for injected controllers.
@@ -24,5 +25,10 @@ import (
 )
 
 func main() {
+	// Allow unknown fields in Istio API client.  This is so that we are more resilience
+	// in cases user clusers have malformed resources.
+	v1alpha3.VirtualServiceUnmarshaler.AllowUnknownFields = true
+	v1alpha3.GatewayUnmarshaler.AllowUnknownFields = true
+
 	sharedmain.Main("istiocontroller", ingress.NewController)
 }
