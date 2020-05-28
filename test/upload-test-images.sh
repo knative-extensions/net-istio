@@ -28,7 +28,7 @@ function upload_test_images() {
       tag_option="--tags $docker_tag,latest"
     fi
 
-    tree ${image_dir}
+    ls -R ${image_dir}
 
     for yaml in $(find ${image_dir} -name '*.yaml'); do
       # Rewrite image reference to use vendor.
