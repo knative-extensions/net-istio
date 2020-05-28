@@ -1152,6 +1152,97 @@ func TestListProbeTargets(t *testing.T) {
 				{Scheme: "http", Host: "foo.bar.svc:80"},
 				{Scheme: "http", Host: "foo.bar.svc.cluster.local:80"}},
 		}},
+	}, {
+		name: "two servers, same port, same protocol",
+		ingressGateways: []config.Gateway{{
+			Name:      "gateway",
+			Namespace: "default",
+		}},
+		gatewayLister: &fakeGatewayLister{
+			gateways: []*v1alpha3.Gateway{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "gateway",
+				},
+				Spec: istiov1alpha3.Gateway{
+					Servers: []*istiov1alpha3.Server{{
+						Hosts: []string{"*"},
+						Port: &istiov1alpha3.Port{
+							Name:     "http",
+							Number:   80,
+							Protocol: "HTTP",
+						},
+					}, {
+						Hosts: []string{"foo.bar.com"},
+						Port: &istiov1alpha3.Port{
+							Name:     "http",
+							Number:   80,
+							Protocol: "HTTP",
+						},
+					}},
+					Selector: map[string]string{
+						"gwt": "istio",
+					},
+				},
+			}},
+		},
+		endpointsLister: &fakeEndpointsLister{
+			endpointses: []*v1.Endpoints{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "gateway",
+				},
+				Subsets: []v1.EndpointSubset{{
+					Ports: []v1.EndpointPort{{
+						Name: "bogus",
+						Port: 8080,
+					}, {
+						Name: "real",
+						Port: 80,
+					}},
+					Addresses: []v1.EndpointAddress{{
+						IP: "1.1.1.1",
+					}},
+				}},
+			}},
+		},
+		serviceLister: &fakeServiceLister{
+			services: []*v1.Service{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "gateway",
+					Labels: map[string]string{
+						"gwt": "istio",
+					},
+				},
+				Spec: v1.ServiceSpec{
+					Ports: []v1.ServicePort{{
+						Name: "real",
+						Port: 80,
+					}},
+				},
+			}},
+		},
+		ingress: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "default",
+				Name:      "whatever",
+			},
+			Spec: v1alpha1.IngressSpec{
+				Rules: []v1alpha1.IngressRule{{
+					Hosts: []string{
+						"foo.bar.com",
+					},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+				}},
+			},
+		},
+		results: []status.ProbeTarget{{
+			PodIPs:  sets.NewString("1.1.1.1"),
+			PodPort: "80",
+			Port:    "80",
+			URLs:    []*url.URL{{Scheme: "http", Host: "foo.bar.com:80"}},
+		}},
 	}}
 
 	for _, test := range tests {

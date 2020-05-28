@@ -127,6 +127,7 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) (
 		return nil, fmt.Errorf("failed to get Endpoints: %w", err)
 	}
 
+	seen := sets.NewString()
 	targets := []status.ProbeTarget{}
 	for _, server := range gateway.Spec.Servers {
 		tURL := &url.URL{}
@@ -149,6 +150,13 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) (
 			l.logger.Infof("Skipping Server %q because Service %s/%s doesn't contain a port %d", server.Port.Name, service.Namespace, service.Name, server.Port.Number)
 			continue
 		}
+
+		key := server.Port.Protocol + "/" + strconv.Itoa(int(server.Port.Number))
+		if seen.Has(key) {
+			continue
+		}
+		seen.Insert(key)
+
 		for _, sub := range endpoints.Subsets {
 			// The translation from server.Port.Number -> portName -> portNumber is intentional.
 			// We can't simply translate from the Service.Spec because Service.Spec.Target.Port
