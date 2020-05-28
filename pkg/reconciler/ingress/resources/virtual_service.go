@@ -167,7 +167,7 @@ func makeVirtualServiceRoute(hosts sets.String, http *v1alpha1.HTTPIngressPath, 
 			// For local hostname, always use private gateway
 			g = gateways[v1alpha1.IngressVisibilityClusterLocal]
 		}
-		matches = append(matches, makeMatch(host, http.Path, g))
+		matches = append(matches, makeMatch(host, http.Path, http.Headers, g))
 	}
 	weights := []*istiov1alpha3.HTTPRouteDestination{}
 	for _, split := range http.Splits {
@@ -234,7 +234,7 @@ func keepLocalHostnames(hosts sets.String) sets.String {
 	return retained
 }
 
-func makeMatch(host string, pathRegExp string, gateways sets.String) *istiov1alpha3.HTTPMatchRequest {
+func makeMatch(host string, pathRegExp string, headers map[string]v1alpha1.HeaderMatch, gateways sets.String) *istiov1alpha3.HTTPMatchRequest {
 	match := &istiov1alpha3.HTTPMatchRequest{
 		Gateways: gateways.List(),
 		Authority: &istiov1alpha3.StringMatch{
@@ -249,6 +249,17 @@ func makeMatch(host string, pathRegExp string, gateways sets.String) *istiov1alp
 			MatchType: &istiov1alpha3.StringMatch_Regex{Regex: pathRegExp},
 		}
 	}
+
+	for k, v := range headers {
+		match.Headers = map[string]*istiov1alpha3.StringMatch{
+			k: {
+				MatchType: &istiov1alpha3.StringMatch_Exact{
+					Exact: v.Exact,
+				},
+			},
+		}
+	}
+
 	return match
 }
 
