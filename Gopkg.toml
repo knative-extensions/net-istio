@@ -10,6 +10,7 @@ required = [
   "knative.dev/pkg/codegen/cmd/injection-gen",
   "knative.dev/serving/test/conformance/ingress",
   "knative.dev/serving/test/test_images/flaky",
+  "knative.dev/serving/test/test_images/helloworld",
   "knative.dev/serving/test/test_images/grpc-ping",
   "knative.dev/serving/test/test_images/httpproxy",
   "knative.dev/serving/test/test_images/runtime",

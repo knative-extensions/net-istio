@@ -1183,7 +1183,7 @@
 
 [[projects]]
   branch = "release-0.14"
-  digest = "1:f806eb7e5629d594362dc18905d092888b1d56fbfe026a597d25b86e846f2d53"
+  digest = "1:8b6fc008c0812bf9aa046747c03366415274bfb66475aa201701c904fac5fb18"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1252,11 +1252,11 @@
     "webhook/resourcesemantics/defaulting",
   ]
   pruneopts = "T"
-  revision = "2a1db869228ceaca9df34790b49cdf4893a5d39d"
+  revision = "7b6bb61326aec4bb26625da0d24a1ac3d1122950"
 
 [[projects]]
   branch = "release-0.14"
-  digest = "1:9f503c04b1253ff9a61091004a0c7e35e17f460bd9cd918bd9e68552f1610dff"
+  digest = "1:08ae6d731a3848402c005461c74289f99babd6b1c5f2a875cd23079294e3d2b0"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1328,6 +1328,7 @@
     "test/test_images/flaky",
     "test/test_images/grpc-ping",
     "test/test_images/grpc-ping/proto",
+    "test/test_images/helloworld",
     "test/test_images/httpproxy",
     "test/test_images/runtime",
     "test/test_images/runtime/handlers",
@@ -1338,7 +1339,7 @@
     "test/v1alpha1",
   ]
   pruneopts = "U"
-  revision = "f87352b72c48286f164838ddc6684c805ea082a9"
+  revision = "4f12c1fec52f6aaa3a383fa0164c3cfa7c4faa8d"
 
 [[projects]]
   branch = "release-0.14"
@@ -1462,6 +1463,7 @@
     "knative.dev/serving/test/e2e",
     "knative.dev/serving/test/test_images/flaky",
     "knative.dev/serving/test/test_images/grpc-ping",
+    "knative.dev/serving/test/test_images/helloworld",
     "knative.dev/serving/test/test_images/httpproxy",
     "knative.dev/serving/test/test_images/runtime",
     "knative.dev/serving/test/test_images/timeout",
