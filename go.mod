@@ -1,6 +1,6 @@
 module knative.dev/net-istio
 
-go 1.13
+go 1.14
 
 require (
 	github.com/gobuffalo/envy v1.9.0 // indirect
