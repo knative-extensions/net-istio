@@ -677,6 +677,25 @@ func TestMakeWildcardGateways(t *testing.T) {
 	}
 }
 
+func TestGatewayRef(t *testing.T) {
+	gw := &v1alpha3.Gateway{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "istio-ingress-gateway",
+			Namespace: "knative-serving",
+		},
+	}
+	want := corev1.ObjectReference{
+		APIVersion: "networking.istio.io/v1alpha3",
+		Kind:       "Gateway",
+		Name:       "istio-ingress-gateway",
+		Namespace:  "knative-serving",
+	}
+	got := GatewayRef(gw)
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("GatewayRef failed. diff %s", diff)
+	}
+}
+
 func TestGetQualifiedGatewayNames(t *testing.T) {
 	gateways := []*v1alpha3.Gateway{{
 		ObjectMeta: metav1.ObjectMeta{
