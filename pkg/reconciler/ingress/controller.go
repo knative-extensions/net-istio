@@ -41,6 +41,7 @@ import (
 	"knative.dev/serving/pkg/network/status"
 	servingreconciler "knative.dev/serving/pkg/reconciler"
 
+	v1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
@@ -126,10 +127,6 @@ func newControllerWithOptions(
 	c.statusManager = statusProber
 	statusProber.Start(ctx.Done())
 
-	ingressInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		// Cancel probing when a Ingress is deleted
-		DeleteFunc: statusProber.CancelIngressProbing,
-	})
 	podInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		// Cancel probing when a Pod is deleted
 		DeleteFunc: statusProber.CancelPodProbing,
@@ -145,8 +142,32 @@ func newControllerWithOptions(
 			corev1.SchemeGroupVersion.WithKind("Secret"),
 		),
 	))
+
+	gatewayInformer.Informer().AddEventHandler(controller.HandleAll(
+		controller.EnsureTypeMeta(
+			tracker.OnChanged,
+			v1alpha3.SchemeGroupVersion.WithKind("Gateway"),
+		),
+	))
+
+	ingressInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		// Cancel probing when a Ingress is deleted
+		DeleteFunc: combineFunc(
+			statusProber.CancelIngressProbing,
+			tracker.OnDeletedObserver,
+		),
+	})
+
 	for _, opt := range opts {
 		opt(c)
 	}
 	return impl
+}
+
+func combineFunc(functions ...func(interface{})) func(interface{}) {
+	return func(obj interface{}) {
+		for _, f := range functions {
+			f(obj)
+		}
+	}
 }

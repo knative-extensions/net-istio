@@ -41,6 +41,8 @@ import (
 
 var httpServerPortName = "http-server"
 
+var gatewayGvk = v1alpha3.SchemeGroupVersion.WithKind("Gateway")
+
 // Istio Gateway requires to have at least one server. This placeholderServer is used when
 // all of the real servers are deleted.
 var placeholderServer = istiov1alpha3.Server{
@@ -191,6 +193,17 @@ func GetQualifiedGatewayNames(gateways []*v1alpha3.Gateway) []string {
 		result = append(result, gw.Namespace+"/"+gw.Name)
 	}
 	return result
+}
+
+// GatewayRef returns the ObjectReference for a give Gateway.
+func GatewayRef(gw *v1alpha3.Gateway) corev1.ObjectReference {
+	apiVersion, kind := gatewayGvk.ToAPIVersionAndKind()
+	return corev1.ObjectReference{
+		APIVersion: apiVersion,
+		Kind:       kind,
+		Name:       gw.Name,
+		Namespace:  gw.Namespace,
+	}
 }
 
 func makeIngressGateway(ctx context.Context, ing *v1alpha1.Ingress, originSecrets map[string]*corev1.Secret, selector map[string]string, gatewayService *corev1.Service) (*v1alpha3.Gateway, error) {

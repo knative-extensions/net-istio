@@ -80,6 +80,7 @@ type Reconciler struct {
 	svcLister            corev1listers.ServiceLister
 
 	tracker   tracker.Interface
+	gwTracker tracker.Interface
 	finalizer string
 
 	statusManager status.Manager
@@ -170,7 +171,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 			if err != nil {
 				return err
 			}
-			if err := r.reconcileWildcardGateways(ctx, desiredWildcardGateways); err != nil {
+			if err := r.reconcileWildcardGateways(ctx, desiredWildcardGateways, ing); err != nil {
 				return err
 			}
 			wildcardGatewayNames = append(wildcardGatewayNames, resources.GetQualifiedGatewayNames(desiredWildcardGateways)...)
@@ -238,8 +239,9 @@ func (r *Reconciler) reconcileCertSecrets(ctx context.Context, ing *v1alpha1.Ing
 	return nil
 }
 
-func (r *Reconciler) reconcileWildcardGateways(ctx context.Context, gateways []*v1alpha3.Gateway) error {
+func (r *Reconciler) reconcileWildcardGateways(ctx context.Context, gateways []*v1alpha3.Gateway, ing *v1alpha1.Ingress) error {
 	for _, gateway := range gateways {
+		r.tracker.Track(resources.GatewayRef(gateway), ing)
 		if err := r.reconcileSystemGeneratedGateway(ctx, gateway); err != nil {
 			return err
 		}
