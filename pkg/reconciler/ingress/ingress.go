@@ -80,7 +80,6 @@ type Reconciler struct {
 	svcLister            corev1listers.ServiceLister
 
 	tracker   tracker.Interface
-	gwTracker tracker.Interface
 	finalizer string
 
 	statusManager status.Manager
