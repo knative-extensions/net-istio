@@ -13,8 +13,8 @@ require (
 	gomodules.xyz/jsonpatch/v2 v2.1.0 // indirect
 	istio.io/api v0.0.0-20200601150056-da2b8f9da6d0
 	istio.io/client-go v0.0.0-20200601150742-08b47b9edf56
-	k8s.io/api v0.17.6
-	k8s.io/apimachinery v0.17.6
+	k8s.io/api v0.18.1
+	k8s.io/apimachinery v0.18.1
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	knative.dev/pkg v0.0.0-20200601184204-18c577c87d4f
 	knative.dev/serving v0.15.1-0.20200602192917-906630816f4a
