@@ -140,7 +140,7 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) (
 			}
 			tURL.Scheme = "http"
 		case "HTTPS":
-			if server.GetTls().GetMode() == istiov1alpha3.Server_TLSOptions_MUTUAL {
+			if server.GetTls().GetMode() == istiov1alpha3.ServerTLSSettings_MUTUAL {
 				l.logger.Infof("Skipping Server %q because HTTPS with TLS mode MUTUAL is not supported", server.Port.Name)
 				continue
 			}

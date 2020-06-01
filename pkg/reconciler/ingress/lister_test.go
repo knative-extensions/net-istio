@@ -605,8 +605,8 @@ func TestListProbeTargets(t *testing.T) {
 							Number:   8443,
 							Protocol: "HTTPS",
 						},
-						Tls: &istiov1alpha3.Server_TLSOptions{
-							Mode: istiov1alpha3.Server_TLSOptions_MUTUAL,
+						Tls: &istiov1alpha3.ServerTLSSettings{
+							Mode: istiov1alpha3.ServerTLSSettings_MUTUAL,
 						},
 					}},
 					Selector: map[string]string{
@@ -786,7 +786,7 @@ func TestListProbeTargets(t *testing.T) {
 							Number:   80,
 							Protocol: "HTTP",
 						},
-						Tls: &istiov1alpha3.Server_TLSOptions{
+						Tls: &istiov1alpha3.ServerTLSSettings{
 							HttpsRedirect: true,
 						},
 					}, {
