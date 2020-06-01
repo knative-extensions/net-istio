@@ -28,6 +28,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
@@ -39,6 +40,8 @@ import (
 )
 
 var httpServerPortName = "http-server"
+
+var gatewayGvk = v1alpha3.SchemeGroupVersion.WithKind("Gateway")
 
 // Istio Gateway requires to have at least one server. This placeholderServer is used when
 // all of the real servers are deleted.
@@ -112,6 +115,9 @@ func MakeIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, originSecre
 // For each public ingress service, we will create a list of Gateways. Each Gateway of the list corresponds to a wildcard cert secret.
 func MakeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]*corev1.Secret,
 	svcLister corev1listers.ServiceLister) ([]*v1alpha3.Gateway, error) {
+	if len(originWildcardSecrets) == 0 {
+		return []*v1alpha3.Gateway{}, nil
+	}
 	gatewayServices, err := getGatewayServices(ctx, svcLister)
 	if err != nil {
 		return nil, err
@@ -159,11 +165,12 @@ func makeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]
 		if httpServer != nil {
 			servers = append(servers, httpServer)
 		}
+		gvk := schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
 		gateways = append(gateways, &v1alpha3.Gateway{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:            WildcardGatewayName(secret.Name, gatewayService.Namespace, gatewayService.Name),
 				Namespace:       secret.Namespace,
-				OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(secret, secret.GroupVersionKind())},
+				OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(secret, gvk)},
 			},
 			Spec: istiov1alpha3.Gateway{
 				Selector: gatewayService.Spec.Selector,
@@ -188,12 +195,23 @@ func GetQualifiedGatewayNames(gateways []*v1alpha3.Gateway) []string {
 	return result
 }
 
+// GatewayRef returns the ObjectReference for a give Gateway.
+func GatewayRef(gw *v1alpha3.Gateway) corev1.ObjectReference {
+	apiVersion, kind := gatewayGvk.ToAPIVersionAndKind()
+	return corev1.ObjectReference{
+		APIVersion: apiVersion,
+		Kind:       kind,
+		Name:       gw.Name,
+		Namespace:  gw.Namespace,
+	}
+}
+
 func makeIngressGateway(ctx context.Context, ing *v1alpha1.Ingress, originSecrets map[string]*corev1.Secret, selector map[string]string, gatewayService *corev1.Service) (*v1alpha3.Gateway, error) {
 	ns := ing.GetNamespace()
 	if len(ns) == 0 {
 		ns = system.Namespace()
 	}
-	servers, err := MakeTLSServers(ing, gatewayService.Namespace, originSecrets)
+	servers, err := MakeTLSServers(ing, ing.Spec.TLS, gatewayService.Namespace, originSecrets)
 	if err != nil {
 		return nil, err
 	}
@@ -245,12 +263,12 @@ func GatewayName(accessor kmeta.Accessor, gatewaySvc *corev1.Service) string {
 	return fmt.Sprintf("%s-%d", accessor.GetName(), adler32.Checksum([]byte(gatewayServiceKey)))
 }
 
-// MakeTLSServers creates the expected Gateway TLS `Servers` based on the given Ingress.
-func MakeTLSServers(ing *v1alpha1.Ingress, gatewayServiceNamespace string, originSecrets map[string]*corev1.Secret) ([]*istiov1alpha3.Server, error) {
-	servers := make([]*istiov1alpha3.Server, len(ing.Spec.TLS))
+// MakeTLSServers creates the expected Gateway TLS `Servers` based on the given IngressTLS.
+func MakeTLSServers(ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, gatewayServiceNamespace string, originSecrets map[string]*corev1.Secret) ([]*istiov1alpha3.Server, error) {
+	servers := make([]*istiov1alpha3.Server, len(ingressTLS))
 	// TODO(zhiminx): for the hosts that does not included in the IngressTLS but listed in the IngressRule,
 	// do we consider them as hosts for HTTP?
-	for i, tls := range ing.Spec.TLS {
+	for i, tls := range ingressTLS {
 		credentialName := tls.SecretName
 		// If the origin secret is not in the target namespace, then it should have been
 		// copied into the target namespace. So we use the name of the copy.
@@ -302,6 +320,17 @@ func MakeHTTPServer(httpProtocol network.HTTPProtocol, hosts []string) *istiov1a
 		}
 	}
 	return server
+}
+
+// GetNonWildcardIngressTLS gets Ingress TLS that do not reference wildcard certificates.
+func GetNonWildcardIngressTLS(ingressTLS []v1alpha1.IngressTLS, nonWildcardSecrest map[string]*corev1.Secret) []v1alpha1.IngressTLS {
+	result := []v1alpha1.IngressTLS{}
+	for _, tls := range ingressTLS {
+		if _, ok := nonWildcardSecrest[secretKey(tls)]; ok {
+			result = append(result, tls)
+		}
+	}
+	return result
 }
 
 // ServiceNamespaceFromURL extracts the namespace part from the service URL.

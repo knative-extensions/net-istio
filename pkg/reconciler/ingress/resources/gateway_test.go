@@ -26,6 +26,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
@@ -50,6 +51,8 @@ var secret = corev1.Secret{
 		"test": []byte("test"),
 	},
 }
+
+var secretGVK = schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
 
 var wildcardSecret, _ = GenerateCertificate("*.example.com", "secret0", system.Namespace())
 
@@ -266,7 +269,7 @@ func TestMakeTLSServers(t *testing.T) {
 	}}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			servers, err := MakeTLSServers(c.ci, c.gatewayServiceNamespace, c.originSecrets)
+			servers, err := MakeTLSServers(c.ci, c.ci.Spec.TLS, c.gatewayServiceNamespace, c.originSecrets)
 			if (err != nil) != c.wantErr {
 				t.Fatalf("Test: %s; MakeServers error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
@@ -562,7 +565,7 @@ func TestMakeWildcardGateways(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:            WildcardGatewayName(wildcardSecret.Name, "istio-system", "istio-ingressgateway"),
 				Namespace:       system.Namespace(),
-				OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(wildcardSecret, wildcardSecret.GroupVersionKind())},
+				OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(wildcardSecret, secretGVK)},
 			},
 			Spec: istiov1alpha3.Gateway{
 				Selector: selector,
@@ -605,7 +608,7 @@ func TestMakeWildcardGateways(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:            WildcardGatewayName(wildcardSecret.Name, system.Namespace(), "istio-ingressgateway"),
 				Namespace:       system.Namespace(),
-				OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(wildcardSecret, wildcardSecret.GroupVersionKind())},
+				OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(wildcardSecret, secretGVK)},
 			},
 			Spec: istiov1alpha3.Gateway{
 				Selector: selector,
@@ -671,6 +674,25 @@ func TestMakeWildcardGateways(t *testing.T) {
 				t.Errorf("Unexpected Gateways (-want, +got): %v", diff)
 			}
 		})
+	}
+}
+
+func TestGatewayRef(t *testing.T) {
+	gw := &v1alpha3.Gateway{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "istio-ingress-gateway",
+			Namespace: "knative-serving",
+		},
+	}
+	want := corev1.ObjectReference{
+		APIVersion: "networking.istio.io/v1alpha3",
+		Kind:       "Gateway",
+		Name:       "istio-ingress-gateway",
+		Namespace:  "knative-serving",
+	}
+	got := GatewayRef(gw)
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("GatewayRef failed. diff %s", diff)
 	}
 }
 

@@ -40,6 +40,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
+	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/errors"
@@ -76,6 +77,7 @@ type Reconciler struct {
 	virtualServiceLister istiolisters.VirtualServiceLister
 	gatewayLister        istiolisters.GatewayLister
 	secretLister         corev1listers.SecretLister
+	svcLister            corev1listers.ServiceLister
 
 	tracker   tracker.Interface
 	finalizer string
@@ -117,28 +119,28 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	ing.Status.InitializeConditions()
 	logger.Infof("Reconciling ingress: %#v", ing)
 
-	gatewayNames := qualifiedGatewayNamesFromContext(ctx)
-	vses, err := resources.MakeVirtualServices(ing, gatewayNames)
-	if err != nil {
-		return err
-	}
-
-	// First, create the VirtualServices.
-	logger.Info("Creating/Updating VirtualServices")
 	ing.Status.ObservedGeneration = ing.GetGeneration()
-	if err := r.reconcileVirtualServices(ctx, ing, vses); err != nil {
-		ing.Status.MarkLoadBalancerFailed(virtualServiceNotReconciled, err.Error())
-		return err
-	}
+	wildcardGatewayNames := []string{}
 	if r.shouldReconcileTLS(ing) {
 		originSecrets, err := resources.GetSecrets(ing, r.secretLister)
 		if err != nil {
 			return err
 		}
-		targetSecrets, err := resources.MakeSecrets(ctx, originSecrets, ing)
+		nonWildcardSecrets, wildcardSecrets, err := resources.CategorizeSecrets(originSecrets)
 		if err != nil {
 			return err
 		}
+		targetNonwildcardSecrets, err := resources.MakeSecrets(ctx, nonWildcardSecrets, ing)
+		if err != nil {
+			return err
+		}
+		targetWildcardSecrets, err := resources.MakeWildcardSecrets(ctx, wildcardSecrets)
+		if err != nil {
+			return err
+		}
+		targetSecrets := make([]*corev1.Secret, 0, len(targetNonwildcardSecrets)+len(targetWildcardSecrets))
+		targetSecrets = append(targetSecrets, targetNonwildcardSecrets...)
+		targetSecrets = append(targetSecrets, targetWildcardSecrets...)
 		if err := r.reconcileCertSecrets(ctx, ing, targetSecrets); err != nil {
 			return err
 		}
@@ -148,13 +150,30 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 			if err != nil {
 				return err
 			}
-			desired, err := resources.MakeTLSServers(ing, ns, originSecrets)
+
+			nonWildcardIngressTLS := resources.GetNonWildcardIngressTLS(ing.Spec.TLS, nonWildcardSecrets)
+			// For Ingress TLS referencing non-wildcard certificate, we reconcile user provided Gateway to enforce the TLS configuration regularly.
+			desiredIngressServer, err := resources.MakeTLSServers(ing, nonWildcardIngressTLS, ns, nonWildcardSecrets)
 			if err != nil {
 				return err
 			}
-			if err := r.reconcileIngressServers(ctx, ing, gw, desired); err != nil {
+			if err := r.reconcileIngressServers(ctx, ing, gw, desiredIngressServer); err != nil {
 				return err
 			}
+
+			// For Ingress TLS referencing wildcard certificates, we reconcile a separate Gateway
+			// that will be shared by other Ingresses that reference the
+			// same wildcard host. We need to handle wildcard certificate specially because Istio does
+			// not fully support multiple TLS Servers (or Gateways) share the same certificate.
+			// https://istio.io/docs/ops/common-problems/network-issues/
+			desiredWildcardGateways, err := resources.MakeWildcardGateways(ctx, wildcardSecrets, r.svcLister)
+			if err != nil {
+				return err
+			}
+			if err := r.reconcileWildcardGateways(ctx, desiredWildcardGateways, ing); err != nil {
+				return err
+			}
+			wildcardGatewayNames = append(wildcardGatewayNames, resources.GetQualifiedGatewayNames(desiredWildcardGateways)...)
 		}
 	}
 
@@ -169,6 +188,20 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 			}
 		}
 	}
+
+	gatewayNames := qualifiedGatewayNamesFromContext(ctx)
+	gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(wildcardGatewayNames...)
+	vses, err := resources.MakeVirtualServices(ing, gatewayNames)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("Creating/Updating VirtualServices")
+	if err := r.reconcileVirtualServices(ctx, ing, vses); err != nil {
+		ing.Status.MarkLoadBalancerFailed(virtualServiceNotReconciled, err.Error())
+		return err
+	}
+
 	// Update status
 	ing.Status.MarkNetworkConfigured()
 
@@ -199,6 +232,34 @@ func (r *Reconciler) reconcileCertSecrets(ctx context.Context, ing *v1alpha1.Ing
 			certSecret.Labels[networking.OriginSecretNamespaceLabelKey],
 			certSecret.Labels[networking.OriginSecretNameLabelKey]), ing)
 		if _, err := coreaccessor.ReconcileSecret(ctx, nil, certSecret, r); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *Reconciler) reconcileWildcardGateways(ctx context.Context, gateways []*v1alpha3.Gateway, ing *v1alpha1.Ingress) error {
+	for _, gateway := range gateways {
+		r.tracker.Track(resources.GatewayRef(gateway), ing)
+		if err := r.reconcileSystemGeneratedGateway(ctx, gateway); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desired *v1alpha3.Gateway) error {
+	existing, err := r.gatewayLister.Gateways(desired.Namespace).Get(desired.Name)
+	if apierrs.IsNotFound(err) {
+		if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(desired.Namespace).Create(desired); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	} else if !equality.Semantic.DeepEqual(existing.Spec, desired.Spec) {
+		copy := existing.DeepCopy()
+		copy.Spec = desired.Spec
+		if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(desired.Namespace).Update(copy); err != nil {
 			return err
 		}
 	}

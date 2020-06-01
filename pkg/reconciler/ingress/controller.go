@@ -41,6 +41,7 @@ import (
 	"knative.dev/serving/pkg/network/status"
 	servingreconciler "knative.dev/serving/pkg/reconciler"
 
+	v1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
@@ -69,6 +70,7 @@ func newControllerWithOptions(
 	virtualServiceInformer := virtualserviceinformer.Get(ctx)
 	gatewayInformer := gatewayinformer.Get(ctx)
 	secretInformer := secretinformer.Get(ctx)
+	serviceInformer := serviceinformer.Get(ctx)
 	ingressInformer := ingressinformer.Get(ctx)
 
 	c := &Reconciler{
@@ -77,6 +79,7 @@ func newControllerWithOptions(
 		virtualServiceLister: virtualServiceInformer.Lister(),
 		gatewayLister:        gatewayInformer.Lister(),
 		secretLister:         secretInformer.Lister(),
+		svcLister:            serviceInformer.Lister(),
 		finalizer:            ingressFinalizer,
 	}
 	myFilterFunc := reconciler.AnnotationFilterFunc(networking.IngressClassAnnotationKey, network.IstioIngressClassName, true)
@@ -109,7 +112,6 @@ func newControllerWithOptions(
 
 	logger.Info("Setting up statusManager")
 	endpointsInformer := endpointsinformer.Get(ctx)
-	serviceInformer := serviceinformer.Get(ctx)
 	podInformer := podinformer.Get(ctx)
 	resyncOnIngressReady := func(ing *v1alpha1.Ingress) {
 		impl.EnqueueKey(types.NamespacedName{Namespace: ing.GetNamespace(), Name: ing.GetName()})
@@ -125,10 +127,6 @@ func newControllerWithOptions(
 	c.statusManager = statusProber
 	statusProber.Start(ctx.Done())
 
-	ingressInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		// Cancel probing when a Ingress is deleted
-		DeleteFunc: statusProber.CancelIngressProbing,
-	})
 	podInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		// Cancel probing when a Pod is deleted
 		DeleteFunc: statusProber.CancelPodProbing,
@@ -144,8 +142,32 @@ func newControllerWithOptions(
 			corev1.SchemeGroupVersion.WithKind("Secret"),
 		),
 	))
+
+	gatewayInformer.Informer().AddEventHandler(controller.HandleAll(
+		controller.EnsureTypeMeta(
+			tracker.OnChanged,
+			v1alpha3.SchemeGroupVersion.WithKind("Gateway"),
+		),
+	))
+
+	ingressInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		// Cancel probing when a Ingress is deleted
+		DeleteFunc: combineFunc(
+			statusProber.CancelIngressProbing,
+			tracker.OnDeletedObserver,
+		),
+	})
+
 	for _, opt := range opts {
 		opt(c)
 	}
 	return impl
+}
+
+func combineFunc(functions ...func(interface{})) func(interface{}) {
+	return func(obj interface{}) {
+		for _, f := range functions {
+			f(obj)
+		}
+	}
 }
