@@ -19,21 +19,12 @@ package defaults
 import (
 	"context"
 
+	istiolabels "istio.io/api/label"
+
 	appsv1 "k8s.io/api/apps/v1"
 	"knative.dev/pkg/apis"
 
 	"knative.dev/serving/pkg/apis/serving"
-)
-
-const (
-	// GroupName is the group name for istio labels and annotations
-	GroupName = "service.istio.io"
-
-	// RevisionLabelKey is the label key to define the canonical revision name used by istio.
-	RevisionLabelKey = GroupName + "/canonical-revision"
-
-	// ServiceLabelKey is the label key to define the canonical service name used by istio.
-	ServiceLabelKey = GroupName + "/canonical-name"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -62,14 +53,14 @@ func (r *IstioDeployment) SetDefaults(ctx context.Context) {
 
 	revisionName := r.Labels[serving.RevisionLabelKey]
 	if revisionName != "" {
-		r.Labels[RevisionLabelKey] = revisionName
-		r.Spec.Template.Labels[RevisionLabelKey] = revisionName
+		r.Labels[istiolabels.IstioCanonicalServiceRevision] = revisionName
+		r.Spec.Template.Labels[istiolabels.IstioCanonicalServiceRevision] = revisionName
 	}
 
 	servingName := r.servingName()
 	if servingName != "" {
-		r.Labels[ServiceLabelKey] = servingName
-		r.Spec.Template.Labels[ServiceLabelKey] = servingName
+		r.Labels[istiolabels.IstioCanonicalServiceName] = servingName
+		r.Spec.Template.Labels[istiolabels.IstioCanonicalServiceName] = servingName
 	}
 }
 

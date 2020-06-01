@@ -11,8 +11,8 @@ require (
 	go.uber.org/zap v1.14.1
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
 	gomodules.xyz/jsonpatch/v2 v2.1.0 // indirect
-	istio.io/api v0.0.0-20200107183329-ed4b507c54e1
-	istio.io/client-go v0.0.0-20200107185429-9053b0f86b03
+	istio.io/api v0.0.0-20200601150056-da2b8f9da6d0
+	istio.io/client-go v0.0.0-20200601150742-08b47b9edf56
 	k8s.io/api v0.17.6
 	k8s.io/apimachinery v0.17.6
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
