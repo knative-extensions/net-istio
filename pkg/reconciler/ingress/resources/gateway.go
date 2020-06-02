@@ -154,8 +154,8 @@ func makeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]
 				Number:   443,
 				Protocol: "HTTPS",
 			},
-			Tls: &istiov1alpha3.Server_TLSOptions{
-				Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+			Tls: &istiov1alpha3.ServerTLSSettings{
+				Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 				ServerCertificate: corev1.TLSCertKey,
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 				CredentialName:    credentialName,
@@ -289,8 +289,8 @@ func MakeTLSServers(ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, gat
 				Number:   443,
 				Protocol: "HTTPS",
 			},
-			Tls: &istiov1alpha3.Server_TLSOptions{
-				Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+			Tls: &istiov1alpha3.ServerTLSSettings{
+				Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 				ServerCertificate: corev1.TLSCertKey,
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 				CredentialName:    credentialName,
@@ -315,7 +315,7 @@ func MakeHTTPServer(httpProtocol network.HTTPProtocol, hosts []string) *istiov1a
 		},
 	}
 	if httpProtocol == network.HTTPRedirected {
-		server.Tls = &istiov1alpha3.Server_TLSOptions{
+		server.Tls = &istiov1alpha3.ServerTLSSettings{
 			HttpsRedirect: true,
 		}
 	}

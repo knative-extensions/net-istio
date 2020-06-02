@@ -81,8 +81,8 @@ var servers = []*istiov1alpha3.Server{{
 		Number:   443,
 		Protocol: "HTTPS",
 	},
-	Tls: &istiov1alpha3.Server_TLSOptions{
-		Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+	Tls: &istiov1alpha3.ServerTLSSettings{
+		Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 		ServerCertificate: corev1.TLSCertKey,
 		PrivateKey:        corev1.TLSPrivateKeyKey,
 	},
@@ -93,8 +93,8 @@ var servers = []*istiov1alpha3.Server{{
 		Number:   443,
 		Protocol: "HTTPS",
 	},
-	Tls: &istiov1alpha3.Server_TLSOptions{
-		Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+	Tls: &istiov1alpha3.ServerTLSSettings{
+		Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 		ServerCertificate: corev1.TLSCertKey,
 		PrivateKey:        corev1.TLSPrivateKeyKey,
 	},
@@ -128,8 +128,8 @@ var modifiedDefaultTLSServer = istiov1alpha3.Server{
 		Number:   443,
 		Protocol: "HTTPS",
 	},
-	Tls: &istiov1alpha3.Server_TLSOptions{
-		Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+	Tls: &istiov1alpha3.ServerTLSSettings{
+		Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 		ServerCertificate: corev1.TLSCertKey,
 		PrivateKey:        corev1.TLSPrivateKeyKey,
 	},
@@ -163,8 +163,8 @@ func TestGetServers(t *testing.T) {
 			Number:   443,
 			Protocol: "HTTPS",
 		},
-		Tls: &istiov1alpha3.Server_TLSOptions{
-			Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+		Tls: &istiov1alpha3.ServerTLSSettings{
+			Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 			ServerCertificate: corev1.TLSCertKey,
 			PrivateKey:        corev1.TLSPrivateKeyKey,
 		},
@@ -213,8 +213,8 @@ func TestMakeTLSServers(t *testing.T) {
 				Number:   443,
 				Protocol: "HTTPS",
 			},
-			Tls: &istiov1alpha3.Server_TLSOptions{
-				Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+			Tls: &istiov1alpha3.ServerTLSSettings{
+				Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 				ServerCertificate: corev1.TLSCertKey,
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 				CredentialName:    targetSecret(&secret, &ingressResource),
@@ -233,8 +233,8 @@ func TestMakeTLSServers(t *testing.T) {
 				Number:   443,
 				Protocol: "HTTPS",
 			},
-			Tls: &istiov1alpha3.Server_TLSOptions{
-				Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+			Tls: &istiov1alpha3.ServerTLSSettings{
+				Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 				ServerCertificate: corev1.TLSCertKey,
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 				CredentialName:    "secret0",
@@ -253,8 +253,8 @@ func TestMakeTLSServers(t *testing.T) {
 				Number:   443,
 				Protocol: "HTTPS",
 			},
-			Tls: &istiov1alpha3.Server_TLSOptions{
-				Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+			Tls: &istiov1alpha3.ServerTLSSettings{
+				Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 				ServerCertificate: corev1.TLSCertKey,
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 				CredentialName:    "secret0",
@@ -310,7 +310,7 @@ func TestMakeHTTPServer(t *testing.T) {
 				Number:   80,
 				Protocol: "HTTP",
 			},
-			Tls: &istiov1alpha3.Server_TLSOptions{
+			Tls: &istiov1alpha3.ServerTLSSettings{
 				HttpsRedirect: true,
 			},
 		},
@@ -341,8 +341,8 @@ func TestUpdateGateway(t *testing.T) {
 				Number:   443,
 				Protocol: "HTTPS",
 			},
-			Tls: &istiov1alpha3.Server_TLSOptions{
-				Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+			Tls: &istiov1alpha3.ServerTLSSettings{
+				Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 				ServerCertificate: corev1.TLSCertKey,
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 			},
@@ -354,8 +354,8 @@ func TestUpdateGateway(t *testing.T) {
 				Number:   443,
 				Protocol: "HTTPS",
 			},
-			Tls: &istiov1alpha3.Server_TLSOptions{
-				Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+			Tls: &istiov1alpha3.ServerTLSSettings{
+				Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 				ServerCertificate: corev1.TLSCertKey,
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 			},
@@ -371,8 +371,8 @@ func TestUpdateGateway(t *testing.T) {
 						Number:   443,
 						Protocol: "HTTPS",
 					},
-					Tls: &istiov1alpha3.Server_TLSOptions{
-						Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+					Tls: &istiov1alpha3.ServerTLSSettings{
+						Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 						ServerCertificate: corev1.TLSCertKey,
 						PrivateKey:        corev1.TLSPrivateKeyKey,
 					},
@@ -383,8 +383,8 @@ func TestUpdateGateway(t *testing.T) {
 						Number:   443,
 						Protocol: "HTTPS",
 					},
-					Tls: &istiov1alpha3.Server_TLSOptions{
-						Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+					Tls: &istiov1alpha3.ServerTLSSettings{
+						Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 						ServerCertificate: corev1.TLSCertKey,
 						PrivateKey:        corev1.TLSPrivateKeyKey,
 					},
@@ -400,8 +400,8 @@ func TestUpdateGateway(t *testing.T) {
 				Number:   443,
 				Protocol: "HTTPS",
 			},
-			Tls: &istiov1alpha3.Server_TLSOptions{
-				Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+			Tls: &istiov1alpha3.ServerTLSSettings{
+				Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 				ServerCertificate: corev1.TLSCertKey,
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 			},
@@ -418,8 +418,8 @@ func TestUpdateGateway(t *testing.T) {
 						Number:   443,
 						Protocol: "HTTPS",
 					},
-					Tls: &istiov1alpha3.Server_TLSOptions{
-						Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+					Tls: &istiov1alpha3.ServerTLSSettings{
+						Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 						ServerCertificate: corev1.TLSCertKey,
 						PrivateKey:        corev1.TLSPrivateKeyKey,
 					},
@@ -437,8 +437,8 @@ func TestUpdateGateway(t *testing.T) {
 				Number:   443,
 				Protocol: "HTTPS",
 			},
-			Tls: &istiov1alpha3.Server_TLSOptions{
-				Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+			Tls: &istiov1alpha3.ServerTLSSettings{
+				Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 				ServerCertificate: corev1.TLSCertKey,
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 			},
@@ -449,8 +449,8 @@ func TestUpdateGateway(t *testing.T) {
 				Number:   443,
 				Protocol: "HTTPS",
 			},
-			Tls: &istiov1alpha3.Server_TLSOptions{
-				Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+			Tls: &istiov1alpha3.ServerTLSSettings{
+				Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 				ServerCertificate: corev1.TLSCertKey,
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 			},
@@ -468,8 +468,8 @@ func TestUpdateGateway(t *testing.T) {
 				Number:   443,
 				Protocol: "HTTPS",
 			},
-			Tls: &istiov1alpha3.Server_TLSOptions{
-				Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+			Tls: &istiov1alpha3.ServerTLSSettings{
+				Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 				ServerCertificate: corev1.TLSCertKey,
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 			},
@@ -485,8 +485,8 @@ func TestUpdateGateway(t *testing.T) {
 						Number:   443,
 						Protocol: "HTTPS",
 					},
-					Tls: &istiov1alpha3.Server_TLSOptions{
-						Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+					Tls: &istiov1alpha3.ServerTLSSettings{
+						Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 						ServerCertificate: corev1.TLSCertKey,
 						PrivateKey:        corev1.TLSPrivateKeyKey,
 					},
@@ -503,8 +503,8 @@ func TestUpdateGateway(t *testing.T) {
 				Number:   443,
 				Protocol: "HTTPS",
 			},
-			Tls: &istiov1alpha3.Server_TLSOptions{
-				Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+			Tls: &istiov1alpha3.ServerTLSSettings{
+				Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 				ServerCertificate: corev1.TLSCertKey,
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 			},
@@ -520,8 +520,8 @@ func TestUpdateGateway(t *testing.T) {
 							Number:   443,
 							Protocol: "HTTPS",
 						},
-						Tls: &istiov1alpha3.Server_TLSOptions{
-							Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+						Tls: &istiov1alpha3.ServerTLSSettings{
+							Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 							ServerCertificate: corev1.TLSCertKey,
 							PrivateKey:        corev1.TLSPrivateKeyKey,
 						},
@@ -576,8 +576,8 @@ func TestMakeWildcardGateways(t *testing.T) {
 						Number:   443,
 						Protocol: "HTTPS",
 					},
-					Tls: &istiov1alpha3.Server_TLSOptions{
-						Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+					Tls: &istiov1alpha3.ServerTLSSettings{
+						Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 						ServerCertificate: corev1.TLSCertKey,
 						PrivateKey:        corev1.TLSPrivateKeyKey,
 						CredentialName:    targetWildcardSecretName(wildcardSecret.Name, wildcardSecret.Namespace),
@@ -619,8 +619,8 @@ func TestMakeWildcardGateways(t *testing.T) {
 						Number:   443,
 						Protocol: "HTTPS",
 					},
-					Tls: &istiov1alpha3.Server_TLSOptions{
-						Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+					Tls: &istiov1alpha3.ServerTLSSettings{
+						Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 						ServerCertificate: corev1.TLSCertKey,
 						PrivateKey:        corev1.TLSPrivateKeyKey,
 						CredentialName:    wildcardSecret.Name,
@@ -748,8 +748,8 @@ func TestMakeIngressGateways(t *testing.T) {
 						Number:   443,
 						Protocol: "HTTPS",
 					},
-					Tls: &istiov1alpha3.Server_TLSOptions{
-						Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+					Tls: &istiov1alpha3.ServerTLSSettings{
+						Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 						ServerCertificate: corev1.TLSCertKey,
 						PrivateKey:        corev1.TLSPrivateKeyKey,
 						CredentialName:    targetSecret(&secret, &ingressResource),
@@ -796,8 +796,8 @@ func TestMakeIngressGateways(t *testing.T) {
 						Number:   443,
 						Protocol: "HTTPS",
 					},
-					Tls: &istiov1alpha3.Server_TLSOptions{
-						Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+					Tls: &istiov1alpha3.ServerTLSSettings{
+						Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 						ServerCertificate: corev1.TLSCertKey,
 						PrivateKey:        corev1.TLSPrivateKeyKey,
 						CredentialName:    secret.Name,

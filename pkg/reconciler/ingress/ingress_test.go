@@ -108,8 +108,8 @@ var (
 			Number:   443,
 			Protocol: "HTTPS",
 		},
-		Tls: &istiov1alpha3.Server_TLSOptions{
-			Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+		Tls: &istiov1alpha3.ServerTLSSettings{
+			Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 			ServerCertificate: corev1.TLSCertKey,
 			PrivateKey:        corev1.TLSPrivateKeyKey,
 			CredentialName:    "secret0",
@@ -172,8 +172,8 @@ var (
 			Number:   443,
 			Protocol: "HTTPS",
 		},
-		Tls: &istiov1alpha3.Server_TLSOptions{
-			Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+		Tls: &istiov1alpha3.ServerTLSSettings{
+			Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 			ServerCertificate: "tls.crt",
 			PrivateKey:        "tls.key",
 			CredentialName:    "secret0",
@@ -187,7 +187,7 @@ var (
 			Number:   80,
 			Protocol: "HTTP",
 		},
-		Tls: &istiov1alpha3.Server_TLSOptions{
+		Tls: &istiov1alpha3.ServerTLSSettings{
 			HttpsRedirect: true,
 		},
 	}
@@ -200,8 +200,8 @@ var (
 			Number:   443,
 			Protocol: "HTTPS",
 		},
-		Tls: &istiov1alpha3.Server_TLSOptions{
-			Mode:              istiov1alpha3.Server_TLSOptions_SIMPLE,
+		Tls: &istiov1alpha3.ServerTLSSettings{
+			Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
 			ServerCertificate: "tls.crt",
 			PrivateKey:        "tls.key",
 			CredentialName:    "other-secret",
