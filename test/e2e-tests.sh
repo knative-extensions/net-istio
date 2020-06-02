@@ -21,6 +21,6 @@ source $(dirname $0)/e2e-common.sh
 initialize $@  --skip-istio-addon
 
 go_test_e2e -timeout=20m -parallel=12 \
-  knative.dev/serving/test/conformance/ingress || fail_test
+  ./test/conformance || fail_test
 
 success

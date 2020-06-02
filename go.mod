@@ -1,6 +1,6 @@
 module knative.dev/net-istio
 
-go 1.13
+go 1.14
 
 require (
 	github.com/gobuffalo/envy v1.9.0 // indirect
@@ -17,7 +17,7 @@ require (
 	k8s.io/apimachinery v0.17.6
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	knative.dev/pkg v0.0.0-20200601184204-18c577c87d4f
-	knative.dev/serving v0.15.1-0.20200602105317-468ae278d9e3
+	knative.dev/serving v0.15.1-0.20200602192917-906630816f4a
 	knative.dev/test-infra v0.0.0-20200602024303-e406de9f65c4
 )
 
