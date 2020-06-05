@@ -775,6 +775,11 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 // One active target.
 func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 	ingressPath := &v1alpha1.HTTPIngressPath{
+		Headers: map[string]v1alpha1.HeaderMatch{
+			"my-header": {
+				Exact: "my-header-value",
+			},
+		},
 		Splits: []v1alpha1.IngressBackendSplit{{
 			IngressBackend: v1alpha1.IngressBackend{
 
@@ -797,10 +802,24 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 			Authority: &istiov1alpha3.StringMatch{
 				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `a.com`},
 			},
+			Headers: map[string]*istiov1alpha3.StringMatch{
+				"my-header": {
+					MatchType: &istiov1alpha3.StringMatch_Exact{
+						Exact: "my-header-value",
+					},
+				},
+			},
 		}, {
 			Gateways: []string{"gateway-1"},
 			Authority: &istiov1alpha3.StringMatch{
 				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `b.org`},
+			},
+			Headers: map[string]*istiov1alpha3.StringMatch{
+				"my-header": {
+					MatchType: &istiov1alpha3.StringMatch_Exact{
+						Exact: "my-header-value",
+					},
+				},
 			},
 		}},
 		Route: []*istiov1alpha3.HTTPRouteDestination{{
