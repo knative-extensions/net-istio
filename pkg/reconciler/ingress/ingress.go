@@ -32,8 +32,8 @@ import (
 
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
-	"knative.dev/serving/pkg/apis/networking"
-	"knative.dev/serving/pkg/apis/networking/v1alpha1"
+	"knative.dev/networking/pkg/apis/networking"
+	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/serving/pkg/apis/serving"
 	"knative.dev/serving/pkg/network"
 	"knative.dev/serving/pkg/network/status"
@@ -51,7 +51,7 @@ import (
 	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
 	coreaccessor "knative.dev/net-istio/pkg/reconciler/accessor/core"
 	istioaccessor "knative.dev/net-istio/pkg/reconciler/accessor/istio"
-	ingressreconciler "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
+	ingressreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 )
 
 const (
