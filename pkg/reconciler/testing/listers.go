@@ -25,14 +25,14 @@ import (
 	"k8s.io/client-go/tools/cache"
 	fakeistioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned/fake"
 	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
+	networking "knative.dev/networking/pkg/apis/networking/v1alpha1"
+	fakenetworkingclientset "knative.dev/networking/pkg/client/clientset/versioned/fake"
+	networkinglisters "knative.dev/networking/pkg/client/listers/networking/v1alpha1"
 	"knative.dev/pkg/reconciler/testing"
-	networking "knative.dev/serving/pkg/apis/networking/v1alpha1"
-	fakeservingclientset "knative.dev/serving/pkg/client/clientset/versioned/fake"
-	networkinglisters "knative.dev/serving/pkg/client/listers/networking/v1alpha1"
 )
 
 var clientSetSchemes = []func(*runtime.Scheme) error{
-	fakeservingclientset.AddToScheme,
+	fakenetworkingclientset.AddToScheme,
 	fakeistioclientset.AddToScheme,
 	fakekubeclientset.AddToScheme,
 }
@@ -71,8 +71,8 @@ func (l *Listers) IndexerFor(obj runtime.Object) cache.Indexer {
 	return l.sorter.IndexerForObjectType(obj)
 }
 
-func (l *Listers) GetServingObjects() []runtime.Object {
-	return l.sorter.ObjectsForSchemeFunc(fakeservingclientset.AddToScheme)
+func (l *Listers) GetNetworkingObjects() []runtime.Object {
+	return l.sorter.ObjectsForSchemeFunc(fakenetworkingclientset.AddToScheme)
 }
 
 func (l *Listers) GetIstioObjects() []runtime.Object {

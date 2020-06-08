@@ -8,7 +8,7 @@ You may obtain a copy of the License at
     http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
+istributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
@@ -28,6 +28,10 @@ import (
 	fakeistioclient "knative.dev/net-istio/pkg/client/istio/injection/client/fake"
 	_ "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/gateway/fake"
 	_ "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice/fake"
+	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
+	networkingclient "knative.dev/networking/pkg/client/injection/client/fake"
+	_ "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
+	fakeingressinformer "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints/fake"
@@ -35,10 +39,6 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
 	"knative.dev/pkg/logging"
-	fakeservingclient "knative.dev/serving/pkg/client/injection/client/fake"
-	servingclient "knative.dev/serving/pkg/client/injection/client/fake"
-	_ "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
-	fakeingressinformer "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
 	"knative.dev/serving/pkg/network/ingress"
 
 	proto "github.com/gogo/protobuf/proto"
@@ -65,14 +65,14 @@ import (
 
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
+	"knative.dev/networking/pkg/apis/networking"
+	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	ingressreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 	pkgnet "knative.dev/pkg/network"
 	"knative.dev/pkg/system"
 	_ "knative.dev/pkg/system/testing"
 	apiconfig "knative.dev/serving/pkg/apis/config"
-	"knative.dev/serving/pkg/apis/networking"
-	"knative.dev/serving/pkg/apis/networking/v1alpha1"
 	"knative.dev/serving/pkg/apis/serving"
-	ingressreconciler "knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 	"knative.dev/serving/pkg/network"
 
 	. "knative.dev/net-istio/pkg/reconciler/testing"
@@ -714,7 +714,7 @@ func TestReconcile(t *testing.T) {
 			},
 		}
 
-		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), networkingclient.Get(ctx),
 			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, controller.Options{
 				ConfigStore: &testConfigStore{
 					config: ReconcilerTestConfig(),
@@ -1211,7 +1211,7 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			},
 		}
 
-		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), servingclient.Get(ctx),
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), networkingclient.Get(ctx),
 			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, controller.Options{
 				ConfigStore: &testConfigStore{
 					// Enable reconciling gateway.
@@ -1476,12 +1476,12 @@ func TestGlobalResyncOnUpdateGatewayConfigMap(t *testing.T) {
 
 	grp := errgroup.Group{}
 
-	servingClient := fakeservingclient.Get(ctx)
+	networkingclient := fakenetworkingclient.Get(ctx)
 
 	h := NewHooks()
 
 	// Check for Ingress created as a signal that syncHandler ran
-	h.OnUpdate(&servingClient.Fake, "ingresses", func(obj runtime.Object) HookResult {
+	h.OnUpdate(&networkingclient.Fake, "ingresses", func(obj runtime.Object) HookResult {
 		ci := obj.(*v1alpha1.Ingress)
 		t.Logf("Ingress updated: %q", ci.Name)
 
@@ -1536,7 +1536,7 @@ func TestGlobalResyncOnUpdateGatewayConfigMap(t *testing.T) {
 			},
 		},
 	)
-	ingressClient := servingClient.NetworkingV1alpha1().Ingresses(testNS)
+	ingressClient := networkingclient.NetworkingV1alpha1().Ingresses(testNS)
 
 	// Create a ingress.
 	ingressClient.Create(ingress)
@@ -1640,7 +1640,7 @@ func TestGlobalResyncOnUpdateNetwork(t *testing.T) {
 		},
 	)
 
-	ingressClient := fakeservingclient.Get(ctx).NetworkingV1alpha1().Ingresses(testNS)
+	ingressClient := fakenetworkingclient.Get(ctx).NetworkingV1alpha1().Ingresses(testNS)
 
 	// Create a ingress.
 	ingressClient.Create(ingress)

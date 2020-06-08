@@ -27,13 +27,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
+	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	clientset "knative.dev/networking/pkg/client/clientset/versioned"
+	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
+	fakecertinformer "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/certificate/fake"
+	listers "knative.dev/networking/pkg/client/listers/networking/v1alpha1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/ptr"
-	"knative.dev/serving/pkg/apis/networking/v1alpha1"
-	clientset "knative.dev/serving/pkg/client/clientset/versioned"
-	fakeservingclient "knative.dev/serving/pkg/client/injection/client/fake"
-	fakecertinformer "knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/certificate/fake"
-	listers "knative.dev/serving/pkg/client/listers/networking/v1alpha1"
 
 	. "knative.dev/pkg/reconciler/testing"
 )
@@ -84,7 +84,7 @@ type FakeAccessor struct {
 	certLister listers.CertificateLister
 }
 
-func (f *FakeAccessor) GetServingClient() clientset.Interface {
+func (f *FakeAccessor) GetNetworkingClient() clientset.Interface {
 	return f.client
 }
 
@@ -95,7 +95,7 @@ func (f *FakeAccessor) GetCertificateLister() listers.CertificateLister {
 func TestReconcileCertificateCreate(t *testing.T) {
 	ctx, cancel, _ := SetupFakeContextWithCancel(t)
 
-	client := fakeservingclient.Get(ctx)
+	client := fakenetworkingclient.Get(ctx)
 
 	h := NewHooks()
 	h.OnCreate(&client.Fake, "certificates", func(obj runtime.Object) HookResult {
@@ -123,7 +123,7 @@ func TestReconcileCertificateCreate(t *testing.T) {
 func TestReconcileCertificateUpdate(t *testing.T) {
 	ctx, cancel, _ := SetupFakeContextWithCancel(t)
 
-	client := fakeservingclient.Get(ctx)
+	client := fakenetworkingclient.Get(ctx)
 	accessor, waitInformers := setup(ctx, []*v1alpha1.Certificate{origin}, client, t)
 	defer func() {
 		cancel()
@@ -149,7 +149,7 @@ func TestReconcileCertificateUpdate(t *testing.T) {
 func setup(ctx context.Context, certs []*v1alpha1.Certificate,
 	client clientset.Interface, t *testing.T) (*FakeAccessor, func()) {
 
-	fake := fakeservingclient.Get(ctx)
+	fake := fakenetworkingclient.Get(ctx)
 	certInformer := fakecertinformer.Get(ctx)
 
 	for _, cert := range certs {

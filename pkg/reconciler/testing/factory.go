@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	fakeistioclient "knative.dev/net-istio/pkg/client/istio/injection/client/fake"
+	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
-	fakeservingclient "knative.dev/serving/pkg/client/injection/client/fake"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ktesting "k8s.io/client-go/testing"
@@ -53,7 +53,7 @@ func MakeFactory(ctor Ctor) rtesting.Factory {
 		eventRecorder := record.NewFakeRecorder(10)
 		ctx = controller.WithEventRecorder(ctx, eventRecorder)
 
-		ctx, client := fakeservingclient.With(ctx, ls.GetServingObjects()...)
+		ctx, client := fakenetworkingclient.With(ctx, ls.GetNetworkingObjects()...)
 		ctx, istioclient := fakeistioclient.With(ctx, ls.GetIstioObjects()...)
 		ctx, kubeclient := fakekubeclient.With(ctx, ls.GetKubeObjects()...)
 
