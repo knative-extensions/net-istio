@@ -7,9 +7,11 @@ cloud.google.com/go/trace/apiv2
 contrib.go.opencensus.io/exporter/ocagent
 # contrib.go.opencensus.io/exporter/prometheus v0.1.0
 contrib.go.opencensus.io/exporter/prometheus
-# contrib.go.opencensus.io/exporter/stackdriver v0.12.9-0.20191108183826-59d068f8d8ff
+# contrib.go.opencensus.io/exporter/stackdriver v0.13.1
 contrib.go.opencensus.io/exporter/stackdriver
 contrib.go.opencensus.io/exporter/stackdriver/monitoredresource
+contrib.go.opencensus.io/exporter/stackdriver/monitoredresource/aws
+contrib.go.opencensus.io/exporter/stackdriver/monitoredresource/gcp
 # github.com/PuerkitoBio/purell v1.1.1
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
@@ -272,7 +274,6 @@ golang.org/x/tools/internal/imports
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
 # gomodules.xyz/jsonpatch/v2 v2.1.0
-## explicit
 gomodules.xyz/jsonpatch/v2
 # gonum.org/v1/gonum v0.0.0-20190331200053-3d26580ed485
 gonum.org/v1/gonum/blas
@@ -764,7 +765,31 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/pkg v0.0.0-20200606224418-7ed1d4a552bc
+# knative.dev/networking v0.0.0-20200607161819-2086ac6759c2
+## explicit
+knative.dev/networking/pkg/apis/config
+knative.dev/networking/pkg/apis/networking
+knative.dev/networking/pkg/apis/networking/v1alpha1
+knative.dev/networking/pkg/client/clientset/versioned
+knative.dev/networking/pkg/client/clientset/versioned/fake
+knative.dev/networking/pkg/client/clientset/versioned/scheme
+knative.dev/networking/pkg/client/clientset/versioned/typed/networking/v1alpha1
+knative.dev/networking/pkg/client/clientset/versioned/typed/networking/v1alpha1/fake
+knative.dev/networking/pkg/client/informers/externalversions
+knative.dev/networking/pkg/client/informers/externalversions/internalinterfaces
+knative.dev/networking/pkg/client/informers/externalversions/networking
+knative.dev/networking/pkg/client/informers/externalversions/networking/v1alpha1
+knative.dev/networking/pkg/client/injection/client
+knative.dev/networking/pkg/client/injection/client/fake
+knative.dev/networking/pkg/client/injection/informers/factory
+knative.dev/networking/pkg/client/injection/informers/factory/fake
+knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/certificate
+knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/certificate/fake
+knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress
+knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake
+knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress
+knative.dev/networking/pkg/client/listers/networking/v1alpha1
+# knative.dev/pkg v0.0.0-20200608155520-39a1f43fc050
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -831,58 +856,25 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/configmaps
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
-# knative.dev/serving v0.15.1-0.20200608134619-efb0203dfa53
+# knative.dev/serving v0.15.1-0.20200608213432-f1582404be27
 ## explicit
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
 knative.dev/serving/pkg/apis/config
-knative.dev/serving/pkg/apis/networking
-knative.dev/serving/pkg/apis/networking/v1alpha1
 knative.dev/serving/pkg/apis/serving
 knative.dev/serving/pkg/apis/serving/v1
 knative.dev/serving/pkg/apis/serving/v1alpha1
 knative.dev/serving/pkg/apis/serving/v1beta1
 knative.dev/serving/pkg/autoscaler/config
 knative.dev/serving/pkg/client/clientset/versioned
-knative.dev/serving/pkg/client/clientset/versioned/fake
 knative.dev/serving/pkg/client/clientset/versioned/scheme
 knative.dev/serving/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1
-knative.dev/serving/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1/fake
-knative.dev/serving/pkg/client/clientset/versioned/typed/networking/v1alpha1
-knative.dev/serving/pkg/client/clientset/versioned/typed/networking/v1alpha1/fake
 knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1
-knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1/fake
 knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1alpha1
-knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1alpha1/fake
 knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1beta1
-knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1beta1/fake
-knative.dev/serving/pkg/client/informers/externalversions
-knative.dev/serving/pkg/client/informers/externalversions/autoscaling
-knative.dev/serving/pkg/client/informers/externalversions/autoscaling/v1alpha1
-knative.dev/serving/pkg/client/informers/externalversions/internalinterfaces
-knative.dev/serving/pkg/client/informers/externalversions/networking
-knative.dev/serving/pkg/client/informers/externalversions/networking/v1alpha1
-knative.dev/serving/pkg/client/informers/externalversions/serving
-knative.dev/serving/pkg/client/informers/externalversions/serving/v1
-knative.dev/serving/pkg/client/informers/externalversions/serving/v1alpha1
-knative.dev/serving/pkg/client/informers/externalversions/serving/v1beta1
-knative.dev/serving/pkg/client/injection/client
-knative.dev/serving/pkg/client/injection/client/fake
-knative.dev/serving/pkg/client/injection/informers/factory
-knative.dev/serving/pkg/client/injection/informers/factory/fake
-knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/certificate
-knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/certificate/fake
-knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress
-knative.dev/serving/pkg/client/injection/informers/networking/v1alpha1/ingress/fake
-knative.dev/serving/pkg/client/injection/reconciler/networking/v1alpha1/ingress
 knative.dev/serving/pkg/client/istio/clientset/versioned
 knative.dev/serving/pkg/client/istio/clientset/versioned/scheme
 knative.dev/serving/pkg/client/istio/clientset/versioned/typed/networking/v1alpha3
-knative.dev/serving/pkg/client/listers/autoscaling/v1alpha1
-knative.dev/serving/pkg/client/listers/networking/v1alpha1
-knative.dev/serving/pkg/client/listers/serving/v1
-knative.dev/serving/pkg/client/listers/serving/v1alpha1
-knative.dev/serving/pkg/client/listers/serving/v1beta1
 knative.dev/serving/pkg/gc
 knative.dev/serving/pkg/network
 knative.dev/serving/pkg/network/ingress
@@ -907,7 +899,7 @@ knative.dev/serving/test/test_images/timeout
 knative.dev/serving/test/test_images/wsserver
 knative.dev/serving/test/types
 knative.dev/serving/test/v1alpha1
-# knative.dev/test-infra v0.0.0-20200606045118-14ebc4a42974
+# knative.dev/test-infra v0.0.0-20200608183332-3442736aebd0
 ## explicit
 knative.dev/test-infra/scripts
 knative.dev/test-infra/tools/dep-collector
