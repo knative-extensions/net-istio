@@ -29,9 +29,7 @@ import (
 	_ "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/gateway/fake"
 	_ "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice/fake"
 	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
-	networkingclient "knative.dev/networking/pkg/client/injection/client/fake"
-	_ "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
-	fakeingressinformer "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
+	fakeingressclient "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints/fake"
@@ -714,7 +712,7 @@ func TestReconcile(t *testing.T) {
 			},
 		}
 
-		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), networkingclient.Get(ctx),
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakenetworkingclient.Get(ctx),
 			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, controller.Options{
 				ConfigStore: &testConfigStore{
 					config: ReconcilerTestConfig(),
@@ -1211,7 +1209,7 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			},
 		}
 
-		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), networkingclient.Get(ctx),
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakenetworkingclient.Get(ctx),
 			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, controller.Options{
 				ConfigStore: &testConfigStore{
 					// Enable reconciling gateway.
@@ -1540,7 +1538,7 @@ func TestGlobalResyncOnUpdateGatewayConfigMap(t *testing.T) {
 
 	// Create a ingress.
 	ingressClient.Create(ingress)
-	il := fakeingressinformer.Get(ctx).Lister()
+	il := fakeingressclient.Get(ctx).Lister()
 	if err := wait.PollImmediate(10*time.Millisecond, 5*time.Second, func() (bool, error) {
 		l, err := il.List(labels.Everything())
 		if err != nil {
