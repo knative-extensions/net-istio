@@ -20,6 +20,7 @@ metadata:
   labels:
     serving.knative.dev/release: devel
     networking.knative.dev/ingress-provider: istio
+    knative.dev/high-availability: "true"
 spec:
   selector:
     matchLabels:
