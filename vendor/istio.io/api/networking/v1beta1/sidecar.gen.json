@@ -2,16 +2,16 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Configuration affecting network reachability of a sidecar.",
-    "version": "v1alpha3"
+    "version": "v1beta1"
   },
   "components": {
     "schemas": {
-      "istio.networking.v1alpha3.ClientTLSSettings": {
+      "istio.networking.v1beta1.ClientTLSSettings": {
         "description": "SSL/TLS related settings for upstream connections. See Envoy's [TLS context](https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/auth/cert.proto.html) for more details. These settings are common to both HTTP and TCP upstreams.",
         "type": "object",
         "properties": {
           "mode": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.ClientTLSSettings.TLSmode"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.ClientTLSSettings.TLSmode"
           },
           "clientCertificate": {
             "description": "REQUIRED if mode is `MUTUAL`. The path to the file holding the client-side TLS certificate to use. Should be empty if mode is `ISTIO_MUTUAL`.",
@@ -48,7 +48,7 @@
           }
         }
       },
-      "istio.networking.v1alpha3.PortSelector": {
+      "istio.networking.v1beta1.PortSelector": {
         "description": "PortSelector specifies the number of a port to be used for matching or selection for final routing.",
         "type": "object",
         "properties": {
@@ -58,7 +58,7 @@
           }
         }
       },
-      "istio.networking.v1alpha3.ClientTLSSettings.TLSmode": {
+      "istio.networking.v1beta1.ClientTLSSettings.TLSmode": {
         "description": "TLS connection mode",
         "type": "string",
         "enum": [
@@ -68,21 +68,7 @@
           "ISTIO_MUTUAL"
         ]
       },
-      "istio.networking.v1alpha3.WorkloadSelector": {
-        "description": "`WorkloadSelector` specifies the criteria used to determine if the `Gateway`, `Sidecar`, or `EnvoyFilter` or `ServiceEntry` configuration can be applied to a proxy. The matching criteria includes the metadata associated with a proxy, workload instance info such as labels attached to the pod/VM, or any other info that the proxy provides to Istio during the initial handshake. If multiple conditions are specified, all conditions need to match in order for the workload instance to be selected. Currently, only label based selection mechanism is supported.",
-        "type": "object",
-        "properties": {
-          "labels": {
-            "description": "One or more labels that indicate a specific set of pods/VMs on which the configuration should be applied. The scope of label search is restricted to the configuration namespace in which the the resource is present.",
-            "type": "object",
-            "additionalProperties": {
-              "type": "string",
-              "format": "string"
-            }
-          }
-        }
-      },
-      "istio.networking.v1alpha3.Port": {
+      "istio.networking.v1beta1.Port": {
         "description": "Port describes the properties of a specific port of a service.",
         "type": "object",
         "properties": {
@@ -102,11 +88,11 @@
           }
         }
       },
-      "istio.networking.v1alpha3.ServerTLSSettings": {
+      "istio.networking.v1beta1.ServerTLSSettings": {
         "type": "object",
         "properties": {
           "mode": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.ServerTLSSettings.TLSmode"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.ServerTLSSettings.TLSmode"
           },
           "privateKey": {
             "description": "REQUIRED if mode is `SIMPLE` or `MUTUAL`. The path to the file holding the server's private key.",
@@ -119,7 +105,7 @@
             "format": "string"
           },
           "credentialName": {
-            "description": "For gateways running on Kubernetes, the name of the secret that holds the TLS certs including the CA certificates. Applicable only on Kubernetes. The secret (of type`generic`) should contain the following keys and values: `key: \u003cprivateKey\u003e`, `cert: \u003cserverCert\u003e`, `cacert: \u003cCACertificate\u003e`. Secret of type tls for server certificates along with ca.crt key for CA certificates is also supported. Only one of server certificates and CA certificate or credentialName can be specified.",
+            "description": "For gateways running on Kubernetes, the name of the secret that holds the TLS certs including the CA certificates. Applicable only on Kubernetes, and only if the dynamic credential fetching feature is enabled in the proxy by setting `ISTIO_META_USER_SDS` metadata variable. The secret (of type `generic`) should contain the following keys and values: `key: \u003cprivateKey\u003e`, `cert: \u003cserverCert\u003e`, `cacert: \u003cCACertificate\u003e`. Secret of type tls for server certificates along with ca.crt key for CA certificates is also supported. Only one of server certificates and CA certificate or credentialName can be specified.",
             "type": "string",
             "format": "string"
           },
@@ -157,10 +143,10 @@
             }
           },
           "minProtocolVersion": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.ServerTLSSettings.TLSProtocol"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.ServerTLSSettings.TLSProtocol"
           },
           "maxProtocolVersion": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.ServerTLSSettings.TLSProtocol"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.ServerTLSSettings.TLSProtocol"
           },
           "cipherSuites": {
             "description": "Optional: If specified, only support the specified cipher list. Otherwise default to the default cipher list supported by Envoy.",
@@ -172,7 +158,7 @@
           }
         }
       },
-      "istio.networking.v1alpha3.ServerTLSSettings.TLSmode": {
+      "istio.networking.v1beta1.ServerTLSSettings.TLSmode": {
         "description": "TLS modes enforced by the proxy",
         "type": "string",
         "enum": [
@@ -183,7 +169,7 @@
           "ISTIO_MUTUAL"
         ]
       },
-      "istio.networking.v1alpha3.ServerTLSSettings.TLSProtocol": {
+      "istio.networking.v1beta1.ServerTLSSettings.TLSProtocol": {
         "description": "TLS protocol versions.",
         "type": "string",
         "enum": [
@@ -194,41 +180,55 @@
           "TLSV1_3"
         ]
       },
-      "istio.networking.v1alpha3.Sidecar": {
+      "istio.networking.v1beta1.WorkloadSelector": {
+        "description": "`WorkloadSelector` specifies the criteria used to determine if the `Gateway`, `Sidecar`, or `EnvoyFilter` configuration can be applied to a proxy. The matching criteria includes the metadata associated with a proxy, workload instance info such as labels attached to the pod/VM, or any other info that the proxy provides to Istio during the initial handshake. If multiple conditions are specified, all conditions need to match in order for the workload instance to be selected. Currently, only label based selection mechanism is supported.",
+        "type": "object",
+        "properties": {
+          "labels": {
+            "description": "One or more labels that indicate a specific set of pods/VMs on which this `Sidecar` configuration should be applied. The scope of label search is restricted to the configuration namespace in which the the resource is present.",
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        }
+      },
+      "istio.networking.v1beta1.Sidecar": {
         "description": "`Sidecar` describes the configuration of the sidecar proxy that mediates inbound and outbound communication of the workload instance to which it is attached.",
         "type": "object",
         "properties": {
           "workloadSelector": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.WorkloadSelector"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.WorkloadSelector"
           },
           "ingress": {
             "description": "Ingress specifies the configuration of the sidecar for processing inbound traffic to the attached workload instance. If omitted, Istio will automatically configure the sidecar based on the information about the workload obtained from the orchestration platform (e.g., exposed ports, services, etc.). If specified, inbound ports are configured if and only if the workload instance is associated with a service.",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/istio.networking.v1alpha3.IstioIngressListener"
+              "$ref": "#/components/schemas/istio.networking.v1beta1.IstioIngressListener"
             }
           },
           "egress": {
             "description": "Egress specifies the configuration of the sidecar for processing outbound traffic from the attached workload instance to other services in the mesh. If not specified, inherits the system detected defaults from the namespace-wide or the global default Sidecar.",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/istio.networking.v1alpha3.IstioEgressListener"
+              "$ref": "#/components/schemas/istio.networking.v1beta1.IstioEgressListener"
             }
           },
           "outboundTrafficPolicy": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.OutboundTrafficPolicy"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.OutboundTrafficPolicy"
           },
           "localhost": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.Localhost"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.Localhost"
           }
         }
       },
-      "istio.networking.v1alpha3.IstioIngressListener": {
+      "istio.networking.v1beta1.IstioIngressListener": {
         "description": "`IstioIngressListener` specifies the properties of an inbound traffic listener on the sidecar proxy attached to a workload instance.",
         "type": "object",
         "properties": {
           "port": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.Port"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.Port"
           },
           "bind": {
             "description": "The IP to which the listener should be bound. Must be in the format `x.x.x.x`. Unix domain socket addresses are not allowed in the bind field for ingress listeners. If omitted, Istio will automatically configure the defaults based on imported services and the workload instances to which this configuration is applied to.",
@@ -241,19 +241,19 @@
             "format": "string"
           },
           "captureMode": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.CaptureMode"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.CaptureMode"
           },
           "localhostClientTls": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.ClientTLSSettings"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.ClientTLSSettings"
           }
         }
       },
-      "istio.networking.v1alpha3.IstioEgressListener": {
+      "istio.networking.v1beta1.IstioEgressListener": {
         "description": "`IstioEgressListener` specifies the properties of an outbound traffic listener on the sidecar proxy attached to a workload instance.",
         "type": "object",
         "properties": {
           "port": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.Port"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.Port"
           },
           "bind": {
             "description": "The IP or the Unix domain socket to which the listener should be bound to. Port MUST be specified if bind is not empty. Format: `x.x.x.x` or `unix:///path/to/uds` or `unix://@foobar` (Linux abstract namespace). If omitted, Istio will automatically configure the defaults based on imported services, the workload instances to which this configuration is applied to and the captureMode. If captureMode is `NONE`, bind will default to 127.0.0.1.",
@@ -269,38 +269,38 @@
             }
           },
           "captureMode": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.CaptureMode"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.CaptureMode"
           },
           "localhostServerTls": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.ServerTLSSettings"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.ServerTLSSettings"
           }
         }
       },
-      "istio.networking.v1alpha3.OutboundTrafficPolicy": {
+      "istio.networking.v1beta1.OutboundTrafficPolicy": {
         "description": "`OutboundTrafficPolicy` sets the default behavior of the sidecar for handling outbound traffic from the application. If your application uses one or more external services that are not known apriori, setting the policy to `ALLOW_ANY` will cause the sidecars to route any unknown traffic originating from the application to its requested destination. Users are strongly encouraged to use `ServiceEntry` configurations to explicitly declare any external dependencies, instead of using `ALLOW_ANY`, so that traffic to these services can be monitored.",
         "type": "object",
         "properties": {
           "mode": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.OutboundTrafficPolicy.Mode"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.OutboundTrafficPolicy.Mode"
           },
           "egressProxy": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.Destination"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.Destination"
           }
         }
       },
-      "istio.networking.v1alpha3.Localhost": {
+      "istio.networking.v1beta1.Localhost": {
         "description": "`Localhost` describes the sidecar settings related to the communication between the sidecar and the workload it is attached to in a Kubernetes Pod or a VM. These settings apply by default to all ingress and egress listeners in a sidecar unless overridden.",
         "type": "object",
         "properties": {
           "clientTls": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.ClientTLSSettings"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.ClientTLSSettings"
           },
           "serverTls": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.ServerTLSSettings"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.ServerTLSSettings"
           }
         }
       },
-      "istio.networking.v1alpha3.CaptureMode": {
+      "istio.networking.v1beta1.CaptureMode": {
         "description": "`CaptureMode` describes how traffic to a listener is expected to be captured. Applicable only when the listener is bound to an IP.",
         "type": "string",
         "enum": [
@@ -309,14 +309,14 @@
           "NONE"
         ]
       },
-      "istio.networking.v1alpha3.OutboundTrafficPolicy.Mode": {
+      "istio.networking.v1beta1.OutboundTrafficPolicy.Mode": {
         "type": "string",
         "enum": [
           "REGISTRY_ONLY",
           "ALLOW_ANY"
         ]
       },
-      "istio.networking.v1alpha3.Destination": {
+      "istio.networking.v1beta1.Destination": {
         "description": "Destination indicates the network addressable service to which the request/connection will be sent after processing a routing rule. The destination.host should unambiguously refer to a service in the service registry. Istio's service registry is composed of all the services found in the platform's service registry (e.g., Kubernetes services, Consul services), as well as services declared through the [ServiceEntry](https://istio.io/docs/reference/config/networking/service-entry/#ServiceEntry) resource.",
         "type": "object",
         "properties": {
@@ -326,7 +326,7 @@
             "format": "string"
           },
           "port": {
-            "$ref": "#/components/schemas/istio.networking.v1alpha3.PortSelector"
+            "$ref": "#/components/schemas/istio.networking.v1beta1.PortSelector"
           },
           "subset": {
             "description": "The name of a subset within the service. Applicable only to services within the mesh. The subset must be defined in a corresponding DestinationRule.",

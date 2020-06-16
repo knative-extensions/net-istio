@@ -1,4 +1,4 @@
-// Copyright 2017 Istio Authors
+// Copyright 2020 Istio Authors
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@ syntax = "proto3";
 
 import "google/api/field_behavior.proto";
 
-// $schema: istio.networking.v1alpha3.Gateway
+// $schema: istio.networking.v1beta1.Gateway
 // $title: Gateway
 // $description: Configuration affecting edge load balancer.
 // $location: https://istio.io/docs/reference/config/networking/gateway.html
-// $aliases: [/docs/reference/config/networking/v1alpha3/gateway]
+// $aliases: [/docs/reference/config/networking/v1beta1/gateway]
 
 // `Gateway` describes a load balancer operating at the edge of the mesh
 // receiving incoming or outgoing HTTP/TCP connections. The specification
@@ -261,7 +261,8 @@ import "google/api/field_behavior.proto";
 //   hosts:
 //   - mongosvr.prod.svc.cluster.local # name of internal Mongo service
 //   gateways:
-//   - some-config-namespace/my-gateway # can omit the namespace if gateway is in same
+//   - some-config-namespace/my-gateway # can omit the namespace if gateway is
+//   in same
 //                                        namespace as virtual service.
 //   tcp:
 //   - match:
@@ -285,7 +286,8 @@ import "google/api/field_behavior.proto";
 //   hosts:
 //   - mongosvr.prod.svc.cluster.local # name of internal Mongo service
 //   gateways:
-//   - some-config-namespace/my-gateway # can omit the namespace if gateway is in same
+//   - some-config-namespace/my-gateway # can omit the namespace if gateway is
+//   in same
 //                                        namespace as virtual service.
 //   tcp:
 //   - match:
@@ -349,17 +351,16 @@ import "google/api/field_behavior.proto";
 // {{</tab>}}
 // {{</tabset>}}
 //
-package istio.networking.v1alpha3;
+package istio.networking.v1beta1;
 
-option go_package = "istio.io/api/networking/v1alpha3";
+option go_package = "istio.io/api/networking/v1beta1";
 
 // Gateway describes a load balancer operating at the edge of the mesh
 // receiving incoming or outgoing HTTP/TCP connections.
 //
 // <!-- crd generation tags
 // +cue-gen:Gateway:groupName:networking.istio.io
-// +cue-gen:Gateway:version:v1alpha3
-// +cue-gen:Gateway:storageVersion
+// +cue-gen:Gateway:version:v1beta1
 // +cue-gen:Gateway:annotations:helm.sh/resource-policy=keep
 // +cue-gen:Gateway:labels:app=istio-pilot,chart=istio,heritage=Tiller,release=istio
 // +cue-gen:Gateway:subresource:status
@@ -370,7 +371,7 @@ option go_package = "istio.io/api/networking/v1alpha3";
 //
 // <!-- go code generation tags
 // +kubetype-gen
-// +kubetype-gen:groupVersion=networking.istio.io/v1alpha3
+// +kubetype-gen:groupVersion=networking.istio.io/v1beta1
 // +genclient
 // +k8s:deepcopy-gen=true
 // -->
@@ -539,16 +540,17 @@ message Server {
   // HTTP services, it can also be used for TCP services using TLS with SNI.
   // A host is specified as a `dnsName` with an optional `namespace/` prefix.
   // The `dnsName` should be specified using FQDN format, optionally including
-  // a wildcard character in the left-most component (e.g., `prod/*.example.com`).
-  // Set the `dnsName` to `*` to select all `VirtualService` hosts from the
-  // specified namespace (e.g.,`prod/*`).
+  // a wildcard character in the left-most component (e.g.,
+  // `prod/*.example.com`). Set the `dnsName` to `*` to select all
+  // `VirtualService` hosts from the specified namespace (e.g.,`prod/*`).
   //
   // The `namespace` can be set to `*` or `.`, representing any or the current
   // namespace, respectively. For example, `*/foo.example.com` selects the
   // service from any available namespace while `./foo.example.com` only selects
-  // the service from the namespace of the sidecar. The default, if no `namespace/`
-  // is specified, is `*/`, that is, select services from any namespace.
-  // Any associated `DestinationRule` in the selected namespace will also be used.
+  // the service from the namespace of the sidecar. The default, if no
+  // `namespace/` is specified, is `*/`, that is, select services from any
+  // namespace. Any associated `DestinationRule` in the selected namespace will
+  // also be used.
   //
   // A `VirtualService` must be bound to the gateway and must have one or
   // more hosts that match the hosts specified in a server. The match
@@ -654,8 +656,10 @@ message ServerTLSSettings {
 
   // For gateways running on Kubernetes, the name of the secret that
   // holds the TLS certs including the CA certificates. Applicable
-  // only on Kubernetes. The secret (of type`generic`) should
-  // contain the following keys and values: `key:
+  // only on Kubernetes, and only if the dynamic credential fetching
+  // feature is enabled in the proxy by setting
+  // `ISTIO_META_USER_SDS` metadata variable.  The secret (of type
+  // `generic`) should contain the following keys and values: `key:
   // <privateKey>`, `cert: <serverCert>`, `cacert: <CACertificate>`.
   // Secret of type tls for server certificates along with
   // ca.crt key for CA certificates is also supported.
