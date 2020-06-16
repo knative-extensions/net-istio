@@ -37,13 +37,13 @@ ${REPO_ROOT}/hack/update-deps.sh
 # Knative Injection (for istio)
 ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   knative.dev/net-istio/pkg/client/istio istio.io/client-go/pkg/apis \
-  "networking:v1alpha3" \
+  "networking:v1beta1" \
   --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
 
 # Generate our own client for istio (otherwise injection won't work)
 ${CODEGEN_PKG}/generate-groups.sh "client,informer,lister" \
   knative.dev/net-istio/pkg/client/istio istio.io/client-go/pkg/apis \
-  "networking:v1alpha3" \
+  "networking:v1beta1" \
   --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
 
 # Depends on generate-groups.sh to install bin/deepcopy-gen
