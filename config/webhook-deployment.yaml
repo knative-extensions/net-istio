@@ -29,6 +29,9 @@ spec:
     metadata:
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+        # This must be outside of the mesh to be reachable by
+        # kube-api (also outside the mesh).
+        sidecar.istio.io/inject: "false"
       labels:
         app: istio-webhook
         role: istio-webhook
