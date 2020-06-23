@@ -71,3 +71,4 @@ chmod +x $(find vendor -name '*.sh')
 
 export GOFLAGS=-mod=vendor
 update_licenses third_party/VENDOR-LICENSE "./..."
+git apply hack/patches/*.patch
