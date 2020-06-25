@@ -465,9 +465,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
 					},
 				}}},
 		},
-		expected: &istiov1alpha3.HTTPRetry{
-			Attempts: 0,
-		},
+		expected: &istiov1alpha3.HTTPRetry{},
 	}, {
 		name: "disabling retries",
 		ci: &v1alpha1.Ingress{
@@ -492,9 +490,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
 					},
 				}}},
 		},
-		expected: &istiov1alpha3.HTTPRetry{
-			Attempts: 0,
-		},
+		expected: &istiov1alpha3.HTTPRetry{},
 	}} {
 		t.Run(tc.name, func(t *testing.T) {
 			for _, h := range MakeMeshVirtualService(tc.ci, defaultGateways).Spec.Http {
