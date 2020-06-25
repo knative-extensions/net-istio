@@ -211,6 +211,7 @@ func makeVirtualServiceRoute(hosts sets.String, http *v1alpha1.HTTPIngressPath, 
 		Headers: h,
 	}
 
+	route.Retries = &istiov1alpha3.HTTPRetry{}
 	if http.Retries != nil && http.Retries.Attempts > 0 {
 		route.Retries = &istiov1alpha3.HTTPRetry{
 			RetryOn:  retriableConditions,
