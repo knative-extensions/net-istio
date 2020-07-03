@@ -145,13 +145,13 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 			return err
 		}
 
+		nonWildcardIngressTLS := resources.GetNonWildcardIngressTLS(ing.Spec.TLS, nonWildcardSecrets)
 		for _, gw := range config.FromContext(ctx).Istio.IngressGateways {
 			ns, err := resources.ServiceNamespaceFromURL(gw.ServiceURL)
 			if err != nil {
 				return err
 			}
 
-			nonWildcardIngressTLS := resources.GetNonWildcardIngressTLS(ing.Spec.TLS, nonWildcardSecrets)
 			// For Ingress TLS referencing non-wildcard certificate, we reconcile user provided Gateway to enforce the TLS configuration regularly.
 			desiredIngressServer, err := resources.MakeTLSServers(ing, nonWildcardIngressTLS, ns, nonWildcardSecrets)
 			if err != nil {
@@ -160,21 +160,20 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 			if err := r.reconcileIngressServers(ctx, ing, gw, desiredIngressServer); err != nil {
 				return err
 			}
-
-			// For Ingress TLS referencing wildcard certificates, we reconcile a separate Gateway
-			// that will be shared by other Ingresses that reference the
-			// same wildcard host. We need to handle wildcard certificate specially because Istio does
-			// not fully support multiple TLS Servers (or Gateways) share the same certificate.
-			// https://istio.io/docs/ops/common-problems/network-issues/
-			desiredWildcardGateways, err := resources.MakeWildcardGateways(ctx, wildcardSecrets, r.svcLister)
-			if err != nil {
-				return err
-			}
-			if err := r.reconcileWildcardGateways(ctx, desiredWildcardGateways, ing); err != nil {
-				return err
-			}
-			wildcardGatewayNames = append(wildcardGatewayNames, resources.GetQualifiedGatewayNames(desiredWildcardGateways)...)
 		}
+		// For Ingress TLS referencing wildcard certificates, we reconcile a separate Gateway
+		// that will be shared by other Ingresses that reference the
+		// same wildcard host. We need to handle wildcard certificate specially because Istio does
+		// not fully support multiple TLS Servers (or Gateways) share the same certificate.
+		// https://istio.io/docs/ops/common-problems/network-issues/
+		desiredWildcardGateways, err := resources.MakeWildcardGateways(ctx, wildcardSecrets, r.svcLister)
+		if err != nil {
+			return err
+		}
+		if err := r.reconcileWildcardGateways(ctx, desiredWildcardGateways, ing); err != nil {
+			return err
+		}
+		wildcardGatewayNames = resources.GetQualifiedGatewayNames(desiredWildcardGateways)
 	}
 
 	// HTTPProtocol should be effective only when Auto TLS is enabled per its definition.
