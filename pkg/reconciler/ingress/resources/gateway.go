@@ -219,11 +219,9 @@ func makeIngressGateway(ctx context.Context, ing *v1alpha1.Ingress, ingressTLS [
 	for _, rule := range ing.Spec.Rules {
 		hosts.Insert(rule.Hosts...)
 	}
-	if config.FromContext(ctx).Network.AutoTLS {
-		httpServer := MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, hosts.List())
-		if httpServer != nil {
-			servers = append(servers, httpServer)
-		}
+	httpServer := MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, hosts.List())
+	if httpServer != nil {
+		servers = append(servers, httpServer)
 	}
 	return &v1alpha3.Gateway{
 		ObjectMeta: metav1.ObjectMeta{

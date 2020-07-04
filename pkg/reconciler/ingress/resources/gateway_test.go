@@ -844,7 +844,7 @@ func TestMakeIngressGateways(t *testing.T) {
 			},
 		})
 		t.Run(c.name, func(t *testing.T) {
-			got, err := MakeIngressGateways(ctx, c.ia, c.originSecrets, svcLister)
+			got, err := MakeIngressGateways(ctx, c.ia, c.ia.Spec.TLS, c.originSecrets, svcLister)
 			if (err != nil) != c.wantErr {
 				t.Fatalf("Test: %s; MakeIngressGateways error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
