@@ -95,14 +95,14 @@ func SortServers(servers []*istiov1alpha3.Server) []*istiov1alpha3.Server {
 }
 
 // MakeIngressGateways creates Gateways for a given Ingress.
-func MakeIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, originSecrets map[string]*corev1.Secret, svcLister corev1listers.ServiceLister) ([]*v1alpha3.Gateway, error) {
+func MakeIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, originSecrets map[string]*corev1.Secret, svcLister corev1listers.ServiceLister) ([]*v1alpha3.Gateway, error) {
 	gatewayServices, err := getGatewayServices(ctx, svcLister)
 	if err != nil {
 		return nil, err
 	}
 	gateways := make([]*v1alpha3.Gateway, len(gatewayServices))
 	for i, gatewayService := range gatewayServices {
-		gateway, err := makeIngressGateway(ctx, ing, originSecrets, gatewayService.Spec.Selector, gatewayService)
+		gateway, err := makeIngressGateway(ctx, ing, ingressTLS, originSecrets, gatewayService.Spec.Selector, gatewayService)
 		if err != nil {
 			return nil, err
 		}
@@ -206,7 +206,7 @@ func GatewayRef(gw *v1alpha3.Gateway) corev1.ObjectReference {
 	}
 }
 
-func makeIngressGateway(ctx context.Context, ing *v1alpha1.Ingress, originSecrets map[string]*corev1.Secret, selector map[string]string, gatewayService *corev1.Service) (*v1alpha3.Gateway, error) {
+func makeIngressGateway(ctx context.Context, ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, originSecrets map[string]*corev1.Secret, selector map[string]string, gatewayService *corev1.Service) (*v1alpha3.Gateway, error) {
 	ns := ing.GetNamespace()
 	if len(ns) == 0 {
 		ns = system.Namespace()
@@ -219,9 +219,11 @@ func makeIngressGateway(ctx context.Context, ing *v1alpha1.Ingress, originSecret
 	for _, rule := range ing.Spec.Rules {
 		hosts.Insert(rule.Hosts...)
 	}
-	httpServer := MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, hosts.List())
-	if httpServer != nil {
-		servers = append(servers, httpServer)
+	if config.FromContext(ctx).Network.AutoTLS {
+		httpServer := MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, hosts.List())
+		if httpServer != nil {
+			servers = append(servers, httpServer)
+		}
 	}
 	return &v1alpha3.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
