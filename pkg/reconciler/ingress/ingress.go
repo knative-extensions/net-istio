@@ -121,7 +121,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 
 	ing.Status.ObservedGeneration = ing.GetGeneration()
 	gatewayNames := qualifiedGatewayNamesFromContext(ctx)
-	if r.shouldReconcileTLS(ing) {
+	if r.shouldReconcileTLS(ing) || config.FromContext(ctx).Network.AutoTLS {
 		originSecrets, err := resources.GetSecrets(ing, r.secretLister)
 		if err != nil {
 			return err
