@@ -801,6 +801,83 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 		},
 		Key: "test-ns/reconciling-ingress",
 	}, {
+		Name:                    "Update Ingress Gateway to match Ingress",
+		SkipNamespaceValidation: true,
+		Objects: []runtime.Object{
+			ingressWithTLS("reconciling-ingress", 1234, ingressTLS),
+			// The default global Gateway.
+			gateway(networking.KnativeIngressGateway, system.Namespace(), []*istiov1alpha3.Server{irrelevantServer}),
+			// The existing Ingress gateway does not have HTTPS server.
+			gateway(resources.GatewayName(ingressWithTLS("reconciling-ingress", 1234, ingressTLS), ingressService), testNS,
+				[]*istiov1alpha3.Server{}, withOwnerRef(ingressWithTLS("reconciling-ingress", 1234, ingressTLS)),
+				withLabels(gwLabels), withSelector(selector)),
+			originSecret("istio-system", "secret0"),
+			ingressService,
+		},
+		WantCreates: []runtime.Object{
+			// The creation of default global Gateway is triggered when setting up the test.
+			gateway(networking.KnativeIngressGateway, system.Namespace(), []*istiov1alpha3.Server{irrelevantServer}),
+			gateway(resources.GatewayName(ingressWithTLS("reconciling-ingress", 1234, ingressTLS), ingressService), testNS,
+				[]*istiov1alpha3.Server{}, withOwnerRef(ingressWithTLS("reconciling-ingress", 1234, ingressTLS)),
+				withLabels(gwLabels), withSelector(selector)),
+
+			resources.MakeMeshVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", 1234, ingressTLS)), ingressGateway),
+			resources.MakeIngressVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", 1234, ingressTLS)),
+				makeGatewayMap([]string{"knative-testing/" + networking.KnativeIngressGateway}, nil)),
+		},
+		WantUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: gateway(resources.GatewayName(ingressWithTLS("reconciling-ingress", 1234, ingressTLS), ingressService), testNS,
+				[]*istiov1alpha3.Server{ingressTLSServer}, withOwnerRef(ingressWithTLS("reconciling-ingress", 1234, ingressTLS)),
+				withLabels(gwLabels), withSelector(selector)),
+		}},
+		WantPatches: []clientgotesting.PatchActionImpl{
+			patchAddFinalizerAction("reconciling-ingress", ingressFinalizer),
+		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ingressWithTLSAndStatus("reconciling-ingress", 1234,
+				ingressTLS,
+				v1alpha1.IngressStatus{
+					LoadBalancer: &v1alpha1.LoadBalancerStatus{
+						Ingress: []v1alpha1.LoadBalancerIngressStatus{
+							{DomainInternal: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system")},
+						},
+					},
+					PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
+						Ingress: []v1alpha1.LoadBalancerIngressStatus{
+							{DomainInternal: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system")},
+						},
+					},
+					PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{
+						Ingress: []v1alpha1.LoadBalancerIngressStatus{
+							{MeshOnly: true},
+						},
+					},
+					Status: duckv1.Status{
+						Conditions: duckv1.Conditions{{
+							Type:     v1alpha1.IngressConditionLoadBalancerReady,
+							Status:   corev1.ConditionTrue,
+							Severity: apis.ConditionSeverityError,
+						}, {
+							Type:     v1alpha1.IngressConditionNetworkConfigured,
+							Status:   corev1.ConditionTrue,
+							Severity: apis.ConditionSeverityError,
+						}, {
+							Type:     v1alpha1.IngressConditionReady,
+							Status:   corev1.ConditionTrue,
+							Severity: apis.ConditionSeverityError,
+						}},
+					},
+				},
+			),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
+			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", `IngressType reconciled: "test-ns/reconciling-ingress"`),
+		},
+		Key: "test-ns/reconciling-ingress",
+	}, {
 		Name:                    "new Ingress using wildcard certificate",
 		SkipNamespaceValidation: true,
 		Objects: []runtime.Object{
