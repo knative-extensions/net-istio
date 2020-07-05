@@ -20,6 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -1341,6 +1343,9 @@ func getGatewaysFromObjects(objects []runtime.Object) []*v1alpha3.Gateway {
 			gateways = append(gateways, gateway)
 		}
 	}
+	sort.Slice(gateways, func(i, j int) bool {
+		return strings.Compare(gateways[i].Name, gateways[j].Name) == -1
+	})
 	return gateways
 }
 
