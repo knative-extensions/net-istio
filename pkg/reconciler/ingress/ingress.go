@@ -377,24 +377,6 @@ func (r *Reconciler) reconcileIngressServers(ctx context.Context, ing *v1alpha1.
 	return r.reconcileGateway(ctx, ing, gateway, existing, desired)
 }
 
-func (r *Reconciler) reconcileHTTPServer(ctx context.Context, ing *v1alpha1.Ingress, gw config.Gateway, desiredHTTP *istiov1alpha3.Server) error {
-	gateway, err := r.gatewayLister.Gateways(gw.Namespace).Get(gw.Name)
-	if err != nil {
-		// Unlike VirtualService, a default gateway needs to be existent.
-		// It should be installed when installing Knative.
-		return fmt.Errorf("failed to get Gateway: %w", err)
-	}
-	existing := []*istiov1alpha3.Server{}
-	if e := resources.GetHTTPServer(gateway); e != nil {
-		existing = append(existing, e)
-	}
-	desired := []*istiov1alpha3.Server{}
-	if desiredHTTP != nil {
-		desired = append(desired, desiredHTTP)
-	}
-	return r.reconcileGateway(ctx, ing, gateway, existing, desired)
-}
-
 func (r *Reconciler) reconcileGateway(ctx context.Context, ing *v1alpha1.Ingress, gateway *v1alpha3.Gateway, existing []*istiov1alpha3.Server, desired []*istiov1alpha3.Server) error {
 	if equality.Semantic.DeepEqual(existing, desired) {
 		return nil
