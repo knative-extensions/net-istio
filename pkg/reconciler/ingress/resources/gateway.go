@@ -96,6 +96,10 @@ func SortServers(servers []*istiov1alpha3.Server) []*istiov1alpha3.Server {
 
 // MakeIngressGateways creates Gateways for a given Ingress.
 func MakeIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, originSecrets map[string]*corev1.Secret, svcLister corev1listers.ServiceLister) ([]*v1alpha3.Gateway, error) {
+	// No need to create Gateway if there is no related ingress TLS.
+	if len(ingressTLS) == 0 {
+		return []*v1alpha3.Gateway{}, nil
+	}
 	gatewayServices, err := getGatewayServices(ctx, svcLister)
 	if err != nil {
 		return nil, err

@@ -121,7 +121,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 
 	ing.Status.ObservedGeneration = ing.GetGeneration()
 	gatewayNames := qualifiedGatewayNamesFromContext(ctx)
-	if r.shouldReconcileTLS(ing) || config.FromContext(ctx).Network.AutoTLS {
+	if r.shouldReconcileTLS(ctx, ing) {
 		originSecrets, err := resources.GetSecrets(ing, r.secretLister)
 		if err != nil {
 			return err
@@ -178,7 +178,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		return err
 	}
 
-	if r.shouldReconcileTLS(ing) {
+	if r.shouldReconcileTLS(ctx, ing) {
 		// For backward compatibility reason, we need to remove the TLS servers corresponding to the Ingress
 		// from the global Gateways. This code should be deleted in release 0.18.
 		// We should handle the deletion after VirtualService is created with the newly generated non-wildcard Gateway
@@ -338,7 +338,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, ing *v1alpha1.Ingress) pk
 }
 
 func (r *Reconciler) reconcileDeletion(ctx context.Context, ing *v1alpha1.Ingress) error {
-	if !r.shouldReconcileTLS(ing) {
+	if !r.shouldReconcileTLS(ctx, ing) {
 		return nil
 	}
 
@@ -491,8 +491,8 @@ func getLBStatus(gatewayServiceURL string) []v1alpha1.LoadBalancerIngressStatus 
 	}
 }
 
-func (r *Reconciler) shouldReconcileTLS(ing *v1alpha1.Ingress) bool {
+func (r *Reconciler) shouldReconcileTLS(ctx context.Context, ing *v1alpha1.Ingress) bool {
 	// We should keep reconciling the Ingress whose TLS has been reconciled before
 	// to make sure deleting IngressTLS will clean up the TLS server in the Gateway.
-	return ing.IsPublic() && (len(ing.Spec.TLS) > 0)
+	return ing.IsPublic() && ((len(ing.Spec.TLS) > 0) || config.FromContext(ctx).Network.AutoTLS)
 }
