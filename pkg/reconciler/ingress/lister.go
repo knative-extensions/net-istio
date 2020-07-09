@@ -59,6 +59,13 @@ type gatewayPodTargetLister struct {
 }
 
 func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1alpha1.Ingress) ([]status.ProbeTarget, error) {
+	if containsRewriteHostRule(ing) {
+		// if this ingress contains a RewriteHost rule we can't ensure the
+		// k-network-hash header will be properly returned, so we'll just skip
+		// probing (which is best-effort anyway).
+		return nil, nil
+	}
+
 	results := []status.ProbeTarget{}
 	gatewayHosts := ingress.HostsPerVisibility(ing, qualifiedGatewayNamesFromContext(ctx))
 	gatewayNames := []string{}
@@ -185,4 +192,20 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) (
 		}
 	}
 	return targets, nil
+}
+
+func containsRewriteHostRule(ing *v1alpha1.Ingress) bool {
+	for _, rule := range ing.Spec.Rules {
+		if rule.HTTP == nil {
+			continue
+		}
+
+		for _, path := range rule.HTTP.Paths {
+			if path.RewriteHost != "" {
+				return true
+			}
+		}
+	}
+
+	return false
 }
