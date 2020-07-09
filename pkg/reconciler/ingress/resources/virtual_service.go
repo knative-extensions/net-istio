@@ -17,6 +17,7 @@ limitations under the License.
 package resources
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -26,6 +27,7 @@ import (
 	"github.com/gogo/protobuf/types"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources/names"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
@@ -55,7 +57,7 @@ func VirtualServiceNamespace(ing *v1alpha1.Ingress) string {
 
 // MakeIngressVirtualService creates Istio VirtualService as network
 // programming for Istio Gateways other than 'mesh'.
-func MakeIngressVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) *v1alpha3.VirtualService {
+func MakeIngressVirtualService(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) *v1alpha3.VirtualService {
 	vs := &v1alpha3.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            names.IngressVirtualService(ing),
@@ -63,7 +65,7 @@ func MakeIngressVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingr
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 			Annotations:     ing.GetAnnotations(),
 		},
-		Spec: *makeVirtualServiceSpec(ing, gateways, ingress.ExpandedHosts(getHosts(ing))),
+		Spec: *makeVirtualServiceSpec(ctx, ing, gateways, ingress.ExpandedHosts(getHosts(ing))),
 	}
 
 	// Populate the Ingress labels.
@@ -75,7 +77,7 @@ func MakeIngressVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingr
 }
 
 // MakeMeshVirtualService creates a mesh Virtual Service
-func MakeMeshVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) *v1alpha3.VirtualService {
+func MakeMeshVirtualService(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) *v1alpha3.VirtualService {
 	hosts := keepLocalHostnames(getHosts(ing))
 	// If cluster local gateway is configured, we need to expand hosts because of
 	// https://github.com/knative/serving/issues/6488#issuecomment-573513768.
@@ -92,7 +94,7 @@ func MakeMeshVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 			Annotations:     ing.GetAnnotations(),
 		},
-		Spec: *makeVirtualServiceSpec(ing, map[v1alpha1.IngressVisibility]sets.String{
+		Spec: *makeVirtualServiceSpec(ctx, ing, map[v1alpha1.IngressVisibility]sets.String{
 			v1alpha1.IngressVisibilityExternalIP:   sets.NewString("mesh"),
 			v1alpha1.IngressVisibilityClusterLocal: sets.NewString("mesh"),
 		}, hosts),
@@ -106,14 +108,14 @@ func MakeMeshVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 }
 
 // MakeVirtualServices creates a mesh VirtualService and a virtual service for each gateway
-func MakeVirtualServices(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) ([]*v1alpha3.VirtualService, error) {
+func MakeVirtualServices(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) ([]*v1alpha3.VirtualService, error) {
 	// Insert probe header
 	ing = ing.DeepCopy()
 	if _, err := ingress.InsertProbe(ing); err != nil {
 		return nil, fmt.Errorf("failed to insert a probe into the Ingress: %w", err)
 	}
 	vss := []*v1alpha3.VirtualService{}
-	if meshVs := MakeMeshVirtualService(ing, gateways); meshVs != nil {
+	if meshVs := MakeMeshVirtualService(ctx, ing, gateways); meshVs != nil {
 		vss = append(vss, meshVs)
 	}
 	requiredGatewayCount := 0
@@ -126,13 +128,13 @@ func MakeVirtualServices(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVis
 	}
 
 	if requiredGatewayCount > 0 {
-		vss = append(vss, MakeIngressVirtualService(ing, gateways))
+		vss = append(vss, MakeIngressVirtualService(ctx, ing, gateways))
 	}
 
 	return vss, nil
 }
 
-func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, hosts sets.String) *istiov1alpha3.VirtualService {
+func makeVirtualServiceSpec(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, hosts sets.String) *istiov1alpha3.VirtualService {
 	spec := istiov1alpha3.VirtualService{
 		Hosts: hosts.List(),
 	}
@@ -142,7 +144,7 @@ func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 		for _, p := range rule.HTTP.Paths {
 			hosts := hosts.Intersection(sets.NewString(rule.Hosts...))
 			if hosts.Len() != 0 {
-				http := makeVirtualServiceRoute(hosts, &p, gateways, rule.Visibility)
+				http := makeVirtualServiceRoute(ctx, hosts, &p, gateways, rule.Visibility)
 				// Add all the Gateways that exist inside the http.match section of
 				// the VirtualService.
 				// This ensures that we are only using the Gateways that actually appear
@@ -158,7 +160,7 @@ func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 	return &spec
 }
 
-func makeVirtualServiceRoute(hosts sets.String, http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.String, visibility v1alpha1.IngressVisibility) *istiov1alpha3.HTTPRoute {
+func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.String, visibility v1alpha1.IngressVisibility) *istiov1alpha3.HTTPRoute {
 	matches := []*istiov1alpha3.HTTPMatchRequest{}
 	clusterDomainName := network.GetClusterDomainName()
 	for _, host := range hosts.List() {
@@ -169,11 +171,10 @@ func makeVirtualServiceRoute(hosts sets.String, http *v1alpha1.HTTPIngressPath, 
 		}
 		matches = append(matches, makeMatch(host, http.Path, http.Headers, g))
 	}
+
 	weights := []*istiov1alpha3.HTTPRouteDestination{}
 	for _, split := range http.Splits {
-
 		var h *istiov1alpha3.Headers
-
 		if len(split.AppendHeaders) > 0 {
 			h = &istiov1alpha3.Headers{
 				Request: &istiov1alpha3.Headers_HeaderOperations{
@@ -204,9 +205,24 @@ func makeVirtualServiceRoute(hosts sets.String, http *v1alpha1.HTTPIngressPath, 
 		}
 	}
 
+	var rewrite *istiov1alpha3.HTTPRewrite
+	if http.RewriteHost != "" {
+		rewrite = &istiov1alpha3.HTTPRewrite{
+			Authority: http.RewriteHost,
+		}
+
+		weights = []*istiov1alpha3.HTTPRouteDestination{{
+			Weight: 100,
+			Destination: &istiov1alpha3.Destination{
+				Host: gatewayServiceURLFromContext(ctx, visibility),
+			},
+		}}
+	}
+
 	route := &istiov1alpha3.HTTPRoute{
 		Match:   matches,
 		Route:   weights,
+		Rewrite: rewrite,
 		Headers: h,
 	}
 	if http.Timeout != nil {
@@ -303,4 +319,30 @@ func getPublicIngressRules(i *v1alpha1.Ingress) []v1alpha1.IngressRule {
 	}
 
 	return result
+}
+
+func gatewayServiceURLFromContext(ctx context.Context, visibility v1alpha1.IngressVisibility) string {
+	if visibility == v1alpha1.IngressVisibilityExternalIP {
+		return publicGatewayServiceURLFromContext(ctx)
+	}
+
+	return privateGatewayServiceURLFromContext(ctx)
+}
+
+func publicGatewayServiceURLFromContext(ctx context.Context) string {
+	cfg := config.FromContext(ctx).Istio
+	if len(cfg.IngressGateways) > 0 {
+		return cfg.IngressGateways[0].ServiceURL
+	}
+
+	return ""
+}
+
+func privateGatewayServiceURLFromContext(ctx context.Context) string {
+	cfg := config.FromContext(ctx).Istio
+	if len(cfg.LocalGateways) > 0 {
+		return cfg.LocalGateways[0].ServiceURL
+	}
+
+	return ""
 }

@@ -190,7 +190,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 
 	gatewayNames := qualifiedGatewayNamesFromContext(ctx)
 	gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(wildcardGatewayNames...)
-	vses, err := resources.MakeVirtualServices(ing, gatewayNames)
+	vses, err := resources.MakeVirtualServices(ctx, ing, gatewayNames)
 	if err != nil {
 		return err
 	}
