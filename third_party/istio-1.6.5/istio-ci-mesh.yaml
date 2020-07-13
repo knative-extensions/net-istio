@@ -8,6 +8,15 @@ metadata:
     istio-injection: disabled
 # PATCH #1 ends.
 ---
+# PATCH #1: Creating the istio-system namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-system
+  labels:
+    istio-injection: disabled
+# PATCH #1 ends.
+---
 # Source: istio/charts/galley/templates/poddisruptionbudget.yaml
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
@@ -809,6 +818,10 @@ data:
       {{- end }}
       {{- end }}
         - name: ISTIO_META_POD_NAME
+        # PATCH #2: Increase termination drain duration.
+        - name: TERMINATION_DRAIN_DURATION_SECONDS
+          value: "20"
+        # PATCH #2 ends.
           valueFrom:
             fieldRef:
               fieldPath: metadata.name

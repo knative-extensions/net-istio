@@ -8,6 +8,15 @@ metadata:
     istio-injection: disabled
 # PATCH #1 ends.
 ---
+# PATCH #1: Creating the istio-system namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-system
+  labels:
+    istio-injection: disabled
+# PATCH #1 ends.
+---
 # Source: istio-init/templates/configmap-crd-10.yaml
 apiVersion: v1
 kind: ConfigMap
