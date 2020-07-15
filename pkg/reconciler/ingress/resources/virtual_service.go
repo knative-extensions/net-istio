@@ -207,10 +207,11 @@ func makeVirtualServiceRoute(hosts sets.String, http *v1alpha1.HTTPIngressPath, 
 	route := &istiov1alpha3.HTTPRoute{
 		Match:   matches,
 		Route:   weights,
-		Timeout: types.DurationProto(http.Timeout.Duration),
 		Headers: h,
 	}
-
+	if http.Timeout != nil {
+		route.Timeout = types.DurationProto(http.Timeout.Duration)
+	}
 	route.Retries = &istiov1alpha3.HTTPRetry{}
 	if http.Retries != nil && http.Retries.Attempts > 0 {
 		route.Retries = &istiov1alpha3.HTTPRetry{
