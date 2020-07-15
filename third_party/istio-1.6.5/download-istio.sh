@@ -15,8 +15,8 @@
 # limitations under the License.
 
 # Download and unpack Istio
-ISTIO_VERSION=1.4.6
-DOWNLOAD_URL=https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/istio-${ISTIO_VERSION}-linux.tar.gz
+ISTIO_VERSION=1.6.5
+DOWNLOAD_URL=https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/istio-${ISTIO_VERSION}-linux-amd64.tar.gz
 
 wget --no-check-certificate $DOWNLOAD_URL
 if [ $? != 0 ]; then
