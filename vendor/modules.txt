@@ -850,7 +850,7 @@ knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingres
 knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake
 knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress
 knative.dev/networking/pkg/client/listers/networking/v1alpha1
-# knative.dev/pkg v0.0.0-20200716235533-0f78f8a8cccf
+# knative.dev/pkg v0.0.0-20200719221534-601c9ff3832e
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -895,6 +895,7 @@ knative.dev/pkg/logging/testing
 knative.dev/pkg/metrics
 knative.dev/pkg/metrics/metricskey
 knative.dev/pkg/network
+knative.dev/pkg/network/handlers
 knative.dev/pkg/network/prober
 knative.dev/pkg/pool
 knative.dev/pkg/profiling
@@ -922,7 +923,7 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/configmaps
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
-# knative.dev/serving v0.16.1-0.20200717070433-66a88a4ff431
+# knative.dev/serving v0.16.1-0.20200720030934-017f438b1b38
 ## explicit
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
@@ -965,7 +966,7 @@ knative.dev/serving/test/test_images/timeout
 knative.dev/serving/test/test_images/wsserver
 knative.dev/serving/test/types
 knative.dev/serving/test/v1alpha1
-# knative.dev/test-infra v0.0.0-20200716222033-3c06d840fc70
+# knative.dev/test-infra v0.0.0-20200719034534-5adf654f5ed5
 ## explicit
 knative.dev/test-infra/scripts
 knative.dev/test-infra/tools/dep-collector
