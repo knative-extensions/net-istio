@@ -785,8 +785,8 @@ func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 	}
 	ctx := config.ToContext(context.Background(), &config.Config{
 		Istio: &config.Istio{
-			IngressGateways: []config.Gateway{{
-				ServiceURL: "the-public-gateway.svc.url",
+			LocalGateways: []config.Gateway{{
+				ServiceURL: "the-local-gateway.svc.url",
 			}},
 		},
 	})
@@ -808,7 +808,7 @@ func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 		},
 		Route: []*istiov1alpha3.HTTPRouteDestination{{
 			Destination: &istiov1alpha3.Destination{
-				Host: "the-public-gateway.svc.url",
+				Host: "the-local-gateway.svc.url",
 			},
 			Weight: 100,
 		}},
