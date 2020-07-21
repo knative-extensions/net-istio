@@ -17,6 +17,7 @@ limitations under the License.
 package resources
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -26,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/kmeta"
@@ -207,7 +209,7 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 		}},
 	}} {
 		t.Run(tc.name, func(t *testing.T) {
-			vss, err := MakeVirtualServices(tc.ci, tc.gateways)
+			vss, err := MakeVirtualServices(context.Background(), tc.ci, tc.gateways)
 			if err != nil {
 				t.Fatalf("MakeVirtualServices failed: %v", err)
 			}
@@ -302,7 +304,7 @@ func TestMakeVirtualServicesSpec_CorrectGateways(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			vs := makeVirtualServiceSpec(tc.ingress, tc.gateways, ingress.ExpandedHosts(getHosts(tc.ingress)))
+			vs := makeVirtualServiceSpec(context.Background(), tc.ingress, tc.gateways, ingress.ExpandedHosts(getHosts(tc.ingress)))
 			actualGateways := sets.NewString(vs.Gateways...)
 			if !actualGateways.Equal(tc.expectedGateways) {
 				t.Fatalf("Got gateways %v, expected %v", actualGateways.List(), tc.expectedGateways.List())
@@ -331,7 +333,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectGateways(t *testing.T) {
 			}}},
 	}
 	expected := []string{"mesh"}
-	gateways := MakeMeshVirtualService(ci, defaultGateways).Spec.Gateways
+	gateways := MakeMeshVirtualService(context.Background(), ci, defaultGateways).Spec.Gateways
 	if diff := cmp.Diff(expected, gateways); diff != "" {
 		t.Errorf("Unexpected gateways (-want +got): %v", diff)
 	}
@@ -358,7 +360,7 @@ func TestMakeMeshVirtualServiceSpecCorrectHosts(t *testing.T) {
 		expectedHosts: sets.NewString("test-route.test-ns.svc.cluster.local"),
 	}} {
 		t.Run(tc.name, func(t *testing.T) {
-			vs := MakeMeshVirtualService(&defaultIngress, tc.gateways)
+			vs := MakeMeshVirtualService(context.Background(), &defaultIngress, tc.gateways)
 			vsHosts := sets.NewString(vs.Spec.Hosts...)
 			if !vsHosts.Equal(tc.expectedHosts) {
 				t.Errorf("Unexpected hosts want %v; got %v", tc.expectedHosts, vsHosts)
@@ -493,7 +495,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
 		expected: &istiov1alpha3.HTTPRetry{},
 	}} {
 		t.Run(tc.name, func(t *testing.T) {
-			for _, h := range MakeMeshVirtualService(tc.ci, defaultGateways).Spec.Http {
+			for _, h := range MakeMeshVirtualService(context.Background(), tc.ci, defaultGateways).Spec.Http {
 				if diff := cmp.Diff(tc.expected, h.Retries); diff != "" {
 					t.Errorf("Unexpected retries (-want +got): %v", diff)
 				}
@@ -604,7 +606,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 		},
 	}}
 
-	routes := MakeMeshVirtualService(ci, defaultGateways).Spec.Http
+	routes := MakeMeshVirtualService(context.Background(), ci, defaultGateways).Spec.Http
 	if diff := cmp.Diff(expected, routes); diff != "" {
 		t.Errorf("Unexpected routes (-want +got): %v", diff)
 	}
@@ -617,7 +619,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectGateways(t *testing.T) {
 		ci.Spec.Rules[idx].Visibility = v1alpha1.IngressVisibilityExternalIP
 	}
 	expected := []string{"knative-testing/gateway-one", "knative-testing/gateway-two"}
-	gateways := MakeIngressVirtualService(ci, makeGatewayMap([]string{"knative-testing/gateway-one", "knative-testing/gateway-two"}, nil)).Spec.Gateways
+	gateways := MakeIngressVirtualService(context.Background(), ci, makeGatewayMap([]string{"knative-testing/gateway-one", "knative-testing/gateway-two"}, nil)).Spec.Gateways
 	if diff := cmp.Diff(expected, gateways); diff != "" {
 		t.Errorf("Unexpected gateways (-want +got): %v", diff)
 	}
@@ -766,9 +768,59 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 		},
 	}}
 
-	routes := MakeIngressVirtualService(ci, makeGatewayMap([]string{"gateway.public"}, []string{"gateway.private"})).Spec.Http
+	routes := MakeIngressVirtualService(context.Background(), ci, makeGatewayMap([]string{"gateway.public"}, []string{"gateway.private"})).Spec.Http
 	if diff := cmp.Diff(expected, routes); diff != "" {
 		t.Errorf("Unexpected routes (-want +got): %v", diff)
+	}
+}
+
+func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
+	ingressPath := &v1alpha1.HTTPIngressPath{
+		RewriteHost: "the.target.host",
+		Timeout:     &metav1.Duration{Duration: defaultMaxRevisionTimeout},
+		Retries: &v1alpha1.HTTPRetry{
+			PerTryTimeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
+			Attempts:      networking.DefaultRetryCount,
+		},
+	}
+	ctx := config.ToContext(context.Background(), &config.Config{
+		Istio: &config.Istio{
+			IngressGateways: []config.Gateway{{
+				ServiceURL: "the-public-gateway.svc.url",
+			}},
+		},
+	})
+	route := makeVirtualServiceRoute(ctx, sets.NewString("a.vanity.url", "another.vanity.url"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	expected := &istiov1alpha3.HTTPRoute{
+		Match: []*istiov1alpha3.HTTPMatchRequest{{
+			Gateways: []string{"gateway-1"},
+			Authority: &istiov1alpha3.StringMatch{
+				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `a.vanity.url`},
+			},
+		}, {
+			Gateways: []string{"gateway-1"},
+			Authority: &istiov1alpha3.StringMatch{
+				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `another.vanity.url`},
+			},
+		}},
+		Rewrite: &istiov1alpha3.HTTPRewrite{
+			Authority: "the.target.host",
+		},
+		Route: []*istiov1alpha3.HTTPRouteDestination{{
+			Destination: &istiov1alpha3.Destination{
+				Host: "the-public-gateway.svc.url",
+			},
+			Weight: 100,
+		}},
+		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
+		Retries: &istiov1alpha3.HTTPRetry{
+			RetryOn:       retriableConditions,
+			Attempts:      int32(networking.DefaultRetryCount),
+			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
+		},
+	}
+	if diff := cmp.Diff(expected, route); diff != "" {
+		t.Errorf("Unexpected route  (-want +got): %v", diff)
 	}
 }
 
@@ -795,7 +847,7 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 			Attempts:      networking.DefaultRetryCount,
 		},
 	}
-	route := makeVirtualServiceRoute(sets.NewString("a.com", "b.org"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	route := makeVirtualServiceRoute(context.Background(), sets.NewString("a.com", "b.org"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1alpha3.HTTPRoute{
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Gateways: []string{"gateway-1"},
@@ -865,7 +917,7 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 			Attempts:      networking.DefaultRetryCount,
 		},
 	}
-	route := makeVirtualServiceRoute(sets.NewString("test.org"), ingressPath, makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	route := makeVirtualServiceRoute(context.Background(), sets.NewString("test.org"), ingressPath, makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1alpha3.HTTPRoute{
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Gateways: []string{"knative-testing/gateway-1"},
