@@ -104,7 +104,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ingress *v1alpha1.Ingres
 		ingress.Status.MarkIngressNotReady(notReconciledReason, notReconciledMessage)
 		return reconcileErr
 	}
-	return pkgreconciler.NewEvent(corev1.EventTypeNormal, "IngressTypeReconciled", `IngressType reconciled: "%s/%s"`, ingress.Namespace, ingress.Name)
+	return nil
 }
 
 func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress) error {

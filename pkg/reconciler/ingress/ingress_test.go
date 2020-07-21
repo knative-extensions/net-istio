@@ -328,7 +328,6 @@ func TestReconcile(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "no-virtualservice-yet"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "no-virtualservice-yet-mesh"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "no-virtualservice-yet-ingress"),
-			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", `IngressType reconciled: "test-ns/no-virtualservice-yet"`),
 		},
 		WantPatches: []clientgotesting.PatchActionImpl{
 			patchAddFinalizerAction("no-virtualservice-yet", "ingresses.networking.internal.knative.dev"),
@@ -493,7 +492,6 @@ func TestReconcile(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconcile-virtualservice-mesh"),
 			Eventf(corev1.EventTypeNormal, "Updated", "Updated VirtualService %s/%s",
 				"test-ns", "reconcile-virtualservice-ingress"),
-			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", `IngressType reconciled: "test-ns/reconcile-virtualservice"`),
 		},
 		WantPatches: []clientgotesting.PatchActionImpl{
 			patchAddFinalizerAction("reconcile-virtualservice", "ingresses.networking.internal.knative.dev"),
@@ -602,100 +600,93 @@ func TestReconcile(t *testing.T) {
 				},
 			), map[string]string{networking.IngressClassAnnotationKey: "some-other-ingress"}),
 		}},
-		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", `IngressType reconciled: "test-ns/reconcile-virtualservice"`),
-		},
 		Key: "test-ns/reconcile-virtualservice",
-	},
-		{
-			Name: "clean up old VirtualServices with route label and no ingress label",
-			Objects: []runtime.Object{
-				gateway("knative-ingress-gateway", system.Namespace(), []*istiov1alpha3.Server{irrelevantServer1}),
-				gateway("knative-test-gateway", system.Namespace(), []*istiov1alpha3.Server{irrelevantServer1}),
-				&v1alpha1.Ingress{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "reconcile-virtualservice",
-						Namespace: testNS,
-						Labels: map[string]string{
-							serving.RouteLabelKey:          "test-route",
-							serving.RouteNamespaceLabelKey: testNS,
-						},
-						Annotations:     map[string]string{networking.IngressClassAnnotationKey: "some-other-ingress"},
-						ResourceVersion: "v1",
-						Finalizers:      []string{"ingresses.networking.internal.knative.dev"},
+	}, {
+		Name: "clean up old VirtualServices with route label and no ingress label",
+		Objects: []runtime.Object{
+			gateway("knative-ingress-gateway", system.Namespace(), []*istiov1alpha3.Server{irrelevantServer1}),
+			gateway("knative-test-gateway", system.Namespace(), []*istiov1alpha3.Server{irrelevantServer1}),
+			&v1alpha1.Ingress{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "reconcile-virtualservice",
+					Namespace: testNS,
+					Labels: map[string]string{
+						serving.RouteLabelKey:          "test-route",
+						serving.RouteNamespaceLabelKey: testNS,
 					},
-					Spec: v1alpha1.IngressSpec{
-						DeprecatedGeneration: 1234,
-						Rules:                ingressRules,
-						// Deprecated, needed because of DeepCopy behavior
-						Visibility: v1alpha1.IngressVisibilityExternalIP,
-					},
+					Annotations:     map[string]string{networking.IngressClassAnnotationKey: "some-other-ingress"},
+					ResourceVersion: "v1",
+					Finalizers:      []string{"ingresses.networking.internal.knative.dev"},
 				},
+				Spec: v1alpha1.IngressSpec{
+					DeprecatedGeneration: 1234,
+					Rules:                ingressRules,
+					// Deprecated, needed because of DeepCopy behavior
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+				},
+			},
 
-				&v1alpha3.VirtualService{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "reconcile-virtualservice",
-						Namespace: testNS,
-						Labels: map[string]string{
-							serving.RouteLabelKey: "test-route",
-						},
-						Annotations:     map[string]string{networking.IngressClassAnnotationKey: network.IstioIngressClassName},
-						OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing("reconcile-virtualservice", 1234))},
+			&v1alpha3.VirtualService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "reconcile-virtualservice",
+					Namespace: testNS,
+					Labels: map[string]string{
+						serving.RouteLabelKey: "test-route",
 					},
-					Spec: istiov1alpha3.VirtualService{},
+					Annotations:     map[string]string{networking.IngressClassAnnotationKey: network.IstioIngressClassName},
+					OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing("reconcile-virtualservice", 1234))},
 				},
+				Spec: istiov1alpha3.VirtualService{},
 			},
-			WantDeletes: []clientgotesting.DeleteActionImpl{
-				{
-					ActionImpl: clientgotesting.ActionImpl{
-						Namespace: testNS,
-						Verb:      "delete",
-					},
-					Name: "reconcile-virtualservice",
+		},
+		WantDeletes: []clientgotesting.DeleteActionImpl{
+			{
+				ActionImpl: clientgotesting.ActionImpl{
+					Namespace: testNS,
+					Verb:      "delete",
 				},
+				Name: "reconcile-virtualservice",
 			},
-			WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-				Object: addAnnotations(ingressWithFinalizersAndStatus("reconcile-virtualservice", 1234,
-					[]string{"ingresses.networking.internal.knative.dev"},
-					v1alpha1.IngressStatus{
-						LoadBalancer: &v1alpha1.LoadBalancerStatus{
-							Ingress: []v1alpha1.LoadBalancerIngressStatus{
-								{DomainInternal: pkgnet.GetServiceHostname("test-ingressgateway", "istio-system")},
-							},
-						},
-						PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
-							Ingress: []v1alpha1.LoadBalancerIngressStatus{
-								{DomainInternal: pkgnet.GetServiceHostname("test-ingressgateway", "istio-system")},
-							},
-						},
-						PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{
-							Ingress: []v1alpha1.LoadBalancerIngressStatus{
-								{MeshOnly: true},
-							},
-						},
-						Status: duckv1.Status{
-							Conditions: duckv1.Conditions{{
-								Type:     v1alpha1.IngressConditionLoadBalancerReady,
-								Status:   corev1.ConditionTrue,
-								Severity: apis.ConditionSeverityError,
-							}, {
-								Type:     v1alpha1.IngressConditionNetworkConfigured,
-								Status:   corev1.ConditionTrue,
-								Severity: apis.ConditionSeverityError,
-							}, {
-								Type:     v1alpha1.IngressConditionReady,
-								Status:   corev1.ConditionTrue,
-								Severity: apis.ConditionSeverityError,
-							}},
+		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: addAnnotations(ingressWithFinalizersAndStatus("reconcile-virtualservice", 1234,
+				[]string{"ingresses.networking.internal.knative.dev"},
+				v1alpha1.IngressStatus{
+					LoadBalancer: &v1alpha1.LoadBalancerStatus{
+						Ingress: []v1alpha1.LoadBalancerIngressStatus{
+							{DomainInternal: pkgnet.GetServiceHostname("test-ingressgateway", "istio-system")},
 						},
 					},
-				), map[string]string{networking.IngressClassAnnotationKey: "some-other-ingress"}),
-			}},
-			WantEvents: []string{
-				Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", `IngressType reconciled: "test-ns/reconcile-virtualservice"`),
-			},
-			Key: "test-ns/reconcile-virtualservice",
-		}}
+					PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
+						Ingress: []v1alpha1.LoadBalancerIngressStatus{
+							{DomainInternal: pkgnet.GetServiceHostname("test-ingressgateway", "istio-system")},
+						},
+					},
+					PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{
+						Ingress: []v1alpha1.LoadBalancerIngressStatus{
+							{MeshOnly: true},
+						},
+					},
+					Status: duckv1.Status{
+						Conditions: duckv1.Conditions{{
+							Type:     v1alpha1.IngressConditionLoadBalancerReady,
+							Status:   corev1.ConditionTrue,
+							Severity: apis.ConditionSeverityError,
+						}, {
+							Type:     v1alpha1.IngressConditionNetworkConfigured,
+							Status:   corev1.ConditionTrue,
+							Severity: apis.ConditionSeverityError,
+						}, {
+							Type:     v1alpha1.IngressConditionReady,
+							Status:   corev1.ConditionTrue,
+							Severity: apis.ConditionSeverityError,
+						}},
+					},
+				},
+			), map[string]string{networking.IngressClassAnnotationKey: "some-other-ingress"}),
+		}},
+		Key: "test-ns/reconcile-virtualservice",
+	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		retryAttempted = false
@@ -787,7 +778,6 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "Updated", "Updated Gateway %s/%s", system.Namespace(), networking.KnativeIngressGateway),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
-			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", `IngressType reconciled: "test-ns/reconciling-ingress"`),
 		},
 		Key: "test-ns/reconciling-ingress",
 	}, {
@@ -854,7 +844,6 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
-			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", `IngressType reconciled: "test-ns/reconciling-ingress"`),
 		},
 		Key: "test-ns/reconciling-ingress",
 	}, {
@@ -1026,7 +1015,6 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "Updated", "Updated Gateway %s/%s", system.Namespace(), networking.KnativeIngressGateway),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
-			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", `IngressType reconciled: "test-ns/reconciling-ingress"`),
 		},
 		Key: "test-ns/reconciling-ingress",
 	}, {
@@ -1120,7 +1108,6 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "Updated", "Updated Secret %s/%s", "istio-system", targetSecretName),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
-			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", "IngressType reconciled: \"%s/%s\"", "test-ns", "reconciling-ingress"),
 		},
 		Key: "test-ns/reconciling-ingress",
 	}, {
@@ -1175,7 +1162,6 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 		WantEvents: []string{
 			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
-			Eventf(corev1.EventTypeNormal, "IngressTypeReconciled", `IngressType reconciled: "test-ns/reconciling-ingress"`),
 		},
 		WantPatches: []clientgotesting.PatchActionImpl{
 			patchAddFinalizerAction("reconciling-ingress", ingressFinalizer),
