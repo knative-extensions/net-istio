@@ -11,12 +11,12 @@ require (
 	istio.io/api v0.0.0-20200601150056-da2b8f9da6d0
 	istio.io/client-go v0.0.0-20200601150742-08b47b9edf56
 	k8s.io/api v0.18.1
-	k8s.io/apimachinery v0.18.5
+	k8s.io/apimachinery v0.18.6
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	knative.dev/networking v0.0.0-20200720170535-ca74f50d1c0e
-	knative.dev/pkg v0.0.0-20200721091635-3b7ca76a63e4
-	knative.dev/serving v0.16.1-0.20200721135235-a2f470ac5430
-	knative.dev/test-infra v0.0.0-20200720224135-d2706240545c
+	knative.dev/networking v0.0.0-20200721232954-c2d27c44d14b
+	knative.dev/pkg v0.0.0-20200722085354-ba0f3cb7cf84
+	knative.dev/serving v0.16.1-0.20200722095454-75b436a0c767
+	knative.dev/test-infra v0.0.0-20200721175154-c98db9bd4d5d
 )
 
 replace (
