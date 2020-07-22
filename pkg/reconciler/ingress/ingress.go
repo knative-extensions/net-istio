@@ -60,15 +60,6 @@ const (
 	notReconciledMessage        = "Ingress reconciliation failed"
 )
 
-// ingressfinalizer is the name that we put into the resource finalizer list, e.g.
-//  metadata:
-//    finalizers:
-//    - ingresses.networking.internal.knative.dev
-var (
-	ingressResource  = v1alpha1.Resource("ingresses")
-	ingressFinalizer = ingressResource.String()
-)
-
 // Reconciler implements the control loop for the Ingress resources.
 type Reconciler struct {
 	kubeclient kubernetes.Interface
@@ -79,8 +70,7 @@ type Reconciler struct {
 	secretLister         corev1listers.SecretLister
 	svcLister            corev1listers.ServiceLister
 
-	tracker   tracker.Interface
-	finalizer string
+	tracker tracker.Interface
 
 	statusManager status.Manager
 }
