@@ -214,7 +214,7 @@ func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alp
 		weights = []*istiov1alpha3.HTTPRouteDestination{{
 			Weight: 100,
 			Destination: &istiov1alpha3.Destination{
-				Host: gatewayServiceURLFromContext(ctx, visibility),
+				Host: privateGatewayServiceURLFromContext(ctx),
 			},
 		}}
 	}
@@ -319,23 +319,6 @@ func getPublicIngressRules(i *v1alpha1.Ingress) []v1alpha1.IngressRule {
 	}
 
 	return result
-}
-
-func gatewayServiceURLFromContext(ctx context.Context, visibility v1alpha1.IngressVisibility) string {
-	if visibility == v1alpha1.IngressVisibilityExternalIP {
-		return publicGatewayServiceURLFromContext(ctx)
-	}
-
-	return privateGatewayServiceURLFromContext(ctx)
-}
-
-func publicGatewayServiceURLFromContext(ctx context.Context) string {
-	cfg := config.FromContext(ctx).Istio
-	if len(cfg.IngressGateways) > 0 {
-		return cfg.IngressGateways[0].ServiceURL
-	}
-
-	return ""
 }
 
 func privateGatewayServiceURLFromContext(ctx context.Context) string {
