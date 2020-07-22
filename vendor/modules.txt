@@ -120,7 +120,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/go-containerregistry v0.1.1
+# github.com/google/go-containerregistry v0.1.2-0.20200717224239-a84993334b27
 github.com/google/go-containerregistry/pkg/name
 # github.com/google/gofuzz v1.1.0
 github.com/google/gofuzz
@@ -266,7 +266,7 @@ golang.org/x/oauth2/jwt
 ## explicit
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae
+# golang.org/x/sys v0.0.0-20200720211630-cb9d2d5c5666
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
@@ -280,7 +280,7 @@ golang.org/x/text/unicode/norm
 golang.org/x/text/width
 # golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1
 golang.org/x/time/rate
-# golang.org/x/tools v0.0.0-20200714190737-9048b464a08d
+# golang.org/x/tools v0.0.0-20200721032237-77f530d86f9a
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/imports
 golang.org/x/tools/internal/event
@@ -340,7 +340,7 @@ google.golang.org/appengine/internal/socket
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/socket
 google.golang.org/appengine/urlfetch
-# google.golang.org/genproto v0.0.0-20200715011427-11fb19a81f2c
+# google.golang.org/genproto v0.0.0-20200721032028-5044d0edf986
 google.golang.org/genproto/googleapis/api
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/distribution
@@ -505,7 +505,7 @@ k8s.io/api/storage/v1beta1
 # k8s.io/apiextensions-apiserver v0.17.6 => k8s.io/apiextensions-apiserver v0.17.6
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
-# k8s.io/apimachinery v0.18.5 => k8s.io/apimachinery v0.17.6
+# k8s.io/apimachinery v0.18.6 => k8s.io/apimachinery v0.17.6
 ## explicit
 k8s.io/apimachinery/pkg/api/apitesting/fuzzer
 k8s.io/apimachinery/pkg/api/equality
@@ -827,8 +827,9 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/networking v0.0.0-20200720170535-ca74f50d1c0e
+# knative.dev/networking v0.0.0-20200721232954-c2d27c44d14b
 ## explicit
+knative.dev/networking/pkg/apis/config
 knative.dev/networking/pkg/apis/networking
 knative.dev/networking/pkg/apis/networking/v1alpha1
 knative.dev/networking/pkg/client/clientset/versioned
@@ -850,7 +851,7 @@ knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingres
 knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake
 knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress
 knative.dev/networking/pkg/client/listers/networking/v1alpha1
-# knative.dev/pkg v0.0.0-20200721091635-3b7ca76a63e4
+# knative.dev/pkg v0.0.0-20200722085354-ba0f3cb7cf84
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -925,7 +926,7 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/configmaps
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
-# knative.dev/serving v0.16.1-0.20200721135235-a2f470ac5430
+# knative.dev/serving v0.16.1-0.20200722095454-75b436a0c767
 ## explicit
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
@@ -968,7 +969,7 @@ knative.dev/serving/test/test_images/timeout
 knative.dev/serving/test/test_images/wsserver
 knative.dev/serving/test/types
 knative.dev/serving/test/v1alpha1
-# knative.dev/test-infra v0.0.0-20200720224135-d2706240545c
+# knative.dev/test-infra v0.0.0-20200721175154-c98db9bd4d5d
 ## explicit
 knative.dev/test-infra/scripts
 knative.dev/test-infra/tools/dep-collector
