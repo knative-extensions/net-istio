@@ -67,11 +67,12 @@ func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1al
 	}
 
 	results := []status.ProbeTarget{}
-	gatewayHosts := ingress.HostsPerVisibility(ing, qualifiedGatewayNamesFromContext(ctx))
-	gatewayNames := []string{}
-	for gatewayName := range gatewayHosts {
+	hostsByGateway := ingress.HostsPerVisibility(ing, qualifiedGatewayNamesFromContext(ctx))
+	gatewayNames := make([]string, 0, len(hostsByGateway))
+	for gatewayName := range hostsByGateway {
 		gatewayNames = append(gatewayNames, gatewayName)
 	}
+
 	// Sort the gateway names for a consistent ordering.
 	sort.Strings(gatewayNames)
 	for _, gatewayName := range gatewayNames {
@@ -91,14 +92,14 @@ func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1al
 				PodIPs:  target.PodIPs,
 				PodPort: target.PodPort,
 				Port:    target.Port,
-				URLs:    make([]*url.URL, len(gatewayHosts[gatewayName])),
+				URLs:    make([]*url.URL, 1),
 			}
-			// Use sorted hosts list for consistent ordering.
-			for i, host := range gatewayHosts[gatewayName].List() {
-				newURL := *target.URLs[0]
-				newURL.Host = host + ":" + target.Port
-				qualifiedTarget.URLs[i] = &newURL
-			}
+			// Pick a single host since they all end up being used in the same
+			// VirtualService and will be applied atomically by Istio.
+			host := hostsByGateway[gatewayName].List()[0]
+			newURL := *target.URLs[0]
+			newURL.Host = host + ":" + target.Port
+			qualifiedTarget.URLs[0] = &newURL
 			results = append(results, qualifiedTarget)
 		}
 	}
