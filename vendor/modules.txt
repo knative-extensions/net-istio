@@ -851,7 +851,7 @@ knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingres
 knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake
 knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress
 knative.dev/networking/pkg/client/listers/networking/v1alpha1
-# knative.dev/pkg v0.0.0-20200722171357-1127f59d7b73
+# knative.dev/pkg v0.0.0-20200723060257-ae9c3f7fa8d3
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -926,7 +926,7 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/configmaps
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
-# knative.dev/serving v0.16.1-0.20200722154556-c305bce70a71
+# knative.dev/serving v0.16.1-0.20200723113957-3098a20c9a03
 ## explicit
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
