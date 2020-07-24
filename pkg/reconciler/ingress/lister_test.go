@@ -1251,7 +1251,7 @@ func TestListProbeTargets(t *testing.T) {
 			URLs: []*url.URL{
 				{Scheme: "http", Host: "foo.bar.com:80"}},
 		}},
-	},{
+	}, {
 		name: "local gateways",
 		localGateways: []config.Gateway{{
 			Name:      "local-gateway",
