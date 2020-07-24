@@ -1169,6 +1169,89 @@ func TestListProbeTargets(t *testing.T) {
 			URLs:    []*url.URL{{Scheme: "http", Host: "foo.bar.com:90"}},
 		}},
 	}, {
+		name: "pick first host",
+		ingressGateways: []config.Gateway{{
+			Name:      "ingress-gateway",
+			Namespace: "default",
+		}},
+		gatewayLister: &fakeGatewayLister{
+			gateways: []*v1alpha3.Gateway{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "ingress-gateway",
+				},
+				Spec: istiov1alpha3.Gateway{
+					Servers: []*istiov1alpha3.Server{{
+						Hosts: []string{"*"},
+						Port: &istiov1alpha3.Port{
+							Name:     "http",
+							Number:   80,
+							Protocol: "HTTP",
+						},
+					}},
+					Selector: map[string]string{
+						"gwt": "istio",
+					},
+				},
+			}},
+		},
+		endpointsLister: &fakeEndpointsLister{
+			endpointses: []*v1.Endpoints{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "ingress-gateway",
+				},
+				Subsets: []v1.EndpointSubset{{
+					Ports: []v1.EndpointPort{{
+						Name: "real",
+						Port: 80,
+					}},
+					Addresses: []v1.EndpointAddress{{
+						IP: "1.1.1.1",
+					}},
+				}},
+			}},
+		},
+		serviceLister: &fakeServiceLister{
+			services: []*v1.Service{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "ingress-gateway",
+					Labels: map[string]string{
+						"gwt": "istio",
+					},
+				},
+				Spec: v1.ServiceSpec{
+					Ports: []v1.ServicePort{{
+						Name: "real",
+						Port: 80,
+					}},
+				},
+			}},
+		},
+		ingress: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "default",
+				Name:      "whatever",
+			},
+			Spec: v1alpha1.IngressSpec{
+				Rules: []v1alpha1.IngressRule{{
+					Hosts: []string{
+						"foo.bar.com",
+						"route.knative.dev",
+					},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+				}},
+			},
+		},
+		results: []status.ProbeTarget{{
+			PodIPs:  sets.NewString("1.1.1.1"),
+			PodPort: "80",
+			Port:    "80",
+			URLs: []*url.URL{
+				{Scheme: "http", Host: "foo.bar.com:80"}},
+		}},
+	},{
 		name: "local gateways",
 		localGateways: []config.Gateway{{
 			Name:      "local-gateway",
@@ -1315,9 +1398,7 @@ func TestListProbeTargets(t *testing.T) {
 			PodPort: "80",
 			Port:    "80",
 			URLs: []*url.URL{
-				{Scheme: "http", Host: "foo.bar:80"},
-				{Scheme: "http", Host: "foo.bar.svc:80"},
-				{Scheme: "http", Host: "foo.bar.svc.cluster.local:80"}},
+				{Scheme: "http", Host: "foo.bar:80"}},
 		}},
 	}, {
 		name: "two servers, same port, same protocol",
