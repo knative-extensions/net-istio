@@ -478,6 +478,7 @@ type Gateway struct {
 	// label search is restricted to the configuration namespace in which the
 	// the resource is present. In other words, the Gateway resource must
 	// reside in the same namespace as the gateway workload instance.
+	// If selector is nil, the Gateway will be applied to all workloads.
 	Selector             map[string]string `protobuf:"bytes,2,rep,name=selector,proto3" json:"selector,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
@@ -879,11 +880,13 @@ type ServerTLSSettings struct {
 	CaCertificates string `protobuf:"bytes,5,opt,name=ca_certificates,json=caCertificates,proto3" json:"ca_certificates,omitempty"`
 	// For gateways running on Kubernetes, the name of the secret that
 	// holds the TLS certs including the CA certificates. Applicable
-	// only on Kubernetes, and only if the dynamic credential fetching
-	// feature is enabled in the proxy by setting
-	// `ISTIO_META_USER_SDS` metadata variable.  The secret (of type
-	// `generic`) should contain the following keys and values: `key:
+	// only on Kubernetes. The secret (of type`generic`) should
+	// contain the following keys and values: `key:
 	// <privateKey>`, `cert: <serverCert>`, `cacert: <CACertificate>`.
+	// Secret of type tls for server certificates along with
+	// ca.crt key for CA certificates is also supported.
+	// Only one of server certificates and CA certificate
+	// or credentialName can be specified.
 	CredentialName string `protobuf:"bytes,10,opt,name=credential_name,json=credentialName,proto3" json:"credential_name,omitempty"`
 	// A list of alternate names to verify the subject identity in the
 	// certificate presented by the client.

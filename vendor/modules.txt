@@ -450,13 +450,15 @@ gopkg.in/alecthomas/kingpin.v2
 gopkg.in/inf.v0
 # gopkg.in/yaml.v2 v2.3.0
 gopkg.in/yaml.v2
-# istio.io/api v0.0.0-20200601150056-da2b8f9da6d0
+# istio.io/api v0.0.0-20200615162408-9b5293c30ef5
 ## explicit
 istio.io/api/label
 istio.io/api/networking/v1alpha3
-# istio.io/client-go v0.0.0-20200601150742-08b47b9edf56
+istio.io/api/networking/v1beta1
+# istio.io/client-go v0.0.0-20200615164228-d77b0b53b6a0
 ## explicit
 istio.io/client-go/pkg/apis/networking/v1alpha3
+istio.io/client-go/pkg/apis/networking/v1beta1
 # istio.io/gogo-genproto v0.0.0-20191029161641-f7d19ec0141d
 istio.io/gogo-genproto/googleapis/google/api
 # k8s.io/api v0.18.1 => k8s.io/api v0.17.6
