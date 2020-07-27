@@ -17,13 +17,8 @@ kind: IstioOperator
 spec:
   values:
     global:
-      mtls:
-        enabled: true
-        auto: false
       proxy:
-        autoInject: enabled
-        accessLogFile: "/dev/stdout"
-        accessLogEncoding: 'JSON'
+        autoInject: disabled
       useMCP: false
       # The third-party-jwt is not enabled on all k8s.
       # See: https://istio.io/docs/ops/best-practices/security/#configure-third-party-service-account-tokens
@@ -37,13 +32,6 @@ spec:
       istio-ingressgateway:
         autoscaleMin: 2
         autoscaleMax: 5
-    sidecarInjectorWebhook:
-      rewriteAppHTTPProbe: true
-
-  meshConfig:
-    defaultConfig:
-      proxyMetadata:
-        TERMINATION_DRAIN_DURATION_SECONDS: "20"
 
   addonComponents:
     pilot:
