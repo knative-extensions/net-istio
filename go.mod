@@ -7,7 +7,7 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/google/go-cmp v0.5.1
 	go.uber.org/zap v1.14.1
-	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
+	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	istio.io/api v0.0.0-20200615162408-9b5293c30ef5
 	istio.io/client-go v0.0.0-20200615164228-d77b0b53b6a0
 	k8s.io/api v0.18.1

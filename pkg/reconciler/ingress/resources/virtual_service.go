@@ -25,8 +25,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/gogo/protobuf/types"
-	istiov1alpha3 "istio.io/api/networking/v1alpha3"
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	istiov1beta1 "istio.io/api/networking/v1beta1"
+	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources/names"
 	"knative.dev/networking/pkg/apis/networking"
@@ -57,8 +57,8 @@ func VirtualServiceNamespace(ing *v1alpha1.Ingress) string {
 
 // MakeIngressVirtualService creates Istio VirtualService as network
 // programming for Istio Gateways other than 'mesh'.
-func MakeIngressVirtualService(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) *v1alpha3.VirtualService {
-	vs := &v1alpha3.VirtualService{
+func MakeIngressVirtualService(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) *v1beta1.VirtualService {
+	vs := &v1beta1.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            names.IngressVirtualService(ing),
 			Namespace:       VirtualServiceNamespace(ing),
@@ -77,7 +77,7 @@ func MakeIngressVirtualService(ctx context.Context, ing *v1alpha1.Ingress, gatew
 }
 
 // MakeMeshVirtualService creates a mesh Virtual Service
-func MakeMeshVirtualService(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) *v1alpha3.VirtualService {
+func MakeMeshVirtualService(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) *v1beta1.VirtualService {
 	hosts := keepLocalHostnames(getHosts(ing))
 	// If cluster local gateway is configured, we need to expand hosts because of
 	// https://github.com/knative/serving/issues/6488#issuecomment-573513768.
@@ -87,7 +87,7 @@ func MakeMeshVirtualService(ctx context.Context, ing *v1alpha1.Ingress, gateways
 	if len(hosts) == 0 {
 		return nil
 	}
-	vs := &v1alpha3.VirtualService{
+	vs := &v1beta1.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            names.MeshVirtualService(ing),
 			Namespace:       VirtualServiceNamespace(ing),
@@ -108,13 +108,13 @@ func MakeMeshVirtualService(ctx context.Context, ing *v1alpha1.Ingress, gateways
 }
 
 // MakeVirtualServices creates a mesh VirtualService and a virtual service for each gateway
-func MakeVirtualServices(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) ([]*v1alpha3.VirtualService, error) {
+func MakeVirtualServices(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) ([]*v1beta1.VirtualService, error) {
 	// Insert probe header
 	ing = ing.DeepCopy()
 	if _, err := ingress.InsertProbe(ing); err != nil {
 		return nil, fmt.Errorf("failed to insert a probe into the Ingress: %w", err)
 	}
-	vss := []*v1alpha3.VirtualService{}
+	vss := []*v1beta1.VirtualService{}
 	if meshVs := MakeMeshVirtualService(ctx, ing, gateways); meshVs != nil {
 		vss = append(vss, meshVs)
 	}
@@ -134,8 +134,8 @@ func MakeVirtualServices(ctx context.Context, ing *v1alpha1.Ingress, gateways ma
 	return vss, nil
 }
 
-func makeVirtualServiceSpec(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, hosts sets.String) *istiov1alpha3.VirtualService {
-	spec := istiov1alpha3.VirtualService{
+func makeVirtualServiceSpec(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, hosts sets.String) *istiov1beta1.VirtualService {
+	spec := istiov1beta1.VirtualService{
 		Hosts: hosts.List(),
 	}
 
@@ -160,8 +160,8 @@ func makeVirtualServiceSpec(ctx context.Context, ing *v1alpha1.Ingress, gateways
 	return &spec
 }
 
-func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.String, visibility v1alpha1.IngressVisibility) *istiov1alpha3.HTTPRoute {
-	matches := []*istiov1alpha3.HTTPMatchRequest{}
+func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.String, visibility v1alpha1.IngressVisibility) *istiov1beta1.HTTPRoute {
+	matches := []*istiov1beta1.HTTPMatchRequest{}
 	clusterDomainName := network.GetClusterDomainName()
 	for _, host := range hosts.List() {
 		g := gateways[visibility]
@@ -172,22 +172,22 @@ func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alp
 		matches = append(matches, makeMatch(host, http.Path, http.Headers, g))
 	}
 
-	weights := []*istiov1alpha3.HTTPRouteDestination{}
+	weights := []*istiov1beta1.HTTPRouteDestination{}
 	for _, split := range http.Splits {
-		var h *istiov1alpha3.Headers
+		var h *istiov1beta1.Headers
 		if len(split.AppendHeaders) > 0 {
-			h = &istiov1alpha3.Headers{
-				Request: &istiov1alpha3.Headers_HeaderOperations{
+			h = &istiov1beta1.Headers{
+				Request: &istiov1beta1.Headers_HeaderOperations{
 					Set: split.AppendHeaders,
 				},
 			}
 		}
 
-		weights = append(weights, &istiov1alpha3.HTTPRouteDestination{
-			Destination: &istiov1alpha3.Destination{
+		weights = append(weights, &istiov1beta1.HTTPRouteDestination{
+			Destination: &istiov1beta1.Destination{
 				Host: network.GetServiceHostname(
 					split.ServiceName, split.ServiceNamespace),
-				Port: &istiov1alpha3.PortSelector{
+				Port: &istiov1beta1.PortSelector{
 					Number: uint32(split.ServicePort.IntValue()),
 				},
 			},
@@ -196,30 +196,30 @@ func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alp
 		})
 	}
 
-	var h *istiov1alpha3.Headers
+	var h *istiov1beta1.Headers
 	if len(http.AppendHeaders) > 0 {
-		h = &istiov1alpha3.Headers{
-			Request: &istiov1alpha3.Headers_HeaderOperations{
+		h = &istiov1beta1.Headers{
+			Request: &istiov1beta1.Headers_HeaderOperations{
 				Set: http.AppendHeaders,
 			},
 		}
 	}
 
-	var rewrite *istiov1alpha3.HTTPRewrite
+	var rewrite *istiov1beta1.HTTPRewrite
 	if http.RewriteHost != "" {
-		rewrite = &istiov1alpha3.HTTPRewrite{
+		rewrite = &istiov1beta1.HTTPRewrite{
 			Authority: http.RewriteHost,
 		}
 
-		weights = []*istiov1alpha3.HTTPRouteDestination{{
+		weights = []*istiov1beta1.HTTPRouteDestination{{
 			Weight: 100,
-			Destination: &istiov1alpha3.Destination{
+			Destination: &istiov1beta1.Destination{
 				Host: privateGatewayServiceURLFromContext(ctx),
 			},
 		}}
 	}
 
-	route := &istiov1alpha3.HTTPRoute{
+	route := &istiov1beta1.HTTPRoute{
 		Match:   matches,
 		Route:   weights,
 		Rewrite: rewrite,
@@ -228,9 +228,9 @@ func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alp
 	if http.Timeout != nil {
 		route.Timeout = types.DurationProto(http.Timeout.Duration)
 	}
-	route.Retries = &istiov1alpha3.HTTPRetry{}
+	route.Retries = &istiov1beta1.HTTPRetry{}
 	if http.Retries != nil && http.Retries.Attempts > 0 {
-		route.Retries = &istiov1alpha3.HTTPRetry{
+		route.Retries = &istiov1beta1.HTTPRetry{
 			RetryOn:  retriableConditions,
 			Attempts: int32(http.Retries.Attempts),
 		}
@@ -252,26 +252,26 @@ func keepLocalHostnames(hosts sets.String) sets.String {
 	return retained
 }
 
-func makeMatch(host string, pathRegExp string, headers map[string]v1alpha1.HeaderMatch, gateways sets.String) *istiov1alpha3.HTTPMatchRequest {
-	match := &istiov1alpha3.HTTPMatchRequest{
+func makeMatch(host string, pathRegExp string, headers map[string]v1alpha1.HeaderMatch, gateways sets.String) *istiov1beta1.HTTPMatchRequest {
+	match := &istiov1beta1.HTTPMatchRequest{
 		Gateways: gateways.List(),
-		Authority: &istiov1alpha3.StringMatch{
+		Authority: &istiov1beta1.StringMatch{
 			// Do not use Regex as Istio 1.4 or later has 100 bytes limitation.
-			MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: hostPrefix(host)},
+			MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: hostPrefix(host)},
 		},
 	}
 	// Empty pathRegExp is considered match all path. We only need to
 	// consider pathRegExp when it's non-empty.
 	if pathRegExp != "" {
-		match.Uri = &istiov1alpha3.StringMatch{
-			MatchType: &istiov1alpha3.StringMatch_Regex{Regex: pathRegExp},
+		match.Uri = &istiov1beta1.StringMatch{
+			MatchType: &istiov1beta1.StringMatch_Regex{Regex: pathRegExp},
 		}
 	}
 
 	for k, v := range headers {
-		match.Headers = map[string]*istiov1alpha3.StringMatch{
+		match.Headers = map[string]*istiov1beta1.StringMatch{
 			k: {
-				MatchType: &istiov1alpha3.StringMatch_Exact{
+				MatchType: &istiov1beta1.StringMatch_Exact{
 					Exact: v.Exact,
 				},
 			},

@@ -22,8 +22,8 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	istiov1alpha3 "istio.io/api/networking/v1alpha3"
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	istiov1beta1 "istio.io/api/networking/v1beta1"
+	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -31,7 +31,7 @@ import (
 	istiofake "knative.dev/net-istio/pkg/client/istio/clientset/versioned/fake"
 	istioinformers "knative.dev/net-istio/pkg/client/istio/informers/externalversions"
 	fakeistioclient "knative.dev/net-istio/pkg/client/istio/injection/client/fake"
-	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
+	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/ptr"
 
@@ -54,24 +54,24 @@ var (
 		Controller: ptr.Bool(true),
 	}
 
-	origin = &v1alpha3.VirtualService{
+	origin = &v1beta1.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            "vs",
 			Namespace:       "default",
 			OwnerReferences: []metav1.OwnerReference{ownerRef},
 		},
-		Spec: istiov1alpha3.VirtualService{
+		Spec: istiov1beta1.VirtualService{
 			Hosts: []string{"origin.example.com"},
 		},
 	}
 
-	desired = &v1alpha3.VirtualService{
+	desired = &v1beta1.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            "vs",
 			Namespace:       "default",
 			OwnerReferences: []metav1.OwnerReference{ownerRef},
 		},
-		Spec: istiov1alpha3.VirtualService{
+		Spec: istiov1beta1.VirtualService{
 			Hosts: []string{"desired.example.com"},
 		},
 	}
@@ -98,7 +98,7 @@ func TestReconcileVirtualService_Create(t *testing.T) {
 
 	h := NewHooks()
 	h.OnCreate(&istioClient.Fake, "virtualservices", func(obj runtime.Object) HookResult {
-		got := obj.(*v1alpha3.VirtualService)
+		got := obj.(*v1beta1.VirtualService)
 		if diff := cmp.Diff(got, desired); diff != "" {
 			t.Logf("Unexpected VirtualService (-want, +got): %v", diff)
 			return HookIncomplete
@@ -106,7 +106,7 @@ func TestReconcileVirtualService_Create(t *testing.T) {
 		return HookComplete
 	})
 
-	accessor, waitInformers := setup(ctx, []*v1alpha3.VirtualService{}, istioClient, t)
+	accessor, waitInformers := setup(ctx, []*v1beta1.VirtualService{}, istioClient, t)
 	defer func() {
 		cancel()
 		waitInformers()
@@ -124,7 +124,7 @@ func TestReconcileVirtualService_Update(t *testing.T) {
 	ctx, cancel := context.WithCancel(ctx)
 
 	istioClient := fakeistioclient.Get(ctx)
-	accessor, waitInformers := setup(ctx, []*v1alpha3.VirtualService{origin}, istioClient, t)
+	accessor, waitInformers := setup(ctx, []*v1beta1.VirtualService{origin}, istioClient, t)
 	defer func() {
 		cancel()
 		waitInformers()
@@ -132,7 +132,7 @@ func TestReconcileVirtualService_Update(t *testing.T) {
 
 	h := NewHooks()
 	h.OnUpdate(&istioClient.Fake, "virtualservices", func(obj runtime.Object) HookResult {
-		got := obj.(*v1alpha3.VirtualService)
+		got := obj.(*v1beta1.VirtualService)
 		if diff := cmp.Diff(got, desired); diff != "" {
 			t.Logf("Unexpected VirtualService (-want, +got): %v", diff)
 			return HookIncomplete
@@ -146,15 +146,15 @@ func TestReconcileVirtualService_Update(t *testing.T) {
 	}
 }
 
-func setup(ctx context.Context, vses []*v1alpha3.VirtualService,
+func setup(ctx context.Context, vses []*v1beta1.VirtualService,
 	istioClient istioclientset.Interface, t *testing.T) (*FakeAccessor, func()) {
 
 	fake := istiofake.NewSimpleClientset()
 	informer := istioinformers.NewSharedInformerFactory(fake, 0)
-	vsInformer := informer.Networking().V1alpha3().VirtualServices()
+	vsInformer := informer.Networking().V1beta1().VirtualServices()
 
 	for _, vs := range vses {
-		fake.NetworkingV1alpha3().VirtualServices(vs.Namespace).Create(vs)
+		fake.NetworkingV1beta1().VirtualServices(vs.Namespace).Create(vs)
 		vsInformer.Informer().GetIndexer().Add(vs)
 	}
 
