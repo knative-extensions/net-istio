@@ -506,8 +506,7 @@ func TestReconcile(t *testing.T) {
 			patchAddFinalizerAction("reconcile-virtualservice", "ingresses.networking.internal.knative.dev"),
 		},
 		Key: "test-ns/reconcile-virtualservice",
-	}, {
-		}}
+	}, {}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		retryAttempted = false
