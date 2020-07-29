@@ -17,15 +17,17 @@ limitations under the License.
 package resources
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/google/go-cmp/cmp"
-	istiov1alpha3 "istio.io/api/networking/v1alpha3"
+	istiov1beta1 "istio.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/kmeta"
@@ -207,7 +209,7 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 		}},
 	}} {
 		t.Run(tc.name, func(t *testing.T) {
-			vss, err := MakeVirtualServices(tc.ci, tc.gateways)
+			vss, err := MakeVirtualServices(context.Background(), tc.ci, tc.gateways)
 			if err != nil {
 				t.Fatalf("MakeVirtualServices failed: %v", err)
 			}
@@ -302,7 +304,7 @@ func TestMakeVirtualServicesSpec_CorrectGateways(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			vs := makeVirtualServiceSpec(tc.ingress, tc.gateways, ingress.ExpandedHosts(getHosts(tc.ingress)))
+			vs := makeVirtualServiceSpec(context.Background(), tc.ingress, tc.gateways, ingress.ExpandedHosts(getHosts(tc.ingress)))
 			actualGateways := sets.NewString(vs.Gateways...)
 			if !actualGateways.Equal(tc.expectedGateways) {
 				t.Fatalf("Got gateways %v, expected %v", actualGateways.List(), tc.expectedGateways.List())
@@ -331,7 +333,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectGateways(t *testing.T) {
 			}}},
 	}
 	expected := []string{"mesh"}
-	gateways := MakeMeshVirtualService(ci, defaultGateways).Spec.Gateways
+	gateways := MakeMeshVirtualService(context.Background(), ci, defaultGateways).Spec.Gateways
 	if diff := cmp.Diff(expected, gateways); diff != "" {
 		t.Errorf("Unexpected gateways (-want +got): %v", diff)
 	}
@@ -358,7 +360,7 @@ func TestMakeMeshVirtualServiceSpecCorrectHosts(t *testing.T) {
 		expectedHosts: sets.NewString("test-route.test-ns.svc.cluster.local"),
 	}} {
 		t.Run(tc.name, func(t *testing.T) {
-			vs := MakeMeshVirtualService(&defaultIngress, tc.gateways)
+			vs := MakeMeshVirtualService(context.Background(), &defaultIngress, tc.gateways)
 			vsHosts := sets.NewString(vs.Spec.Hosts...)
 			if !vsHosts.Equal(tc.expectedHosts) {
 				t.Errorf("Unexpected hosts want %v; got %v", tc.expectedHosts, vsHosts)
@@ -372,7 +374,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
 	for _, tc := range []struct {
 		name     string
 		ci       *v1alpha1.Ingress
-		expected *istiov1alpha3.HTTPRetry
+		expected *istiov1beta1.HTTPRetry
 	}{{
 		name: "default retries",
 		ci: &v1alpha1.Ingress{
@@ -401,7 +403,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
 					},
 				}}},
 		},
-		expected: &istiov1alpha3.HTTPRetry{
+		expected: &istiov1beta1.HTTPRetry{
 			RetryOn:       retriableConditions,
 			Attempts:      int32(networking.DefaultRetryCount),
 			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
@@ -433,7 +435,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
 					},
 				}}},
 		},
-		expected: &istiov1alpha3.HTTPRetry{
+		expected: &istiov1beta1.HTTPRetry{
 			RetryOn:  retriableConditions,
 			Attempts: int32(networking.DefaultRetryCount),
 		},
@@ -465,7 +467,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
 					},
 				}}},
 		},
-		expected: &istiov1alpha3.HTTPRetry{},
+		expected: &istiov1beta1.HTTPRetry{},
 	}, {
 		name: "disabling retries",
 		ci: &v1alpha1.Ingress{
@@ -490,10 +492,10 @@ func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
 					},
 				}}},
 		},
-		expected: &istiov1alpha3.HTTPRetry{},
+		expected: &istiov1beta1.HTTPRetry{},
 	}} {
 		t.Run(tc.name, func(t *testing.T) {
-			for _, h := range MakeMeshVirtualService(tc.ci, defaultGateways).Spec.Http {
+			for _, h := range MakeMeshVirtualService(context.Background(), tc.ci, defaultGateways).Spec.Http {
 				if diff := cmp.Diff(tc.expected, h.Retries); diff != "" {
 					t.Errorf("Unexpected retries (-want +got): %v", diff)
 				}
@@ -565,46 +567,46 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 			}},
 		},
 	}
-	expected := []*istiov1alpha3.HTTPRoute{{
-		Match: []*istiov1alpha3.HTTPMatchRequest{{
-			Uri: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Regex{Regex: "^/pets/(.*?)?"},
+	expected := []*istiov1beta1.HTTPRoute{{
+		Match: []*istiov1beta1.HTTPMatchRequest{{
+			Uri: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Regex{Regex: "^/pets/(.*?)?"},
 			},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `test-route.test-ns`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `test-route.test-ns`},
 			},
 			Gateways: []string{"mesh"},
 		}},
-		Route: []*istiov1alpha3.HTTPRouteDestination{{
-			Destination: &istiov1alpha3.Destination{
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
 				Host: "v2-service.test-ns.svc.cluster.local",
-				Port: &istiov1alpha3.PortSelector{Number: 80},
+				Port: &istiov1beta1.PortSelector{Number: 80},
 			},
 			Weight: 100,
-			Headers: &istiov1alpha3.Headers{
-				Request: &istiov1alpha3.Headers_HeaderOperations{
+			Headers: &istiov1beta1.Headers{
+				Request: &istiov1beta1.Headers_HeaderOperations{
 					Set: map[string]string{
 						"ugh": "blah",
 					},
 				},
 			},
 		}},
-		Headers: &istiov1alpha3.Headers{
-			Request: &istiov1alpha3.Headers_HeaderOperations{
+		Headers: &istiov1beta1.Headers{
+			Request: &istiov1beta1.Headers_HeaderOperations{
 				Set: map[string]string{
 					"foo": "bar",
 				},
 			},
 		},
 		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
-		Retries: &istiov1alpha3.HTTPRetry{
+		Retries: &istiov1beta1.HTTPRetry{
 			RetryOn:       retriableConditions,
 			Attempts:      int32(networking.DefaultRetryCount),
 			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
 		},
 	}}
 
-	routes := MakeMeshVirtualService(ci, defaultGateways).Spec.Http
+	routes := MakeMeshVirtualService(context.Background(), ci, defaultGateways).Spec.Http
 	if diff := cmp.Diff(expected, routes); diff != "" {
 		t.Errorf("Unexpected routes (-want +got): %v", diff)
 	}
@@ -617,7 +619,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectGateways(t *testing.T) {
 		ci.Spec.Rules[idx].Visibility = v1alpha1.IngressVisibilityExternalIP
 	}
 	expected := []string{"knative-testing/gateway-one", "knative-testing/gateway-two"}
-	gateways := MakeIngressVirtualService(ci, makeGatewayMap([]string{"knative-testing/gateway-one", "knative-testing/gateway-two"}, nil)).Spec.Gateways
+	gateways := MakeIngressVirtualService(context.Background(), ci, makeGatewayMap([]string{"knative-testing/gateway-one", "knative-testing/gateway-two"}, nil)).Spec.Gateways
 	if diff := cmp.Diff(expected, gateways); diff != "" {
 		t.Errorf("Unexpected gateways (-want +got): %v", diff)
 	}
@@ -689,86 +691,136 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 		},
 	}
 
-	expected := []*istiov1alpha3.HTTPRoute{{
-		Match: []*istiov1alpha3.HTTPMatchRequest{{
-			Uri: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Regex{Regex: "^/pets/(.*?)?"},
+	expected := []*istiov1beta1.HTTPRoute{{
+		Match: []*istiov1beta1.HTTPMatchRequest{{
+			Uri: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Regex{Regex: "^/pets/(.*?)?"},
 			},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `domain.com`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `domain.com`},
 			},
 			Gateways: []string{"gateway.public"},
 		}, {
-			Uri: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Regex{Regex: "^/pets/(.*?)?"},
+			Uri: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Regex{Regex: "^/pets/(.*?)?"},
 			},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `test-route.test-ns`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `test-route.test-ns`},
 			},
 			Gateways: []string{"gateway.private"},
 		}},
-		Route: []*istiov1alpha3.HTTPRouteDestination{{
-			Destination: &istiov1alpha3.Destination{
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
 				Host: "v2-service.test-ns.svc.cluster.local",
-				Port: &istiov1alpha3.PortSelector{Number: 80},
+				Port: &istiov1beta1.PortSelector{Number: 80},
 			},
 			Weight: 100,
-			Headers: &istiov1alpha3.Headers{
-				Request: &istiov1alpha3.Headers_HeaderOperations{
+			Headers: &istiov1beta1.Headers{
+				Request: &istiov1beta1.Headers_HeaderOperations{
 					Set: map[string]string{
 						"ugh": "blah",
 					},
 				},
 			},
 		}},
-		Headers: &istiov1alpha3.Headers{
-			Request: &istiov1alpha3.Headers_HeaderOperations{
+		Headers: &istiov1beta1.Headers{
+			Request: &istiov1beta1.Headers_HeaderOperations{
 				Set: map[string]string{
 					"foo": "bar",
 				},
 			},
 		},
 		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
-		Retries: &istiov1alpha3.HTTPRetry{
+		Retries: &istiov1beta1.HTTPRetry{
 			RetryOn:       retriableConditions,
 			Attempts:      int32(networking.DefaultRetryCount),
 			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
 		},
 	}, {
-		Match: []*istiov1alpha3.HTTPMatchRequest{{
-			Uri: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Regex{Regex: "^/pets/(.*?)?"},
+		Match: []*istiov1beta1.HTTPMatchRequest{{
+			Uri: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Regex{Regex: "^/pets/(.*?)?"},
 			},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `v1.domain.com`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `v1.domain.com`},
 			},
 			Gateways: []string{},
 		}},
-		Route: []*istiov1alpha3.HTTPRouteDestination{{
-			Destination: &istiov1alpha3.Destination{
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
 				Host: "v1-service.test-ns.svc.cluster.local",
-				Port: &istiov1alpha3.PortSelector{Number: 80},
+				Port: &istiov1beta1.PortSelector{Number: 80},
 			},
 			Weight: 100,
 		}},
-		Headers: &istiov1alpha3.Headers{
-			Request: &istiov1alpha3.Headers_HeaderOperations{
+		Headers: &istiov1beta1.Headers{
+			Request: &istiov1beta1.Headers_HeaderOperations{
 				Set: map[string]string{
 					"foo": "baz",
 				},
 			},
 		},
 		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
-		Retries: &istiov1alpha3.HTTPRetry{
+		Retries: &istiov1beta1.HTTPRetry{
 			RetryOn:       retriableConditions,
 			Attempts:      int32(networking.DefaultRetryCount),
 			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
 		},
 	}}
 
-	routes := MakeIngressVirtualService(ci, makeGatewayMap([]string{"gateway.public"}, []string{"gateway.private"})).Spec.Http
+	routes := MakeIngressVirtualService(context.Background(), ci, makeGatewayMap([]string{"gateway.public"}, []string{"gateway.private"})).Spec.Http
 	if diff := cmp.Diff(expected, routes); diff != "" {
 		t.Errorf("Unexpected routes (-want +got): %v", diff)
+	}
+}
+
+func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
+	ingressPath := &v1alpha1.HTTPIngressPath{
+		RewriteHost: "the.target.host",
+		Timeout:     &metav1.Duration{Duration: defaultMaxRevisionTimeout},
+		Retries: &v1alpha1.HTTPRetry{
+			PerTryTimeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
+			Attempts:      networking.DefaultRetryCount,
+		},
+	}
+	ctx := config.ToContext(context.Background(), &config.Config{
+		Istio: &config.Istio{
+			LocalGateways: []config.Gateway{{
+				ServiceURL: "the-local-gateway.svc.url",
+			}},
+		},
+	})
+	route := makeVirtualServiceRoute(ctx, sets.NewString("a.vanity.url", "another.vanity.url"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	expected := &istiov1beta1.HTTPRoute{
+		Match: []*istiov1beta1.HTTPMatchRequest{{
+			Gateways: []string{"gateway-1"},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `a.vanity.url`},
+			},
+		}, {
+			Gateways: []string{"gateway-1"},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `another.vanity.url`},
+			},
+		}},
+		Rewrite: &istiov1beta1.HTTPRewrite{
+			Authority: "the.target.host",
+		},
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
+				Host: "the-local-gateway.svc.url",
+			},
+			Weight: 100,
+		}},
+		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
+		Retries: &istiov1beta1.HTTPRetry{
+			RetryOn:       retriableConditions,
+			Attempts:      int32(networking.DefaultRetryCount),
+			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
+		},
+	}
+	if diff := cmp.Diff(expected, route); diff != "" {
+		t.Errorf("Unexpected route  (-want +got): %v", diff)
 	}
 }
 
@@ -795,42 +847,42 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 			Attempts:      networking.DefaultRetryCount,
 		},
 	}
-	route := makeVirtualServiceRoute(sets.NewString("a.com", "b.org"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
-	expected := &istiov1alpha3.HTTPRoute{
-		Match: []*istiov1alpha3.HTTPMatchRequest{{
+	route := makeVirtualServiceRoute(context.Background(), sets.NewString("a.com", "b.org"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	expected := &istiov1beta1.HTTPRoute{
+		Match: []*istiov1beta1.HTTPMatchRequest{{
 			Gateways: []string{"gateway-1"},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `a.com`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `a.com`},
 			},
-			Headers: map[string]*istiov1alpha3.StringMatch{
+			Headers: map[string]*istiov1beta1.StringMatch{
 				"my-header": {
-					MatchType: &istiov1alpha3.StringMatch_Exact{
+					MatchType: &istiov1beta1.StringMatch_Exact{
 						Exact: "my-header-value",
 					},
 				},
 			},
 		}, {
 			Gateways: []string{"gateway-1"},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `b.org`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `b.org`},
 			},
-			Headers: map[string]*istiov1alpha3.StringMatch{
+			Headers: map[string]*istiov1beta1.StringMatch{
 				"my-header": {
-					MatchType: &istiov1alpha3.StringMatch_Exact{
+					MatchType: &istiov1beta1.StringMatch_Exact{
 						Exact: "my-header-value",
 					},
 				},
 			},
 		}},
-		Route: []*istiov1alpha3.HTTPRouteDestination{{
-			Destination: &istiov1alpha3.Destination{
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
 				Host: "revision-service.test-ns.svc.cluster.local",
-				Port: &istiov1alpha3.PortSelector{Number: 80},
+				Port: &istiov1beta1.PortSelector{Number: 80},
 			},
 			Weight: 100,
 		}},
 		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
-		Retries: &istiov1alpha3.HTTPRetry{
+		Retries: &istiov1beta1.HTTPRetry{
 			RetryOn:       retriableConditions,
 			Attempts:      int32(networking.DefaultRetryCount),
 			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
@@ -865,29 +917,29 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 			Attempts:      networking.DefaultRetryCount,
 		},
 	}
-	route := makeVirtualServiceRoute(sets.NewString("test.org"), ingressPath, makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
-	expected := &istiov1alpha3.HTTPRoute{
-		Match: []*istiov1alpha3.HTTPMatchRequest{{
+	route := makeVirtualServiceRoute(context.Background(), sets.NewString("test.org"), ingressPath, makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	expected := &istiov1beta1.HTTPRoute{
+		Match: []*istiov1beta1.HTTPMatchRequest{{
 			Gateways: []string{"knative-testing/gateway-1"},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `test.org`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `test.org`},
 			},
 		}},
-		Route: []*istiov1alpha3.HTTPRouteDestination{{
-			Destination: &istiov1alpha3.Destination{
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
 				Host: "revision-service.test-ns.svc.cluster.local",
-				Port: &istiov1alpha3.PortSelector{Number: 80},
+				Port: &istiov1beta1.PortSelector{Number: 80},
 			},
 			Weight: 90,
 		}, {
-			Destination: &istiov1alpha3.Destination{
+			Destination: &istiov1beta1.Destination{
 				Host: "new-revision-service.test-ns.svc.cluster.local",
-				Port: &istiov1alpha3.PortSelector{Number: 81},
+				Port: &istiov1beta1.PortSelector{Number: 81},
 			},
 			Weight: 10,
 		}},
 		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
-		Retries: &istiov1alpha3.HTTPRetry{
+		Retries: &istiov1beta1.HTTPRetry{
 			RetryOn:       retriableConditions,
 			Attempts:      int32(networking.DefaultRetryCount),
 			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),

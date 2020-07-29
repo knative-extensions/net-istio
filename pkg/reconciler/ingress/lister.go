@@ -24,13 +24,13 @@ import (
 	"strconv"
 
 	"go.uber.org/zap"
-	istiov1alpha3 "istio.io/api/networking/v1alpha3"
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	istiov1beta1 "istio.io/api/networking/v1beta1"
+	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
-	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
+	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/serving/pkg/network"
 	"knative.dev/serving/pkg/network/ingress"
@@ -59,12 +59,20 @@ type gatewayPodTargetLister struct {
 }
 
 func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1alpha1.Ingress) ([]status.ProbeTarget, error) {
+	if containsRewriteHostRule(ing) {
+		// if this ingress contains a RewriteHost rule we can't ensure the
+		// k-network-hash header will be properly returned, so we'll just skip
+		// probing (which is best-effort anyway).
+		return nil, nil
+	}
+
 	results := []status.ProbeTarget{}
-	gatewayHosts := ingress.HostsPerVisibility(ing, qualifiedGatewayNamesFromContext(ctx))
-	gatewayNames := []string{}
-	for gatewayName := range gatewayHosts {
+	hostsByGateway := ingress.HostsPerVisibility(ing, qualifiedGatewayNamesFromContext(ctx))
+	gatewayNames := make([]string, 0, len(hostsByGateway))
+	for gatewayName := range hostsByGateway {
 		gatewayNames = append(gatewayNames, gatewayName)
 	}
+
 	// Sort the gateway names for a consistent ordering.
 	sort.Strings(gatewayNames)
 	for _, gatewayName := range gatewayNames {
@@ -84,21 +92,21 @@ func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1al
 				PodIPs:  target.PodIPs,
 				PodPort: target.PodPort,
 				Port:    target.Port,
-				URLs:    make([]*url.URL, len(gatewayHosts[gatewayName])),
+				URLs:    make([]*url.URL, 1),
 			}
-			// Use sorted hosts list for consistent ordering.
-			for i, host := range gatewayHosts[gatewayName].List() {
-				newURL := *target.URLs[0]
-				newURL.Host = host + ":" + target.Port
-				qualifiedTarget.URLs[i] = &newURL
-			}
+			// Pick a single host since they all end up being used in the same
+			// VirtualService and will be applied atomically by Istio.
+			host := hostsByGateway[gatewayName].List()[0]
+			newURL := *target.URLs[0]
+			newURL.Host = host + ":" + target.Port
+			qualifiedTarget.URLs[0] = &newURL
 			results = append(results, qualifiedTarget)
 		}
 	}
 	return results, nil
 }
 
-func (l *gatewayPodTargetLister) getGateway(name string) (*v1alpha3.Gateway, error) {
+func (l *gatewayPodTargetLister) getGateway(name string) (*v1beta1.Gateway, error) {
 	namespace, name, err := cache.SplitMetaNamespaceKey(name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse Gateway name %q: %w", name, err)
@@ -110,7 +118,7 @@ func (l *gatewayPodTargetLister) getGateway(name string) (*v1alpha3.Gateway, err
 }
 
 // listGatewayPodsURLs returns a probe targets for a given Gateway.
-func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) ([]status.ProbeTarget, error) {
+func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1beta1.Gateway) ([]status.ProbeTarget, error) {
 	selector := labels.SelectorFromSet(gateway.Spec.Selector)
 
 	services, err := l.serviceLister.List(selector)
@@ -140,7 +148,7 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) (
 			}
 			tURL.Scheme = "http"
 		case "HTTPS":
-			if server.GetTls().GetMode() == istiov1alpha3.ServerTLSSettings_MUTUAL {
+			if server.GetTls().GetMode() == istiov1beta1.ServerTLSSettings_MUTUAL {
 				l.logger.Infof("Skipping Server %q because HTTPS with TLS mode MUTUAL is not supported", server.Port.Name)
 				continue
 			}
@@ -185,4 +193,20 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) (
 		}
 	}
 	return targets, nil
+}
+
+func containsRewriteHostRule(ing *v1alpha1.Ingress) bool {
+	for _, rule := range ing.Spec.Rules {
+		if rule.HTTP == nil {
+			continue
+		}
+
+		for _, path := range rule.HTTP.Paths {
+			if path.RewriteHost != "" {
+				return true
+			}
+		}
+	}
+
+	return false
 }

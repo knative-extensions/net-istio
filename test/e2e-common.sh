@@ -53,15 +53,15 @@ function test_setup() {
 
   # Bringing up controllers.
   echo ">> Bringing up Istio"
-  echo ">> Running Istio CRD installer"
   local istio_dir=third_party/istio-${ISTIO_VERSION}
-  kubectl apply -f ${istio_dir}/istio-crds.yaml || return 1
-  wait_until_batch_job_complete istio-system || return 1
-  echo ">> Running Istio"
-  kubectl apply -f ${istio_dir}/istio-ci-no-mesh.yaml || return 1
+  #kubectl apply -f ${istio_dir}/istio-crds.yaml || return 1
+  #echo ">> Running Istio"
+  ${istio_dir}/install-istio.sh istio-ci-no-mesh.yaml || return 1
   echo ">> Bringing up net-istio Ingress Controller"
   ko apply -f config/ || return 1
 
+  scale_controlplane networking-istio istio-webhook
+  
   # Wait for pods to be running.
   echo ">> Waiting for Istio components to be running..."
   wait_until_pods_running istio-system || return 1
@@ -70,6 +70,17 @@ function test_setup() {
 
   # Wait for static IP to be through
   wait_until_service_has_external_http_address istio-system istio-ingressgateway
+}
+
+function scale_controlplane() {
+  for deployment in "$@"; do
+    # Make sure all pods run in leader-elected mode.
+    kubectl -n knative-serving scale deployment "$deployment" --replicas=0 || failed=1
+    # Give it time to kill the pods.
+    sleep 5
+    # Scale up components for HA tests
+    kubectl -n knative-serving scale deployment "$deployment" --replicas=2 || failed=1
+  done
 }
 
 # Add function call to trap

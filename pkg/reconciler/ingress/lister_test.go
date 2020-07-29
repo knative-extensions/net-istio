@@ -26,8 +26,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	istiov1alpha3 "istio.io/api/networking/v1alpha3"
-	v1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
+	istiov1beta1 "istio.io/api/networking/v1beta1"
+	v1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/serving/pkg/network/status"
@@ -38,7 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
-	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
+	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
 )
 
 func TestListProbeTargets(t *testing.T) {
@@ -101,15 +101,15 @@ func TestListProbeTargets(t *testing.T) {
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Number:   80,
 							Protocol: "HTTP",
 						},
@@ -143,15 +143,15 @@ func TestListProbeTargets(t *testing.T) {
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Number:   80,
 							Protocol: "HTTP",
 						},
@@ -196,15 +196,15 @@ func TestListProbeTargets(t *testing.T) {
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Number:   80,
 							Protocol: "HTTP",
 						},
@@ -258,15 +258,15 @@ func TestListProbeTargets(t *testing.T) {
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Number:   80,
 							Protocol: "HTTP",
 						},
@@ -321,15 +321,15 @@ func TestListProbeTargets(t *testing.T) {
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Number:   80,
 							Protocol: "HTTP",
 						},
@@ -363,15 +363,15 @@ func TestListProbeTargets(t *testing.T) {
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Number:   80,
 							Protocol: "Mongo",
 						},
@@ -418,15 +418,15 @@ func TestListProbeTargets(t *testing.T) {
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "http",
 							Number:   8080,
 							Protocol: "HTTP",
@@ -505,15 +505,15 @@ func TestListProbeTargets(t *testing.T) {
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "https",
 							Number:   8443,
 							Protocol: "HTTPS",
@@ -592,21 +592,21 @@ func TestListProbeTargets(t *testing.T) {
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "https",
 							Number:   8443,
 							Protocol: "HTTPS",
 						},
-						Tls: &istiov1alpha3.ServerTLSSettings{
-							Mode: istiov1alpha3.ServerTLSSettings_MUTUAL,
+						Tls: &istiov1beta1.ServerTLSSettings{
+							Mode: istiov1beta1.ServerTLSSettings_MUTUAL,
 						},
 					}},
 					Selector: map[string]string{
@@ -679,22 +679,22 @@ func TestListProbeTargets(t *testing.T) {
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "http",
 							Number:   80,
 							Protocol: "HTTP",
 						},
 					}, {
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "https",
 							Number:   443,
 							Protocol: "HTTPS",
@@ -773,25 +773,25 @@ func TestListProbeTargets(t *testing.T) {
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "http",
 							Number:   80,
 							Protocol: "HTTP",
 						},
-						Tls: &istiov1alpha3.ServerTLSSettings{
+						Tls: &istiov1beta1.ServerTLSSettings{
 							HttpsRedirect: true,
 						},
 					}, {
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "https",
 							Number:   443,
 							Protocol: "HTTPS",
@@ -865,15 +865,15 @@ func TestListProbeTargets(t *testing.T) {
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "http",
 							Number:   80,
 							Protocol: "GRPC",
@@ -947,15 +947,15 @@ func TestListProbeTargets(t *testing.T) {
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "http",
 							Number:   80,
 							Protocol: "HTTP",
@@ -1029,15 +1029,15 @@ func TestListProbeTargets(t *testing.T) {
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "http",
 							Number:   80,
 							Protocol: "HTTP",
@@ -1052,10 +1052,10 @@ func TestListProbeTargets(t *testing.T) {
 					Namespace: "default",
 					Name:      "gateway-two",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "http",
 							Number:   90,
 							Protocol: "HTTP",
@@ -1169,28 +1169,111 @@ func TestListProbeTargets(t *testing.T) {
 			URLs:    []*url.URL{{Scheme: "http", Host: "foo.bar.com:90"}},
 		}},
 	}, {
+		name: "pick first host",
+		ingressGateways: []config.Gateway{{
+			Name:      "ingress-gateway",
+			Namespace: "default",
+		}},
+		gatewayLister: &fakeGatewayLister{
+			gateways: []*v1beta1.Gateway{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "ingress-gateway",
+				},
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
+						Hosts: []string{"*"},
+						Port: &istiov1beta1.Port{
+							Name:     "http",
+							Number:   80,
+							Protocol: "HTTP",
+						},
+					}},
+					Selector: map[string]string{
+						"gwt": "istio",
+					},
+				},
+			}},
+		},
+		endpointsLister: &fakeEndpointsLister{
+			endpointses: []*v1.Endpoints{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "ingress-gateway",
+				},
+				Subsets: []v1.EndpointSubset{{
+					Ports: []v1.EndpointPort{{
+						Name: "real",
+						Port: 80,
+					}},
+					Addresses: []v1.EndpointAddress{{
+						IP: "1.1.1.1",
+					}},
+				}},
+			}},
+		},
+		serviceLister: &fakeServiceLister{
+			services: []*v1.Service{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "ingress-gateway",
+					Labels: map[string]string{
+						"gwt": "istio",
+					},
+				},
+				Spec: v1.ServiceSpec{
+					Ports: []v1.ServicePort{{
+						Name: "real",
+						Port: 80,
+					}},
+				},
+			}},
+		},
+		ingress: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "default",
+				Name:      "whatever",
+			},
+			Spec: v1alpha1.IngressSpec{
+				Rules: []v1alpha1.IngressRule{{
+					Hosts: []string{
+						"foo.bar.com",
+						"route.knative.dev",
+					},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+				}},
+			},
+		},
+		results: []status.ProbeTarget{{
+			PodIPs:  sets.NewString("1.1.1.1"),
+			PodPort: "80",
+			Port:    "80",
+			URLs: []*url.URL{
+				{Scheme: "http", Host: "foo.bar.com:80"}},
+		}},
+	}, {
 		name: "local gateways",
 		localGateways: []config.Gateway{{
 			Name:      "local-gateway",
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "http",
 							Number:   80,
 							Protocol: "HTTP",
 						},
 					}, {
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "https",
 							Number:   443,
 							Protocol: "HTTPS",
@@ -1205,10 +1288,10 @@ func TestListProbeTargets(t *testing.T) {
 					Namespace: "default",
 					Name:      "local-gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "http",
 							Number:   80,
 							Protocol: "HTTP",
@@ -1315,9 +1398,7 @@ func TestListProbeTargets(t *testing.T) {
 			PodPort: "80",
 			Port:    "80",
 			URLs: []*url.URL{
-				{Scheme: "http", Host: "foo.bar:80"},
-				{Scheme: "http", Host: "foo.bar.svc:80"},
-				{Scheme: "http", Host: "foo.bar.svc.cluster.local:80"}},
+				{Scheme: "http", Host: "foo.bar:80"}},
 		}},
 	}, {
 		name: "two servers, same port, same protocol",
@@ -1326,22 +1407,22 @@ func TestListProbeTargets(t *testing.T) {
 			Namespace: "default",
 		}},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1alpha3.Gateway{{
+			gateways: []*v1beta1.Gateway{{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "gateway",
 				},
-				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{{
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
 						Hosts: []string{"*"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "http",
 							Number:   80,
 							Protocol: "HTTP",
 						},
 					}, {
 						Hosts: []string{"foo.bar.com"},
-						Port: &istiov1alpha3.Port{
+						Port: &istiov1beta1.Port{
 							Name:     "http",
 							Number:   80,
 							Protocol: "HTTP",
@@ -1410,6 +1491,91 @@ func TestListProbeTargets(t *testing.T) {
 			Port:    "80",
 			URLs:    []*url.URL{{Scheme: "http", Host: "foo.bar.com:80"}},
 		}},
+	}, {
+		name: "skip probing for RewriteHost",
+		ingressGateways: []config.Gateway{{
+			Name:      "gateway",
+			Namespace: "default",
+		}},
+		gatewayLister: &fakeGatewayLister{
+			gateways: []*v1beta1.Gateway{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "gateway",
+				},
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
+						Hosts: []string{"*"},
+						Port: &istiov1beta1.Port{
+							Name:     "http",
+							Number:   8080,
+							Protocol: "HTTP",
+						},
+					}},
+					Selector: map[string]string{
+						"gwt": "istio",
+					},
+				},
+			}},
+		},
+		endpointsLister: &fakeEndpointsLister{
+			endpointses: []*v1.Endpoints{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "gateway",
+				},
+				Subsets: []v1.EndpointSubset{{
+					Ports: []v1.EndpointPort{{
+						Name: "bogus",
+						Port: 8081,
+					}, {
+						Name: "real",
+						Port: 8080,
+					}},
+					Addresses: []v1.EndpointAddress{{
+						IP: "1.1.1.1",
+					}},
+				}},
+			}},
+		},
+		serviceLister: &fakeServiceLister{
+			services: []*v1.Service{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "gateway",
+					Labels: map[string]string{
+						"gwt": "istio",
+					},
+				},
+				Spec: v1.ServiceSpec{
+					Ports: []v1.ServicePort{{
+						Name: "bogus",
+						Port: 8081,
+					}, {
+						Name: "real",
+						Port: 8080,
+					}},
+				},
+			}},
+		},
+		ingress: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "default",
+				Name:      "whatever",
+			},
+			Spec: v1alpha1.IngressSpec{
+				Rules: []v1alpha1.IngressRule{{
+					Hosts: []string{
+						"foo.bar.com",
+					},
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{RewriteHost: "something"}},
+					},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+				}},
+			},
+		},
+		results: []status.ProbeTarget{},
 	}}
 
 	for _, test := range tests {
@@ -1448,7 +1614,7 @@ func TestListProbeTargets(t *testing.T) {
 }
 
 type fakeGatewayLister struct {
-	gateways []*v1alpha3.Gateway
+	gateways []*v1beta1.Gateway
 	fails    bool
 }
 
@@ -1457,7 +1623,7 @@ func (l *fakeGatewayLister) Gateways(namespace string) istiolisters.GatewayNames
 		return &fakeGatewayNamespaceLister{fails: true}
 	}
 
-	var matches []*v1alpha3.Gateway
+	var matches []*v1beta1.Gateway
 	for _, gateway := range l.gateways {
 		if gateway.Namespace == namespace {
 			matches = append(matches, gateway)
@@ -1468,22 +1634,22 @@ func (l *fakeGatewayLister) Gateways(namespace string) istiolisters.GatewayNames
 	}
 }
 
-func (l *fakeGatewayLister) List(selector labels.Selector) ([]*v1alpha3.Gateway, error) {
+func (l *fakeGatewayLister) List(selector labels.Selector) ([]*v1beta1.Gateway, error) {
 	log.Panic("not implemented")
 	return nil, nil
 }
 
 type fakeGatewayNamespaceLister struct {
-	gateways []*v1alpha3.Gateway
+	gateways []*v1beta1.Gateway
 	fails    bool
 }
 
-func (l *fakeGatewayNamespaceLister) List(selector labels.Selector) ([]*v1alpha3.Gateway, error) {
+func (l *fakeGatewayNamespaceLister) List(selector labels.Selector) ([]*v1beta1.Gateway, error) {
 	log.Panic("not implemented")
 	return nil, nil
 }
 
-func (l *fakeGatewayNamespaceLister) Get(name string) (*v1alpha3.Gateway, error) {
+func (l *fakeGatewayNamespaceLister) Get(name string) (*v1beta1.Gateway, error) {
 	if l.fails {
 		return nil, errors.New("failed to get Gateway")
 	}
