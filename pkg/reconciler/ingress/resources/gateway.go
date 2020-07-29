@@ -94,8 +94,8 @@ func SortServers(servers []*istiov1beta1.Server) []*istiov1beta1.Server {
 	return servers
 }
 
-// MakeIngressGateways creates Gateways for a given Ingress.
-func MakeIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, originSecrets map[string]*corev1.Secret, svcLister corev1listers.ServiceLister) ([]*v1beta1.Gateway, error) {
+// MakeIngressTLSGateways creates Gateways for a given Ingress.
+func MakeIngressTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, originSecrets map[string]*corev1.Secret, svcLister corev1listers.ServiceLister) ([]*v1beta1.Gateway, error) {
 	// No need to create Gateway if there is no related ingress TLS.
 	if len(ingressTLS) == 0 {
 		return []*v1beta1.Gateway{}, nil
@@ -106,7 +106,7 @@ func MakeIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressTLS 
 	}
 	gateways := make([]*v1beta1.Gateway, len(gatewayServices))
 	for i, gatewayService := range gatewayServices {
-		gateway, err := makeIngressGateway(ctx, ing, ingressTLS, originSecrets, gatewayService.Spec.Selector, gatewayService)
+		gateway, err := makeIngressTLSGateway(ctx, ing, ingressTLS, originSecrets, gatewayService.Spec.Selector, gatewayService)
 		if err != nil {
 			return nil, err
 		}
@@ -210,7 +210,7 @@ func GatewayRef(gw *v1beta1.Gateway) corev1.ObjectReference {
 	}
 }
 
-func makeIngressGateway(ctx context.Context, ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, originSecrets map[string]*corev1.Secret, selector map[string]string, gatewayService *corev1.Service) (*v1beta1.Gateway, error) {
+func makeIngressTLSGateway(ctx context.Context, ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, originSecrets map[string]*corev1.Secret, selector map[string]string, gatewayService *corev1.Service) (*v1beta1.Gateway, error) {
 	ns := ing.GetNamespace()
 	if len(ns) == 0 {
 		ns = system.Namespace()
@@ -222,10 +222,6 @@ func makeIngressGateway(ctx context.Context, ing *v1alpha1.Ingress, ingressTLS [
 	hosts := sets.String{}
 	for _, rule := range ing.Spec.Rules {
 		hosts.Insert(rule.Hosts...)
-	}
-	httpServer := MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, hosts.List())
-	if httpServer != nil {
-		servers = append(servers, httpServer)
 	}
 	return &v1beta1.Gateway{
 		ObjectMeta: metav1.ObjectMeta{

@@ -1521,7 +1521,7 @@ func TestGlobalResyncOnUpdateNetwork(t *testing.T) {
 		createdGateway := obj.(*v1beta1.Gateway)
 		// The expected gateway should include the Istio TLS server.
 		expectedGateway := gateway(resources.GatewayName(ingressWithTLS("reconciling-ingress", 1234, ingressTLS), ingressService), testNS,
-			[]*istiov1beta1.Server{ingressTLSServer, ingressHTTPServer}, withOwnerRef(ingressWithTLS("reconciling-ingress", 1234, ingressTLS)),
+			[]*istiov1beta1.Server{ingressTLSServer}, withOwnerRef(ingressWithTLS("reconciling-ingress", 1234, ingressTLS)),
 			withLabels(gwLabels), withSelector(selector))
 		if diff := cmp.Diff(createdGateway, expectedGateway); diff != "" {
 			t.Logf("Unexpected Gateway (-want, +got): %v", diff)

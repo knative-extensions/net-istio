@@ -709,7 +709,7 @@ func TestGetQualifiedGatewayNames(t *testing.T) {
 	}
 }
 
-func TestMakeIngressGateways(t *testing.T) {
+func TestMakeIngressTLSGateways(t *testing.T) {
 	cases := []struct {
 		name           string
 		ia             *v1alpha1.Ingress
@@ -754,13 +754,6 @@ func TestMakeIngressGateways(t *testing.T) {
 						PrivateKey:        corev1.TLSPrivateKeyKey,
 						CredentialName:    targetSecret(&secret, &ingressResource),
 					},
-				}, {
-					Hosts: []string{"host1.example.com"},
-					Port: &istiov1beta1.Port{
-						Name:     httpServerPortName,
-						Number:   80,
-						Protocol: "HTTP",
-					},
 				}},
 			},
 		}},
@@ -802,13 +795,6 @@ func TestMakeIngressGateways(t *testing.T) {
 						PrivateKey:        corev1.TLSPrivateKeyKey,
 						CredentialName:    secret.Name,
 					},
-				}, {
-					Hosts: []string{"host1.example.com"},
-					Port: &istiov1beta1.Port{
-						Name:     httpServerPortName,
-						Number:   80,
-						Protocol: "HTTP",
-					},
 				}},
 			},
 		}},
@@ -844,9 +830,9 @@ func TestMakeIngressGateways(t *testing.T) {
 			},
 		})
 		t.Run(c.name, func(t *testing.T) {
-			got, err := MakeIngressGateways(ctx, c.ia, c.ia.Spec.TLS, c.originSecrets, svcLister)
+			got, err := MakeIngressTLSGateways(ctx, c.ia, c.ia.Spec.TLS, c.originSecrets, svcLister)
 			if (err != nil) != c.wantErr {
-				t.Fatalf("Test: %s; MakeIngressGateways error = %v, WantErr %v", c.name, err, c.wantErr)
+				t.Fatalf("Test: %s; MakeIngressTLSGateways error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
 			if diff := cmp.Diff(c.want, got); diff != "" {
 				t.Errorf("Unexpected Gateways (-want, +got): %v", diff)
