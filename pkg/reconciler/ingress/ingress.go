@@ -163,6 +163,18 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(desiredWildcardGateways)...)
 	}
 
+	// HTTPProtocol should be effective only when Auto TLS is enabled per its definition.
+	// TODO(zhiminx): figure out a better way to handle HTTP behavior.
+	// https://github.com/knative/serving/issues/6373
+	if config.FromContext(ctx).Network.AutoTLS {
+		desiredHTTPServer := resources.MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, []string{"*"})
+		for _, gw := range config.FromContext(ctx).Istio.IngressGateways {
+			if err := r.reconcileHTTPServer(ctx, ing, gw, desiredHTTPServer); err != nil {
+				return err
+			}
+		}
+	}
+
 	vses, err := resources.MakeVirtualServices(ctx, ing, gatewayNames)
 	if err != nil {
 		return err
@@ -364,6 +376,24 @@ func (r *Reconciler) reconcileIngressServers(ctx context.Context, ing *v1alpha1.
 		return fmt.Errorf("failed to get Gateway: %w", err)
 	}
 	existing := resources.GetServers(gateway, ing)
+	return r.reconcileGateway(ctx, ing, gateway, existing, desired)
+}
+
+func (r *Reconciler) reconcileHTTPServer(ctx context.Context, ing *v1alpha1.Ingress, gw config.Gateway, desiredHTTP *istiov1beta1.Server) error {
+	gateway, err := r.gatewayLister.Gateways(gw.Namespace).Get(gw.Name)
+	if err != nil {
+		// Unlike VirtualService, a default gateway needs to be existent.
+		// It should be installed when installing Knative.
+		return fmt.Errorf("failed to get Gateway: %w", err)
+	}
+	existing := []*istiov1beta1.Server{}
+	if e := resources.GetHTTPServer(gateway); e != nil {
+		existing = append(existing, e)
+	}
+	desired := []*istiov1beta1.Server{}
+	if desiredHTTP != nil {
+		desired = append(desired, desiredHTTP)
+	}
 	return r.reconcileGateway(ctx, ing, gateway, existing, desired)
 }
 
