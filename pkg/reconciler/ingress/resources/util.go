@@ -33,8 +33,21 @@ import (
 )
 
 const (
-	ServingGroupName       = "serving.knative.dev"
-	RouteLabelKey          = ServingGroupName + "/route"
+	// ServingGroupName is the group name for Knative serving labels
+	// and annotations
+	ServingGroupName = "serving.knative.dev"
+	// RouteLabelKey is the label key attached to a Configuration
+	// indicating by which Route it is configured as traffic target.
+	// The key is also attached to Revision resources to indicate they
+	// are directly referenced by a Route, or are a child of a
+	// Configuration which is referenced by a Route.  The key can also
+	// be attached to Ingress resources to indicate which Route
+	// triggered their creation.  The key is also attached to k8s
+	// Service resources to indicate which Route triggered their
+	// creation.
+	RouteLabelKey = ServingGroupName + "/route"
+	// RouteNamespaceLabelKey is the label key attached to a Ingress
+	// by a Route to indicate which namespace the Route was created in.
 	RouteNamespaceLabelKey = ServingGroupName + "/routeNamespace"
 )
 
