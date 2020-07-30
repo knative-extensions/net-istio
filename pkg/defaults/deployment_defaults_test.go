@@ -55,7 +55,7 @@ func TestIstioDeploymentDefaulting(t *testing.T) {
 			appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						ServingServiceLabelKey: "foo-service",
+						servingServiceLabelKey: "foo-service",
 					},
 				},
 			},
@@ -64,7 +64,7 @@ func TestIstioDeploymentDefaulting(t *testing.T) {
 			appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						ServingServiceLabelKey:            "foo-service",
+						servingServiceLabelKey:            "foo-service",
 						"service.istio.io/canonical-name": "foo-service",
 					},
 				},
@@ -85,7 +85,7 @@ func TestIstioDeploymentDefaulting(t *testing.T) {
 			appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						ServingConfigurationLabelKey: "foo-config",
+						servingConfigurationLabelKey: "foo-config",
 					},
 				},
 			},
@@ -94,7 +94,7 @@ func TestIstioDeploymentDefaulting(t *testing.T) {
 			appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						ServingConfigurationLabelKey:      "foo-config",
+						servingConfigurationLabelKey:      "foo-config",
 						"service.istio.io/canonical-name": "foo-config",
 					},
 				},
@@ -115,7 +115,7 @@ func TestIstioDeploymentDefaulting(t *testing.T) {
 			appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						ServingRevisionLabelKey: "foo-revision",
+						servingRevisionLabelKey: "foo-revision",
 					},
 				},
 			},
@@ -124,7 +124,7 @@ func TestIstioDeploymentDefaulting(t *testing.T) {
 			appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						ServingRevisionLabelKey:               "foo-revision",
+						servingRevisionLabelKey:               "foo-revision",
 						"service.istio.io/canonical-revision": "foo-revision",
 					},
 				},
@@ -145,9 +145,9 @@ func TestIstioDeploymentDefaulting(t *testing.T) {
 			appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						ServingConfigurationLabelKey: "foo-config",
-						ServingRevisionLabelKey:      "foo-revision",
-						ServingServiceLabelKey:       "foo-service",
+						servingConfigurationLabelKey: "foo-config",
+						servingRevisionLabelKey:      "foo-revision",
+						servingServiceLabelKey:       "foo-service",
 					},
 				},
 			},
@@ -156,9 +156,9 @@ func TestIstioDeploymentDefaulting(t *testing.T) {
 			appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						ServingConfigurationLabelKey:          "foo-config",
-						ServingRevisionLabelKey:               "foo-revision",
-						ServingServiceLabelKey:                "foo-service",
+						servingConfigurationLabelKey:          "foo-config",
+						servingRevisionLabelKey:               "foo-revision",
+						servingServiceLabelKey:                "foo-service",
 						"service.istio.io/canonical-revision": "foo-revision",
 						"service.istio.io/canonical-name":     "foo-service",
 					},

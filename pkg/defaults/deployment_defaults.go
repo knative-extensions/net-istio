@@ -26,20 +26,20 @@ import (
 )
 
 const (
-	// ServingGroupName is the group name for knative labels and annotations
-	ServingGroupName = "serving.knative.dev"
+	// servingGroupName is the group name for knative labels and annotations
+	servingGroupName = "serving.knative.dev"
 
-	// ServingServiceLabelKey is the label key attached to a Route and Configuration indicating by
+	// servingServiceLabelKey is the label key attached to a Route and Configuration indicating by
 	// which Service they are created.
-	ServingServiceLabelKey = ServingGroupName + "/service"
+	servingServiceLabelKey = servingGroupName + "/service"
 
-	// ServingConfigurationLabelKey is the label key attached to a Revision indicating by
+	// servingConfigurationLabelKey is the label key attached to a Revision indicating by
 	// which Configuration it is created.
-	ServingConfigurationLabelKey = ServingGroupName + "/configuration"
+	servingConfigurationLabelKey = servingGroupName + "/configuration"
 
-	// ServingRevisionLabelKey is the label key attached to k8s resources to indicate
+	// servingRevisionLabelKey is the label key attached to k8s resources to indicate
 	// which Revision triggered their creation.
-	ServingRevisionLabelKey = ServingGroupName + "/revision"
+	servingRevisionLabelKey = servingGroupName + "/revision"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -66,7 +66,7 @@ func (r *IstioDeployment) SetDefaults(ctx context.Context) {
 		r.Spec.Template.Labels = make(map[string]string)
 	}
 
-	revisionName := r.Labels[ServingRevisionLabelKey]
+	revisionName := r.Labels[servingRevisionLabelKey]
 	if revisionName != "" {
 		r.Labels[istiolabels.IstioCanonicalServiceRevision] = revisionName
 		r.Spec.Template.Labels[istiolabels.IstioCanonicalServiceRevision] = revisionName
@@ -83,8 +83,8 @@ func (r *IstioDeployment) servingName() string {
 	// start with the service name if available.
 	// otherwise fall back to configuration name.
 	parentKeys := []string{
-		ServingServiceLabelKey,
-		ServingConfigurationLabelKey,
+		servingServiceLabelKey,
+		servingConfigurationLabelKey,
 	}
 
 	for _, parentKey := range parentKeys {
