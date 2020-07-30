@@ -31,10 +31,10 @@ import (
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
+	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
-	"knative.dev/serving/pkg/network"
-	"knative.dev/serving/pkg/network/ingress"
-	"knative.dev/serving/pkg/network/status"
+	"knative.dev/networking/pkg/ingress"
+	"knative.dev/networking/pkg/status"
 )
 
 func NewProbeTargetLister(

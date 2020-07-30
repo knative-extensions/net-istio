@@ -23,8 +23,23 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	"knative.dev/pkg/apis"
+)
 
-	"knative.dev/serving/pkg/apis/serving"
+const (
+	// ServingGroupName is the group name for knative labels and annotations
+	ServingGroupName = "serving.knative.dev"
+
+	// ServingServiceLabelKey is the label key attached to a Route and Configuration indicating by
+	// which Service they are created.
+	ServingServiceLabelKey = ServingGroupName + "/service"
+
+	// ServingConfigurationLabelKey is the label key attached to a Revision indicating by
+	// which Configuration it is created.
+	ServingConfigurationLabelKey = ServingGroupName + "/configuration"
+
+	// ServingRevisionLabelKey is the label key attached to k8s resources to indicate
+	// which Revision triggered their creation.
+	ServingRevisionLabelKey = ServingGroupName + "/revision"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -51,7 +66,7 @@ func (r *IstioDeployment) SetDefaults(ctx context.Context) {
 		r.Spec.Template.Labels = make(map[string]string)
 	}
 
-	revisionName := r.Labels[serving.RevisionLabelKey]
+	revisionName := r.Labels[ServingRevisionLabelKey]
 	if revisionName != "" {
 		r.Labels[istiolabels.IstioCanonicalServiceRevision] = revisionName
 		r.Spec.Template.Labels[istiolabels.IstioCanonicalServiceRevision] = revisionName
@@ -68,8 +83,8 @@ func (r *IstioDeployment) servingName() string {
 	// start with the service name if available.
 	// otherwise fall back to configuration name.
 	parentKeys := []string{
-		serving.ServiceLabelKey,
-		serving.ConfigurationLabelKey,
+		ServingServiceLabelKey,
+		ServingConfigurationLabelKey,
 	}
 
 	for _, parentKey := range parentKeys {

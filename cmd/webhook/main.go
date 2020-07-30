@@ -26,14 +26,12 @@ import (
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection/sharedmain"
-	"knative.dev/pkg/logging"
 	"knative.dev/pkg/signals"
 	"knative.dev/pkg/webhook"
 	"knative.dev/pkg/webhook/certificates"
 	"knative.dev/pkg/webhook/configmaps"
 	"knative.dev/pkg/webhook/resourcesemantics"
 	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
-	defaultconfig "knative.dev/serving/pkg/apis/config"
 )
 
 func NewConfigValidationController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
@@ -58,9 +56,6 @@ var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
 
 // NewDefaultingAdmissionController adds default values to the watched types
 func NewDefaultingAdmissionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
-	// Decorate contexts with the current state of the config.
-	store := defaultconfig.NewStore(logging.FromContext(ctx).Named("config-store"))
-	store.WatchConfigs(cmw)
 
 	return defaulting.NewAdmissionController(ctx,
 

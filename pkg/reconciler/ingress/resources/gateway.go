@@ -32,11 +32,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
+	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/system"
-	"knative.dev/serving/pkg/network"
 )
 
 var httpServerPortName = "http-server"

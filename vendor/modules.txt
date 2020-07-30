@@ -831,6 +831,7 @@ k8s.io/utils/pointer
 k8s.io/utils/trace
 # knative.dev/networking v0.0.0-20200730222100-e8df1ba775fa
 ## explicit
+knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/config
 knative.dev/networking/pkg/apis/networking
 knative.dev/networking/pkg/apis/networking/v1alpha1
@@ -950,9 +951,6 @@ knative.dev/serving/pkg/client/istio/clientset/versioned/scheme
 knative.dev/serving/pkg/client/istio/clientset/versioned/typed/networking/v1alpha3
 knative.dev/serving/pkg/gc
 knative.dev/serving/pkg/network
-knative.dev/serving/pkg/network/ingress
-knative.dev/serving/pkg/network/status
-knative.dev/serving/pkg/reconciler
 knative.dev/serving/pkg/reconciler/route/config
 knative.dev/serving/pkg/reconciler/route/domains
 knative.dev/serving/pkg/reconciler/route/resources/labels

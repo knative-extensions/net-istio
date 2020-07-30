@@ -30,6 +30,7 @@ import (
 	_ "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/virtualservice/fake"
 	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
 	fakeingressclient "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
+	"knative.dev/networking/pkg/ingress"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints/fake"
@@ -37,7 +38,6 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
 	"knative.dev/pkg/logging"
-	"knative.dev/serving/pkg/network/ingress"
 
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
@@ -63,15 +63,13 @@ import (
 
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
+	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	ingressreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 	pkgnet "knative.dev/pkg/network"
 	"knative.dev/pkg/system"
 	_ "knative.dev/pkg/system/testing"
-	apiconfig "knative.dev/serving/pkg/apis/config"
-	"knative.dev/serving/pkg/apis/serving"
-	"knative.dev/serving/pkg/network"
 
 	. "knative.dev/net-istio/pkg/reconciler/testing"
 	. "knative.dev/pkg/reconciler/testing"
@@ -135,7 +133,6 @@ var (
 	gateways = map[v1alpha1.IngressVisibility]sets.String{
 		v1alpha1.IngressVisibilityExternalIP: sets.NewString("knative-test-gateway", networking.KnativeIngressGateway),
 	}
-	defaultMaxRevisionTimeout = time.Duration(apiconfig.DefaultMaxRevisionTimeoutSeconds) * time.Second
 )
 
 var (
@@ -156,9 +153,9 @@ var (
 					},
 					Percent: 100,
 				}},
-				Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
+				Timeout: &metav1.Duration{Duration: time.Duration(90) * time.Second},
 				Retries: &v1alpha1.HTTPRetry{
-					PerTryTimeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
+					PerTryTimeout: &metav1.Duration{Duration: time.Duration(90) * time.Second},
 					Attempts:      networking.DefaultRetryCount,
 				}},
 			},
@@ -1164,8 +1161,8 @@ func ingressWithStatus(name string, generation int64, status v1alpha1.IngressSta
 			Name:      name,
 			Namespace: testNS,
 			Labels: map[string]string{
-				serving.RouteLabelKey:          "test-route",
-				serving.RouteNamespaceLabelKey: testNS,
+				resources.RouteLabelKey:          "test-route",
+				resources.RouteNamespaceLabelKey: testNS,
 			},
 			Annotations:     map[string]string{networking.IngressClassAnnotationKey: network.IstioIngressClassName},
 			ResourceVersion: "v1",

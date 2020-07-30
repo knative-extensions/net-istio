@@ -30,16 +30,14 @@ import (
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	"knative.dev/networking/pkg/ingress"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/system"
 	_ "knative.dev/pkg/system/testing"
-	apiconfig "knative.dev/serving/pkg/apis/config"
-	"knative.dev/serving/pkg/apis/serving"
-	"knative.dev/serving/pkg/network/ingress"
 )
 
 var (
-	defaultMaxRevisionTimeout = time.Duration(apiconfig.DefaultMaxRevisionTimeoutSeconds) * time.Second
+	defaultMaxRevisionTimeout = 90 * time.Second
 	defaultGateways           = makeGatewayMap([]string{"gateway"}, []string{"private-gateway"})
 	defaultIngressRuleValue   = &v1alpha1.HTTPIngressRuleValue{
 		Paths: []v1alpha1.HTTPIngressPath{
@@ -90,9 +88,9 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 				Name:      "test",
 				Namespace: system.Namespace(),
 				Labels: map[string]string{
-					networking.IngressLabelKey:     "test-ingress",
-					serving.RouteLabelKey:          "test-route",
-					serving.RouteNamespaceLabelKey: "test-ns",
+					networking.IngressLabelKey: "test-ingress",
+					RouteLabelKey:              "test-route",
+					RouteNamespaceLabelKey:     "test-ns",
 				},
 			},
 			Spec: v1alpha1.IngressSpec{Rules: []v1alpha1.IngressRule{{
@@ -107,17 +105,17 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 			Name:      "test-mesh",
 			Namespace: system.Namespace(),
 			Labels: map[string]string{
-				networking.IngressLabelKey:     "test",
-				serving.RouteLabelKey:          "test-route",
-				serving.RouteNamespaceLabelKey: "test-ns",
+				networking.IngressLabelKey: "test",
+				RouteLabelKey:              "test-route",
+				RouteNamespaceLabelKey:     "test-ns",
 			},
 		}, {
 			Name:      "test-ingress",
 			Namespace: system.Namespace(),
 			Labels: map[string]string{
-				networking.IngressLabelKey:     "test",
-				serving.RouteLabelKey:          "test-route",
-				serving.RouteNamespaceLabelKey: "test-ns",
+				networking.IngressLabelKey: "test",
+				RouteLabelKey:              "test-route",
+				RouteNamespaceLabelKey:     "test-ns",
 			},
 		}},
 	}, {
@@ -128,8 +126,8 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 				Name:      "test",
 				Namespace: system.Namespace(),
 				Labels: map[string]string{
-					serving.RouteLabelKey:          "test-route",
-					serving.RouteNamespaceLabelKey: "test-ns",
+					RouteLabelKey:          "test-route",
+					RouteNamespaceLabelKey: "test-ns",
 				},
 			},
 			Spec: v1alpha1.IngressSpec{Rules: []v1alpha1.IngressRule{{
@@ -144,9 +142,9 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 			Name:      "test-ingress",
 			Namespace: system.Namespace(),
 			Labels: map[string]string{
-				networking.IngressLabelKey:     "test",
-				serving.RouteLabelKey:          "test-route",
-				serving.RouteNamespaceLabelKey: "test-ns",
+				networking.IngressLabelKey: "test",
+				RouteLabelKey:              "test-route",
+				RouteNamespaceLabelKey:     "test-ns",
 			},
 		}},
 	}, {
@@ -157,8 +155,8 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 				Name:      "test-ingress",
 				Namespace: system.Namespace(),
 				Labels: map[string]string{
-					serving.RouteLabelKey:          "test-route",
-					serving.RouteNamespaceLabelKey: "test-ns",
+					RouteLabelKey:          "test-route",
+					RouteNamespaceLabelKey: "test-ns",
 				},
 			},
 			Spec: v1alpha1.IngressSpec{Rules: []v1alpha1.IngressRule{{
@@ -173,9 +171,9 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 			Name:      "test-ingress-mesh",
 			Namespace: system.Namespace(),
 			Labels: map[string]string{
-				networking.IngressLabelKey:     "test-ingress",
-				serving.RouteLabelKey:          "test-route",
-				serving.RouteNamespaceLabelKey: "test-ns",
+				networking.IngressLabelKey: "test-ingress",
+				RouteLabelKey:              "test-route",
+				RouteNamespaceLabelKey:     "test-ns",
 			},
 		}},
 	}, {
@@ -186,8 +184,8 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 				Name:      "test-ingress",
 				Namespace: "test-ns",
 				Labels: map[string]string{
-					serving.RouteLabelKey:          "test-route",
-					serving.RouteNamespaceLabelKey: "test-ns",
+					RouteLabelKey:          "test-route",
+					RouteNamespaceLabelKey: "test-ns",
 				},
 			},
 			Spec: v1alpha1.IngressSpec{Rules: []v1alpha1.IngressRule{{
@@ -202,9 +200,9 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 			Name:      "test-ingress-mesh",
 			Namespace: "test-ns",
 			Labels: map[string]string{
-				networking.IngressLabelKey:     "test-ingress",
-				serving.RouteLabelKey:          "test-route",
-				serving.RouteNamespaceLabelKey: "test-ns",
+				networking.IngressLabelKey: "test-ingress",
+				RouteLabelKey:              "test-route",
+				RouteNamespaceLabelKey:     "test-ns",
 			},
 		}},
 	}} {
@@ -319,8 +317,8 @@ func TestMakeMeshVirtualServiceSpec_CorrectGateways(t *testing.T) {
 			Name:      "test-ingress",
 			Namespace: system.Namespace(),
 			Labels: map[string]string{
-				serving.RouteLabelKey:          "test-route",
-				serving.RouteNamespaceLabelKey: "test-ns",
+				RouteLabelKey:          "test-route",
+				RouteNamespaceLabelKey: "test-ns",
 			},
 		},
 		Spec: v1alpha1.IngressSpec{
@@ -382,8 +380,8 @@ func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
 				Name:      "test-ingress",
 				Namespace: system.Namespace(),
 				Labels: map[string]string{
-					serving.RouteLabelKey:          "test-route",
-					serving.RouteNamespaceLabelKey: "test-ns",
+					RouteLabelKey:          "test-route",
+					RouteNamespaceLabelKey: "test-ns",
 				},
 			},
 			Spec: v1alpha1.IngressSpec{
@@ -415,8 +413,8 @@ func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
 				Name:      "test-ingress",
 				Namespace: system.Namespace(),
 				Labels: map[string]string{
-					serving.RouteLabelKey:          "test-route",
-					serving.RouteNamespaceLabelKey: "test-ns",
+					RouteLabelKey:          "test-route",
+					RouteNamespaceLabelKey: "test-ns",
 				},
 			},
 			Spec: v1alpha1.IngressSpec{
@@ -446,8 +444,8 @@ func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
 				Name:      "test-ingress",
 				Namespace: system.Namespace(),
 				Labels: map[string]string{
-					serving.RouteLabelKey:          "test-route",
-					serving.RouteNamespaceLabelKey: "test-ns",
+					RouteLabelKey:          "test-route",
+					RouteNamespaceLabelKey: "test-ns",
 				},
 			},
 			Spec: v1alpha1.IngressSpec{
@@ -475,8 +473,8 @@ func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
 				Name:      "test-ingress",
 				Namespace: system.Namespace(),
 				Labels: map[string]string{
-					serving.RouteLabelKey:          "test-route",
-					serving.RouteNamespaceLabelKey: "test-ns",
+					RouteLabelKey:          "test-route",
+					RouteNamespaceLabelKey: "test-ns",
 				},
 			},
 			Spec: v1alpha1.IngressSpec{

@@ -32,6 +32,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	ServingGroupName       = "serving.knative.dev"
+	RouteLabelKey          = ServingGroupName + "/route"
+	RouteNamespaceLabelKey = ServingGroupName + "/routeNamespace"
+)
+
 func GenerateCertificate(host string, secretName string, namespace string) (*corev1.Secret, error) {
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {

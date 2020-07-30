@@ -30,7 +30,7 @@ import (
 	v1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
-	"knative.dev/serving/pkg/network/status"
+	"knative.dev/networking/pkg/status"
 
 	"go.uber.org/zap/zaptest"
 	v1 "k8s.io/api/core/v1"

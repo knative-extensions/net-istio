@@ -32,6 +32,7 @@ import (
 	istiov1beta1 "istio.io/api/networking/v1beta1"
 	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
+	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
@@ -39,7 +40,6 @@ import (
 	"knative.dev/pkg/kmeta"
 	rtesting "knative.dev/pkg/reconciler/testing"
 	"knative.dev/pkg/system"
-	"knative.dev/serving/pkg/network"
 )
 
 var secret = corev1.Secret{
