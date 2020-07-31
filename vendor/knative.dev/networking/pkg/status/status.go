@@ -36,11 +36,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/util/workqueue"
 
+	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	"knative.dev/networking/pkg/ingress"
 	"knative.dev/pkg/logging/logkey"
 	"knative.dev/pkg/network/prober"
-	"knative.dev/serving/pkg/network"
-	"knative.dev/serving/pkg/network/ingress"
 )
 
 const (

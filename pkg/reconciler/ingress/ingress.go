@@ -32,11 +32,10 @@ import (
 
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
+	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
-	"knative.dev/serving/pkg/apis/serving"
-	"knative.dev/serving/pkg/network"
-	"knative.dev/serving/pkg/network/status"
+	"knative.dev/networking/pkg/status"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -276,8 +275,8 @@ func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1
 
 	// Now, remove the extra ones.
 	selectors := map[string]string{
-		networking.IngressLabelKey: ing.GetName(),                          // VS created from 0.12 on
-		serving.RouteLabelKey:      ing.GetLabels()[serving.RouteLabelKey], // VS created before 0.12
+		networking.IngressLabelKey: ing.GetName(),                            // VS created from 0.12 on
+		resources.RouteLabelKey:    ing.GetLabels()[resources.RouteLabelKey], // VS created before 0.12
 	}
 	for k, v := range selectors {
 		vses, err := r.virtualServiceLister.VirtualServices(ing.GetNamespace()).List(
