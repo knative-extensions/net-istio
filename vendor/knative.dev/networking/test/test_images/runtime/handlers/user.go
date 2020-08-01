@@ -1,7 +1,5 @@
-// +build e2e
-
 /*
-Copyright 2020 The Knative Authors
+Copyright 2019 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,14 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package conformance
+package handlers
 
 import (
-	"testing"
+	"os"
 
-	"knative.dev/networking/test/conformance/ingress"
+	"knative.dev/networking/test/types"
 )
 
-func TestIngressConformance(t *testing.T) {
-	ingress.RunConformance(t)
+func userInfo() *types.UserInfo {
+	cwd, err := os.Getwd()
+	cwdInfo := &types.Cwd{
+		Directory: cwd,
+	}
+	if err != nil {
+		cwdInfo.Error = err.Error()
+	}
+
+	return &types.UserInfo{
+		UID:  os.Getuid(),
+		EUID: os.Geteuid(),
+		GID:  os.Getgid(),
+		EGID: os.Getegid(),
+		Cwd:  cwdInfo,
+	}
 }
