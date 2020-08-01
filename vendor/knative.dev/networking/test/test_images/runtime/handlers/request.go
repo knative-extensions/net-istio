@@ -1,7 +1,5 @@
-// +build e2e
-
 /*
-Copyright 2020 The Knative Authors
+Copyright 2019 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,14 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package conformance
+package handlers
 
 import (
-	"testing"
+	"net/http"
+	"time"
 
-	"knative.dev/networking/test/conformance/ingress"
+	"knative.dev/networking/test/types"
 )
 
-func TestIngressConformance(t *testing.T) {
-	ingress.RunConformance(t)
+func requestInfo(r *http.Request) *types.RequestInfo {
+	return &types.RequestInfo{
+		Ts:         time.Now(),
+		URI:        r.RequestURI,
+		Host:       r.Host,
+		Method:     r.Method,
+		Headers:    r.Header,
+		ProtoMajor: r.ProtoMajor,
+		ProtoMinor: r.ProtoMinor,
+	}
 }

@@ -120,8 +120,6 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/go-containerregistry v0.1.2-0.20200717224239-a84993334b27
-github.com/google/go-containerregistry/pkg/name
 # github.com/google/gofuzz v1.1.0
 github.com/google/gofuzz
 # github.com/google/licenseclassifier v0.0.0-20200708223521-3d09a0ea2f39
@@ -166,8 +164,6 @@ github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
 # github.com/markbates/inflect v1.0.4
 github.com/markbates/inflect
-# github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
-github.com/mattbaird/jsonpatch
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
@@ -454,13 +450,12 @@ gopkg.in/yaml.v2
 # istio.io/api v0.0.0-20200615162408-9b5293c30ef5
 ## explicit
 istio.io/api/label
-istio.io/api/networking/v1alpha3
 istio.io/api/networking/v1beta1
 # istio.io/client-go v0.0.0-20200615164228-d77b0b53b6a0
 ## explicit
-istio.io/client-go/pkg/apis/networking/v1alpha3
 istio.io/client-go/pkg/apis/networking/v1beta1
 # istio.io/gogo-genproto v0.0.0-20191029161641-f7d19ec0141d
+## explicit
 istio.io/gogo-genproto/googleapis/google/api
 # k8s.io/api v0.18.1 => k8s.io/api v0.17.6
 ## explicit
@@ -510,7 +505,6 @@ k8s.io/apiextensions-apiserver/pkg/apis/apiextensions
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
 # k8s.io/apimachinery v0.18.6 => k8s.io/apimachinery v0.17.6
 ## explicit
-k8s.io/apimachinery/pkg/api/apitesting/fuzzer
 k8s.io/apimachinery/pkg/api/equality
 k8s.io/apimachinery/pkg/api/errors
 k8s.io/apimachinery/pkg/api/meta
@@ -830,7 +824,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/networking v0.0.0-20200730222100-e8df1ba775fa
+# knative.dev/networking v0.0.0-20200801021400-4b262113649d
 ## explicit
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/config
@@ -857,15 +851,24 @@ knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingre
 knative.dev/networking/pkg/client/listers/networking/v1alpha1
 knative.dev/networking/pkg/ingress
 knative.dev/networking/pkg/status
+knative.dev/networking/test
+knative.dev/networking/test/conformance/ingress
+knative.dev/networking/test/test_images/flaky
+knative.dev/networking/test/test_images/grpc-ping
+knative.dev/networking/test/test_images/grpc-ping/proto
+knative.dev/networking/test/test_images/helloworld
+knative.dev/networking/test/test_images/httpproxy
+knative.dev/networking/test/test_images/runtime
+knative.dev/networking/test/test_images/runtime/handlers
+knative.dev/networking/test/test_images/timeout
+knative.dev/networking/test/test_images/wsserver
+knative.dev/networking/test/types
 # knative.dev/pkg v0.0.0-20200731005101-694087017879
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
 knative.dev/pkg/apis/duck/ducktypes
 knative.dev/pkg/apis/duck/v1
-knative.dev/pkg/apis/duck/v1alpha1
-knative.dev/pkg/apis/duck/v1beta1
-knative.dev/pkg/apis/testing/fuzzer
 knative.dev/pkg/changeset
 knative.dev/pkg/client/injection/kube/client
 knative.dev/pkg/client/injection/kube/client/fake
@@ -933,46 +936,6 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/configmaps
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
-# knative.dev/serving v0.16.1-0.20200731105301-2da382612fb7
-## explicit
-knative.dev/serving/pkg/apis/autoscaling
-knative.dev/serving/pkg/apis/autoscaling/v1alpha1
-knative.dev/serving/pkg/apis/config
-knative.dev/serving/pkg/apis/serving
-knative.dev/serving/pkg/apis/serving/v1
-knative.dev/serving/pkg/apis/serving/v1alpha1
-knative.dev/serving/pkg/apis/serving/v1beta1
-knative.dev/serving/pkg/autoscaler/config
-knative.dev/serving/pkg/client/clientset/versioned
-knative.dev/serving/pkg/client/clientset/versioned/scheme
-knative.dev/serving/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1
-knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1
-knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1alpha1
-knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1beta1
-knative.dev/serving/pkg/client/istio/clientset/versioned
-knative.dev/serving/pkg/client/istio/clientset/versioned/scheme
-knative.dev/serving/pkg/client/istio/clientset/versioned/typed/networking/v1alpha3
-knative.dev/serving/pkg/gc
-knative.dev/serving/pkg/network
-knative.dev/serving/pkg/reconciler/route/config
-knative.dev/serving/pkg/reconciler/route/domains
-knative.dev/serving/pkg/reconciler/route/resources/labels
-knative.dev/serving/pkg/reconciler/route/resources/names
-knative.dev/serving/pkg/reconciler/service/resources/names
-knative.dev/serving/pkg/testing/v1alpha1
-knative.dev/serving/test
-knative.dev/serving/test/conformance/ingress
-knative.dev/serving/test/test_images/flaky
-knative.dev/serving/test/test_images/grpc-ping
-knative.dev/serving/test/test_images/grpc-ping/proto
-knative.dev/serving/test/test_images/helloworld
-knative.dev/serving/test/test_images/httpproxy
-knative.dev/serving/test/test_images/runtime
-knative.dev/serving/test/test_images/runtime/handlers
-knative.dev/serving/test/test_images/timeout
-knative.dev/serving/test/test_images/wsserver
-knative.dev/serving/test/types
-knative.dev/serving/test/v1alpha1
 # knative.dev/test-infra v0.0.0-20200731141600-8bb2015c65e2
 ## explicit
 knative.dev/test-infra/scripts
