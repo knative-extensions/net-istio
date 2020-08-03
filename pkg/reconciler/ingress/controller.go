@@ -21,8 +21,8 @@ import (
 
 	"go.uber.org/zap"
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
-	gatewayinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/gateway"
-	virtualserviceinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/virtualservice"
+	gatewayinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/gateway"
+	virtualserviceinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
@@ -42,7 +42,7 @@ import (
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/tracker"
 
-	v1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
+	v1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
@@ -158,7 +158,7 @@ func newControllerWithOptions(
 	gatewayInformer.Informer().AddEventHandler(controller.HandleAll(
 		controller.EnsureTypeMeta(
 			tracker.OnChanged,
-			v1beta1.SchemeGroupVersion.WithKind("Gateway"),
+			v1alpha3.SchemeGroupVersion.WithKind("Gateway"),
 		),
 	))
 

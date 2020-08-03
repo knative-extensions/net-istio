@@ -25,8 +25,8 @@ import (
 	fakediscovery "k8s.io/client-go/discovery/fake"
 	"k8s.io/client-go/testing"
 	clientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
-	networkingv1beta1 "knative.dev/net-istio/pkg/client/istio/clientset/versioned/typed/networking/v1beta1"
-	fakenetworkingv1beta1 "knative.dev/net-istio/pkg/client/istio/clientset/versioned/typed/networking/v1beta1/fake"
+	networkingv1alpha3 "knative.dev/net-istio/pkg/client/istio/clientset/versioned/typed/networking/v1alpha3"
+	fakenetworkingv1alpha3 "knative.dev/net-istio/pkg/client/istio/clientset/versioned/typed/networking/v1alpha3/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -76,7 +76,7 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 
 var _ clientset.Interface = &Clientset{}
 
-// NetworkingV1beta1 retrieves the NetworkingV1beta1Client
-func (c *Clientset) NetworkingV1beta1() networkingv1beta1.NetworkingV1beta1Interface {
-	return &fakenetworkingv1beta1.FakeNetworkingV1beta1{Fake: &c.Fake}
+// NetworkingV1alpha3 retrieves the NetworkingV1alpha3Client
+func (c *Clientset) NetworkingV1alpha3() networkingv1alpha3.NetworkingV1alpha3Interface {
+	return &fakenetworkingv1alpha3.FakeNetworkingV1alpha3{Fake: &c.Fake}
 }

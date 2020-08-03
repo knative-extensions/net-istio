@@ -20,13 +20,13 @@ import (
 	"context"
 	"fmt"
 
-	"istio.io/client-go/pkg/apis/networking/v1beta1"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
-	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
+	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
 	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
@@ -38,15 +38,15 @@ type VirtualServiceAccessor interface {
 	GetVirtualServiceLister() istiolisters.VirtualServiceLister
 }
 
-func hasDesiredDiff(current, desired *v1beta1.VirtualService) bool {
+func hasDesiredDiff(current, desired *v1alpha3.VirtualService) bool {
 	return !equality.Semantic.DeepEqual(current.Spec, desired.Spec) ||
 		!equality.Semantic.DeepEqual(current.Labels, desired.Labels) ||
 		!equality.Semantic.DeepEqual(current.Annotations, desired.Annotations)
 }
 
 // ReconcileVirtualService reconciles VirtualService to the desired status.
-func ReconcileVirtualService(ctx context.Context, owner kmeta.Accessor, desired *v1beta1.VirtualService,
-	vsAccessor VirtualServiceAccessor) (*v1beta1.VirtualService, error) {
+func ReconcileVirtualService(ctx context.Context, owner kmeta.Accessor, desired *v1alpha3.VirtualService,
+	vsAccessor VirtualServiceAccessor) (*v1alpha3.VirtualService, error) {
 
 	recorder := controller.GetEventRecorder(ctx)
 	if recorder == nil {
@@ -56,7 +56,7 @@ func ReconcileVirtualService(ctx context.Context, owner kmeta.Accessor, desired 
 	name := desired.Name
 	vs, err := vsAccessor.GetVirtualServiceLister().VirtualServices(ns).Get(name)
 	if apierrs.IsNotFound(err) {
-		vs, err = vsAccessor.GetIstioClient().NetworkingV1beta1().VirtualServices(ns).Create(desired)
+		vs, err = vsAccessor.GetIstioClient().NetworkingV1alpha3().VirtualServices(ns).Create(desired)
 		if err != nil {
 			recorder.Eventf(owner, corev1.EventTypeWarning, "CreationFailed",
 				"Failed to create VirtualService %s/%s: %v", ns, name, err)
@@ -76,7 +76,7 @@ func ReconcileVirtualService(ctx context.Context, owner kmeta.Accessor, desired 
 		existing.Spec = desired.Spec
 		existing.Labels = desired.Labels
 		existing.Annotations = desired.Annotations
-		vs, err = vsAccessor.GetIstioClient().NetworkingV1beta1().VirtualServices(ns).Update(existing)
+		vs, err = vsAccessor.GetIstioClient().NetworkingV1alpha3().VirtualServices(ns).Update(existing)
 		if err != nil {
 			return nil, fmt.Errorf("failed to update VirtualService: %w", err)
 		}

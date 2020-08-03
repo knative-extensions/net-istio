@@ -450,10 +450,11 @@ gopkg.in/yaml.v2
 # istio.io/api v0.0.0-20200615162408-9b5293c30ef5
 ## explicit
 istio.io/api/label
+istio.io/api/networking/v1alpha3
 istio.io/api/networking/v1beta1
 # istio.io/client-go v0.0.0-20200615164228-d77b0b53b6a0
 ## explicit
-istio.io/client-go/pkg/apis/networking/v1beta1
+istio.io/client-go/pkg/apis/networking/v1alpha3
 # istio.io/gogo-genproto v0.0.0-20191029161641-f7d19ec0141d
 ## explicit
 istio.io/gogo-genproto/googleapis/google/api
