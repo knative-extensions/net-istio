@@ -29,6 +29,7 @@ import (
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/tracker"
 )
 
 // GetSecrets gets the all of the secrets referenced by the given Ingress, and
@@ -120,11 +121,11 @@ func targetSecret(originSecret *corev1.Secret, accessor kmeta.OwnerRefable) stri
 	return fmt.Sprintf("%s-%s", accessor.GetObjectMeta().GetName(), originSecret.UID)
 }
 
-// SecretRef returns the ObjectReference of a secret given the namespace and name of the secret.
-func SecretRef(namespace, name string) corev1.ObjectReference {
+// SecretRef returns the Reference of a secret given the namespace and name of the secret.
+func SecretRef(namespace, name string) tracker.Reference {
 	gvk := corev1.SchemeGroupVersion.WithKind("Secret")
 	apiVersion, kind := gvk.ToAPIVersionAndKind()
-	return corev1.ObjectReference{
+	return tracker.Reference{
 		APIVersion: apiVersion,
 		Kind:       kind,
 		Namespace:  namespace,

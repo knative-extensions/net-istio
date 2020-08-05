@@ -215,8 +215,8 @@ func (r *Reconciler) reconcileCertSecrets(ctx context.Context, ing *v1alpha1.Ing
 	for _, certSecret := range desiredSecrets {
 		// We track the origin and desired secrets so that desired secrets could be synced accordingly when the origin TLS certificate
 		// secret is refreshed.
-		r.tracker.Track(resources.SecretRef(certSecret.Namespace, certSecret.Name), ing)
-		r.tracker.Track(resources.SecretRef(
+		r.tracker.TrackReference(resources.SecretRef(certSecret.Namespace, certSecret.Name), ing)
+		r.tracker.TrackReference(resources.SecretRef(
 			certSecret.Labels[networking.OriginSecretNamespaceLabelKey],
 			certSecret.Labels[networking.OriginSecretNameLabelKey]), ing)
 		if _, err := coreaccessor.ReconcileSecret(ctx, nil, certSecret, r); err != nil {
@@ -228,7 +228,7 @@ func (r *Reconciler) reconcileCertSecrets(ctx context.Context, ing *v1alpha1.Ing
 
 func (r *Reconciler) reconcileWildcardGateways(ctx context.Context, gateways []*v1alpha3.Gateway, ing *v1alpha1.Ingress) error {
 	for _, gateway := range gateways {
-		r.tracker.Track(resources.GatewayRef(gateway), ing)
+		r.tracker.TrackReference(resources.GatewayRef(gateway), ing)
 		if err := r.reconcileSystemGeneratedGateway(ctx, gateway); err != nil {
 			return err
 		}
