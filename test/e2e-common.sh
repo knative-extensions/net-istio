@@ -54,9 +54,7 @@ function test_setup() {
   # Bringing up controllers.
   echo ">> Bringing up Istio"
   local istio_dir=third_party/istio-${ISTIO_VERSION}
-  #kubectl apply -f ${istio_dir}/istio-crds.yaml || return 1
-  #echo ">> Running Istio"
-  ${istio_dir}/install-istio.sh istio-ci-no-mesh.yaml || return 1
+  ./third_party/install-istio.sh ${istio_dir}/istio-ci-no-mesh.yaml || return 1
   echo ">> Bringing up net-istio Ingress Controller"
   ko apply -f config/ || return 1
 
