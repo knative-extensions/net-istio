@@ -23,9 +23,6 @@ else
   ISTIO_VERSION="${ISTIO_VERSION:-"1.5.7"}"
 fi
 
-ISTIO_TARBALL=istio-${ISTIO_VERSION}-linux.tar.gz
-DOWNLOAD_URL=https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/${ISTIO_TARBALL}
-
 if [[ $# != 1 ]]; then
   echo "usage: $0 [ISTIO_OPERATOR_YAML_PATH|ISTIO_OPERATOR_YAML_URL]"; exit 1
 fi
@@ -37,9 +34,13 @@ else
 fi
 
 SUBCOMMAND="manifest apply"
+ISTIO_TARBALL=istio-${ISTIO_VERSION}-linux.tar.gz
 if [[ ${ISTIO_VERSION} =~ ^1\.6 ]]; then
   SUBCOMMAND="install"
+  ISTIO_TARBALL=istio-${ISTIO_VERSION}-linux-amd64.tar.gz
 fi
+
+DOWNLOAD_URL=https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/${ISTIO_TARBALL}
 
 wget --no-check-certificate $DOWNLOAD_URL
 if [ $? != 0 ]; then
