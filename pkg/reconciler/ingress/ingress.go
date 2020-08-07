@@ -109,8 +109,8 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	logger.Infof("Reconciling ingress: %#v", ing)
 
 	ing.Status.ObservedGeneration = ing.GetGeneration()
-	wildcardGatewayNames := []string{}
-	if r.shouldReconcileTLS(ing) {
+	gatewayNames := qualifiedGatewayNamesFromContext(ctx)
+	if r.shouldReconcileTLS(ctx, ing) {
 		originSecrets, err := resources.GetSecrets(ing, r.secretLister)
 		if err != nil {
 			return err
@@ -135,21 +135,14 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		}
 
 		nonWildcardIngressTLS := resources.GetNonWildcardIngressTLS(ing.Spec.TLS, nonWildcardSecrets)
-		for _, gw := range config.FromContext(ctx).Istio.IngressGateways {
-			ns, err := resources.ServiceNamespaceFromURL(gw.ServiceURL)
-			if err != nil {
-				return err
-			}
-
-			// For Ingress TLS referencing non-wildcard certificate, we reconcile user provided Gateway to enforce the TLS configuration regularly.
-			desiredIngressServer, err := resources.MakeTLSServers(ing, nonWildcardIngressTLS, ns, nonWildcardSecrets)
-			if err != nil {
-				return err
-			}
-			if err := r.reconcileIngressServers(ctx, ing, gw, desiredIngressServer); err != nil {
-				return err
-			}
+		ingressGateways, err := resources.MakeIngressTLSGateways(ctx, ing, nonWildcardIngressTLS, nonWildcardSecrets, r.svcLister)
+		if err != nil {
+			return err
 		}
+		if err := r.reconcileIngressGateways(ctx, ingressGateways); err != nil {
+			return err
+		}
+
 		// For Ingress TLS referencing wildcard certificates, we reconcile a separate Gateway
 		// that will be shared by other Ingresses that reference the
 		// same wildcard host. We need to handle wildcard certificate specially because Istio does
@@ -162,7 +155,11 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		if err := r.reconcileWildcardGateways(ctx, desiredWildcardGateways, ing); err != nil {
 			return err
 		}
-		wildcardGatewayNames = resources.GetQualifiedGatewayNames(desiredWildcardGateways)
+
+		// VirtualService will be attached to both global Gateways and the Knative generated Gateways.
+		// We still want to attach to the global Gateways to respect any global Gateway configuration.
+		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(ingressGateways)...)
+		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(desiredWildcardGateways)...)
 	}
 
 	// HTTPProtocol should be effective only when Auto TLS is enabled per its definition.
@@ -177,8 +174,6 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		}
 	}
 
-	gatewayNames := qualifiedGatewayNamesFromContext(ctx)
-	gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(wildcardGatewayNames...)
 	vses, err := resources.MakeVirtualServices(ctx, ing, gatewayNames)
 	if err != nil {
 		return err
@@ -188,6 +183,18 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	if err := r.reconcileVirtualServices(ctx, ing, vses); err != nil {
 		ing.Status.MarkLoadBalancerFailed(virtualServiceNotReconciled, err.Error())
 		return err
+	}
+
+	if r.shouldReconcileTLS(ctx, ing) {
+		// For backward compatibility reason, we need to remove the TLS servers corresponding to the Ingress
+		// from the global Gateways. This code should be deleted in release 0.18.
+		// We should handle the deletion after VirtualService is created with the newly generated non-wildcard Gateway
+		// in order to make sure the ongoing traffic won't be affected.
+		for _, gw := range config.FromContext(ctx).Istio.IngressGateways {
+			if err := r.reconcileIngressServers(ctx, ing, gw, []*istiov1alpha3.Server{}); err != nil {
+				return err
+			}
+		}
 	}
 
 	// Update status
@@ -229,6 +236,15 @@ func (r *Reconciler) reconcileCertSecrets(ctx context.Context, ing *v1alpha1.Ing
 func (r *Reconciler) reconcileWildcardGateways(ctx context.Context, gateways []*v1alpha3.Gateway, ing *v1alpha1.Ingress) error {
 	for _, gateway := range gateways {
 		r.tracker.Track(resources.GatewayRef(gateway), ing)
+		if err := r.reconcileSystemGeneratedGateway(ctx, gateway); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *Reconciler) reconcileIngressGateways(ctx context.Context, gateways []*v1alpha3.Gateway) error {
+	for _, gateway := range gateways {
 		if err := r.reconcileSystemGeneratedGateway(ctx, gateway); err != nil {
 			return err
 		}
@@ -323,7 +339,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, ing *v1alpha1.Ingress) pk
 }
 
 func (r *Reconciler) reconcileDeletion(ctx context.Context, ing *v1alpha1.Ingress) error {
-	if !r.shouldReconcileTLS(ing) {
+	if !r.shouldReconcileTLS(ctx, ing) {
 		return nil
 	}
 
@@ -476,8 +492,8 @@ func getLBStatus(gatewayServiceURL string) []v1alpha1.LoadBalancerIngressStatus 
 	}
 }
 
-func (r *Reconciler) shouldReconcileTLS(ing *v1alpha1.Ingress) bool {
+func (r *Reconciler) shouldReconcileTLS(ctx context.Context, ing *v1alpha1.Ingress) bool {
 	// We should keep reconciling the Ingress whose TLS has been reconciled before
 	// to make sure deleting IngressTLS will clean up the TLS server in the Gateway.
-	return ing.IsPublic() && (len(ing.Spec.TLS) > 0)
+	return ing.IsPublic() && ((len(ing.Spec.TLS) > 0) || config.FromContext(ctx).Network.AutoTLS)
 }
