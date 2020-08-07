@@ -21,7 +21,7 @@ package conformance
 import (
 	"testing"
 
-	"knative.dev/serving/test/conformance/ingress"
+	"knative.dev/networking/test/conformance/ingress"
 )
 
 func TestIngressConformance(t *testing.T) {

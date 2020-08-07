@@ -24,17 +24,17 @@ import (
 	"strconv"
 
 	"go.uber.org/zap"
-	istiov1beta1 "istio.io/api/networking/v1beta1"
-	"istio.io/client-go/pkg/apis/networking/v1beta1"
+	istiov1alpha3 "istio.io/api/networking/v1alpha3"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
-	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
+	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
+	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
-	"knative.dev/serving/pkg/network"
-	"knative.dev/serving/pkg/network/ingress"
-	"knative.dev/serving/pkg/network/status"
+	"knative.dev/networking/pkg/ingress"
+	"knative.dev/networking/pkg/status"
 )
 
 func NewProbeTargetLister(
@@ -106,7 +106,7 @@ func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1al
 	return results, nil
 }
 
-func (l *gatewayPodTargetLister) getGateway(name string) (*v1beta1.Gateway, error) {
+func (l *gatewayPodTargetLister) getGateway(name string) (*v1alpha3.Gateway, error) {
 	namespace, name, err := cache.SplitMetaNamespaceKey(name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse Gateway name %q: %w", name, err)
@@ -118,7 +118,7 @@ func (l *gatewayPodTargetLister) getGateway(name string) (*v1beta1.Gateway, erro
 }
 
 // listGatewayPodsURLs returns a probe targets for a given Gateway.
-func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1beta1.Gateway) ([]status.ProbeTarget, error) {
+func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) ([]status.ProbeTarget, error) {
 	selector := labels.SelectorFromSet(gateway.Spec.Selector)
 
 	services, err := l.serviceLister.List(selector)
@@ -148,7 +148,7 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1beta1.Gateway) ([
 			}
 			tURL.Scheme = "http"
 		case "HTTPS":
-			if server.GetTls().GetMode() == istiov1beta1.ServerTLSSettings_MUTUAL {
+			if server.GetTls().GetMode() == istiov1alpha3.ServerTLSSettings_MUTUAL {
 				l.logger.Infof("Skipping Server %q because HTTPS with TLS mode MUTUAL is not supported", server.Port.Name)
 				continue
 			}

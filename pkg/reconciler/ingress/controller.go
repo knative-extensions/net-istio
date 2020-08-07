@@ -19,14 +19,17 @@ package ingress
 import (
 	"context"
 
+	"go.uber.org/zap"
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
-	gatewayinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/gateway"
-	virtualserviceinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/virtualservice"
+	gatewayinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/gateway"
+	virtualserviceinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
+	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	ingressinformer "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress"
 	ingressreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
+	"knative.dev/networking/pkg/status"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	endpointsinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
@@ -35,13 +38,11 @@ import (
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/logging/logkey"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/tracker"
-	"knative.dev/serving/pkg/network"
-	"knative.dev/serving/pkg/network/status"
-	servingreconciler "knative.dev/serving/pkg/reconciler"
 
-	v1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
+	v1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
@@ -59,13 +60,25 @@ func NewController(
 	return newControllerWithOptions(ctx, cmw)
 }
 
+// AnnotateLoggerWithName names the logger in the context with the supplied name
+//
+// This is a stop gap until the generated reconcilers can do this
+// automatically for you
+func AnnotateLoggerWithName(ctx context.Context, name string) context.Context {
+	logger := logging.FromContext(ctx).
+		Named(name).
+		With(zap.String(logkey.ControllerType, name))
+
+	return logging.WithLogger(ctx, logger)
+
+}
 func newControllerWithOptions(
 	ctx context.Context,
 	cmw configmap.Watcher,
 	opts ...ingressOption,
 ) *controller.Impl {
 
-	ctx = servingreconciler.AnnotateLoggerWithName(ctx, controllerAgentName)
+	ctx = AnnotateLoggerWithName(ctx, controllerAgentName)
 	logger := logging.FromContext(ctx)
 	virtualServiceInformer := virtualserviceinformer.Get(ctx)
 	gatewayInformer := gatewayinformer.Get(ctx)
@@ -145,7 +158,7 @@ func newControllerWithOptions(
 	gatewayInformer.Informer().AddEventHandler(controller.HandleAll(
 		controller.EnsureTypeMeta(
 			tracker.OnChanged,
-			v1beta1.SchemeGroupVersion.WithKind("Gateway"),
+			v1alpha3.SchemeGroupVersion.WithKind("Gateway"),
 		),
 	))
 

@@ -21,22 +21,21 @@ import (
 	"fmt"
 	"sort"
 
-	istiov1beta1 "istio.io/api/networking/v1beta1"
-	"istio.io/client-go/pkg/apis/networking/v1beta1"
+	istiov1alpha3 "istio.io/api/networking/v1alpha3"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 
-	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
+	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/tracker"
 
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
+	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
-	"knative.dev/serving/pkg/apis/serving"
-	"knative.dev/serving/pkg/network"
-	"knative.dev/serving/pkg/network/status"
+	"knative.dev/networking/pkg/status"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -192,7 +191,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		// We should handle the deletion after VirtualService is created with the newly generated non-wildcard Gateway
 		// in order to make sure the ongoing traffic won't be affected.
 		for _, gw := range config.FromContext(ctx).Istio.IngressGateways {
-			if err := r.reconcileIngressServers(ctx, ing, gw, []*istiov1beta1.Server{}); err != nil {
+			if err := r.reconcileIngressServers(ctx, ing, gw, []*istiov1alpha3.Server{}); err != nil {
 				return err
 			}
 		}
@@ -234,7 +233,7 @@ func (r *Reconciler) reconcileCertSecrets(ctx context.Context, ing *v1alpha1.Ing
 	return nil
 }
 
-func (r *Reconciler) reconcileWildcardGateways(ctx context.Context, gateways []*v1beta1.Gateway, ing *v1alpha1.Ingress) error {
+func (r *Reconciler) reconcileWildcardGateways(ctx context.Context, gateways []*v1alpha3.Gateway, ing *v1alpha1.Ingress) error {
 	for _, gateway := range gateways {
 		r.tracker.Track(resources.GatewayRef(gateway), ing)
 		if err := r.reconcileSystemGeneratedGateway(ctx, gateway); err != nil {
@@ -244,7 +243,7 @@ func (r *Reconciler) reconcileWildcardGateways(ctx context.Context, gateways []*
 	return nil
 }
 
-func (r *Reconciler) reconcileIngressGateways(ctx context.Context, gateways []*v1beta1.Gateway) error {
+func (r *Reconciler) reconcileIngressGateways(ctx context.Context, gateways []*v1alpha3.Gateway) error {
 	for _, gateway := range gateways {
 		if err := r.reconcileSystemGeneratedGateway(ctx, gateway); err != nil {
 			return err
@@ -253,10 +252,10 @@ func (r *Reconciler) reconcileIngressGateways(ctx context.Context, gateways []*v
 	return nil
 }
 
-func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desired *v1beta1.Gateway) error {
+func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desired *v1alpha3.Gateway) error {
 	existing, err := r.gatewayLister.Gateways(desired.Namespace).Get(desired.Name)
 	if apierrs.IsNotFound(err) {
-		if _, err := r.istioClientSet.NetworkingV1beta1().Gateways(desired.Namespace).Create(desired); err != nil {
+		if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(desired.Namespace).Create(desired); err != nil {
 			return err
 		}
 	} else if err != nil {
@@ -264,7 +263,7 @@ func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desire
 	} else if !equality.Semantic.DeepEqual(existing.Spec, desired.Spec) {
 		copy := existing.DeepCopy()
 		copy.Spec = desired.Spec
-		if _, err := r.istioClientSet.NetworkingV1beta1().Gateways(desired.Namespace).Update(copy); err != nil {
+		if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(desired.Namespace).Update(copy); err != nil {
 			return err
 		}
 	}
@@ -272,7 +271,7 @@ func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desire
 }
 
 func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1.Ingress,
-	desired []*v1beta1.VirtualService) error {
+	desired []*v1alpha3.VirtualService) error {
 	// First, create all needed VirtualServices.
 	kept := sets.NewString()
 	for _, d := range desired {
@@ -292,8 +291,8 @@ func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1
 
 	// Now, remove the extra ones.
 	selectors := map[string]string{
-		networking.IngressLabelKey: ing.GetName(),                          // VS created from 0.12 on
-		serving.RouteLabelKey:      ing.GetLabels()[serving.RouteLabelKey], // VS created before 0.12
+		networking.IngressLabelKey: ing.GetName(),                            // VS created from 0.12 on
+		resources.RouteLabelKey:    ing.GetLabels()[resources.RouteLabelKey], // VS created before 0.12
 	}
 	for k, v := range selectors {
 		vses, err := r.virtualServiceLister.VirtualServices(ing.GetNamespace()).List(
@@ -316,7 +315,7 @@ func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1
 				// We shouldn't remove resources not controlled by us.
 				continue
 			}
-			if err = r.istioClientSet.NetworkingV1beta1().VirtualServices(ns).Delete(n, &metav1.DeleteOptions{}); err != nil {
+			if err = r.istioClientSet.NetworkingV1alpha3().VirtualServices(ns).Delete(n, &metav1.DeleteOptions{}); err != nil {
 				return fmt.Errorf("failed to delete VirtualService: %w", err)
 			}
 		}
@@ -330,7 +329,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, ing *v1alpha1.Ingress) pk
 	logger.Info("Cleaning up Gateway Servers")
 	for _, gws := range [][]config.Gateway{istiocfg.IngressGateways, istiocfg.LocalGateways} {
 		for _, gw := range gws {
-			if err := r.reconcileIngressServers(ctx, ing, gw, []*istiov1beta1.Server{}); err != nil {
+			if err := r.reconcileIngressServers(ctx, ing, gw, []*istiov1alpha3.Server{}); err != nil {
 				return err
 			}
 		}
@@ -368,7 +367,7 @@ func (r *Reconciler) reconcileDeletion(ctx context.Context, ing *v1alpha1.Ingres
 	return errors.NewAggregate(errs)
 }
 
-func (r *Reconciler) reconcileIngressServers(ctx context.Context, ing *v1alpha1.Ingress, gw config.Gateway, desired []*istiov1beta1.Server) error {
+func (r *Reconciler) reconcileIngressServers(ctx context.Context, ing *v1alpha1.Ingress, gw config.Gateway, desired []*istiov1alpha3.Server) error {
 	gateway, err := r.gatewayLister.Gateways(gw.Namespace).Get(gw.Name)
 	if err != nil {
 		// Unlike VirtualService, a default gateway needs to be existent.
@@ -379,32 +378,32 @@ func (r *Reconciler) reconcileIngressServers(ctx context.Context, ing *v1alpha1.
 	return r.reconcileGateway(ctx, ing, gateway, existing, desired)
 }
 
-func (r *Reconciler) reconcileHTTPServer(ctx context.Context, ing *v1alpha1.Ingress, gw config.Gateway, desiredHTTP *istiov1beta1.Server) error {
+func (r *Reconciler) reconcileHTTPServer(ctx context.Context, ing *v1alpha1.Ingress, gw config.Gateway, desiredHTTP *istiov1alpha3.Server) error {
 	gateway, err := r.gatewayLister.Gateways(gw.Namespace).Get(gw.Name)
 	if err != nil {
 		// Unlike VirtualService, a default gateway needs to be existent.
 		// It should be installed when installing Knative.
 		return fmt.Errorf("failed to get Gateway: %w", err)
 	}
-	existing := []*istiov1beta1.Server{}
+	existing := []*istiov1alpha3.Server{}
 	if e := resources.GetHTTPServer(gateway); e != nil {
 		existing = append(existing, e)
 	}
-	desired := []*istiov1beta1.Server{}
+	desired := []*istiov1alpha3.Server{}
 	if desiredHTTP != nil {
 		desired = append(desired, desiredHTTP)
 	}
 	return r.reconcileGateway(ctx, ing, gateway, existing, desired)
 }
 
-func (r *Reconciler) reconcileGateway(ctx context.Context, ing *v1alpha1.Ingress, gateway *v1beta1.Gateway, existing []*istiov1beta1.Server, desired []*istiov1beta1.Server) error {
+func (r *Reconciler) reconcileGateway(ctx context.Context, ing *v1alpha1.Ingress, gateway *v1alpha3.Gateway, existing []*istiov1alpha3.Server, desired []*istiov1alpha3.Server) error {
 	if equality.Semantic.DeepEqual(existing, desired) {
 		return nil
 	}
 
 	copy := gateway.DeepCopy()
 	copy = resources.UpdateGateway(copy, desired, existing)
-	if _, err := r.istioClientSet.NetworkingV1beta1().Gateways(copy.Namespace).Update(copy); err != nil {
+	if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(copy.Namespace).Update(copy); err != nil {
 		return fmt.Errorf("failed to update Gateway: %w", err)
 	}
 	controller.GetEventRecorder(ctx).Eventf(ing, corev1.EventTypeNormal,
