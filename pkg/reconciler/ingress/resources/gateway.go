@@ -37,6 +37,7 @@ import (
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/system"
+	"knative.dev/pkg/tracker"
 )
 
 var httpServerPortName = "http-server"
@@ -199,10 +200,10 @@ func GetQualifiedGatewayNames(gateways []*v1alpha3.Gateway) []string {
 	return result
 }
 
-// GatewayRef returns the ObjectReference for a give Gateway.
-func GatewayRef(gw *v1alpha3.Gateway) corev1.ObjectReference {
+// GatewayRef returns the Reference for a give Gateway.
+func GatewayRef(gw *v1alpha3.Gateway) tracker.Reference {
 	apiVersion, kind := gatewayGvk.ToAPIVersionAndKind()
-	return corev1.ObjectReference{
+	return tracker.Reference{
 		APIVersion: apiVersion,
 		Kind:       kind,
 		Name:       gw.Name,

@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"knative.dev/pkg/tracker"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -684,7 +685,7 @@ func TestGatewayRef(t *testing.T) {
 			Namespace: "knative-serving",
 		},
 	}
-	want := corev1.ObjectReference{
+	want := tracker.Reference{
 		APIVersion: "networking.istio.io/v1alpha3",
 		Kind:       "Gateway",
 		Name:       "istio-ingress-gateway",
