@@ -198,7 +198,7 @@ github.com/prometheus/statsd_exporter/pkg/mapper/fsm
 github.com/rogpeppe/go-internal/modfile
 github.com/rogpeppe/go-internal/module
 github.com/rogpeppe/go-internal/semver
-# github.com/sergi/go-diff v1.1.0
+# github.com/sergi/go-diff v1.0.0
 github.com/sergi/go-diff/diffmatchpatch
 # github.com/sirupsen/logrus v1.6.0
 github.com/sirupsen/logrus
@@ -994,7 +994,7 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/configmaps
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
-# knative.dev/test-infra v0.0.0-20200811195106-afcd1747545f
+# knative.dev/test-infra v0.0.0-20200811195106-afcd1747545f => github.com/tcnghia/test-infra v0.0.0-20200813181931-7a37c851a5ea
 ## explicit
 knative.dev/test-infra/scripts
 knative.dev/test-infra/tools/dep-collector
@@ -1006,3 +1006,4 @@ sigs.k8s.io/yaml
 # k8s.io/apimachinery => k8s.io/apimachinery v0.17.6
 # k8s.io/client-go => k8s.io/client-go v0.17.6
 # k8s.io/code-generator => k8s.io/code-generator v0.17.6
+# knative.dev/test-infra => github.com/tcnghia/test-infra v0.0.0-20200813181931-7a37c851a5ea
