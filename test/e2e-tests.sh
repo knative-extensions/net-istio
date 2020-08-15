@@ -21,6 +21,7 @@ source $(dirname $0)/e2e-common.sh
 initialize $@  --skip-istio-addon
 
 go_test_e2e -timeout=40m -parallel=12 \
-  ./test/conformance || fail_test
+    ./test/conformance \
+    --enable-beta --enable-alpha || fail_test
 
 success
