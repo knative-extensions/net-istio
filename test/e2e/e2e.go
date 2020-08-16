@@ -17,37 +17,26 @@ limitations under the License.
 package e2e
 
 import (
-	"testing"
-
 	// Mysteriously required to support GCP auth (required by k8s libs).
 	// Apparently just importing it is enough. @_@ side effects @_@.
 	// https://github.com/kubernetes/client-go/issues/242
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
+	"knative.dev/networking/test"
 	pkgTest "knative.dev/pkg/test"
-	"knative.dev/serving/test"
+	"knative.dev/pkg/test/logstream"
 )
 
-// Setup creates the client objects needed in the e2e tests.
-func Setup(t *testing.T) *test.Clients {
-	return SetupWithNamespace(t, test.ServingNamespace)
-}
+// Setup creates client to run Knative Service requests
+func Setup(t pkgTest.TLegacy) *Clients {
+	t.Helper()
 
-//SetupServingNamespaceforSecurityTesting creates the client objects needed in e2e tests
-// under the security testing namespace.
-func SetupServingNamespaceforSecurityTesting(t *testing.T) *test.Clients {
-	return SetupWithNamespace(t, test.ServingNamespaceforSecurityTesting)
-}
+	cancel := logstream.Start(t)
+	t.Cleanup(cancel)
 
-// SetupWithNamespace creates the client objects needed in the e2e tests under the specified namespace.
-func SetupWithNamespace(t *testing.T, namespace string) *test.Clients {
-	pkgTest.SetupLoggingFlags()
-	clients, err := test.NewClients(
-		pkgTest.Flags.Kubeconfig,
-		pkgTest.Flags.Cluster,
-		namespace)
+	clients, err := NewClients(pkgTest.Flags.Kubeconfig, pkgTest.Flags.Cluster, test.ServingNamespace)
 	if err != nil {
-		t.Fatal("Couldn't initialize clients:", err)
+		t.Fatal("Couldn't initialize clients", "error", err.Error())
 	}
 	return clients
 }

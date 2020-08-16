@@ -45,11 +45,10 @@ import (
 
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"knative.dev/networking/pkg/apis/networking"
+	"knative.dev/networking/test"
 	"knative.dev/pkg/system"
 	pkgTest "knative.dev/pkg/test"
 	"knative.dev/pkg/test/spoof"
-	"knative.dev/serving/test"
-	v1test "knative.dev/serving/test/v1"
 )
 
 func TestIstioProbing(t *testing.T) {
@@ -81,12 +80,18 @@ func TestIstioProbing(t *testing.T) {
 			Service: test.ObjectNameForTest(t),
 			Image:   "helloworld",
 		}
-		test.EnsureTearDown(t, clients, &names)
-		objects, err := v1test.CreateServiceReady(t, clients, &names)
+		test.EnsureCleanup(t, func() {
+			clients.ServingClient.Services.Delete(names.Service, &metav1.DeleteOptions{})
+		})
+		err := CreateServiceReady(t, clients, &names)
 		if err != nil {
 			t.Fatalf("Failed to create Service %s: %v", names.Service, err)
 		}
-		domain = strings.SplitN(objects.Route.Status.URL.Host, ".", 2)[1]
+		svcObject, err := clients.ServingClient.Services.Get(names.Service, metav1.GetOptions{})
+		if err != nil {
+			t.Fatalf("Failed to get Service %s: %v", names.Service, err)
+		}
+		domain = strings.SplitN(svcObject.Status.URL.Host, ".", 2)[1]
 	}()
 
 	tlsOptions := &istiov1alpha3.ServerTLSSettings{
@@ -254,9 +259,12 @@ func TestIstioProbing(t *testing.T) {
 
 			setupGateway(t, clients, names, domain, namespace, c.servers)
 
+			test.EnsureCleanup(t, func() {
+				clients.ServingClient.Services.Delete(names.Service, &metav1.DeleteOptions{})
+			})
+
 			// Create the service and wait for it to be ready
-			test.EnsureTearDown(t, clients, &names)
-			_, err = v1test.CreateServiceReady(t, clients, &names)
+			err = CreateServiceReady(t, clients, &names)
 			if err != nil {
 				t.Fatalf("Failed to create Service %s: %v", names.Service, err)
 			}
@@ -274,7 +282,7 @@ func TestIstioProbing(t *testing.T) {
 						clients.KubeClient,
 						t.Logf,
 						u,
-						v1test.RetryingRouteInconsistency(pkgTest.MatchesAllOf(pkgTest.IsStatusOK, pkgTest.MatchesBody(test.HelloWorldText))),
+						RetryingRouteInconsistency(pkgTest.MatchesAllOf(pkgTest.IsStatusOK, pkgTest.MatchesBody(test.HelloWorldText))),
 						"HelloWorldServesText",
 						test.ServingFlags.ResolvableDomain,
 						1*time.Minute,
@@ -302,7 +310,7 @@ func hasHTTPS(servers []*istiov1alpha3.Server) bool {
 }
 
 // setupGateway updates the ingress Gateway to the provided Servers and waits until all Envoy pods have been updated.
-func setupGateway(t *testing.T, clients *test.Clients, names test.ResourceNames, domain string,
+func setupGateway(t *testing.T, clients *Clients, names test.ResourceNames, domain string,
 	namespace string, servers []*istiov1alpha3.Server) {
 	// Get the current Gateway
 	curGateway, err := clients.IstioClient.NetworkingV1alpha3().Gateways(namespace).Get(networking.KnativeIngressGateway, metav1.GetOptions{})
