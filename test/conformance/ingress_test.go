@@ -25,7 +25,7 @@ import (
 	"knative.dev/networking/test/conformance/ingress"
 )
 
-const iterations = 11
+const iterations = 15
 
 func TestIngressConformance(t *testing.T) {
 	for i := 0; i < iterations; i++ {

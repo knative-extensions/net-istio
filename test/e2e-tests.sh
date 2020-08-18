@@ -20,7 +20,6 @@ source $(dirname $0)/e2e-common.sh
 # Script entry point.
 initialize $@  --skip-istio-addon
 
-go_test_e2e -timeout=40m -parallel=12 \
-  ./test/conformance || fail_test
+go_test_e2e -timeout=60m ./test/conformance || fail_test
 
 success
