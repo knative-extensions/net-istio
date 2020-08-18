@@ -8,6 +8,92 @@ metadata:
     istio-injection: disabled
 # PATCH #1 ends.
 ---
+# Source: istio/charts/galley/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: istio-galley-service-account
+  namespace: istio-system
+  labels:
+    app: galley
+    chart: galley
+    heritage: Helm
+    release: RELEASE-NAME
+---
+# Source: istio/charts/gateways/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cluster-local-gateway-service-account
+  namespace: istio-system
+  labels:
+    app: cluster-local-gateway
+    chart: gateways
+    heritage: Helm
+    release: RELEASE-NAME
+---
+# Source: istio/charts/gateways/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: istio-ingressgateway-service-account
+  namespace: istio-system
+  labels:
+    app: istio-ingressgateway
+    chart: gateways
+    heritage: Helm
+    release: RELEASE-NAME
+---
+# Source: istio/charts/pilot/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: istio-pilot-service-account
+  namespace: istio-system
+  labels:
+    app: pilot
+    chart: pilot
+    heritage: Helm
+    release: RELEASE-NAME
+---
+# Source: istio/charts/security/templates/create-custom-resources-job.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: istio-security-post-install-account
+  namespace: istio-system
+  labels:
+    app: security
+    chart: security
+    heritage: Helm
+    release: RELEASE-NAME
+---
+# Source: istio/charts/security/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: istio-citadel-service-account
+  namespace: istio-system
+  labels:
+    app: security
+    chart: security
+    heritage: Helm
+    release: RELEASE-NAME
+---
+# Source: istio/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: istio-multi
+  namespace: istio-system
+---
+# Source: istio/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: istio-reader-service-account
+  namespace: istio-system
+---
 # Source: istio/charts/galley/templates/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -94,7 +180,10 @@ data:
             - serviceentries
             - sidecars
             - virtualservices
-        failurePolicy: Fail
+        # Fail open until the validation webhook is ready. The webhook controller
+        # will update this to `Fail` and patch in the `caBundle` when the webhook
+        # endpoint is ready.
+        failurePolicy: Ignore
         sideEffects: None
       - name: mixer.validation.istio.io
         clientConfig:
@@ -114,38 +203,14 @@ data:
             resources:
             - rules
             - attributemanifests
-            - circonuses
-            - deniers
-            - fluentds
-            - kubernetesenvs
-            - listcheckers
-            - memquotas
-            - noops
-            - opas
-            - prometheuses
-            - rbacs
-            - solarwindses
-            - stackdrivers
-            - cloudwatches
-            - dogstatsds
-            - statsds
-            - stdios
-            - apikeys
-            - authorizations
-            - checknothings
-            # - kuberneteses
-            - listentries
-            - logentries
-            - metrics
-            - quotas
-            - reportnothings
-            - tracespans
             - adapters
             - handlers
             - instances
             - templates
-            - zipkins
-        failurePolicy: Fail
+        # Fail open until the validation webhook is ready. The webhook controller
+        # will update this to `Fail` and patch in the `caBundle` when the webhook
+        # endpoint is ready.
+        failurePolicy: Ignore
         sideEffects: None
 ---
 # Source: istio/charts/security/templates/configmap.yaml
@@ -287,7 +352,7 @@ data:
     # If true, automatically configure client side mTLS settings to match the corresponding service's
     # server side mTLS authentication policy, when destination rule for that service does not specify
     # TLS settings.
-    enableAutoMtls: false
+    enableAutoMtls: true
 
     # Set the default behavior of the sidecar for handling outbound traffic from the application:
     # ALLOW_ANY - outbound traffic to unknown destinations will be allowed, in case there are no
@@ -363,85 +428,6 @@ data:
   meshNetworks: |-
     networks: {}
 ---
-# Source: istio/charts/galley/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: istio-galley-service-account
-  namespace: istio-system
-  labels:
-    app: galley
-    chart: galley
-    heritage: Helm
-    release: RELEASE-NAME
----
-# Source: istio/charts/gateways/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: cluster-local-gateway-service-account
-  namespace: istio-system
-  labels:
-    app: cluster-local-gateway
-    chart: gateways
-    heritage: Helm
-    release: RELEASE-NAME
----
-# Source: istio/charts/gateways/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: istio-ingressgateway-service-account
-  namespace: istio-system
-  labels:
-    app: istio-ingressgateway
-    chart: gateways
-    heritage: Helm
-    release: RELEASE-NAME
----
-# Source: istio/charts/pilot/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: istio-pilot-service-account
-  namespace: istio-system
-  labels:
-    app: pilot
-    chart: pilot
-    heritage: Helm
-    release: RELEASE-NAME
----
-# Source: istio/charts/security/templates/create-custom-resources-job.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: istio-security-post-install-account
-  namespace: istio-system
-  labels:
-    app: security
-    chart: security
-    heritage: Helm
-    release: RELEASE-NAME
----
-# Source: istio/charts/security/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: istio-citadel-service-account
-  namespace: istio-system
-  labels:
-    app: security
-    chart: security
-    heritage: Helm
-    release: RELEASE-NAME
----
-# Source: istio/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: istio-multi
-  namespace: istio-system
----
 # Source: istio/charts/galley/templates/clusterrole.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -473,22 +459,26 @@ rules:
   verbs: ["update"]
 - apiGroups: ["admissionregistration.k8s.io"]
   resources: ["validatingwebhookconfigurations"]
-  verbs: ["*"]
+  verbs: ["get", "list", "watch", "update"]
+# permissions to verify the webhook is ready and rejecting
+# invalid config. We use --server-dry-run so no config is persisted.
+- apiGroups: ["networking.istio.io"]
+  verbs: ["create"]
+  resources: ["gateways"]
 - apiGroups: ["extensions","apps"]
   resources: ["deployments"]
-  resourceNames: ["istio-galley"]
-  verbs: ["get"]
+  verbs: ["get", "list", "watch"]
 - apiGroups: [""]
   resources: ["pods", "nodes", "services", "endpoints", "namespaces"]
   verbs: ["get", "list", "watch"]
 - apiGroups: ["extensions"]
   resources: ["ingresses"]
   verbs: ["get", "list", "watch"]
-- apiGroups: [""]
-  resources: ["namespaces/finalizers"]
-  verbs: ["update"]
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["clusterroles"]
   verbs: ["get", "list", "watch"]
 ---
 # Source: istio/charts/pilot/templates/clusterrole.yaml
@@ -502,24 +492,14 @@ metadata:
     heritage: Helm
     release: RELEASE-NAME
 rules:
-- apiGroups: ["config.istio.io"]
+- apiGroups:
+  - config.istio.io
+  - rbac.istio.io
+  - security.istio.io
+  - networking.istio.io
+  - authentication.istio.io
   resources: ["*"]
-  verbs: ["*"]
-- apiGroups: ["rbac.istio.io"]
-  resources: ["*"]
-  verbs: ["get", "watch", "list"]
-- apiGroups: ["security.istio.io"]
-  resources: ["*"]
-  verbs: ["get", "watch", "list"]
-- apiGroups: ["networking.istio.io"]
-  resources: ["*"]
-  verbs: ["*"]
-- apiGroups: ["authentication.istio.io"]
-  resources: ["*"]
-  verbs: ["*"]
-- apiGroups: ["apiextensions.k8s.io"]
-  resources: ["customresourcedefinitions"]
-  verbs: ["*"]
+  verbs: ["get", "list", "watch"]
 - apiGroups: ["extensions"]
   resources: ["ingresses", "ingresses/status"]
   verbs: ["*"]
@@ -528,6 +508,9 @@ rules:
   verbs: ["create", "get", "list", "watch", "update"]
 - apiGroups: [""]
   resources: ["endpoints", "pods", "services", "namespaces", "nodes"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["discovery.k8s.io"]
+  resources: ["endpointslices"]
   verbs: ["get", "list", "watch"]
 - apiGroups: [""]
   resources: ["secrets"]
@@ -682,7 +665,7 @@ kind: ClusterRoleBinding
 metadata:
   name: istio-multi
   labels:
-    chart: istio-1.4.6
+    chart: istio-1.5.7
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -690,6 +673,22 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: istio-multi
+  namespace: istio-system
+---
+# Source: istio/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: istio-reader
+  labels:
+    chart: istio-1.5.7
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: istio-reader
+subjects:
+- kind: ServiceAccount
+  name: istio-reader-service-account
   namespace: istio-system
 ---
 # Source: istio/charts/gateways/templates/role.yaml
@@ -732,6 +731,7 @@ metadata:
 spec:
   ports:
   - port: 443
+    targetPort: 9443
     name: https-validation
   - port: 15014
     name: http-monitoring
@@ -739,36 +739,6 @@ spec:
     name: grpc-mcp
   selector:
     istio: galley
----
-# Source: istio/charts/gateways/templates/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: istio-ingressgateway
-  namespace: istio-system
-  annotations:
-  labels:
-    chart: gateways
-    heritage: Helm
-    release: RELEASE-NAME
-    app: istio-ingressgateway
-    istio: ingressgateway
-spec:
-  type: LoadBalancer
-  selector:
-    release: RELEASE-NAME
-    app: istio-ingressgateway
-    istio: ingressgateway
-  ports:
-    -
-      name: status-port
-      port: 15020
-    -
-      name: http2
-      port: 80
-    -
-      name: https
-      port: 443
 ---
 # Source: istio/charts/gateways/templates/service.yaml
 apiVersion: v1
@@ -789,6 +759,36 @@ spec:
     release: RELEASE-NAME
     app: cluster-local-gateway
     istio: cluster-local-gateway
+  ports:
+    -
+      name: status-port
+      port: 15020
+    -
+      name: http2
+      port: 80
+    -
+      name: https
+      port: 443
+---
+# Source: istio/charts/gateways/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: istio-ingressgateway
+  namespace: istio-system
+  annotations:
+  labels:
+    chart: gateways
+    heritage: Helm
+    release: RELEASE-NAME
+    app: istio-ingressgateway
+    istio: ingressgateway
+spec:
+  type: LoadBalancer
+  selector:
+    release: RELEASE-NAME
+    app: istio-ingressgateway
+    istio: ingressgateway
   ports:
     -
       name: status-port
@@ -885,10 +885,10 @@ spec:
       serviceAccountName: istio-galley-service-account
       containers:
         - name: galley
-          image: "docker.io/istio/galley:1.4.6"
+          image: "docker.io/istio/galley:1.5.7"
           imagePullPolicy: IfNotPresent
           ports:
-          - containerPort: 443
+          - containerPort: 9443
           - containerPort: 15014
           - containerPort: 9901
           command:
@@ -896,15 +896,13 @@ spec:
           - server
           - --meshConfigFile=/etc/mesh-config/mesh
           - --livenessProbeInterval=1s
-          - --livenessProbePath=/healthliveness
-          - --readinessProbePath=/healthready
+          - --livenessProbePath=/tmp/healthliveness
+          - --readinessProbePath=/tmp/healthready
           - --readinessProbeInterval=1s
           - --deployment-namespace=istio-system
           - --insecure=true
           - --enable-server=false
           - --enable-reconcileWebhookConfiguration=true
-          - --validation-webhook-config-file
-          - /etc/config/validatingwebhookconfiguration.yaml
           - --monitoringPort=15014
           - --log_output_level=default:info
           volumeMounts:
@@ -922,7 +920,7 @@ spec:
               command:
                 - /usr/local/bin/galley
                 - probe
-                - --probe-path=/healthliveness
+                - --probe-path=/tmp/healthliveness
                 - --interval=10s
             initialDelaySeconds: 5
             periodSeconds: 5
@@ -931,7 +929,7 @@ spec:
               command:
                 - /usr/local/bin/galley
                 - probe
-                - --probe-path=/healthready
+                - --probe-path=/tmp/healthready
                 - --interval=10s
             initialDelaySeconds: 5
             periodSeconds: 5
@@ -942,12 +940,206 @@ spec:
       - name: certs
         secret:
           secretName: istio.istio-galley-service-account
+      # galley expects /etc/config to exist even though it doesn't include any files.
       - name: config
-        configMap:
-          name: istio-galley-configuration
+        emptyDir:
+          medium: Memory
       - name: mesh-config
         configMap:
           name: istio
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values:
+                - "amd64"
+                - "ppc64le"
+                - "s390x"
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 2
+            preference:
+              matchExpressions:
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values:
+                - "amd64"
+          - weight: 2
+            preference:
+              matchExpressions:
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values:
+                - "ppc64le"
+          - weight: 2
+            preference:
+              matchExpressions:
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values:
+                - "s390x"
+---
+# Source: istio/charts/gateways/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cluster-local-gateway
+  namespace: istio-system
+  labels:
+    app: cluster-local-gateway
+    chart: gateways
+    heritage: Helm
+    istio: cluster-local-gateway
+    release: RELEASE-NAME
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cluster-local-gateway
+      istio: cluster-local-gateway
+  strategy:
+    rollingUpdate:
+      maxSurge:
+      maxUnavailable:
+  template:
+    metadata:
+      labels:
+        app: cluster-local-gateway
+        chart: gateways
+        heritage: Helm
+        istio: cluster-local-gateway
+        release: RELEASE-NAME
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      serviceAccountName: cluster-local-gateway-service-account
+      containers:
+        - name: istio-proxy
+          image: "docker.io/istio/proxyv2:1.5.7"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 15020
+            - containerPort: 80
+            - containerPort: 443
+            - containerPort: 15090
+              protocol: TCP
+              name: http-envoy-prom
+          args:
+          - proxy
+          - router
+          - --domain
+          - $(POD_NAMESPACE).svc.cluster.local
+          - --log_output_level=default:info
+          - --drainDuration
+          - '45s' #drainDuration
+          - --parentShutdownDuration
+          - '1m0s' #parentShutdownDuration
+          - --connectTimeout
+          - '10s' #connectTimeout
+          - --serviceCluster
+          - cluster-local-gateway
+          - --zipkinAddress
+          - zipkin:9411
+          - --proxyAdminPort
+          - "15000"
+          - --statusPort
+          - "15020"
+          - --controlPlaneAuthPolicy
+          - NONE
+          - --discoveryAddress
+          - istio-pilot:15010
+          readinessProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /healthz/ready
+              port: 15020
+              scheme: HTTP
+            initialDelaySeconds: 1
+            periodSeconds: 2
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 1024Mi
+          env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: spec.nodeName
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: INSTANCE_IP
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: status.podIP
+          - name: HOST_IP
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: status.hostIP
+          - name: SERVICE_ACCOUNT
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.serviceAccountName
+          - name: ISTIO_AUTO_MTLS_ENABLED
+            value: "true"
+          - name: ISTIO_META_POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          - name: ISTIO_META_CONFIG_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: ISTIO_METAJSON_LABELS
+            value: |
+              {"app":"cluster-local-gateway","chart":"gateways","heritage":"Helm","istio":"cluster-local-gateway","release":"RELEASE-NAME"}
+          - name: ISTIO_META_CLUSTER_ID
+            value: "Kubernetes"
+          - name: SDS_ENABLED
+            value: "false"
+          - name: ISTIO_META_WORKLOAD_NAME
+            value: cluster-local-gateway
+          - name: ISTIO_META_OWNER
+            value: kubernetes://apis/apps/v1/namespaces/istio-system/deployments/cluster-local-gateway
+
+          volumeMounts:
+          - name: istio-certs
+            mountPath: /etc/certs
+            readOnly: true
+          - name: cluster-local-gateway-certs
+            mountPath: "/etc/istio/cluster-local-gateway-certs"
+            readOnly: true
+          - name: cluster-local-gateway-ca-certs
+            mountPath: "/etc/istio/cluster-local-gateway-ca-certs"
+            readOnly: true
+      volumes:
+      - name: istio-certs
+        secret:
+          secretName: istio.cluster-local-gateway-service-account
+          optional: true
+      - name: cluster-local-gateway-certs
+        secret:
+          secretName: "istio-cluster-local-gateway-certs"
+          optional: true
+      - name: cluster-local-gateway-ca-certs
+        secret:
+          secretName: "istio-cluster-local-gateway-ca-certs"
+          optional: true
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -1017,7 +1209,7 @@ spec:
       serviceAccountName: istio-ingressgateway-service-account
       containers:
         - name: ingress-sds
-          image: "docker.io/istio/node-agent-k8s:1.4.6"
+          image: "docker.io/istio/node-agent-k8s:1.5.7"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -1040,7 +1232,7 @@ spec:
           - name: ingressgatewaysdsudspath
             mountPath: /var/run/ingress_gateway
         - name: istio-proxy
-          image: "docker.io/istio/proxyv2:1.4.6"
+          image: "docker.io/istio/proxyv2:1.5.7"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 15020
@@ -1120,6 +1312,8 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: spec.serviceAccountName
+          - name: ISTIO_AUTO_MTLS_ENABLED
+            value: "true"
           - name: ISTIO_META_POD_NAME
             valueFrom:
               fieldRef:
@@ -1143,7 +1337,7 @@ spec:
           - name: ISTIO_META_USER_SDS
             value: "true"
           - name: ISTIO_META_ROUTER_MODE
-            value: sni-dnat
+            value: standard
 
 
           volumeMounts:
@@ -1172,197 +1366,6 @@ spec:
       - name: ingressgateway-ca-certs
         secret:
           secretName: "istio-ingressgateway-ca-certs"
-          optional: true
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: beta.kubernetes.io/arch
-                operator: In
-                values:
-                - "amd64"
-                - "ppc64le"
-                - "s390x"
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 2
-            preference:
-              matchExpressions:
-              - key: beta.kubernetes.io/arch
-                operator: In
-                values:
-                - "amd64"
-          - weight: 2
-            preference:
-              matchExpressions:
-              - key: beta.kubernetes.io/arch
-                operator: In
-                values:
-                - "ppc64le"
-          - weight: 2
-            preference:
-              matchExpressions:
-              - key: beta.kubernetes.io/arch
-                operator: In
-                values:
-                - "s390x"
----
-# Source: istio/charts/gateways/templates/deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: cluster-local-gateway
-  namespace: istio-system
-  labels:
-    app: cluster-local-gateway
-    chart: gateways
-    heritage: Helm
-    istio: cluster-local-gateway
-    release: RELEASE-NAME
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: cluster-local-gateway
-      istio: cluster-local-gateway
-  strategy:
-    rollingUpdate:
-      maxSurge:
-      maxUnavailable:
-  template:
-    metadata:
-      labels:
-        app: cluster-local-gateway
-        chart: gateways
-        heritage: Helm
-        istio: cluster-local-gateway
-        release: RELEASE-NAME
-      annotations:
-        sidecar.istio.io/inject: "false"
-    spec:
-      serviceAccountName: cluster-local-gateway-service-account
-      containers:
-        - name: istio-proxy
-          image: "docker.io/istio/proxyv2:1.4.6"
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 15020
-            - containerPort: 80
-            - containerPort: 443
-            - containerPort: 15090
-              protocol: TCP
-              name: http-envoy-prom
-          args:
-          - proxy
-          - router
-          - --domain
-          - $(POD_NAMESPACE).svc.cluster.local
-          - --log_output_level=default:info
-          - --drainDuration
-          - '45s' #drainDuration
-          - --parentShutdownDuration
-          - '1m0s' #parentShutdownDuration
-          - --connectTimeout
-          - '10s' #connectTimeout
-          - --serviceCluster
-          - cluster-local-gateway
-          - --zipkinAddress
-          - zipkin:9411
-          - --proxyAdminPort
-          - "15000"
-          - --statusPort
-          - "15020"
-          - --controlPlaneAuthPolicy
-          - NONE
-          - --discoveryAddress
-          - istio-pilot:15010
-          readinessProbe:
-            failureThreshold: 30
-            httpGet:
-              path: /healthz/ready
-              port: 15020
-              scheme: HTTP
-            initialDelaySeconds: 1
-            periodSeconds: 2
-            successThreshold: 1
-            timeoutSeconds: 1
-          resources:
-            requests:
-              cpu: 1000m
-              memory: 1024Mi
-          env:
-          - name: NODE_NAME
-            valueFrom:
-              fieldRef:
-                apiVersion: v1
-                fieldPath: spec.nodeName
-          - name: POD_NAME
-            valueFrom:
-              fieldRef:
-                apiVersion: v1
-                fieldPath: metadata.name
-          - name: POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                apiVersion: v1
-                fieldPath: metadata.namespace
-          - name: INSTANCE_IP
-            valueFrom:
-              fieldRef:
-                apiVersion: v1
-                fieldPath: status.podIP
-          - name: HOST_IP
-            valueFrom:
-              fieldRef:
-                apiVersion: v1
-                fieldPath: status.hostIP
-          - name: SERVICE_ACCOUNT
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.serviceAccountName
-          - name: ISTIO_META_POD_NAME
-            valueFrom:
-              fieldRef:
-                apiVersion: v1
-                fieldPath: metadata.name
-          - name: ISTIO_META_CONFIG_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          - name: ISTIO_METAJSON_LABELS
-            value: |
-              {"app":"cluster-local-gateway","chart":"gateways","heritage":"Helm","istio":"cluster-local-gateway","release":"RELEASE-NAME"}
-          - name: ISTIO_META_CLUSTER_ID
-            value: "Kubernetes"
-          - name: SDS_ENABLED
-            value: "false"
-          - name: ISTIO_META_WORKLOAD_NAME
-            value: cluster-local-gateway
-          - name: ISTIO_META_OWNER
-            value: kubernetes://apis/apps/v1/namespaces/istio-system/deployments/cluster-local-gateway
-
-          volumeMounts:
-          - name: istio-certs
-            mountPath: /etc/certs
-            readOnly: true
-          - name: cluster-local-gateway-certs
-            mountPath: "/etc/istio/cluster-local-gateway-certs"
-            readOnly: true
-          - name: cluster-local-gateway-ca-certs
-            mountPath: "/etc/istio/cluster-local-gateway-ca-certs"
-            readOnly: true
-      volumes:
-      - name: istio-certs
-        secret:
-          secretName: istio.cluster-local-gateway-service-account
-          optional: true
-      - name: cluster-local-gateway-certs
-        secret:
-          secretName: "istio-cluster-local-gateway-certs"
-          optional: true
-      - name: cluster-local-gateway-ca-certs
-        secret:
-          secretName: "istio-cluster-local-gateway-ca-certs"
           optional: true
       affinity:
         nodeAffinity:
@@ -1433,7 +1436,7 @@ spec:
       serviceAccountName: istio-pilot-service-account
       containers:
         - name: discovery
-          image: "docker.io/istio/pilot:1.4.6"
+          image: "docker.io/istio/pilot:1.5.7"
           imagePullPolicy: IfNotPresent
           args:
           - "discovery"
@@ -1563,7 +1566,7 @@ spec:
       serviceAccountName: istio-citadel-service-account
       containers:
         - name: citadel
-          image: "docker.io/istio/citadel:1.4.6"
+          image: "docker.io/istio/citadel:1.5.7"
           imagePullPolicy: IfNotPresent
           args:
             - --append-dns-names=true
@@ -1662,11 +1665,117 @@ spec:
       name: cpu
       targetAverageUtilization: 80
 ---
+# Source: istio/charts/galley/templates/validatingwebhookconfiguration.yaml
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: istio-galley
+  labels:
+    app: galley
+    chart: galley
+    heritage: Helm
+    release: RELEASE-NAME
+    istio: galley
+webhooks:
+  - name: pilot.validation.istio.io
+    clientConfig:
+      service:
+        name: istio-galley
+        namespace: istio-system
+        path: "/admitpilot"
+      caBundle: ""
+    rules:
+      - operations:
+        - CREATE
+        - UPDATE
+        apiGroups:
+        - config.istio.io
+        apiVersions:
+        - v1alpha2
+        resources:
+        - httpapispecs
+        - httpapispecbindings
+        - quotaspecs
+        - quotaspecbindings
+      - operations:
+        - CREATE
+        - UPDATE
+        apiGroups:
+        - rbac.istio.io
+        apiVersions:
+        - "*"
+        resources:
+        - "*"
+      - operations:
+        - CREATE
+        - UPDATE
+        apiGroups:
+        - security.istio.io
+        apiVersions:
+        - "*"
+        resources:
+        - "*"
+      - operations:
+        - CREATE
+        - UPDATE
+        apiGroups:
+        - authentication.istio.io
+        apiVersions:
+        - "*"
+        resources:
+        - "*"
+      - operations:
+        - CREATE
+        - UPDATE
+        apiGroups:
+        - networking.istio.io
+        apiVersions:
+        - "*"
+        resources:
+        - destinationrules
+        - envoyfilters
+        - gateways
+        - serviceentries
+        - sidecars
+        - virtualservices
+    # Fail open until the validation webhook is ready. The webhook controller
+    # will update this to `Fail` and patch in the `caBundle` when the webhook
+    # endpoint is ready.
+    failurePolicy: Ignore
+    sideEffects: None
+  - name: mixer.validation.istio.io
+    clientConfig:
+      service:
+        name: istio-galley
+        namespace: istio-system
+        path: "/admitmixer"
+      caBundle: ""
+    rules:
+      - operations:
+        - CREATE
+        - UPDATE
+        apiGroups:
+        - config.istio.io
+        apiVersions:
+        - v1alpha2
+        resources:
+        - rules
+        - attributemanifests
+        - adapters
+        - handlers
+        - instances
+        - templates
+    # Fail open until the validation webhook is ready. The webhook controller
+    # will update this to `Fail` and patch in the `caBundle` when the webhook
+    # endpoint is ready.
+    failurePolicy: Ignore
+    sideEffects: None
+---
 # Source: istio/charts/security/templates/create-custom-resources-job.yaml
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: istio-security-post-install-1.4.6
+  name: istio-security-post-install-1.5.7
   namespace: istio-system
   annotations:
     "helm.sh/hook": post-install,post-upgrade
@@ -1691,7 +1800,7 @@ spec:
       serviceAccountName: istio-security-post-install-account
       containers:
         - name: kubectl
-          image: "docker.io/istio/kubectl:1.4.6"
+          image: "docker.io/istio/kubectl:1.5.7"
           imagePullPolicy: IfNotPresent
           command: [ "/bin/bash", "/tmp/security/run.sh", "/tmp/security/custom-resources.yaml" ]
           volumeMounts:
