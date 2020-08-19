@@ -165,6 +165,12 @@ const (
 	// since the data won't be transferred in chunks less than 4kb, if the
 	// reverse proxy fails to detect streaming (gRPC, e.g.).
 	FlushInterval = 20 * time.Millisecond
+
+	// VisibilityLabelKey is the label to indicate visibility of Route
+	// and KServices.  It can be an annotation too but since users are
+	// already using labels for domain, it probably best to keep this
+	// consistent.
+	VisibilityLabelKey = "network.knative.dev/visibility"
 )
 
 // DomainTemplateValues are the available properties people can choose from
