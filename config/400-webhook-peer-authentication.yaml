@@ -1,0 +1,25 @@
+# Allows the Webhooks to be reached by kube-api with or without
+# sidecar injection and with mTLS PERMISSIVE and STRICT. 
+apiVersion: "security.istio.io/v1beta1"
+kind: "PeerAuthentication"
+metadata:
+  name: "webhook"
+  namespace: "knative-serving"
+spec:
+  selector:
+    matchLabels:
+      app: webhook
+  mtls:
+    mode: PERMISSIVE
+---
+apiVersion: "security.istio.io/v1beta1"
+kind: "PeerAuthentication"
+metadata:
+  name: "istio-webhook"
+  namespace: "knative-serving"
+spec:
+  selector:
+    matchLabels:
+      app: istio-webhook
+  mtls:
+    mode: PERMISSIVE
