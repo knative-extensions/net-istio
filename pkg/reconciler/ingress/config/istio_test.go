@@ -61,7 +61,7 @@ func TestGatewayConfiguration(t *testing.T) {
 	}{{
 		name: "gateway configuration with no network input",
 		wantIstio: &Istio{
-			IngressGateways: defaultGateways(),
+			IngressGateways: defaultIngressGateways(),
 			LocalGateways:   defaultLocalGateways(),
 		},
 		config: &corev1.ConfigMap{
@@ -160,7 +160,7 @@ func TestGatewayConfiguration(t *testing.T) {
 		name:    "local gateway configuration with valid url",
 		wantErr: false,
 		wantIstio: &Istio{
-			IngressGateways: defaultGateways(),
+			IngressGateways: defaultIngressGateways(),
 			LocalGateways: []Gateway{{
 				Namespace:  "knative-testing",
 				Name:       "knative-ingress-backroad",
@@ -193,7 +193,7 @@ func TestGatewayConfiguration(t *testing.T) {
 		name:    "local gateway configuration in custom namespace with valid url",
 		wantErr: false,
 		wantIstio: &Istio{
-			IngressGateways: defaultGateways(),
+			IngressGateways: defaultIngressGateways(),
 			LocalGateways: []Gateway{{
 				Namespace:  "custom-namespace",
 				Name:       "custom-local-gateway",
@@ -226,7 +226,7 @@ func TestGatewayConfiguration(t *testing.T) {
 		name:    "local gateway configuration with mesh",
 		wantErr: false,
 		wantIstio: &Istio{
-			IngressGateways: defaultGateways(),
+			IngressGateways: defaultIngressGateways(),
 			LocalGateways:   []Gateway{},
 		},
 		config: &corev1.ConfigMap{
