@@ -26,4 +26,7 @@ replace (
 	k8s.io/apimachinery => k8s.io/apimachinery v0.17.6
 	k8s.io/client-go => k8s.io/client-go v0.17.6
 	k8s.io/code-generator => k8s.io/code-generator v0.17.6
+
+	// TODO(mattmoor): DO NOT SUBMIT
+	knative.dev/networking => github.com/mattmoor/networking v0.0.0-20200820040706-b82ebdcdc4c9
 )
