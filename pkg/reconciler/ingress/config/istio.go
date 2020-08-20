@@ -23,7 +23,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
-	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/system"
 )
@@ -38,12 +37,18 @@ const (
 
 	// localGatewayKeyPrefix is the prefix of all keys to configure Istio gateways for public & private Ingresses.
 	localGatewayKeyPrefix = "local-gateway."
+
+	// KnativeIngressGateway is the name of the ingress gateway
+	KnativeIngressGateway = "knative-ingress-gateway"
+
+	// ClusterLocalGateway is the name of the local gateway
+	ClusterLocalGateway = "cluster-local-gateway"
 )
 
-func defaultGateways() []Gateway {
+func defaultIngressGateways() []Gateway {
 	return []Gateway{{
 		Namespace: system.Namespace(),
-		Name:      networking.KnativeIngressGateway,
+		Name:      KnativeIngressGateway,
 		ServiceURL: fmt.Sprintf("istio-ingressgateway.istio-system.svc.%s",
 			network.GetClusterDomainName()),
 	}}
@@ -52,8 +57,8 @@ func defaultGateways() []Gateway {
 func defaultLocalGateways() []Gateway {
 	return []Gateway{{
 		Namespace: system.Namespace(),
-		Name:      networking.ClusterLocalGateway,
-		ServiceURL: fmt.Sprintf(networking.ClusterLocalGateway+".istio-system.svc.%s",
+		Name:      ClusterLocalGateway,
+		ServiceURL: fmt.Sprintf(ClusterLocalGateway+".istio-system.svc.%s",
 			network.GetClusterDomainName()),
 	}}
 }
@@ -122,7 +127,7 @@ func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
 		return nil, err
 	}
 	if len(gateways) == 0 {
-		gateways = defaultGateways()
+		gateways = defaultIngressGateways()
 	}
 	localGateways, err := parseGateways(configMap, localGatewayKeyPrefix)
 	if err != nil {
