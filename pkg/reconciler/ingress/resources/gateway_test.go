@@ -658,7 +658,7 @@ func TestMakeWildcardGateways(t *testing.T) {
 		ctx = config.ToContext(context.Background(), &config.Config{
 			Istio: &config.Istio{
 				IngressGateways: []config.Gateway{{
-					Name:       networking.KnativeIngressGateway,
+					Name:       config.KnativeIngressGateway,
 					ServiceURL: fmt.Sprintf("%s.%s.svc.cluster.local", tc.gatewayService.Name, tc.gatewayService.Namespace),
 				}},
 			},
@@ -822,7 +822,7 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 		ctx = config.ToContext(context.Background(), &config.Config{
 			Istio: &config.Istio{
 				IngressGateways: []config.Gateway{{
-					Name:       networking.KnativeIngressGateway,
+					Name:       config.KnativeIngressGateway,
 					ServiceURL: fmt.Sprintf("%s.%s.svc.cluster.local", c.gatewayService.Name, c.gatewayService.Namespace),
 				}},
 			},
