@@ -52,12 +52,20 @@ func InsertProbe(ing *v1alpha1.Ingress) (string, error) {
 		if rule.HTTP == nil {
 			return "", fmt.Errorf("rule is missing HTTP block: %+v", rule)
 		}
+		probePaths := make([]v1alpha1.HTTPIngressPath, 0, len(rule.HTTP.Paths))
 		for i := range rule.HTTP.Paths {
-			if rule.HTTP.Paths[i].AppendHeaders == nil {
-				rule.HTTP.Paths[i].AppendHeaders = make(map[string]string, 1)
+			elt := rule.HTTP.Paths[i].DeepCopy()
+			if elt.AppendHeaders == nil {
+				elt.AppendHeaders = make(map[string]string, 1)
 			}
-			rule.HTTP.Paths[i].AppendHeaders[net.HashHeaderName] = hash
+			if elt.Headers == nil {
+				elt.Headers = make(map[string]v1alpha1.HeaderMatch, 1)
+			}
+			elt.Headers[net.HashHeaderName] = v1alpha1.HeaderMatch{Exact: net.HashHeaderValue}
+			elt.AppendHeaders[net.HashHeaderName] = hash
+			probePaths = append(probePaths, *elt)
 		}
+		rule.HTTP.Paths = append(probePaths, rule.HTTP.Paths...)
 	}
 
 	return hash, nil
