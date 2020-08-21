@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"math"
 	"net/http"
-	"strings"
 	"testing"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -40,10 +39,16 @@ func TestVisibility(t *testing.T) {
 	name, port, _ := CreateRuntimeService(t, clients, networking.ServicePortNameHTTP1)
 
 	privateServiceName := test.ObjectNameForTest(t)
-	privateHostName := privateServiceName + "." + test.ServingNamespace + ".svc.cluster.local"
+	shortName := privateServiceName + "." + test.ServingNamespace
+
+	var privateHostNames = map[string]string{
+		"fqdn":     shortName + ".svc.cluster.local",
+		"short":    shortName + ".svc",
+		"shortest": shortName,
+	}
 	ingress, client, _ := CreateIngressReady(t, clients, v1alpha1.IngressSpec{
 		Rules: []v1alpha1.IngressRule{{
-			Hosts:      []string{privateHostName},
+			Hosts:      []string{privateHostNames["fqdn"], privateHostNames["short"], privateHostNames["shortest"]},
 			Visibility: v1alpha1.IngressVisibilityClusterLocal,
 			HTTP: &v1alpha1.HTTPIngressRuleValue{
 				Paths: []v1alpha1.HTTPIngressPath{{
@@ -60,22 +65,13 @@ func TestVisibility(t *testing.T) {
 	})
 
 	// Ensure the service is not publicly accessible
-	RuntimeRequestWithExpectations(t, client, "http://"+privateHostName, []ResponseExpectation{StatusCodeExpectation(sets.NewInt(http.StatusNotFound))}, true)
-
-	var testCases = []struct {
-		// name of the test case.
-		name string
-		// suffix to be trimmed from TARGET_HOST.
-		suffix string
-	}{
-		{"fqdn", ""},
-		{"short", ".cluster.local"},
-		{"shortest", ".svc.cluster.local"},
+	for _, privateHostName := range privateHostNames {
+		RuntimeRequestWithExpectations(t, client, "http://"+privateHostName, []ResponseExpectation{StatusCodeExpectation(sets.NewInt(http.StatusNotFound))}, true)
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			testProxyToHelloworld(t, ingress, clients, name, strings.TrimSuffix(privateHostName, tc.suffix))
+	for name, privateHostName := range privateHostNames {
+		t.Run(name, func(t *testing.T) {
+			testProxyToHelloworld(t, ingress, clients, name, privateHostName)
 		})
 	}
 }
