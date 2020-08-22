@@ -3,12 +3,13 @@
 approvers:
 # TOC
 - evankanderson
+- markusthoemmes
 - mattmoor
+- tcnghia
 - vaikas
 # Networking Approvers
-- markusthoemmes
+- JRBANCEL
 - mdemirhan
 - nak3
-- tcnghia
 - vagababov
 - ZhiminXiang
