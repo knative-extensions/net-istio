@@ -885,7 +885,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/networking v0.0.0-20200821220446-e27d64c8e623 => github.com/tcnghia/networking v0.0.0-20200822035309-1e14c0e140b0
+# knative.dev/networking v0.0.0-20200821220446-e27d64c8e623 => github.com/tcnghia/networking v0.0.0-20200822153032-5659f4953583
 ## explicit
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
@@ -1009,4 +1009,4 @@ sigs.k8s.io/yaml
 # k8s.io/apimachinery => k8s.io/apimachinery v0.17.6
 # k8s.io/client-go => k8s.io/client-go v0.17.6
 # k8s.io/code-generator => k8s.io/code-generator v0.17.6
-# knative.dev/networking => github.com/tcnghia/networking v0.0.0-20200822035309-1e14c0e140b0
+# knative.dev/networking => github.com/tcnghia/networking v0.0.0-20200822153032-5659f4953583

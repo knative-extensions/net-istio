@@ -1097,8 +1097,8 @@ github.com/stretchr/testify v1.5.1 h1:nOGnQDM7FYENwehXlg/kFVnos3rEvtKTjRvOWSzb6H
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/syndtr/gocapability v0.0.0-20170704070218-db04d3cc01c8/go.mod h1:hkRG7XYTFWNJGYcbNJQlaLq0fg1yr4J4t/NcTQtrfww=
-github.com/tcnghia/networking v0.0.0-20200822035309-1e14c0e140b0 h1:JjN06CtiibFvxdbf3LFjV9QGwfAutcos3GfuE7zCLeo=
-github.com/tcnghia/networking v0.0.0-20200822035309-1e14c0e140b0/go.mod h1:24LNCk5qakmWNKf9+C/bLRXoqi7ZrF63jN7LhABIx94=
+github.com/tcnghia/networking v0.0.0-20200822153032-5659f4953583 h1:PyKgMwzr+2BPvsAIKEBMtf2AusIBfHjIHtauP6L5wdw=
+github.com/tcnghia/networking v0.0.0-20200822153032-5659f4953583/go.mod h1:24LNCk5qakmWNKf9+C/bLRXoqi7ZrF63jN7LhABIx94=
 github.com/tdakkota/asciicheck v0.0.0-20200416190851-d7f85be797a2/go.mod h1:yHp0ai0Z9gUljN3o0xMhYJnH/IcvkdTBOX2fmJ93JEM=
 github.com/tdakkota/asciicheck v0.0.0-20200416200610-e657995f937b/go.mod h1:yHp0ai0Z9gUljN3o0xMhYJnH/IcvkdTBOX2fmJ93JEM=
 github.com/tektoncd/pipeline v0.8.0/go.mod h1:IZzJdiX9EqEMuUcgdnElozdYYRh0/ZRC+NKMLj1K3Yw=

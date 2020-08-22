@@ -93,8 +93,8 @@ func newDNSCachingDialer() func(context.Context, string, string) (net.Conn, erro
 		if err != nil {
 			return nil, err
 		}
+		var dialer net.Dialer
 		for _, ip := range ips {
-			var dialer net.Dialer
 			conn, err = dialer.DialContext(ctx, network, net.JoinHostPort(ip, port))
 			if err == nil {
 				break
