@@ -198,6 +198,8 @@ github.com/prometheus/statsd_exporter/pkg/mapper/fsm
 github.com/rogpeppe/go-internal/modfile
 github.com/rogpeppe/go-internal/module
 github.com/rogpeppe/go-internal/semver
+# github.com/rs/dnscache v0.0.0-20190621150935-06bb5526f76b
+github.com/rs/dnscache
 # github.com/sergi/go-diff v1.1.0
 github.com/sergi/go-diff/diffmatchpatch
 # github.com/sirupsen/logrus v1.6.0
@@ -272,6 +274,7 @@ golang.org/x/oauth2/jwt
 ## explicit
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
+golang.org/x/sync/singleflight
 # golang.org/x/sys v0.0.0-20200802091954-4b90ce9b60b3
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
@@ -882,7 +885,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/networking v0.0.0-20200821220446-e27d64c8e623
+# knative.dev/networking v0.0.0-20200821220446-e27d64c8e623 => github.com/tcnghia/networking v0.0.0-20200822035309-1e14c0e140b0
 ## explicit
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
@@ -1006,3 +1009,4 @@ sigs.k8s.io/yaml
 # k8s.io/apimachinery => k8s.io/apimachinery v0.17.6
 # k8s.io/client-go => k8s.io/client-go v0.17.6
 # k8s.io/code-generator => k8s.io/code-generator v0.17.6
+# knative.dev/networking => github.com/tcnghia/networking v0.0.0-20200822035309-1e14c0e140b0

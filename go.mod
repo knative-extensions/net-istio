@@ -26,4 +26,5 @@ replace (
 	k8s.io/apimachinery => k8s.io/apimachinery v0.17.6
 	k8s.io/client-go => k8s.io/client-go v0.17.6
 	k8s.io/code-generator => k8s.io/code-generator v0.17.6
+	knative.dev/networking => github.com/tcnghia/networking v0.0.0-20200822035309-1e14c0e140b0
 )
