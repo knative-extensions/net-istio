@@ -215,20 +215,7 @@ func CreateProxyService(t *testing.T, clients *test.Clients, target string, gate
 	}
 	proxyServiceCancel := createPodAndService(t, clients, pod, svc)
 
-	targetName := strings.Split(target, ".")
-	externalNameSvc := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      targetName[0],
-			Namespace: targetName[1],
-		},
-		Spec: corev1.ServiceSpec{
-			Type:            corev1.ServiceTypeExternalName,
-			ExternalName:    gatewayDomain,
-			SessionAffinity: corev1.ServiceAffinityNone,
-		},
-	}
-
-	externalNameServiceCancel := createService(t, clients, externalNameSvc)
+	externalNameServiceCancel := createExternalNameService(t, clients, target, gatewayDomain)
 
 	return name, port, func() {
 		externalNameServiceCancel()
@@ -551,6 +538,28 @@ func createService(t *testing.T, clients *test.Clients, svc *corev1.Service) con
 	}
 }
 
+func createExternalNameService(t *testing.T, clients *test.Clients, target, gatewayDomain string) context.CancelFunc {
+	targetName := strings.SplitN(target, ".", 3)
+	externalNameSvc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      targetName[0],
+			Namespace: targetName[1],
+		},
+		Spec: corev1.ServiceSpec{
+			Type:            corev1.ServiceTypeExternalName,
+			ExternalName:    gatewayDomain,
+			SessionAffinity: corev1.ServiceAffinityNone,
+			Ports: []corev1.ServicePort{{
+				Name:       networking.ServicePortNameH2C,
+				Port:       int32(80),
+				TargetPort: intstr.FromInt(80),
+			}},
+		},
+	}
+
+	return createService(t, clients, externalNameSvc)
+}
+
 // createPodAndService is a helper for creating the pod and service resources, setting
 // up their context.CancelFunc, and waiting for it to become ready.
 func createPodAndService(t *testing.T, clients *test.Clients, pod *corev1.Pod, svc *corev1.Service) context.CancelFunc {
@@ -622,6 +631,11 @@ func CreateIngress(t *testing.T, clients *test.Clients, spec v1alpha1.IngressSpe
 		},
 		Spec: spec,
 	}
+
+	if err := ing.Validate(context.Background()); err != nil {
+		t.Fatal("Invalid ingress:", err)
+	}
+
 	t.Cleanup(func() { clients.NetworkingClient.Ingresses.Delete(ing.Name, &metav1.DeleteOptions{}) })
 	if err := reconciler.RetryUpdateConflicts(func(attempts int) (err error) {
 		ing, err = clients.NetworkingClient.Ingresses.Create(ing)
@@ -693,6 +707,11 @@ func UpdateIngress(t *testing.T, clients *test.Clients, name string, spec v1alph
 		}
 
 		ing.Spec = spec
+
+		if err := ing.Validate(context.Background()); err != nil {
+			return err
+		}
+
 		_, err = clients.NetworkingClient.Ingresses.Update(ing)
 		return err
 	}); err != nil {
