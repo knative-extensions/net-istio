@@ -71,19 +71,20 @@ func TestVisibility(t *testing.T) {
 
 	for name, privateHostName := range privateHostNames {
 		t.Run(name, func(t *testing.T) {
-			testProxyToHelloworld(t, ingress, clients, name, privateHostName)
+			testProxyToHelloworld(t, ingress, clients, privateHostName)
 		})
 	}
 }
 
-func testProxyToHelloworld(t *testing.T, ingress *v1alpha1.Ingress, clients *test.Clients, name, privateHostName string) {
+func testProxyToHelloworld(t *testing.T, ingress *v1alpha1.Ingress, clients *test.Clients, privateHostName string) {
 
 	loadbalancerAddress := ingress.Status.PrivateLoadBalancer.Ingress[0].DomainInternal
 	proxyName, proxyPort, _ := CreateProxyService(t, clients, privateHostName, loadbalancerAddress)
 
 	// Using fixed hostnames can lead to conflicts when -count=N>1
 	// so pseudo-randomize the hostnames to avoid conflicts.
-	publicHostName := name + ".publicproxy.example.com"
+	publicHostName := test.ObjectNameForTest(t) + ".publicproxy.example.com"
+
 	_, client, _ := CreateIngressReady(t, clients, v1alpha1.IngressSpec{
 		Rules: []v1alpha1.IngressRule{{
 			Hosts:      []string{publicHostName},
