@@ -24,30 +24,15 @@ import (
 
 	nettest "knative.dev/networking/test"
 	"knative.dev/pkg/test"
-	servingv1 "knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1"
 	istioclientset "knative.dev/serving/pkg/client/istio/clientset/versioned"
 )
 
 // Clients holds instances of interfaces for making requests to Knative Serving.
 type Clients struct {
 	KubeClient       *test.KubeClient
-	NetworkingClient *nettest.NetworkingClients
+	NetworkingClient *nettest.Clients
 	Dynamic          dynamic.Interface
 	IstioClient      istioclientset.Interface
-	ServingClient    *servingClients
-	nettest.Client
-}
-
-type Interface interface {
-	ServingV1() servingv1.ServingV1Interface
-}
-
-// servingClients holds instances of interfaces for making requests to knative serving clients
-type servingClients struct {
-	Routes    servingv1.RouteInterface
-	Configs   servingv1.ConfigurationInterface
-	Revisions servingv1.RevisionInterface
-	Services  servingv1.ServiceInterface
 }
 
 // NewClients instantiates and returns several clientsets required for making request to the
@@ -86,27 +71,12 @@ func NewClientsFromConfig(cfg *rest.Config, namespace string) (*Clients, error) 
 		return nil, err
 	}
 
-	clients.ServingClient, err = newServingClients(cfg, namespace)
+	clients.NetworkingClient, err = nettest.NewClientsFromConfig(cfg, nettest.ServingNamespace)
 	if err != nil {
 		return nil, err
 	}
 
 	return clients, nil
-}
-
-// newNetworkingClients instantiates and returns the networking clientset required to make requests
-// to Networking resources on the Knative service cluster
-func newServingClients(cfg *rest.Config, namespace string) (*servingClients, error) {
-	cs, err := servingv1.NewForConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return &servingClients{
-		Configs:   cs.Configurations(namespace),
-		Revisions: cs.Revisions(namespace),
-		Routes:    cs.Routes(namespace),
-		Services:  cs.Services(namespace),
-	}, nil
 }
 
 // BuildClientConfig builds client config for testing.
