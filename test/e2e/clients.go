@@ -35,6 +35,7 @@ type Clients struct {
 	Dynamic          dynamic.Interface
 	IstioClient      istioclientset.Interface
 	ServingClient    *servingClients
+	nettest.Client
 }
 
 type Interface interface {

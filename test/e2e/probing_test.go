@@ -49,6 +49,8 @@ import (
 	"knative.dev/pkg/system"
 	pkgTest "knative.dev/pkg/test"
 	"knative.dev/pkg/test/spoof"
+
+	"knative.dev/networking/test/conformance/ingress"
 )
 
 func TestIstioProbing(t *testing.T) {
@@ -263,18 +265,22 @@ func TestIstioProbing(t *testing.T) {
 				clients.ServingClient.Services.Delete(names.Service, &metav1.DeleteOptions{})
 			})
 
-			// Create the service and wait for it to be ready
-			err = CreateServiceReady(t, clients, &names)
-			if err != nil {
-				t.Fatalf("Failed to create Service %s: %v", names.Service, err)
-			}
+			name, port, _ := ingress.CreateRuntimeService(t, clients, networking.ServicePortNameHTTP1)
+
+			/*
+				// Create the service and wait for it to be ready
+				err = CreateServiceReady(t, clients, &names)
+				if err != nil {
+					t.Fatalf("Failed to create Service %s: %v", names.Service, err)
+				}
+			*/
 
 			// Probe the Service on all endpoints
 			var g errgroup.Group
 			for _, tmpl := range c.urls {
 				tmpl := tmpl
 				g.Go(func() error {
-					u, err := url.Parse(fmt.Sprintf(tmpl, names.Service+"."+domain))
+					u, err := url.Parse(fmt.Sprintf(tmpl, name+"."+domain))
 					if err != nil {
 						return fmt.Errorf("failed to parse URL: %w", err)
 					}
