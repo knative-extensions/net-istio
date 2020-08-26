@@ -23,8 +23,6 @@ initialize $@  --skip-istio-addon
 go_test_e2e -timeout=60m ./test/conformance --parallel 12 \
   --enable-beta --enable-alpha || fail_test
 
-install_serving_nightly || fail_test
-
 go_test_e2e -timeout=10m \
   ./test/e2e || fail_test
 

@@ -72,16 +72,6 @@ function test_setup() {
   wait_until_service_has_external_http_address istio-system istio-ingressgateway
 }
 
-function install_serving_nightly() {
-  echo ">> Setting up Knative Serving..."
-  kubectl apply --filename https://storage.googleapis.com/knative-nightly/serving/latest/serving-crds.yaml || return 1
-  kubectl wait --for=condition=Established crd services.serving.knative.dev || return 1
-
-  kubectl apply --filename https://storage.googleapis.com/knative-nightly/serving/latest/serving-core.yaml || return 1
-  echo ">> Waiting for Serving components to be running..."
-  wait_until_pods_running knative-serving || return 1
-}
-
 function scale_controlplane() {
   for deployment in "$@"; do
     # Make sure all pods run in leader-elected mode.
