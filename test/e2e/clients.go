@@ -22,9 +22,9 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
+	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
 	nettest "knative.dev/networking/test"
 	"knative.dev/pkg/test"
-	istioclientset "knative.dev/serving/pkg/client/istio/clientset/versioned"
 )
 
 // Clients holds instances of interfaces for making requests to Knative Serving.
