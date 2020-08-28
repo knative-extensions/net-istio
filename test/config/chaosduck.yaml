@@ -77,6 +77,10 @@ spec:
         # and substituted here.
         image: ko://knative.dev/pkg/leaderelection/chaosduck
 
+        args:
+        # Disable chaos on webhooks until https://github.com/knative/pkg/issues/1509 is
+        # sorted out.
+        - "-disable=webhook"
         env:
         - name: SYSTEM_NAMESPACE
           valueFrom:
