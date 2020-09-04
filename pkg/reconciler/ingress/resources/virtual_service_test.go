@@ -50,10 +50,6 @@ var (
 					ServicePort:      intstr.FromInt(8080),
 				},
 			}},
-			Retries: &v1alpha1.HTTPRetry{
-				Attempts:      3,
-				PerTryTimeout: &metav1.Duration{Duration: time.Minute},
-			},
 		}},
 	}
 	defaultIngress = v1alpha1.Ingress{
@@ -239,7 +235,6 @@ func TestMakeVirtualServicesSpec_CorrectGateways(t *testing.T) {
 							HTTP:       defaultIngressRuleValue,
 						},
 					},
-					Visibility: v1alpha1.IngressVisibilityClusterLocal,
 				},
 			},
 			gateways: map[v1alpha1.IngressVisibility]sets.String{
@@ -259,7 +254,6 @@ func TestMakeVirtualServicesSpec_CorrectGateways(t *testing.T) {
 							HTTP:       defaultIngressRuleValue,
 						},
 					},
-					Visibility: v1alpha1.IngressVisibilityExternalIP,
 				},
 			},
 			gateways: map[v1alpha1.IngressVisibility]sets.String{
@@ -284,7 +278,6 @@ func TestMakeVirtualServicesSpec_CorrectGateways(t *testing.T) {
 							HTTP:       defaultIngressRuleValue,
 						},
 					},
-					Visibility: v1alpha1.IngressVisibilityExternalIP,
 				},
 			},
 			gateways: map[v1alpha1.IngressVisibility]sets.String{
@@ -364,140 +357,6 @@ func TestMakeMeshVirtualServiceSpecCorrectHosts(t *testing.T) {
 
 }
 
-func TestMakeMeshVirtualServiceSpec_CorrectRetries(t *testing.T) {
-	for _, tc := range []struct {
-		name     string
-		ci       *v1alpha1.Ingress
-		expected *istiov1alpha3.HTTPRetry
-	}{{
-		name: "default retries",
-		ci: &v1alpha1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-ingress",
-				Namespace: system.Namespace(),
-				Labels: map[string]string{
-					RouteLabelKey:          "test-route",
-					RouteNamespaceLabelKey: "test-ns",
-				},
-			},
-			Spec: v1alpha1.IngressSpec{
-				Rules: []v1alpha1.IngressRule{{
-					Hosts: []string{
-						"test-route.test-ns.svc.cluster.local",
-					},
-					Visibility: v1alpha1.IngressVisibilityExternalIP,
-					HTTP: &v1alpha1.HTTPIngressRuleValue{
-						Paths: []v1alpha1.HTTPIngressPath{{
-							Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-							Retries: &v1alpha1.HTTPRetry{
-								PerTryTimeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-								Attempts:      networking.DefaultRetryCount,
-							},
-						}},
-					},
-				}}},
-		},
-		expected: &istiov1alpha3.HTTPRetry{
-			RetryOn:       retriableConditions,
-			Attempts:      int32(networking.DefaultRetryCount),
-			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
-		},
-	}, {
-		name: "no per-try timeout",
-		ci: &v1alpha1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-ingress",
-				Namespace: system.Namespace(),
-				Labels: map[string]string{
-					RouteLabelKey:          "test-route",
-					RouteNamespaceLabelKey: "test-ns",
-				},
-			},
-			Spec: v1alpha1.IngressSpec{
-				Rules: []v1alpha1.IngressRule{{
-					Hosts: []string{
-						"test-route.test-ns.svc.cluster.local",
-					},
-					Visibility: v1alpha1.IngressVisibilityExternalIP,
-					HTTP: &v1alpha1.HTTPIngressRuleValue{
-						Paths: []v1alpha1.HTTPIngressPath{{
-							Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-							Retries: &v1alpha1.HTTPRetry{
-								Attempts: networking.DefaultRetryCount,
-							},
-						}},
-					},
-				}}},
-		},
-		expected: &istiov1alpha3.HTTPRetry{
-			RetryOn:  retriableConditions,
-			Attempts: int32(networking.DefaultRetryCount),
-		},
-	}, {
-		name: "retry attempt=0",
-		ci: &v1alpha1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-ingress",
-				Namespace: system.Namespace(),
-				Labels: map[string]string{
-					RouteLabelKey:          "test-route",
-					RouteNamespaceLabelKey: "test-ns",
-				},
-			},
-			Spec: v1alpha1.IngressSpec{
-				Rules: []v1alpha1.IngressRule{{
-					Hosts: []string{
-						"test-route.test-ns.svc.cluster.local",
-					},
-					Visibility: v1alpha1.IngressVisibilityExternalIP,
-					HTTP: &v1alpha1.HTTPIngressRuleValue{
-						Paths: []v1alpha1.HTTPIngressPath{{
-							Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-							Retries: &v1alpha1.HTTPRetry{
-								PerTryTimeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-								Attempts:      0,
-							},
-						}},
-					},
-				}}},
-		},
-		expected: &istiov1alpha3.HTTPRetry{},
-	}, {
-		name: "disabling retries",
-		ci: &v1alpha1.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-ingress",
-				Namespace: system.Namespace(),
-				Labels: map[string]string{
-					RouteLabelKey:          "test-route",
-					RouteNamespaceLabelKey: "test-ns",
-				},
-			},
-			Spec: v1alpha1.IngressSpec{
-				Rules: []v1alpha1.IngressRule{{
-					Hosts: []string{
-						"test-route.test-ns.svc.cluster.local",
-					},
-					Visibility: v1alpha1.IngressVisibilityExternalIP,
-					HTTP: &v1alpha1.HTTPIngressRuleValue{
-						Paths: []v1alpha1.HTTPIngressPath{{
-							Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-						}},
-					},
-				}}},
-		},
-		expected: &istiov1alpha3.HTTPRetry{},
-	}} {
-		t.Run(tc.name, func(t *testing.T) {
-			for _, h := range MakeMeshVirtualService(context.Background(), tc.ci, defaultGateways).Spec.Http {
-				if diff := cmp.Diff(tc.expected, h.Retries); diff != "" {
-					t.Errorf("Unexpected retries (-want +got): %v", diff)
-				}
-			}
-		})
-	}
-}
-
 func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 	ci := &v1alpha1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
@@ -527,10 +386,6 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 							"foo": "bar",
 						},
 						Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-						Retries: &v1alpha1.HTTPRetry{
-							PerTryTimeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-							Attempts:      networking.DefaultRetryCount,
-						},
 					}},
 				},
 			}, {
@@ -552,10 +407,6 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 							"foo": "baz",
 						},
 						Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-						Retries: &v1alpha1.HTTPRetry{
-							PerTryTimeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-							Attempts:      networking.DefaultRetryCount,
-						},
 					}},
 				},
 			}},
@@ -593,11 +444,6 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 			},
 		},
 		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
-		Retries: &istiov1alpha3.HTTPRetry{
-			RetryOn:       retriableConditions,
-			Attempts:      int32(networking.DefaultRetryCount),
-			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
-		},
 	}}
 
 	routes := MakeMeshVirtualService(context.Background(), ci, defaultGateways).Spec.Http
@@ -649,10 +495,6 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 							"foo": "bar",
 						},
 						Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-						Retries: &v1alpha1.HTTPRetry{
-							PerTryTimeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-							Attempts:      networking.DefaultRetryCount,
-						},
 					}},
 				},
 				Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -675,10 +517,6 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 							"foo": "baz",
 						},
 						Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-						Retries: &v1alpha1.HTTPRetry{
-							PerTryTimeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-							Attempts:      networking.DefaultRetryCount,
-						},
 					}},
 				},
 			}},
@@ -725,11 +563,6 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 			},
 		},
 		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
-		Retries: &istiov1alpha3.HTTPRetry{
-			RetryOn:       retriableConditions,
-			Attempts:      int32(networking.DefaultRetryCount),
-			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
-		},
 	}, {
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Uri: &istiov1alpha3.StringMatch{
@@ -755,11 +588,6 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 			},
 		},
 		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
-		Retries: &istiov1alpha3.HTTPRetry{
-			RetryOn:       retriableConditions,
-			Attempts:      int32(networking.DefaultRetryCount),
-			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
-		},
 	}}
 
 	routes := MakeIngressVirtualService(context.Background(), ci, makeGatewayMap([]string{"gateway.public"}, []string{"gateway.private"})).Spec.Http
@@ -772,10 +600,6 @@ func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 	ingressPath := &v1alpha1.HTTPIngressPath{
 		RewriteHost: "the.target.host",
 		Timeout:     &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-		Retries: &v1alpha1.HTTPRetry{
-			PerTryTimeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-			Attempts:      networking.DefaultRetryCount,
-		},
 	}
 	ctx := config.ToContext(context.Background(), &config.Config{
 		Istio: &config.Istio{
@@ -807,11 +631,6 @@ func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 			Weight: 100,
 		}},
 		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
-		Retries: &istiov1alpha3.HTTPRetry{
-			RetryOn:       retriableConditions,
-			Attempts:      int32(networking.DefaultRetryCount),
-			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
-		},
 	}
 	if diff := cmp.Diff(expected, route); diff != "" {
 		t.Errorf("Unexpected route  (-want +got): %v", diff)
@@ -836,10 +655,6 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 			Percent: 100,
 		}},
 		Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-		Retries: &v1alpha1.HTTPRetry{
-			PerTryTimeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-			Attempts:      networking.DefaultRetryCount,
-		},
 	}
 	route := makeVirtualServiceRoute(context.Background(), sets.NewString("a.com", "b.org"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1alpha3.HTTPRoute{
@@ -876,11 +691,6 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 			Weight: 100,
 		}},
 		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
-		Retries: &istiov1alpha3.HTTPRetry{
-			RetryOn:       retriableConditions,
-			Attempts:      int32(networking.DefaultRetryCount),
-			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
-		},
 	}
 	if diff := cmp.Diff(expected, route); diff != "" {
 		t.Errorf("Unexpected route  (-want +got): %v", diff)
@@ -906,10 +716,6 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 			Percent: 10,
 		}},
 		Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-		Retries: &v1alpha1.HTTPRetry{
-			PerTryTimeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
-			Attempts:      networking.DefaultRetryCount,
-		},
 	}
 	route := makeVirtualServiceRoute(context.Background(), sets.NewString("test.org"), ingressPath, makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1alpha3.HTTPRoute{
@@ -933,11 +739,6 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 			Weight: 10,
 		}},
 		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
-		Retries: &istiov1alpha3.HTTPRetry{
-			RetryOn:       retriableConditions,
-			Attempts:      int32(networking.DefaultRetryCount),
-			PerTryTimeout: types.DurationProto(defaultMaxRevisionTimeout),
-		},
 	}
 	if diff := cmp.Diff(expected, route); diff != "" {
 		t.Errorf("Unexpected route  (-want +got): %v", diff)

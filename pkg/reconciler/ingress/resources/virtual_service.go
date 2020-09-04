@@ -227,16 +227,6 @@ func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alp
 	if http.Timeout != nil {
 		route.Timeout = types.DurationProto(http.Timeout.Duration)
 	}
-	route.Retries = &istiov1alpha3.HTTPRetry{}
-	if http.Retries != nil && http.Retries.Attempts > 0 {
-		route.Retries = &istiov1alpha3.HTTPRetry{
-			RetryOn:  retriableConditions,
-			Attempts: int32(http.Retries.Attempts),
-		}
-		if http.Retries.PerTryTimeout != nil {
-			route.Retries.PerTryTimeout = types.DurationProto(http.Retries.PerTryTimeout.Duration)
-		}
-	}
 	return route
 }
 

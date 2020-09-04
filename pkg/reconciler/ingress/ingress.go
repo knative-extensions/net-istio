@@ -453,7 +453,7 @@ func qualifiedGatewayNamesFromContext(ctx context.Context) map[v1alpha1.IngressV
 // that the given Ingress is exposed to, or empty string if
 // none.
 func gatewayServiceURLFromContext(ctx context.Context, ing *v1alpha1.Ingress) string {
-	if ing.IsPublic() {
+	if isIngressPublic(ing) {
 		return publicGatewayServiceURLFromContext(ctx)
 	}
 
@@ -495,5 +495,14 @@ func getLBStatus(gatewayServiceURL string) []v1alpha1.LoadBalancerIngressStatus 
 func (r *Reconciler) shouldReconcileTLS(ctx context.Context, ing *v1alpha1.Ingress) bool {
 	// We should keep reconciling the Ingress whose TLS has been reconciled before
 	// to make sure deleting IngressTLS will clean up the TLS server in the Gateway.
-	return ing.IsPublic() && ((len(ing.Spec.TLS) > 0) || config.FromContext(ctx).Network.AutoTLS)
+	return isIngressPublic(ing) && ((len(ing.Spec.TLS) > 0) || config.FromContext(ctx).Network.AutoTLS)
+}
+
+func isIngressPublic(ing *v1alpha1.Ingress) bool {
+	for _, rule := range ing.Spec.Rules {
+		if rule.Visibility == v1alpha1.IngressVisibilityExternalIP {
+			return true
+		}
+	}
+	return false
 }

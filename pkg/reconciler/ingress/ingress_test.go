@@ -18,7 +18,6 @@ package ingress
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -47,7 +46,6 @@ import (
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
-	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -157,11 +155,7 @@ var (
 					},
 					Percent: 100,
 				}},
-				Timeout: &metav1.Duration{Duration: time.Duration(90) * time.Second},
-				Retries: &v1alpha1.HTTPRetry{
-					PerTryTimeout: &metav1.Duration{Duration: time.Duration(90) * time.Second},
-					Attempts:      networking.DefaultRetryCount,
-				}},
+				Timeout: &metav1.Duration{Duration: time.Duration(90) * time.Second}},
 			},
 		},
 		Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -229,7 +223,6 @@ var (
 )
 
 func TestReconcile(t *testing.T) {
-	retryAttempted := false
 	table := TableTest{{
 		Name: "bad workqueue key",
 		Key:  "too/many/parts",
@@ -242,108 +235,6 @@ func TestReconcile(t *testing.T) {
 			addAnnotations(ing("no-virtualservice-yet", 1234),
 				map[string]string{networking.IngressClassAnnotationKey: "fake-controller"}),
 		},
-	}, {
-		Name: "create VirtualService matching Ingress, with retry",
-		Objects: []runtime.Object{
-			ing("no-virtualservice-yet", 1234),
-			gateway("knative-ingress-gateway", system.Namespace(), []*istiov1alpha3.Server{irrelevantServer1}),
-			gateway("knative-test-gateway", system.Namespace(), []*istiov1alpha3.Server{irrelevantServer1}),
-		},
-		WithReactors: []clientgotesting.ReactionFunc{
-			func(action clientgotesting.Action) (handled bool, ret runtime.Object, err error) {
-				if retryAttempted || !action.Matches("update", "ingresses") || action.GetSubresource() != "status" {
-					return false, nil, nil
-				}
-				retryAttempted = true
-				return true, nil, apierrs.NewConflict(v1alpha1.Resource("foo"), "bar", errors.New("foo"))
-			},
-		},
-		WantCreates: []runtime.Object{
-			resources.MakeMeshVirtualService(context.Background(), insertProbe(ing("no-virtualservice-yet", 1234)), gateways),
-			resources.MakeIngressVirtualService(context.Background(), insertProbe(ing("no-virtualservice-yet", 1234)),
-				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
-		},
-		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: ingressWithStatus("no-virtualservice-yet", 1234,
-				v1alpha1.IngressStatus{
-					LoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{DomainInternal: pkgnet.GetServiceHostname("test-ingressgateway", "istio-system")},
-						},
-					},
-					PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{DomainInternal: pkgnet.GetServiceHostname("test-ingressgateway", "istio-system")},
-						},
-					},
-					PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{MeshOnly: true},
-						},
-					},
-					Status: duckv1.Status{
-						Conditions: duckv1.Conditions{{
-							Type:     v1alpha1.IngressConditionLoadBalancerReady,
-							Status:   corev1.ConditionTrue,
-							Severity: apis.ConditionSeverityError,
-						}, {
-							Type:     v1alpha1.IngressConditionNetworkConfigured,
-							Status:   corev1.ConditionTrue,
-							Severity: apis.ConditionSeverityError,
-						}, {
-							Type:     v1alpha1.IngressConditionReady,
-							Status:   corev1.ConditionTrue,
-							Severity: apis.ConditionSeverityError,
-						}},
-					},
-				},
-			),
-		}, {
-			Object: ingressWithFinalizersAndStatus("no-virtualservice-yet", 1234,
-				[]string{"ingresses.networking.internal.knative.dev"},
-				v1alpha1.IngressStatus{
-					LoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{DomainInternal: pkgnet.GetServiceHostname("test-ingressgateway", "istio-system")},
-						},
-					},
-					PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{DomainInternal: pkgnet.GetServiceHostname("test-ingressgateway", "istio-system")},
-						},
-					},
-					PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{MeshOnly: true},
-						},
-					},
-					Status: duckv1.Status{
-						Conditions: duckv1.Conditions{{
-							Type:     v1alpha1.IngressConditionLoadBalancerReady,
-							Status:   corev1.ConditionTrue,
-							Severity: apis.ConditionSeverityError,
-						}, {
-							Type:     v1alpha1.IngressConditionNetworkConfigured,
-							Status:   corev1.ConditionTrue,
-							Severity: apis.ConditionSeverityError,
-						}, {
-							Type:     v1alpha1.IngressConditionReady,
-							Status:   corev1.ConditionTrue,
-							Severity: apis.ConditionSeverityError,
-						}},
-					},
-				},
-			),
-		}},
-		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "no-virtualservice-yet"),
-			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "no-virtualservice-yet-mesh"),
-			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "no-virtualservice-yet-ingress"),
-		},
-		WantPatches: []clientgotesting.PatchActionImpl{
-			patchAddFinalizerAction("no-virtualservice-yet", "ingresses.networking.internal.knative.dev"),
-		},
-		Key: "test-ns/no-virtualservice-yet",
 	}, {
 		Name:    "observed generation is updated when error is encountered in reconciling, and ingress ready status is unknown",
 		WantErr: true,
@@ -512,7 +403,6 @@ func TestReconcile(t *testing.T) {
 	}, {}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
-		retryAttempted = false
 		r := &Reconciler{
 			kubeclient:           kubeclient.Get(ctx),
 			istioClientSet:       istioclient.Get(ctx),
@@ -1297,8 +1187,6 @@ func ingressWithStatus(name string, generation int64, status v1alpha1.IngressSta
 		Spec: v1alpha1.IngressSpec{
 			DeprecatedGeneration: generation,
 			Rules:                ingressRules,
-			// Deprecated, needed because of DeepCopy behavior
-			Visibility: v1alpha1.IngressVisibilityExternalIP,
 		},
 		Status: status,
 	}
@@ -1329,7 +1217,6 @@ func ingressWithTLS(name string, generation int64, tls []v1alpha1.IngressTLS) *v
 
 func ingressWithTLSClusterLocal(name string, generation int64, tls []v1alpha1.IngressTLS) *v1alpha1.Ingress {
 	ci := ingressWithTLSAndStatus(name, generation, tls, v1alpha1.IngressStatus{}).DeepCopy()
-	ci.Spec.Visibility = v1alpha1.IngressVisibilityClusterLocal
 	rules := ci.Spec.Rules
 	for i, rule := range rules {
 		rCopy := rule.DeepCopy()
