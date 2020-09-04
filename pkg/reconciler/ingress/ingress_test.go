@@ -466,6 +466,7 @@ func TestReconcile(t *testing.T) {
 			ActionImpl: clientgotesting.ActionImpl{
 				Namespace: testNS,
 				Verb:      "delete",
+				Resource:  v1alpha3.SchemeGroupVersion.WithResource("virtualservices"),
 			},
 			Name: "reconcile-virtualservice-extra",
 		}},
@@ -814,7 +815,7 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 		},
 		Key: "test-ns/reconciling-ingress",
 	}, {
-		Name:                    "delete Ingress with leftover secrets",
+		Name:                    "delete ingress with leftover secrets",
 		SkipNamespaceValidation: true,
 		Objects: []runtime.Object{
 			ingressWithFinalizers("reconciling-ingress", 1234, ingressTLS, []string{ingressFinalizer}, &deletionTime),
@@ -836,6 +837,7 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			ActionImpl: clientgotesting.ActionImpl{
 				Namespace: "istio-system",
 				Verb:      "delete",
+				Resource:  corev1.SchemeGroupVersion.WithResource("secrets"),
 			},
 			Name: "targetSecret",
 		}},
