@@ -1,4 +1,6 @@
 global:
+  mtls:
+    auto: false
   proxy:
     # Enable proxy to write access log to /dev/stdout.
     accessLogFile: "/dev/stdout"

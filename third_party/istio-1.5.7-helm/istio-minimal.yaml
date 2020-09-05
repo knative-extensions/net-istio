@@ -8,56 +8,6 @@ metadata:
     istio-injection: disabled
 # PATCH #1 ends.
 ---
-# Source: istio/charts/gateways/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: cluster-local-gateway-service-account
-  namespace: istio-system
-  labels:
-    app: cluster-local-gateway
-    chart: gateways
-    heritage: Helm
-    release: RELEASE-NAME
----
-# Source: istio/charts/gateways/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: istio-ingressgateway-service-account
-  namespace: istio-system
-  labels:
-    app: istio-ingressgateway
-    chart: gateways
-    heritage: Helm
-    release: RELEASE-NAME
----
-# Source: istio/charts/pilot/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: istio-pilot-service-account
-  namespace: istio-system
-  labels:
-    app: pilot
-    chart: pilot
-    heritage: Helm
-    release: RELEASE-NAME
----
-# Source: istio/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: istio-multi
-  namespace: istio-system
----
-# Source: istio/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: istio-reader-service-account
-  namespace: istio-system
----
 # Source: istio/templates/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -137,7 +87,7 @@ data:
     # If true, automatically configure client side mTLS settings to match the corresponding service's
     # server side mTLS authentication policy, when destination rule for that service does not specify
     # TLS settings.
-    enableAutoMtls: true
+    enableAutoMtls: false
 
     # Set the default behavior of the sidecar for handling outbound traffic from the application:
     # ALLOW_ANY - outbound traffic to unknown destinations will be allowed, in case there are no
@@ -212,6 +162,56 @@ data:
   # Configuration file for the mesh networks to be used by the Split Horizon EDS.
   meshNetworks: |-
     networks: {}
+---
+# Source: istio/charts/gateways/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: istio-ingressgateway-service-account
+  namespace: istio-system
+  labels:
+    app: istio-ingressgateway
+    chart: gateways
+    heritage: Helm
+    release: RELEASE-NAME
+---
+# Source: istio/charts/gateways/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cluster-local-gateway-service-account
+  namespace: istio-system
+  labels:
+    app: cluster-local-gateway
+    chart: gateways
+    heritage: Helm
+    release: RELEASE-NAME
+---
+# Source: istio/charts/pilot/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: istio-pilot-service-account
+  namespace: istio-system
+  labels:
+    app: pilot
+    chart: pilot
+    heritage: Helm
+    release: RELEASE-NAME
+---
+# Source: istio/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: istio-reader-service-account
+  namespace: istio-system
+---
+# Source: istio/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: istio-multi
+  namespace: istio-system
 ---
 # Source: istio/charts/pilot/templates/clusterrole.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -347,36 +347,6 @@ subjects:
 apiVersion: v1
 kind: Service
 metadata:
-  name: cluster-local-gateway
-  namespace: istio-system
-  annotations:
-  labels:
-    chart: gateways
-    heritage: Helm
-    release: RELEASE-NAME
-    app: cluster-local-gateway
-    istio: cluster-local-gateway
-spec:
-  type: ClusterIP
-  selector:
-    release: RELEASE-NAME
-    app: cluster-local-gateway
-    istio: cluster-local-gateway
-  ports:
-    -
-      name: status-port
-      port: 15020
-    -
-      name: http2
-      port: 80
-    -
-      name: https
-      port: 443
----
-# Source: istio/charts/gateways/templates/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
   name: istio-ingressgateway
   namespace: istio-system
   annotations:
@@ -392,6 +362,36 @@ spec:
     release: RELEASE-NAME
     app: istio-ingressgateway
     istio: ingressgateway
+  ports:
+    -
+      name: status-port
+      port: 15020
+    -
+      name: http2
+      port: 80
+    -
+      name: https
+      port: 443
+---
+# Source: istio/charts/gateways/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cluster-local-gateway
+  namespace: istio-system
+  annotations:
+  labels:
+    chart: gateways
+    heritage: Helm
+    release: RELEASE-NAME
+    app: cluster-local-gateway
+    istio: cluster-local-gateway
+spec:
+  type: ClusterIP
+  selector:
+    release: RELEASE-NAME
+    app: cluster-local-gateway
+    istio: cluster-local-gateway
   ports:
     -
       name: status-port
@@ -541,8 +541,6 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: spec.serviceAccountName
-          - name: ISTIO_AUTO_MTLS_ENABLED
-            value: "true"
           - name: ISTIO_META_POD_NAME
             valueFrom:
               fieldRef:
@@ -760,8 +758,6 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: spec.serviceAccountName
-          - name: ISTIO_AUTO_MTLS_ENABLED
-            value: "true"
           - name: ISTIO_META_POD_NAME
             valueFrom:
               fieldRef:
