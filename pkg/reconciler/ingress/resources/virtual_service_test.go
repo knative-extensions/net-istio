@@ -40,25 +40,21 @@ var (
 	defaultMaxRevisionTimeout = 90 * time.Second
 	defaultGateways           = makeGatewayMap([]string{"gateway"}, []string{"private-gateway"})
 	defaultIngressRuleValue   = &v1alpha1.HTTPIngressRuleValue{
-		Paths: []v1alpha1.HTTPIngressPath{
-			{
-				Timeout: &metav1.Duration{time.Minute},
-				Splits: []v1alpha1.IngressBackendSplit{
-					{
-						Percent: 100,
-						IngressBackend: v1alpha1.IngressBackend{
-							ServiceNamespace: "test",
-							ServiceName:      "test.svc.cluster.local",
-							ServicePort:      intstr.FromInt(8080),
-						},
-					},
+		Paths: []v1alpha1.HTTPIngressPath{{
+			Timeout: &metav1.Duration{Duration: time.Minute},
+			Splits: []v1alpha1.IngressBackendSplit{{
+				Percent: 100,
+				IngressBackend: v1alpha1.IngressBackend{
+					ServiceNamespace: "test",
+					ServiceName:      "test.svc.cluster.local",
+					ServicePort:      intstr.FromInt(8080),
 				},
-				Retries: &v1alpha1.HTTPRetry{
-					Attempts:      3,
-					PerTryTimeout: &metav1.Duration{time.Minute},
-				},
+			}},
+			Retries: &v1alpha1.HTTPRetry{
+				Attempts:      3,
+				PerTryTimeout: &metav1.Duration{Duration: time.Minute},
 			},
-		},
+		}},
 	}
 	defaultIngress = v1alpha1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
