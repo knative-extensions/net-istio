@@ -33,5 +33,10 @@ func TestIngressConformance(t *testing.T) {
 			t.Parallel()
 			ingress.RunConformance(t)
 		})
+
+		// With `-short` only run a single iteration.
+		if testing.Short() {
+			break
+		}
 	}
 }
