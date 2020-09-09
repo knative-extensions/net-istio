@@ -357,11 +357,6 @@ func TestReconcile(t *testing.T) {
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ingressWithStatus("reconcile-virtualservice", 1234,
 				v1alpha1.IngressStatus{
-					LoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{DomainInternal: pkgnet.GetServiceHostname("test-ingressgateway", "istio-system")},
-						},
-					},
 					PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
 						Ingress: []v1alpha1.LoadBalancerIngressStatus{
 							{DomainInternal: pkgnet.GetServiceHostname("test-ingressgateway", "istio-system")},
@@ -453,11 +448,6 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Object: ingressWithTLSAndStatus("reconciling-ingress", 1234,
 				ingressTLS,
 				v1alpha1.IngressStatus{
-					LoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{DomainInternal: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system")},
-						},
-					},
 					PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
 						Ingress: []v1alpha1.LoadBalancerIngressStatus{
 							{DomainInternal: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system")},
@@ -529,11 +519,6 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Object: ingressWithTLSAndStatus("reconciling-ingress", 1234,
 				ingressTLS,
 				v1alpha1.IngressStatus{
-					LoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{DomainInternal: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system")},
-						},
-					},
 					PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
 						Ingress: []v1alpha1.LoadBalancerIngressStatus{
 							{DomainInternal: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system")},
@@ -596,11 +581,6 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Object: ingressWithTLSAndStatus("reconciling-ingress", 1234,
 				ingressTLS,
 				v1alpha1.IngressStatus{
-					LoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{DomainInternal: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system")},
-						},
-					},
 					PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
 						Ingress: []v1alpha1.LoadBalancerIngressStatus{
 							{DomainInternal: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system")},
@@ -769,11 +749,6 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Object: ingressWithTLSAndStatus("reconciling-ingress", 1234,
 				ingressTLSWithSecretNamespace("knative-serving"),
 				v1alpha1.IngressStatus{
-					LoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{DomainInternal: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system")},
-						},
-					},
 					PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
 						Ingress: []v1alpha1.LoadBalancerIngressStatus{
 							{DomainInternal: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system")},
@@ -876,11 +851,6 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Object: ingressWithTLSAndStatus("reconciling-ingress", 1234,
 				ingressTLSWithSecretNamespace("knative-serving"),
 				v1alpha1.IngressStatus{
-					LoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{DomainInternal: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system")},
-						},
-					},
 					PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
 						Ingress: []v1alpha1.LoadBalancerIngressStatus{
 							{DomainInternal: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system")},
@@ -934,9 +904,6 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Object: ingressWithTLSAndStatusClusterLocal("reconciling-ingress", 1234,
 				ingressTLS,
 				v1alpha1.IngressStatus{
-					LoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}},
-					},
 					PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
 						Ingress: []v1alpha1.LoadBalancerIngressStatus{
 							{DomainInternal: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system")},
@@ -1298,7 +1265,7 @@ func TestGlobalResyncOnUpdateGatewayConfigMap(t *testing.T) {
 		ci := obj.(*v1alpha1.Ingress)
 		t.Logf("Ingress updated: %q", ci.Name)
 
-		gateways := ci.Status.LoadBalancer.Ingress
+		gateways := ci.Status.PublicLoadBalancer.Ingress
 		if len(gateways) != 1 {
 			t.Logf("Unexpected gateways: %v", gateways)
 			return HookIncomplete
@@ -1330,7 +1297,7 @@ func TestGlobalResyncOnUpdateGatewayConfigMap(t *testing.T) {
 
 	ingress := ingressWithStatus("config-update", 1234,
 		v1alpha1.IngressStatus{
-			LoadBalancer: &v1alpha1.LoadBalancerStatus{
+			PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
 				Ingress: []v1alpha1.LoadBalancerIngressStatus{
 					{DomainInternal: ""},
 				},
@@ -1432,7 +1399,7 @@ func TestGlobalResyncOnUpdateNetwork(t *testing.T) {
 	ingress := ingressWithTLSAndStatus("reconciling-ingress", 1234,
 		ingressTLS,
 		v1alpha1.IngressStatus{
-			LoadBalancer: &v1alpha1.LoadBalancerStatus{
+			PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{
 				Ingress: []v1alpha1.LoadBalancerIngressStatus{
 					{DomainInternal: originDomainInternal},
 				},

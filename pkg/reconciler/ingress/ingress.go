@@ -205,10 +205,9 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		return fmt.Errorf("failed to probe Ingress %s/%s: %w", ing.GetNamespace(), ing.GetName(), err)
 	}
 	if ready {
-		lbs := getLBStatus(gatewayServiceURLFromContext(ctx, ing))
 		publicLbs := getLBStatus(publicGatewayServiceURLFromContext(ctx))
 		privateLbs := getLBStatus(privateGatewayServiceURLFromContext(ctx))
-		ing.Status.MarkLoadBalancerReady(lbs, publicLbs, privateLbs)
+		ing.Status.MarkLoadBalancerReady(publicLbs, privateLbs)
 	} else {
 		ing.Status.MarkLoadBalancerNotReady()
 	}

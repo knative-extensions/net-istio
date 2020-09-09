@@ -58,11 +58,11 @@ import (
 
 // GetConfig returns a rest.Config to be used for kubernetes client creation.
 // It does so in the following order:
-//   1. Use the passed kubeconfig/masterURL.
+//   1. Use the passed kubeconfig/serverURL.
 //   2. Fallback to the KUBECONFIG environment variable.
 //   3. Fallback to in-cluster config.
 //   4. Fallback to the ~/.kube/config.
-func GetConfig(masterURL, kubeconfig string) (*rest.Config, error) {
+func GetConfig(serverURL, kubeconfig string) (*rest.Config, error) {
 	if kubeconfig == "" {
 		kubeconfig = os.Getenv("KUBECONFIG")
 	}
@@ -75,7 +75,7 @@ func GetConfig(masterURL, kubeconfig string) (*rest.Config, error) {
 
 	// If we have an explicit indication of where the kubernetes config lives, read that.
 	if kubeconfig != "" {
-		c, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
+		c, err := clientcmd.BuildConfigFromFlags(serverURL, kubeconfig)
 		if err != nil {
 			return nil, err
 		}
@@ -305,7 +305,7 @@ func flush(logger *zap.SugaredLogger) {
 // dies by calling log.Fatalf.
 func ParseAndGetConfigOrDie() *rest.Config {
 	var (
-		masterURL = flag.String("master", "",
+		serverURL = flag.String("server", "",
 			"The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 		kubeconfig = flag.String("kubeconfig", "",
 			"Path to a kubeconfig. Only required if out-of-cluster.")
@@ -313,7 +313,7 @@ func ParseAndGetConfigOrDie() *rest.Config {
 	klog.InitFlags(flag.CommandLine)
 	flag.Parse()
 
-	cfg, err := GetConfig(*masterURL, *kubeconfig)
+	cfg, err := GetConfig(*serverURL, *kubeconfig)
 	if err != nil {
 		log.Fatalf("Error building kubeconfig: %v", err)
 	}
@@ -343,7 +343,7 @@ func SetupLoggerOrDie(ctx context.Context, component string) (*zap.SugaredLogger
 }
 
 // CheckK8sClientMinimumVersionOrDie checks that the hosting Kubernetes cluster
-// is at least the minimum allowable version or dies by calling log.Fatalf.
+// is at least the minimum allowable version or dies by calling log.Fatalw.
 func CheckK8sClientMinimumVersionOrDie(ctx context.Context, logger *zap.SugaredLogger) {
 	kc := kubeclient.Get(ctx)
 	if err := version.CheckMinimumVersion(kc.Discovery()); err != nil {
@@ -352,7 +352,7 @@ func CheckK8sClientMinimumVersionOrDie(ctx context.Context, logger *zap.SugaredL
 }
 
 // SetupConfigMapWatchOrDie establishes a watch of the configmaps in the system
-// namespace that are labeled to be watched or dies by calling log.Fatalf.
+// namespace that are labeled to be watched or dies by calling log.Fatalw.
 func SetupConfigMapWatchOrDie(ctx context.Context, logger *zap.SugaredLogger) *configmap.InformedWatcher {
 	kc := kubeclient.Get(ctx)
 	// Create ConfigMaps watcher with optional label-based filter.
@@ -370,7 +370,7 @@ func SetupConfigMapWatchOrDie(ctx context.Context, logger *zap.SugaredLogger) *c
 }
 
 // WatchLoggingConfigOrDie establishes a watch of the logging config or dies by
-// calling log.Fatalf. Note, if the config does not exist, it will be defaulted
+// calling log.Fatalw. Note, if the config does not exist, it will be defaulted
 // and this method will not die.
 func WatchLoggingConfigOrDie(ctx context.Context, cmw *configmap.InformedWatcher, logger *zap.SugaredLogger, atomicLevel zap.AtomicLevel, component string) {
 	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(logging.ConfigMapName(),
@@ -381,8 +381,8 @@ func WatchLoggingConfigOrDie(ctx context.Context, cmw *configmap.InformedWatcher
 	}
 }
 
-// WatchObservabilityConfigOrDie establishes a watch of the logging config or
-// dies by calling log.Fatalf. Note, if the config does not exist, it will be
+// WatchObservabilityConfigOrDie establishes a watch of the observability config
+// or dies by calling log.Fatalw. Note, if the config does not exist, it will be
 // defaulted and this method will not die.
 func WatchObservabilityConfigOrDie(ctx context.Context, cmw *configmap.InformedWatcher, profilingHandler *profiling.Handler, logger *zap.SugaredLogger, component string) {
 	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(metrics.ConfigMapName(),
