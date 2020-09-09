@@ -106,8 +106,9 @@ func CreateRuntimeService(t *testing.T, clients *test.Clients, portName string) 
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{
-				Name:  "foo",
-				Image: pkgTest.ImagePath("runtime"),
+				Name:            "foo",
+				Image:           pkgTest.ImagePath("runtime"),
+				ImagePullPolicy: corev1.PullIfNotPresent,
 				Ports: []corev1.ContainerPort{{
 					Name:          portName,
 					ContainerPort: int32(containerPort),
@@ -178,8 +179,9 @@ func CreateProxyService(t *testing.T, clients *test.Clients, target string, gate
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{
-				Name:  "foo",
-				Image: pkgTest.ImagePath("httpproxy"),
+				Name:            "foo",
+				Image:           pkgTest.ImagePath("httpproxy"),
+				ImagePullPolicy: corev1.PullIfNotPresent,
 				Ports: []corev1.ContainerPort{{
 					ContainerPort: int32(containerPort),
 				}},
@@ -249,8 +251,9 @@ func CreateTimeoutService(t *testing.T, clients *test.Clients) (string, int, con
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{
-				Name:  "foo",
-				Image: pkgTest.ImagePath("timeout"),
+				Name:            "foo",
+				Image:           pkgTest.ImagePath("timeout"),
+				ImagePullPolicy: corev1.PullIfNotPresent,
 				Ports: []corev1.ContainerPort{{
 					Name:          networking.ServicePortNameHTTP1,
 					ContainerPort: int32(containerPort),
@@ -319,8 +322,9 @@ func CreateFlakyService(t *testing.T, clients *test.Clients, period int) (string
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{
-				Name:  "foo",
-				Image: pkgTest.ImagePath("flaky"),
+				Name:            "foo",
+				Image:           pkgTest.ImagePath("flaky"),
+				ImagePullPolicy: corev1.PullIfNotPresent,
 				Ports: []corev1.ContainerPort{{
 					Name:          networking.ServicePortNameHTTP1,
 					ContainerPort: int32(containerPort),
@@ -393,8 +397,9 @@ func CreateWebsocketService(t *testing.T, clients *test.Clients, suffix string) 
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{
-				Name:  "foo",
-				Image: pkgTest.ImagePath("wsserver"),
+				Name:            "foo",
+				Image:           pkgTest.ImagePath("wsserver"),
+				ImagePullPolicy: corev1.PullIfNotPresent,
 				Ports: []corev1.ContainerPort{{
 					Name:          networking.ServicePortNameHTTP1,
 					ContainerPort: int32(containerPort),
@@ -467,8 +472,9 @@ func CreateGRPCService(t *testing.T, clients *test.Clients, suffix string) (stri
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{
-				Name:  "foo",
-				Image: pkgTest.ImagePath("grpc-ping"),
+				Name:            "foo",
+				Image:           pkgTest.ImagePath("grpc-ping"),
+				ImagePullPolicy: corev1.PullIfNotPresent,
 				Ports: []corev1.ContainerPort{{
 					Name:          networking.ServicePortNameH2C,
 					ContainerPort: int32(containerPort),
@@ -591,6 +597,7 @@ func createPodAndService(t *testing.T, clients *test.Clients, pod *corev1.Pod, s
 		} else if err != nil {
 			return true, err
 		}
+
 		for _, subset := range ep.Subsets {
 			if len(subset.Addresses) == 0 {
 				return false, nil
@@ -854,28 +861,43 @@ func CreateDialContext(t *testing.T, ing *v1alpha1.Ingress, clients *test.Client
 	if err != nil {
 		t.Fatalf("Unable to retrieve Kubernetes service %s/%s: %v", namespace, name, err)
 	}
-	if len(svc.Status.LoadBalancer.Ingress) < 1 {
-		t.Fatal("Service does not have any ingresses (not type LoadBalancer?).")
-	}
-	ingress := svc.Status.LoadBalancer.Ingress[0]
+
 	dial := network.NewBackoffDialer(dialBackoff)
-	return func(ctx context.Context, _ string, address string) (net.Conn, error) {
-		_, port, err := net.SplitHostPort(address)
-		if err != nil {
-			return nil, err
+	if pkgTest.Flags.IngressEndpoint != "" {
+		t.Logf("ingressendpoint: %q", pkgTest.Flags.IngressEndpoint)
+
+		// If we're using a manual --ingressendpoint then don't require
+		// "type: LoadBalancer", which may not play nice with KinD
+		return func(ctx context.Context, _ string, address string) (net.Conn, error) {
+			_, port, err := net.SplitHostPort(address)
+			if err != nil {
+				return nil, err
+			}
+			for _, sp := range svc.Spec.Ports {
+				if fmt.Sprint(sp.Port) == port {
+					return dial(ctx, "tcp", fmt.Sprintf("%s:%d", pkgTest.Flags.IngressEndpoint, sp.NodePort))
+				}
+			}
+			return nil, fmt.Errorf("service doesn't contain a matching port: %s", port)
 		}
-		// Allow "ingressendpoint" flag to override the discovered ingress IP/hostname,
-		// this is required in minikube-like environments.
-		if pkgTest.Flags.IngressEndpoint != "" {
-			return dial(ctx, "tcp", pkgTest.Flags.IngressEndpoint)
+	} else if len(svc.Status.LoadBalancer.Ingress) >= 1 {
+		ingress := svc.Status.LoadBalancer.Ingress[0]
+		return func(ctx context.Context, _ string, address string) (net.Conn, error) {
+			_, port, err := net.SplitHostPort(address)
+			if err != nil {
+				return nil, err
+			}
+			if ingress.IP != "" {
+				return dial(ctx, "tcp", ingress.IP+":"+port)
+			}
+			if ingress.Hostname != "" {
+				return dial(ctx, "tcp", ingress.Hostname+":"+port)
+			}
+			return nil, errors.New("service ingress does not contain dialing information")
 		}
-		if ingress.IP != "" {
-			return dial(ctx, "tcp", ingress.IP+":"+port)
-		}
-		if ingress.Hostname != "" {
-			return dial(ctx, "tcp", ingress.Hostname+":"+port)
-		}
-		return nil, errors.New("service ingress does not contain dialing information")
+	} else {
+		t.Fatal("Service does not have a supported shape (not type LoadBalancer? missing --ingressendpoint?).")
+		return nil // Unreachable
 	}
 }
 

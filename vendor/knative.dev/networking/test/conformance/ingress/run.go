@@ -41,7 +41,6 @@ func RunConformance(t *testing.T) {
 	t.Run("dispatch/percentage", TestPercentage)
 	t.Run("dispatch/path_and_percentage", TestPathAndPercentageSplit)
 
-	t.Run("retry", TestRetry)
 	t.Run("timeout", TestTimeout)
 
 	t.Run("tls", TestIngressTLS)
@@ -62,9 +61,10 @@ func RunConformance(t *testing.T) {
 	// ie. state - alpha, beta, ga
 	// ie. requirement - must, should, may
 
-	//if test.ServingFlags.EnableBetaFeatures {
-	// Add your conformance test for beta features
-	//}
+	if test.ServingFlags.EnableBetaFeatures {
+		// Add your conformance test for beta features
+		t.Run("headers/probe", TestProbeHeaders)
+	}
 
 	if test.ServingFlags.EnableAlphaFeatures {
 		// Add your conformance test for alpha features
