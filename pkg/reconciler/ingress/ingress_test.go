@@ -187,15 +187,6 @@ var (
 		},
 	}
 
-	ingressHTTPServer = &istiov1alpha3.Server{
-		Hosts: []string{"host-tls.example.com", "host-tls.test-ns.svc.cluster.local"},
-		Port: &istiov1alpha3.Port{
-			Name:     "http-server",
-			Number:   80,
-			Protocol: "HTTP",
-		},
-	}
-
 	ingressHTTPRedirectServer = &istiov1alpha3.Server{
 		Hosts: []string{"*"},
 		Port: &istiov1alpha3.Port{
