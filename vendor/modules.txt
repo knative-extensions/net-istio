@@ -885,7 +885,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/networking v0.0.0-20200910005051-91f8ce8c55f7
+# knative.dev/networking v0.0.0-20200910092251-e0e6565f9803
 ## explicit
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
@@ -924,7 +924,7 @@ knative.dev/networking/test/test_images/runtime/handlers
 knative.dev/networking/test/test_images/timeout
 knative.dev/networking/test/test_images/wsserver
 knative.dev/networking/test/types
-# knative.dev/pkg v0.0.0-20200909233751-b4c9a6da3030
+# knative.dev/pkg v0.0.0-20200910010051-a79a813ce123
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
