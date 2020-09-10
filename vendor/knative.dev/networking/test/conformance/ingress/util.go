@@ -591,7 +591,11 @@ func createPodAndService(t *testing.T, clients *test.Clients, pod *corev1.Pod, s
 
 	// Wait for the Pod to show up in the Endpoints resource.
 	waitErr := wait.PollImmediate(test.PollInterval, test.PollTimeout, func() (bool, error) {
-		ep, err := clients.KubeClient.Kube.CoreV1().Endpoints(svc.Namespace).Get(svc.Name, metav1.GetOptions{})
+		var ep *corev1.Endpoints
+		err := reconciler.RetryTestErrors(func(attempts int) (err error) {
+			ep, err = clients.KubeClient.Kube.CoreV1().Endpoints(svc.Namespace).Get(svc.Name, metav1.GetOptions{})
+			return err
+		})
 		if apierrs.IsNotFound(err) {
 			return false, nil
 		} else if err != nil {
@@ -668,7 +672,10 @@ func CreateIngressReadyDialContext(t *testing.T, clients *test.Clients, spec v1a
 		cancel()
 		t.Fatal("Error waiting for ingress state:", err)
 	}
-	ing, err := clients.NetworkingClient.Ingresses.Get(ing.Name, metav1.GetOptions{})
+	err := reconciler.RetryTestErrors(func(attempts int) (err error) {
+		ing, err = clients.NetworkingClient.Ingresses.Get(ing.Name, metav1.GetOptions{})
+		return err
+	})
 	if err != nil {
 		cancel()
 		t.Fatal("Error getting Ingress:", err)
@@ -709,7 +716,11 @@ func UpdateIngress(t *testing.T, clients *test.Clients, name string, spec v1alph
 	t.Helper()
 
 	if err := reconciler.RetryTestErrors(func(attempts int) error {
-		ing, err := clients.NetworkingClient.Ingresses.Get(name, metav1.GetOptions{})
+		var ing *v1alpha1.Ingress
+		err := reconciler.RetryTestErrors(func(attempts int) (err error) {
+			ing, err = clients.NetworkingClient.Ingresses.Get(name, metav1.GetOptions{})
+			return err
+		})
 		if err != nil {
 			return err
 		}
@@ -858,7 +869,11 @@ func CreateDialContext(t *testing.T, ing *v1alpha1.Ingress, clients *test.Client
 	}
 	name, namespace := parts[0], parts[1]
 
-	svc, err := clients.KubeClient.Kube.CoreV1().Services(namespace).Get(name, metav1.GetOptions{})
+	var svc *corev1.Service
+	err := reconciler.RetryTestErrors(func(attempts int) (err error) {
+		svc, err = clients.KubeClient.Kube.CoreV1().Services(namespace).Get(name, metav1.GetOptions{})
+		return err
+	})
 	if err != nil {
 		t.Fatalf("Unable to retrieve Kubernetes service %s/%s: %v", namespace, name, err)
 	}
@@ -1003,8 +1018,10 @@ func WaitForIngressState(client *test.NetworkingClients, name string, inState fu
 
 	var lastState *v1alpha1.Ingress
 	waitErr := wait.PollImmediate(test.PollInterval, test.PollTimeout, func() (bool, error) {
-		var err error
-		lastState, err = client.Ingresses.Get(name, metav1.GetOptions{})
+		err := reconciler.RetryTestErrors(func(attempts int) (err error) {
+			lastState, err = client.Ingresses.Get(name, metav1.GetOptions{})
+			return err
+		})
 		if err != nil {
 			return true, err
 		}
