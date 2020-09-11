@@ -20,6 +20,7 @@ package e2e
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
@@ -58,19 +59,19 @@ func TestIstioProbing(t *testing.T) {
 	namespace := system.Namespace()
 
 	// Save the current Gateway to restore it after the test
-	oldGateway, err := clients.IstioClient.NetworkingV1alpha3().Gateways(namespace).Get(config.KnativeIngressGateway, metav1.GetOptions{})
+	oldGateway, err := clients.IstioClient.NetworkingV1alpha3().Gateways(namespace).Get(context.Background(), config.KnativeIngressGateway, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Failed to get Gateway %s/%s", namespace, config.KnativeIngressGateway)
 	}
 
 	// After the test ends, restore the old gateway
 	test.EnsureCleanup(t, func() {
-		curGateway, err := clients.IstioClient.NetworkingV1alpha3().Gateways(namespace).Get(config.KnativeIngressGateway, metav1.GetOptions{})
+		curGateway, err := clients.IstioClient.NetworkingV1alpha3().Gateways(namespace).Get(context.Background(), config.KnativeIngressGateway, metav1.GetOptions{})
 		if err != nil {
 			t.Fatalf("Failed to get Gateway %s/%s", namespace, config.KnativeIngressGateway)
 		}
 		curGateway.Spec.Servers = oldGateway.Spec.Servers
-		if _, err := clients.IstioClient.NetworkingV1alpha3().Gateways(namespace).Update(curGateway); err != nil {
+		if _, err := clients.IstioClient.NetworkingV1alpha3().Gateways(namespace).Update(context.Background(), curGateway, metav1.UpdateOptions{}); err != nil {
 			t.Fatalf("Failed to restore Gateway %s/%s: %v", namespace, config.KnativeIngressGateway, err)
 		}
 	})
@@ -229,7 +230,7 @@ func TestIstioProbing(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 
-			name, port, _ := ingress.CreateRuntimeService(t, clients.NetworkingClient, networking.ServicePortNameHTTP1)
+			name, port, _ := ingress.CreateRuntimeService(context.Background(), t, clients.NetworkingClient, networking.ServicePortNameHTTP1)
 			hosts := []string{name + ".example.com"}
 
 			var transportOptions []interface{}
@@ -239,7 +240,7 @@ func TestIstioProbing(t *testing.T) {
 
 			setupGateway(t, clients, namespace, c.servers)
 
-			_, _, _ = ingress.CreateIngressReady(t, clients.NetworkingClient, v1alpha1.IngressSpec{
+			_, _, _ = ingress.CreateIngressReady(context.Background(), t, clients.NetworkingClient, v1alpha1.IngressSpec{
 				Rules: []v1alpha1.IngressRule{{
 					Hosts:      hosts,
 					Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -267,6 +268,7 @@ func TestIstioProbing(t *testing.T) {
 						return fmt.Errorf("failed to parse URL: %w", err)
 					}
 					if _, err := pkgTest.WaitForEndpointStateWithTimeout(
+						context.Background(),
 						clients.KubeClient,
 						t.Logf,
 						u,
@@ -300,7 +302,7 @@ func hasHTTPS(servers []*istiov1alpha3.Server) bool {
 // setupGateway updates the ingress Gateway to the provided Servers and waits until all Envoy pods have been updated.
 func setupGateway(t *testing.T, clients *Clients, namespace string, servers []*istiov1alpha3.Server) {
 	// Get the current Gateway
-	curGateway, err := clients.IstioClient.NetworkingV1alpha3().Gateways(namespace).Get(config.KnativeIngressGateway, metav1.GetOptions{})
+	curGateway, err := clients.IstioClient.NetworkingV1alpha3().Gateways(namespace).Get(context.Background(), config.KnativeIngressGateway, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Failed to get Gateway %s/%s: %v", namespace, config.KnativeIngressGateway, err)
 	}
@@ -310,14 +312,14 @@ func setupGateway(t *testing.T, clients *Clients, namespace string, servers []*i
 	newGateway.Spec.Servers = servers
 
 	// Update the Gateway
-	gw, err := clients.IstioClient.NetworkingV1alpha3().Gateways(namespace).Update(newGateway)
+	gw, err := clients.IstioClient.NetworkingV1alpha3().Gateways(namespace).Update(context.Background(), newGateway, metav1.UpdateOptions{})
 	if err != nil {
 		t.Fatalf("Failed to update Gateway %s/%s: %v", namespace, config.KnativeIngressGateway, err)
 	}
 
 	selector := labels.SelectorFromSet(gw.Spec.Selector).String()
 	// Restart the Gateway pods: this is needed because Istio without SDS won't refresh the cert when the secret is updated
-	pods, err := clients.KubeClient.Kube.CoreV1().Pods("istio-system").List(metav1.ListOptions{LabelSelector: selector})
+	pods, err := clients.KubeClient.Kube.CoreV1().Pods("istio-system").List(context.Background(), metav1.ListOptions{LabelSelector: selector})
 	if err != nil {
 		t.Fatal("Failed to list Gateway pods:", err)
 	}
@@ -326,7 +328,7 @@ func setupGateway(t *testing.T, clients *Clients, namespace string, servers []*i
 
 	var wg sync.WaitGroup
 	wg.Add(len(pods.Items))
-	wtch, err := clients.KubeClient.Kube.CoreV1().Pods("istio-system").Watch(metav1.ListOptions{LabelSelector: selector})
+	wtch, err := clients.KubeClient.Kube.CoreV1().Pods("istio-system").Watch(context.Background(), metav1.ListOptions{LabelSelector: selector})
 	if err != nil {
 		t.Fatal("Failed to watch Gateway pods:", err)
 	}
@@ -346,7 +348,7 @@ func setupGateway(t *testing.T, clients *Clients, namespace string, servers []*i
 		}
 	}()
 
-	err = clients.KubeClient.Kube.CoreV1().Pods("istio-system").DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: selector})
+	err = clients.KubeClient.Kube.CoreV1().Pods("istio-system").DeleteCollection(context.Background(), metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: selector})
 	if err != nil {
 		t.Fatal("Failed to delete Gateway pods:", err)
 	}
@@ -374,8 +376,8 @@ func setupHTTPS(t *testing.T, kubeClient *pkgTest.KubeClient, hosts []string) sp
 		t.Fatalf("Failed to add the certificate to the root CA")
 	}
 
-	kubeClient.Kube.CoreV1().Secrets("istio-system").Delete(ctx, "istio-ingressgateway-certs", metav1.DeleteOptions{})
-	_, err = kubeClient.Kube.CoreV1().Secrets("istio-system").Create(ctx, &corev1.Secret{
+	kubeClient.Kube.CoreV1().Secrets("istio-system").Delete(context.Background(), "istio-ingressgateway-certs", metav1.DeleteOptions{})
+	_, err = kubeClient.Kube.CoreV1().Secrets("istio-system").Create(context.Background(), &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "istio-system",
 			Name:      "istio-ingressgateway-certs",
