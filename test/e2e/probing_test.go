@@ -374,8 +374,8 @@ func setupHTTPS(t *testing.T, kubeClient *pkgTest.KubeClient, hosts []string) sp
 		t.Fatalf("Failed to add the certificate to the root CA")
 	}
 
-	kubeClient.Kube.CoreV1().Secrets("istio-system").Delete("istio-ingressgateway-certs", &metav1.DeleteOptions{})
-	_, err = kubeClient.Kube.CoreV1().Secrets("istio-system").Create(&corev1.Secret{
+	kubeClient.Kube.CoreV1().Secrets("istio-system").Delete(ctx, "istio-ingressgateway-certs", metav1.DeleteOptions{})
+	_, err = kubeClient.Kube.CoreV1().Secrets("istio-system").Create(ctx, &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "istio-system",
 			Name:      "istio-ingressgateway-certs",
@@ -385,7 +385,7 @@ func setupHTTPS(t *testing.T, kubeClient *pkgTest.KubeClient, hosts []string) sp
 			"tls.key": key,
 			"tls.crt": cert,
 		},
-	})
+	}, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("Failed to set Secret %s/%s: %v", "istio-system", "istio-ingressgateway-certs", err)
 	}
