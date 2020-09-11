@@ -135,7 +135,7 @@ github.com/google/licenseclassifier/stringclassifier/searchset/tokenizer
 github.com/google/uuid
 # github.com/googleapis/gax-go/v2 v2.0.5
 github.com/googleapis/gax-go/v2
-# github.com/googleapis/gnostic v0.3.1
+# github.com/googleapis/gnostic v0.4.0
 github.com/googleapis/gnostic/OpenAPIv2
 github.com/googleapis/gnostic/compiler
 github.com/googleapis/gnostic/extensions
@@ -200,7 +200,7 @@ github.com/rogpeppe/go-internal/module
 github.com/rogpeppe/go-internal/semver
 # github.com/rs/dnscache v0.0.0-20190621150935-06bb5526f76b
 github.com/rs/dnscache
-# github.com/sergi/go-diff v1.0.0
+# github.com/sergi/go-diff v1.1.0
 github.com/sergi/go-diff/diffmatchpatch
 # github.com/sirupsen/logrus v1.6.0
 github.com/sirupsen/logrus
@@ -860,7 +860,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/networking v0.0.0-20200911020900-72f53a3d4d0a => github.com/mattmoor/networking v0.0.0-20200910232405-9c597b4a07b6
+# knative.dev/networking v0.0.0-20200911160100-731bfc03416d
 ## explicit
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
@@ -899,7 +899,7 @@ knative.dev/networking/test/test_images/runtime/handlers
 knative.dev/networking/test/test_images/timeout
 knative.dev/networking/test/test_images/wsserver
 knative.dev/networking/test/types
-# knative.dev/pkg v0.0.0-20200910143251-0761d6b47e4d => github.com/zroubalik/pkg v0.0.0-20200910185112-efc05700095b
+# knative.dev/pkg v0.0.0-20200911145400-2d4efecc6bc1
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -988,5 +988,3 @@ sigs.k8s.io/yaml
 # k8s.io/client-go => k8s.io/client-go v0.18.8
 # k8s.io/code-generator => k8s.io/code-generator v0.18.8
 # k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
-# knative.dev/networking => github.com/mattmoor/networking v0.0.0-20200910232405-9c597b4a07b6
-# knative.dev/pkg => github.com/zroubalik/pkg v0.0.0-20200910185112-efc05700095b

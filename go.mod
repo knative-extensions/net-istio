@@ -14,8 +14,8 @@ require (
 	k8s.io/api v0.18.8
 	k8s.io/apimachinery v0.18.8
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	knative.dev/networking v0.0.0-20200911020900-72f53a3d4d0a
-	knative.dev/pkg v0.0.0-20200910143251-0761d6b47e4d
+	knative.dev/networking v0.0.0-20200911160100-731bfc03416d
+	knative.dev/pkg v0.0.0-20200911145400-2d4efecc6bc1
 	knative.dev/test-infra v0.0.0-20200910231400-cfba2288403d
 )
 
@@ -28,10 +28,4 @@ replace (
 	k8s.io/client-go => k8s.io/client-go v0.18.8
 	k8s.io/code-generator => k8s.io/code-generator v0.18.8
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
-)
-
-// TODO(tcnghia): DO NOT SUBMIT
-replace (
-	knative.dev/networking => github.com/mattmoor/networking v0.0.0-20200910232405-9c597b4a07b6
-	knative.dev/pkg => github.com/zroubalik/pkg v0.0.0-20200910185112-efc05700095b
 )
