@@ -254,7 +254,7 @@ func (r *Reconciler) reconcileIngressGateways(ctx context.Context, gateways []*v
 func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desired *v1alpha3.Gateway) error {
 	existing, err := r.gatewayLister.Gateways(desired.Namespace).Get(desired.Name)
 	if apierrs.IsNotFound(err) {
-		if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(desired.Namespace).Create(desired); err != nil {
+		if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(desired.Namespace).Create(ctx, desired, metav1.CreateOptions{}); err != nil {
 			return err
 		}
 	} else if err != nil {
@@ -262,7 +262,7 @@ func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desire
 	} else if !equality.Semantic.DeepEqual(existing.Spec, desired.Spec) {
 		copy := existing.DeepCopy()
 		copy.Spec = desired.Spec
-		if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(desired.Namespace).Update(copy); err != nil {
+		if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(desired.Namespace).Update(ctx, copy, metav1.UpdateOptions{}); err != nil {
 			return err
 		}
 	}
@@ -314,7 +314,7 @@ func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1
 				// We shouldn't remove resources not controlled by us.
 				continue
 			}
-			if err = r.istioClientSet.NetworkingV1alpha3().VirtualServices(ns).Delete(n, &metav1.DeleteOptions{}); err != nil {
+			if err = r.istioClientSet.NetworkingV1alpha3().VirtualServices(ns).Delete(ctx, n, metav1.DeleteOptions{}); err != nil {
 				return fmt.Errorf("failed to delete VirtualService: %w", err)
 			}
 		}
@@ -357,7 +357,7 @@ func (r *Reconciler) reconcileDeletion(ctx context.Context, ing *v1alpha1.Ingres
 				continue
 			}
 			for _, secret := range secrets {
-				if err := r.GetKubeClient().CoreV1().Secrets(secret.Namespace).Delete(secret.Name, &metav1.DeleteOptions{}); err != nil {
+				if err := r.GetKubeClient().CoreV1().Secrets(secret.Namespace).Delete(ctx, secret.Name, metav1.DeleteOptions{}); err != nil {
 					errs = append(errs, err)
 				}
 			}
@@ -402,7 +402,7 @@ func (r *Reconciler) reconcileGateway(ctx context.Context, ing *v1alpha1.Ingress
 
 	copy := gateway.DeepCopy()
 	copy = resources.UpdateGateway(copy, desired, existing)
-	if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(copy.Namespace).Update(copy); err != nil {
+	if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(copy.Namespace).Update(ctx, copy, metav1.UpdateOptions{}); err != nil {
 		return fmt.Errorf("failed to update Gateway: %w", err)
 	}
 	controller.GetEventRecorder(ctx).Eventf(ing, corev1.EventTypeNormal,

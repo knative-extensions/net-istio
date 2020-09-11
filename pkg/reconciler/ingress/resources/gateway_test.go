@@ -847,7 +847,7 @@ func serviceLister(ctx context.Context, svcs ...*corev1.Service) corev1listers.S
 	informer := fakeserviceinformer.Get(ctx)
 
 	for _, svc := range svcs {
-		fake.CoreV1().Services(svc.Namespace).Create(svc)
+		fake.CoreV1().Services(svc.Namespace).Create(ctx, svc, metav1.CreateOptions{})
 		informer.Informer().GetIndexer().Add(svc)
 	}
 

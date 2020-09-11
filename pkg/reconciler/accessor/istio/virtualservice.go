@@ -56,7 +56,7 @@ func ReconcileVirtualService(ctx context.Context, owner kmeta.Accessor, desired 
 	name := desired.Name
 	vs, err := vsAccessor.GetVirtualServiceLister().VirtualServices(ns).Get(name)
 	if apierrs.IsNotFound(err) {
-		vs, err = vsAccessor.GetIstioClient().NetworkingV1alpha3().VirtualServices(ns).Create(desired)
+		vs, err = vsAccessor.GetIstioClient().NetworkingV1alpha3().VirtualServices(ns).Create(ctx, desired, metav1.CreateOptions{})
 		if err != nil {
 			recorder.Eventf(owner, corev1.EventTypeWarning, "CreationFailed",
 				"Failed to create VirtualService %s/%s: %v", ns, name, err)
@@ -76,7 +76,7 @@ func ReconcileVirtualService(ctx context.Context, owner kmeta.Accessor, desired 
 		existing.Spec = desired.Spec
 		existing.Labels = desired.Labels
 		existing.Annotations = desired.Annotations
-		vs, err = vsAccessor.GetIstioClient().NetworkingV1alpha3().VirtualServices(ns).Update(existing)
+		vs, err = vsAccessor.GetIstioClient().NetworkingV1alpha3().VirtualServices(ns).Update(ctx, existing, metav1.UpdateOptions{})
 		if err != nil {
 			return nil, fmt.Errorf("failed to update VirtualService: %w", err)
 		}
