@@ -153,7 +153,7 @@ func setup(ctx context.Context, certs []*v1alpha1.Certificate,
 	certInformer := fakecertinformer.Get(ctx)
 
 	for _, cert := range certs {
-		fake.NetworkingV1alpha1().Certificates(cert.Namespace).Create(cert)
+		fake.NetworkingV1alpha1().Certificates(cert.Namespace).Create(ctx, cert, metav1.CreateOptions{})
 		certInformer.Informer().GetIndexer().Add(cert)
 	}
 

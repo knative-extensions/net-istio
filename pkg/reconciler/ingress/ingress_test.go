@@ -949,7 +949,7 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 		// https://github.com/knative/serving/blob/a6852fc3b6cdce72b99c5d578dd64f2e03dabb8b/vendor/k8s.io/client-go/testing/fixture.go#L292
 		gateways := getGatewaysFromObjects(listers.GetIstioObjects())
 		for _, gateway := range gateways {
-			fakeistioclient.Get(ctx).NetworkingV1alpha3().Gateways(gateway.Namespace).Create(gateway)
+			fakeistioclient.Get(ctx).NetworkingV1alpha3().Gateways(gateway.Namespace).Create(ctx, gateway, metav1.CreateOptions{})
 		}
 
 		r := &Reconciler{
@@ -1319,7 +1319,7 @@ func TestGlobalResyncOnUpdateGatewayConfigMap(t *testing.T) {
 	ingressClient := networkingclient.NetworkingV1alpha1().Ingresses(testNS)
 
 	// Create a ingress.
-	ingressClient.Create(ingress)
+	ingressClient.Create(ctx, ingress, metav1.CreateOptions{})
 	il := fakeingressclient.Get(ctx).Lister()
 	if err := wait.PollImmediate(10*time.Millisecond, 5*time.Second, func() (bool, error) {
 		l, err := il.List(labels.Everything())
@@ -1421,11 +1421,11 @@ func TestGlobalResyncOnUpdateNetwork(t *testing.T) {
 
 	// Create a ingress.
 	ingressClient := fakenetworkingclient.Get(ctx).NetworkingV1alpha1().Ingresses(testNS)
-	ingressClient.Create(ingress)
+	ingressClient.Create(ctx, ingress, metav1.CreateOptions{})
 
 	gatewayClient := istioClient.NetworkingV1alpha3().Gateways(system.Namespace())
 	// Create a Gateway
-	if _, err := gatewayClient.Create(gateway("knative-test-gateway", system.Namespace(), []*istiov1alpha3.Server{})); err != nil {
+	if _, err := gatewayClient.Create(ctx, gateway("knative-test-gateway", system.Namespace(), []*istiov1alpha3.Server{}), metav1.CreateOptions{}); err != nil {
 		t.Fatalf("Error creating gateway: %v", err)
 	}
 
@@ -1434,19 +1434,19 @@ func TestGlobalResyncOnUpdateNetwork(t *testing.T) {
 	ingressGateway := gateway(perIngressGatewayName, testNS,
 		[]*istiov1alpha3.Server{}, withOwnerRef(ingressWithTLS("reconciling-ingress", 1234, ingressTLS)),
 		withLabels(gwLabels), withSelector(selector))
-	if _, err := ingressGatewayClient.Create(ingressGateway); err != nil {
+	if _, err := ingressGatewayClient.Create(ctx, ingressGateway, metav1.CreateOptions{}); err != nil {
 		t.Fatalf("Error creating gateway: %v", err)
 	}
 
 	// Create origin secret. "ns" namespace is the namespace of ingress gateway service.
 	secretClient := fakekubeclient.Get(ctx).CoreV1().Secrets("istio-system")
-	if _, err := secretClient.Create(nonWildcardCert); err != nil {
+	if _, err := secretClient.Create(ctx, nonWildcardCert, metav1.CreateOptions{}); err != nil {
 		t.Fatalf("Error creating secret: %v", err)
 	}
 
 	// Create ingress service.
 	serviceClient := fakekubeclient.Get(ctx).CoreV1().Services("istio-system")
-	if _, err := serviceClient.Create(ingressService); err != nil {
+	if _, err := serviceClient.Create(ctx, ingressService, metav1.CreateOptions{}); err != nil {
 		t.Fatalf("Error creating service: %v", err)
 	}
 

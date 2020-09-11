@@ -66,7 +66,7 @@ func TestGetSecrets(t *testing.T) {
 	kubeClient := fakek8s.NewSimpleClientset()
 	secretClient := kubeinformers.NewSharedInformerFactory(kubeClient, 0).Core().V1().Secrets()
 	createSecret := func(secret *corev1.Secret) {
-		kubeClient.CoreV1().Secrets(secret.Namespace).Create(secret)
+		kubeClient.CoreV1().Secrets(secret.Namespace).Create(TestContextWithLogger(t), secret, metav1.CreateOptions{})
 		secretClient.Informer().GetIndexer().Add(secret)
 	}
 

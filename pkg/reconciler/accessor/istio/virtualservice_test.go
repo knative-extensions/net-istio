@@ -154,7 +154,7 @@ func setup(ctx context.Context, vses []*v1alpha3.VirtualService,
 	vsInformer := informer.Networking().V1alpha3().VirtualServices()
 
 	for _, vs := range vses {
-		fake.NetworkingV1alpha3().VirtualServices(vs.Namespace).Create(vs)
+		fake.NetworkingV1alpha3().VirtualServices(vs.Namespace).Create(ctx, vs, metav1.CreateOptions{})
 		vsInformer.Informer().GetIndexer().Add(vs)
 	}
 

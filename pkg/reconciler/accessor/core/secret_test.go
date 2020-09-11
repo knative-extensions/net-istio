@@ -178,7 +178,7 @@ func setup(ctx context.Context, secrets []*corev1.Secret,
 
 	fake := fakekubeclient.Get(ctx)
 	for _, secret := range secrets {
-		fake.CoreV1().Secrets(secret.Namespace).Create(secret)
+		fake.CoreV1().Secrets(secret.Namespace).Create(ctx, secret, metav1.CreateOptions{})
 		secretInformer.Informer().GetIndexer().Add(secret)
 	}
 

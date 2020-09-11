@@ -11,19 +11,21 @@ require (
 	istio.io/api v0.0.0-20200615162408-9b5293c30ef5
 	istio.io/client-go v0.0.0-20200615164228-d77b0b53b6a0
 	istio.io/gogo-genproto v0.0.0-20191029161641-f7d19ec0141d // indirect
-	k8s.io/api v0.18.7-rc.0
-	k8s.io/apimachinery v0.18.7-rc.0
+	k8s.io/api v0.18.8
+	k8s.io/apimachinery v0.18.8
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	knative.dev/networking v0.0.0-20200910092251-e0e6565f9803
-	knative.dev/pkg v0.0.0-20200910010051-a79a813ce123
-	knative.dev/test-infra v0.0.0-20200909211651-72eb6ae3c773
+	knative.dev/networking v0.0.0-20200911160100-731bfc03416d
+	knative.dev/pkg v0.0.0-20200911145400-2d4efecc6bc1
+	knative.dev/test-infra v0.0.0-20200910231400-cfba2288403d
 )
 
 replace (
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.2
-	k8s.io/api => k8s.io/api v0.17.6
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.6
-	k8s.io/apimachinery => k8s.io/apimachinery v0.17.6
-	k8s.io/client-go => k8s.io/client-go v0.17.6
-	k8s.io/code-generator => k8s.io/code-generator v0.17.6
+	k8s.io/api => k8s.io/api v0.18.8
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.18.8
+	k8s.io/apimachinery => k8s.io/apimachinery v0.18.8
+	k8s.io/apiserver => k8s.io/apiserver v0.18.8
+	k8s.io/client-go => k8s.io/client-go v0.18.8
+	k8s.io/code-generator => k8s.io/code-generator v0.18.8
+	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
 )
