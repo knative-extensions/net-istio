@@ -15,8 +15,8 @@
 # limitations under the License.
 
 # Download and unpack Istio
-ISTIO_VERSION=1.5.7
-ISTIO_TARBALL=istio-${ISTIO_VERSION}-linux.tar.gz
+ISTIO_VERSION=1.7.1
+ISTIO_TARBALL=istio-${ISTIO_VERSION}-linux-amd64.tar.gz
 DOWNLOAD_URL=https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/${ISTIO_TARBALL}
 
 wget --no-check-certificate $DOWNLOAD_URL
@@ -27,7 +27,7 @@ fi
 tar xzf ${ISTIO_TARBALL} 
 
 # Install Istio
-./istio-${ISTIO_VERSION}/bin/istioctl manifest apply -f "$(dirname $0)/$1"
+./istio-${ISTIO_VERSION}/bin/istioctl install -f "$(dirname $0)/$1"
 
 # Clean up
 rm -rf istio-${ISTIO_VERSION}
