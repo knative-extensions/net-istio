@@ -45,7 +45,7 @@ spec:
             ports:
             - port: 15020
               name: status-port
-            - port: 80
+            - port: 8080
               name: http2
-            - port: 443
+            - port: 8443
               name: https

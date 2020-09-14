@@ -17,8 +17,13 @@ kind: IstioOperator
 spec:
   values:
     global:
+      mtls:
+        enabled: true
+        auto: false
       proxy:
-        autoInject: disabled
+        autoInject: enabled
+        accessLogFile: "/dev/stdout"
+        accessLogEncoding: 'JSON'
       useMCP: false
       # The third-party-jwt is not enabled on all k8s.
       # See: https://istio.io/docs/ops/best-practices/security/#configure-third-party-service-account-tokens
@@ -32,6 +37,13 @@ spec:
       istio-ingressgateway:
         autoscaleMin: 2
         autoscaleMax: 5
+    sidecarInjectorWebhook:
+      rewriteAppHTTPProbe: true
+
+  meshConfig:
+    defaultConfig:
+      proxyMetadata:
+        TERMINATION_DRAIN_DURATION_SECONDS: "20"
 
   addonComponents:
     pilot:
@@ -79,9 +91,9 @@ spec:
             ports:
             - port: 15020
               name: status-port
-            - port: 80
+            - port: 8080
               name: http2
-            - port: 443
+            - port: 8443
               name: https
           overlays:
             # Although we don't need this Gateway, we cannot remove it. Add "dummy" selector for the workaround.
