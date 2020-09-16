@@ -12,11 +12,11 @@ require (
 	istio.io/client-go v0.0.0-20200615164228-d77b0b53b6a0
 	istio.io/gogo-genproto v0.0.0-20191029161641-f7d19ec0141d // indirect
 	k8s.io/api v0.18.7-rc.0
-	k8s.io/apimachinery v0.19.0
+	k8s.io/apimachinery v0.19.1
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	knative.dev/networking v0.0.0-20200817055406-2b6d120d60b8
-	knative.dev/pkg v0.0.0-20200824160247-5343c1d19369
-	knative.dev/test-infra v0.0.0-20200828171708-f68cb78c80a9
+	knative.dev/networking v0.0.0-20200831172815-5f2e0ad6215f
+	knative.dev/pkg v0.0.0-20200831162708-14fb2347fb77
+	knative.dev/test-infra v0.0.0-20200915193842-f4d4232c1f04
 )
 
 replace (
