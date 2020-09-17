@@ -25,8 +25,8 @@ import (
 )
 
 func main() {
-	// Allow unknown fields in Istio API client.  This is so that we are more resilience
-	// in cases user clusers have malformed resources.
+	// Allow unknown fields in Istio API client. This is so that we are more resilience
+	// in cases user clusters have malformed resources.
 	v1beta1.VirtualServiceUnmarshaler.AllowUnknownFields = true
 	v1beta1.GatewayUnmarshaler.AllowUnknownFields = true
 
