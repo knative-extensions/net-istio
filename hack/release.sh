@@ -53,7 +53,8 @@ function build_release() {
   # Assemble the release
   for yaml in "${!RELEASES[@]}"; do
     echo "Assembling Knative net-istio - ${yaml}"
-    echo "" > ${yaml}
+    echo "# Generated when HEAD was $(git rev-parse HEAD)" > ${yaml}
+    echo "#" >> ${yaml}
     for component in ${RELEASES[${yaml}]}; do
       echo "---" >> ${yaml}
       echo "# ${component}" >> ${yaml}
