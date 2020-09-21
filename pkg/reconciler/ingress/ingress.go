@@ -201,6 +201,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	// Update status
 	ing.Status.MarkNetworkConfigured()
 
+	var ready bool
 	if ing.IsReady() {
 		// When the kingress has already been marked Ready for this generation,
 		// then it must have been successfully probed.  The status manager has
@@ -212,18 +213,21 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		// skew we might see when the resource is actually in flux, we simply care
 		// about the steady state.
 		logger.Debug("kingress is ready, skipping probe.")
+		ready = true
 	} else {
-		ready, err := r.statusManager.IsReady(ctx, ing)
+		readyStatus, err := r.statusManager.IsReady(ctx, ing)
 		if err != nil {
 			return fmt.Errorf("failed to probe Ingress %s/%s: %w", ing.GetNamespace(), ing.GetName(), err)
 		}
-		if ready {
-			publicLbs := getLBStatus(publicGatewayServiceURLFromContext(ctx))
-			privateLbs := getLBStatus(privateGatewayServiceURLFromContext(ctx))
-			ing.Status.MarkLoadBalancerReady(publicLbs, privateLbs)
-		} else {
-			ing.Status.MarkLoadBalancerNotReady()
-		}
+		ready = readyStatus
+	}
+
+	if ready {
+		publicLbs := getLBStatus(publicGatewayServiceURLFromContext(ctx))
+		privateLbs := getLBStatus(privateGatewayServiceURLFromContext(ctx))
+		ing.Status.MarkLoadBalancerReady(publicLbs, privateLbs)
+	} else {
+		ing.Status.MarkLoadBalancerNotReady()
 	}
 
 	// TODO(zhiminx): Mark Route status to indicate that Gateway is configured.
