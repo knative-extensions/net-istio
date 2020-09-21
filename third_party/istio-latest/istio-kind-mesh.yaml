@@ -17,22 +17,34 @@ kind: IstioOperator
 spec:
   values:
     global:
+      mtls:
+        enabled: true
+        auto: false
       proxy:
-        autoInject: disabled
+        autoInject: enabled
+        accessLogFile: "/dev/stdout"
+        accessLogEncoding: 'JSON'
       useMCP: false
       # The third-party-jwt is not enabled on all k8s.
       # See: https://istio.io/docs/ops/best-practices/security/#configure-third-party-service-account-tokens
       jwtPolicy: first-party-jwt
     pilot:
-      autoscaleMin: 3
-      autoscaleMax: 10
+      autoscaleMin: 1
+      autoscaleMax: 3
       cpu:
         targetAverageUtilization: 60
     gateways:
       istio-ingressgateway:
-        autoscaleMin: 2
-        autoscaleMax: 5
+        autoscaleMin: 1
+        autoscaleMax: 3
         type: NodePort
+    sidecarInjectorWebhook:
+      rewriteAppHTTPProbe: true
+
+  meshConfig:
+    defaultConfig:
+      proxyMetadata:
+        TERMINATION_DRAIN_DURATION_SECONDS: "20"
 
   addonComponents:
     pilot:
@@ -46,12 +58,9 @@ spec:
         enabled: true
         k8s:
           resources:
-            limits:
-              cpu: 3000m
-              memory: 2048Mi
             requests:
-              cpu: 1000m
-              memory: 1024Mi
+              cpu: 100m
+              memory: 256Mi
       - name: cluster-local-gateway
         enabled: true
         label:
@@ -59,12 +68,9 @@ spec:
           app: cluster-local-gateway
         k8s:
           resources:
-            limits:
-              cpu: 3000m
-              memory: 2048Mi
             requests:
-              cpu: 1000m
-              memory: 1024Mi
+              cpu: 100m
+              memory: 256Mi
           service:
             type: ClusterIP
             ports:

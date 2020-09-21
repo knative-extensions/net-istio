@@ -1019,9 +1019,6 @@ spec:
           image: "docker.io/istio/node-agent-k8s:1.5.7"
           imagePullPolicy: IfNotPresent
           resources:
-            limits:
-              cpu: 2000m
-              memory: 1024Mi
             requests:
               cpu: 100m
               memory: 128Mi
@@ -1083,12 +1080,9 @@ spec:
             successThreshold: 1
             timeoutSeconds: 1
           resources:
-            limits:
-              cpu: 2000m
-              memory: 1024Mi
             requests:
-              cpu: 1000m
-              memory: 1024Mi
+              cpu: 100m
+              memory: 256Mi
           env:
           - name: NODE_NAME
             valueFrom:
@@ -1219,7 +1213,7 @@ metadata:
     istio: cluster-local-gateway
     release: RELEASE-NAME
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: cluster-local-gateway
@@ -1287,8 +1281,8 @@ spec:
             timeoutSeconds: 1
           resources:
             requests:
-              cpu: 1000m
-              memory: 1024Mi
+              cpu: 100m
+              memory: 256Mi
           env:
           - name: NODE_NAME
             valueFrom:
@@ -1476,8 +1470,8 @@ spec:
             value: "false"
           resources:
             requests:
-              cpu: 1000m
-              memory: 1024Mi
+              cpu: 100m
+              memory: 256Mi
           volumeMounts:
           - name: config-volume
             mountPath: /etc/istio/config
@@ -1625,8 +1619,8 @@ metadata:
     app: istio-ingressgateway
     istio: ingressgateway
 spec:
-  maxReplicas: 5
-  minReplicas: 2
+  maxReplicas: 3
+  minReplicas: 1
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
@@ -1649,7 +1643,7 @@ metadata:
     heritage: Helm
     release: RELEASE-NAME
 spec:
-  maxReplicas: 5
+  maxReplicas: 3
   minReplicas: 1
   scaleTargetRef:
     apiVersion: apps/v1
