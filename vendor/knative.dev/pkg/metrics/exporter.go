@@ -135,7 +135,7 @@ func UpdateExporterFromConfigMapWithOpts(ctx context.Context, opts ExporterOptio
 // and updating the current exporter.
 func UpdateExporter(ctx context.Context, ops ExporterOptions, logger *zap.SugaredLogger) error {
 	// TODO(https://github.com/knative/pkg/issues/1273): check if ops.secrets is `nil` after new metrics plan lands
-	newConfig, err := createMetricsConfig(ctx, ops)
+	newConfig, err := createMetricsConfig(ctx, ops, logger)
 	if err != nil {
 		if getCurMetricsConfig() == nil {
 			// Fail the process if there doesn't exist an exporter.

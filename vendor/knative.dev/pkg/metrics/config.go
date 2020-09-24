@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"go.opencensus.io/stats"
+	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/metrics/metricskey"
 )
@@ -173,7 +174,7 @@ func (mc *metricsConfig) record(ctx context.Context, mss []stats.Measurement, ro
 	return mc.recorder(ctx, mss, ros...)
 }
 
-func createMetricsConfig(ctx context.Context, ops ExporterOptions) (*metricsConfig, error) {
+func createMetricsConfig(ctx context.Context, ops ExporterOptions, logger *zap.SugaredLogger) (*metricsConfig, error) {
 	var mc metricsConfig
 
 	if ops.Domain == "" {
