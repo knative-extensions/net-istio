@@ -29,18 +29,9 @@ tar xzf ${ISTIO_TARBALL}
 # Install Istio
 ./istio-${ISTIO_VERSION}/bin/istioctl install -f "$(dirname $0)/$1"
 
-# Enable mTLS STRICT
-if [[ -n "$KIND" ]]; then
-  cat <<EOF | kubectl apply -f -
-  apiVersion: "security.istio.io/v1beta1"
-  kind: "PeerAuthentication"
-  metadata:
-    name: "default"
-    namespace: "istio-system"
-  spec:
-    mtls:
-      mode: STRICT
-EOF
+# Enable mTLS STRICT in mesh mode
+if [[ $MESH -eq 1 ]]; then
+  kubectl apply -f "$(dirname $0)/extra/global-mtls.yaml"
 fi
 
 # Clean up
