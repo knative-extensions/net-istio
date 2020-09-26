@@ -29,6 +29,11 @@ tar xzf ${ISTIO_TARBALL}
 # Install Istio
 ./istio-${ISTIO_VERSION}/bin/istioctl install -f "$(dirname $0)/$1"
 
+# Enable mTLS STRICT in mesh mode
+if [[ $MESH -eq 1 ]]; then
+  kubectl apply -f "$(dirname $0)/extra/global-mtls.yaml"
+fi
+
 # Clean up
 rm -rf istio-${ISTIO_VERSION}
 rm ${ISTIO_TARBALL}
