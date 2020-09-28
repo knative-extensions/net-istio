@@ -32,6 +32,7 @@ import (
 	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
 	fakeingressclient "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
 	"knative.dev/networking/pkg/ingress"
+	fakestatusmanager "knative.dev/networking/pkg/testing/status"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints/fake"
@@ -403,7 +404,7 @@ func TestReconcile(t *testing.T) {
 			istioClientSet:       istioclient.Get(ctx),
 			virtualServiceLister: listers.GetVirtualServiceLister(),
 			gatewayLister:        listers.GetGatewayLister(),
-			statusManager: &fakeStatusManager{
+			statusManager: &fakestatusmanager.FakeStatusManager{
 				FakeIsReady: func(ctx context.Context, ing *v1alpha1.Ingress) (bool, error) {
 					return true, nil
 				},
@@ -960,7 +961,7 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			secretLister:         listers.GetSecretLister(),
 			svcLister:            listers.GetK8sServiceLister(),
 			tracker:              &NullTracker{},
-			statusManager: &fakeStatusManager{
+			statusManager: &fakestatusmanager.FakeStatusManager{
 				FakeIsReady: func(ctx context.Context, ing *v1alpha1.Ingress) (bool, error) {
 					return true, nil
 				},
@@ -1214,7 +1215,7 @@ func newTestSetup(t *testing.T, configs ...*corev1.ConfigMap) (
 	controller := newControllerWithOptions(ctx,
 		configMapWatcher,
 		func(r *Reconciler) {
-			r.statusManager = &fakeStatusManager{
+			r.statusManager = &fakestatusmanager.FakeStatusManager{
 				FakeIsReady: func(ctx context.Context, ing *v1alpha1.Ingress) (bool, error) {
 					return true, nil
 				},
@@ -1466,12 +1467,4 @@ func makeGatewayMap(publicGateways []string, privateGateways []string) map[v1alp
 		v1alpha1.IngressVisibilityExternalIP:   sets.NewString(publicGateways...),
 		v1alpha1.IngressVisibilityClusterLocal: sets.NewString(privateGateways...),
 	}
-}
-
-type fakeStatusManager struct {
-	FakeIsReady func(ctx context.Context, ing *v1alpha1.Ingress) (bool, error)
-}
-
-func (m *fakeStatusManager) IsReady(ctx context.Context, ing *v1alpha1.Ingress) (bool, error) {
-	return m.FakeIsReady(ctx, ing)
 }
