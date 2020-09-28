@@ -32,6 +32,7 @@ import (
 	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
 	fakeingressclient "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
 	"knative.dev/networking/pkg/ingress"
+	"knative.dev/networking/pkg/status"
 	fakestatusmanager "knative.dev/networking/pkg/testing/status"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
@@ -396,6 +397,25 @@ func TestReconcile(t *testing.T) {
 			patchAddFinalizerAction("reconcile-virtualservice", "ingresses.networking.internal.knative.dev"),
 		},
 		Key: "test-ns/reconcile-virtualservice",
+	}, {
+		Name: "if ingress is already ready, we shouldn't call statusManager.IsReady",
+		Key:  "test-ns/ingress-ready",
+		Objects: []runtime.Object{
+			basicReconciledIngress("ingress-ready", 1234),
+			resources.MakeMeshVirtualService(context.Background(), insertProbe(ing("ingress-ready", 1234)),
+				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
+			resources.MakeIngressVirtualService(context.Background(), insertProbe(ing("ingress-ready", 1234)),
+				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
+		},
+		PostConditions: []func(*testing.T, *TableRow){
+			func(t *testing.T, tr *TableRow) {
+				statusManager := tr.Ctx.Value(FakeStatusManagerKey).(*fakestatusmanager.FakeStatusManager)
+				callCount := statusManager.IsReadyCallCount(tr.Objects[0].(*v1alpha1.Ingress))
+				if callCount != 0 {
+					t.Errorf("statusManager.IsReady called %v times, wanted %v", callCount, 0)
+				}
+			},
+		},
 	}, {}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
@@ -404,11 +424,7 @@ func TestReconcile(t *testing.T) {
 			istioClientSet:       istioclient.Get(ctx),
 			virtualServiceLister: listers.GetVirtualServiceLister(),
 			gatewayLister:        listers.GetGatewayLister(),
-			statusManager: &fakestatusmanager.FakeStatusManager{
-				FakeIsReady: func(ctx context.Context, ing *v1alpha1.Ingress) (bool, error) {
-					return true, nil
-				},
-			},
+			statusManager:        ctx.Value(FakeStatusManagerKey).(status.Manager),
 		}
 
 		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakenetworkingclient.Get(ctx),
