@@ -396,6 +396,16 @@ func TestReconcile(t *testing.T) {
 		WantPatches: []clientgotesting.PatchActionImpl{
 			patchAddFinalizerAction("reconcile-virtualservice", "ingresses.networking.internal.knative.dev"),
 		},
+		PostConditions: []func(*testing.T, *TableRow){
+			// ensure that prober gets invoked once
+			func(t *testing.T, tr *TableRow) {
+				statusManager := tr.Ctx.Value(FakeStatusManagerKey).(*fakestatusmanager.FakeStatusManager)
+				callCount := statusManager.IsReadyCallCount(tr.Objects[0].(*v1alpha1.Ingress))
+				if callCount != 1 {
+					t.Errorf("statusManager.IsReady called %v times, wanted %v", callCount, 1)
+				}
+			},
+		},
 		Key: "test-ns/reconcile-virtualservice",
 	}, {
 		Name: "if ingress is already ready, we shouldn't call statusManager.IsReady",
@@ -408,6 +418,7 @@ func TestReconcile(t *testing.T) {
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
 		},
 		PostConditions: []func(*testing.T, *TableRow){
+			// ensure that prober never gets called
 			func(t *testing.T, tr *TableRow) {
 				statusManager := tr.Ctx.Value(FakeStatusManagerKey).(*fakestatusmanager.FakeStatusManager)
 				callCount := statusManager.IsReadyCallCount(tr.Objects[0].(*v1alpha1.Ingress))
