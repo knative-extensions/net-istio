@@ -201,7 +201,7 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			vss, err := MakeVirtualServices(context.Background(), tc.ci, tc.gateways)
 			if err != nil {
-				t.Fatalf("MakeVirtualServices failed: %v", err)
+				t.Fatal("MakeVirtualServices failed:", err)
 			}
 			if len(vss) != len(tc.expected) {
 				t.Fatalf("Expected %d VirtualService, saw %d", len(tc.expected), len(vss))
@@ -209,7 +209,7 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 			for i := range tc.expected {
 				tc.expected[i].OwnerReferences = []metav1.OwnerReference{*kmeta.NewControllerRef(tc.ci)}
 				if diff := cmp.Diff(tc.expected[i], vss[i].ObjectMeta); diff != "" {
-					t.Errorf("Unexpected metadata (-want +got): %v", diff)
+					t.Error("Unexpected metadata (-want +got):", diff)
 				}
 			}
 		})
@@ -322,7 +322,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectGateways(t *testing.T) {
 	expected := []string{"mesh"}
 	gateways := MakeMeshVirtualService(context.Background(), ci, defaultGateways).Spec.Gateways
 	if diff := cmp.Diff(expected, gateways); diff != "" {
-		t.Errorf("Unexpected gateways (-want +got): %v", diff)
+		t.Error("Unexpected gateways (-want +got):", diff)
 	}
 }
 
@@ -448,7 +448,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 
 	routes := MakeMeshVirtualService(context.Background(), ci, defaultGateways).Spec.Http
 	if diff := cmp.Diff(expected, routes); diff != "" {
-		t.Errorf("Unexpected routes (-want +got): %v", diff)
+		t.Error("Unexpected routes (-want +got):", diff)
 	}
 }
 
@@ -461,7 +461,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectGateways(t *testing.T) {
 	expected := []string{"knative-testing/gateway-one", "knative-testing/gateway-two"}
 	gateways := MakeIngressVirtualService(context.Background(), ci, makeGatewayMap([]string{"knative-testing/gateway-one", "knative-testing/gateway-two"}, nil)).Spec.Gateways
 	if diff := cmp.Diff(expected, gateways); diff != "" {
-		t.Errorf("Unexpected gateways (-want +got): %v", diff)
+		t.Error("Unexpected gateways (-want +got):", diff)
 	}
 }
 
@@ -592,7 +592,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 
 	routes := MakeIngressVirtualService(context.Background(), ci, makeGatewayMap([]string{"gateway.public"}, []string{"gateway.private"})).Spec.Http
 	if diff := cmp.Diff(expected, routes); diff != "" {
-		t.Errorf("Unexpected routes (-want +got): %v", diff)
+		t.Error("Unexpected routes (-want +got):", diff)
 	}
 }
 
@@ -633,7 +633,7 @@ func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
 	}
 	if diff := cmp.Diff(expected, route); diff != "" {
-		t.Errorf("Unexpected route  (-want +got): %v", diff)
+		t.Error("Unexpected route  (-want +got):", diff)
 	}
 }
 
@@ -693,7 +693,7 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
 	}
 	if diff := cmp.Diff(expected, route); diff != "" {
-		t.Errorf("Unexpected route  (-want +got): %v", diff)
+		t.Error("Unexpected route  (-want +got):", diff)
 	}
 }
 
@@ -741,7 +741,7 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
 	}
 	if diff := cmp.Diff(expected, route); diff != "" {
-		t.Errorf("Unexpected route  (-want +got): %v", diff)
+		t.Error("Unexpected route  (-want +got):", diff)
 	}
 }
 
@@ -758,7 +758,7 @@ func TestGetHosts_Duplicate(t *testing.T) {
 	hosts := getHosts(ci)
 	expected := sets.NewString("test-route1", "test-route2", "test-route3")
 	if diff := cmp.Diff(expected, hosts); diff != "" {
-		t.Errorf("Unexpected hosts  (-want +got): %v", diff)
+		t.Error("Unexpected hosts  (-want +got):", diff)
 	}
 }
 

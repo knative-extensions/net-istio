@@ -1267,7 +1267,7 @@ func TestGlobalResyncOnUpdateGatewayConfigMap(t *testing.T) {
 
 		gateways := ci.Status.PublicLoadBalancer.Ingress
 		if len(gateways) != 1 {
-			t.Logf("Unexpected gateways: %v", gateways)
+			t.Log("Unexpected gateways:", gateways)
 			return HookIncomplete
 		}
 		if got, want := gateways[0].DomainInternal, newDomainInternal; got != want {
@@ -1280,18 +1280,18 @@ func TestGlobalResyncOnUpdateGatewayConfigMap(t *testing.T) {
 
 	waitInformers, err := controller.RunInformers(ctx.Done(), informers...)
 	if err != nil {
-		t.Fatalf("Failed to start informers: %v", err)
+		t.Fatal("Failed to start informers:", err)
 	}
 	defer func() {
 		cancel()
 		if err := grp.Wait(); err != nil {
-			t.Errorf("Wait() = %v", err)
+			t.Error("Wait() =", err)
 		}
 		waitInformers()
 	}()
 
 	if err := watcher.Start(ctx.Done()); err != nil {
-		t.Fatalf("Failed to start ingress manager: %v", err)
+		t.Fatal("Failed to start ingress manager:", err)
 	}
 	grp.Go(func() error { return ctrl.Run(1, ctx.Done()) })
 
@@ -1330,7 +1330,7 @@ func TestGlobalResyncOnUpdateGatewayConfigMap(t *testing.T) {
 		return len(l) > 0, nil
 
 	}); err != nil {
-		t.Fatalf("Failed to see ingress propagation: %v", err)
+		t.Fatal("Failed to see ingress propagation:", err)
 	}
 
 	// Test changes in gateway config map. Ingress should get updated appropriately.
@@ -1371,7 +1371,7 @@ func TestGlobalResyncOnUpdateNetwork(t *testing.T) {
 			[]*istiov1alpha3.Server{ingressTLSServer}, withOwnerRef(ingressWithTLS("reconciling-ingress", 1234, ingressTLS)),
 			withLabels(gwLabels), withSelector(selector))
 		if diff := cmp.Diff(createdGateway, expectedGateway); diff != "" {
-			t.Logf("Unexpected Gateway (-want, +got): %v", diff)
+			t.Log("Unexpected Gateway (-want, +got):", diff)
 			return HookIncomplete
 		}
 
@@ -1380,18 +1380,18 @@ func TestGlobalResyncOnUpdateNetwork(t *testing.T) {
 
 	waitInformers, err := controller.RunInformers(ctx.Done(), informers...)
 	if err != nil {
-		t.Fatalf("Failed to start ingress manager: %v", err)
+		t.Fatal("Failed to start ingress manager:", err)
 	}
 	defer func() {
 		cancel()
 		if err := grp.Wait(); err != nil {
-			t.Errorf("Wait() = %v", err)
+			t.Error("Wait() =", err)
 		}
 		waitInformers()
 	}()
 
 	if err := watcher.Start(ctx.Done()); err != nil {
-		t.Fatalf("Failed to start watcher: %v", err)
+		t.Fatal("Failed to start watcher:", err)
 	}
 
 	grp.Go(func() error { return ctrl.Run(1, ctx.Done()) })
@@ -1426,7 +1426,7 @@ func TestGlobalResyncOnUpdateNetwork(t *testing.T) {
 	gatewayClient := istioClient.NetworkingV1alpha3().Gateways(system.Namespace())
 	// Create a Gateway
 	if _, err := gatewayClient.Create(ctx, gateway("knative-test-gateway", system.Namespace(), []*istiov1alpha3.Server{}), metav1.CreateOptions{}); err != nil {
-		t.Fatalf("Error creating gateway: %v", err)
+		t.Fatal("Error creating gateway:", err)
 	}
 
 	// Create an Ingress gateway
@@ -1435,19 +1435,19 @@ func TestGlobalResyncOnUpdateNetwork(t *testing.T) {
 		[]*istiov1alpha3.Server{}, withOwnerRef(ingressWithTLS("reconciling-ingress", 1234, ingressTLS)),
 		withLabels(gwLabels), withSelector(selector))
 	if _, err := ingressGatewayClient.Create(ctx, ingressGateway, metav1.CreateOptions{}); err != nil {
-		t.Fatalf("Error creating gateway: %v", err)
+		t.Fatal("Error creating gateway:", err)
 	}
 
 	// Create origin secret. "ns" namespace is the namespace of ingress gateway service.
 	secretClient := fakekubeclient.Get(ctx).CoreV1().Secrets("istio-system")
 	if _, err := secretClient.Create(ctx, nonWildcardCert, metav1.CreateOptions{}); err != nil {
-		t.Fatalf("Error creating secret: %v", err)
+		t.Fatal("Error creating secret:", err)
 	}
 
 	// Create ingress service.
 	serviceClient := fakekubeclient.Get(ctx).CoreV1().Services("istio-system")
 	if _, err := serviceClient.Create(ctx, ingressService, metav1.CreateOptions{}); err != nil {
-		t.Fatalf("Error creating service: %v", err)
+		t.Fatal("Error creating service:", err)
 	}
 
 	// Test changes in autoTLS of config-network ConfigMap. Ingress should get updated appropriately.

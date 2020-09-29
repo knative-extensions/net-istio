@@ -1521,7 +1521,7 @@ func TestListProbeTargets(t *testing.T) {
 					return results[i].Port < results[j].Port
 				})
 				if diff := cmp.Diff(test.results, results); diff != "" {
-					t.Errorf("Unexpected probe targets (-want +got): %s", diff)
+					t.Error("Unexpected probe targets (-want +got):", diff)
 				}
 			}
 		})

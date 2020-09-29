@@ -105,7 +105,7 @@ func TestGetSecrets(t *testing.T) {
 				t.Fatalf("Test: %s; GetSecrets error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
 			if diff := cmp.Diff(c.expected, secrets); diff != "" {
-				t.Errorf("Unexpected secrets (-want, +got): %v", diff)
+				t.Error("Unexpected secrets (-want, +got):", diff)
 			}
 		})
 	}
@@ -178,7 +178,7 @@ func TestMakeSecrets(t *testing.T) {
 				t.Fatalf("Test: %q; MakeSecrets() error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
 			if diff := cmp.Diff(c.expected, secrets); diff != "" {
-				t.Errorf("Unexpected secrets (-want, +got): %v", diff)
+				t.Error("Unexpected secrets (-want, +got):", diff)
 			}
 		})
 	}
@@ -247,7 +247,7 @@ func TestMakeWildcardSecrets(t *testing.T) {
 				t.Fatalf("Test: %q; MakeWildcardSecrets() error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
 			if diff := cmp.Diff(c.expected, secrets); diff != "" {
-				t.Errorf("Unexpected secrets (-want, +got): %v", diff)
+				t.Error("Unexpected secrets (-want, +got):", diff)
 			}
 		})
 	}
@@ -287,10 +287,10 @@ func TestCategorizeSecrets(t *testing.T) {
 				t.Fatalf("Test: %q; CategorizeSecrets() error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
 			if diff := cmp.Diff(c.wantNonWildcard, gotNonWildcard); diff != "" {
-				t.Fatalf("Unexpected non-wildcard secrets (-want, +got): %s", diff)
+				t.Fatal("Unexpected non-wildcard secrets (-want, +got):", diff)
 			}
 			if diff := cmp.Diff(c.wantWildcard, gotWildcard); diff != "" {
-				t.Fatalf("Unexpected wildcard secrets (-want, +got): %s", diff)
+				t.Fatal("Unexpected wildcard secrets (-want, +got):", diff)
 			}
 		})
 	}
@@ -321,7 +321,7 @@ func TestGetHostsFromCertSecret(t *testing.T) {
 			t.Fatalf("Test: %q; GetHostsFromCertSecret() error = %v, WantErr %v", c.name, err, c.wantErr)
 		}
 		if diff := cmp.Diff(c.wantHosts, hosts); diff != "" {
-			t.Fatalf("Unexpected hosts (-want, +got): %s", diff)
+			t.Fatal("Unexpected hosts (-want, +got):", diff)
 		}
 	}
 }
