@@ -100,7 +100,7 @@ func TestReconcileVirtualService_Create(t *testing.T) {
 	h.OnCreate(&istioClient.Fake, "virtualservices", func(obj runtime.Object) HookResult {
 		got := obj.(*v1alpha3.VirtualService)
 		if diff := cmp.Diff(got, desired); diff != "" {
-			t.Logf("Unexpected VirtualService (-want, +got): %v", diff)
+			t.Log("Unexpected VirtualService (-want, +got):", diff)
 			return HookIncomplete
 		}
 		return HookComplete
@@ -115,7 +115,7 @@ func TestReconcileVirtualService_Create(t *testing.T) {
 	ReconcileVirtualService(ctx, ownerObj, desired, accessor)
 
 	if err := h.WaitForHooks(3 * time.Second); err != nil {
-		t.Errorf("Failed to Reconcile VirtualService: %v", err)
+		t.Error("Failed to Reconcile VirtualService:", err)
 	}
 }
 
@@ -134,7 +134,7 @@ func TestReconcileVirtualService_Update(t *testing.T) {
 	h.OnUpdate(&istioClient.Fake, "virtualservices", func(obj runtime.Object) HookResult {
 		got := obj.(*v1alpha3.VirtualService)
 		if diff := cmp.Diff(got, desired); diff != "" {
-			t.Logf("Unexpected VirtualService (-want, +got): %v", diff)
+			t.Log("Unexpected VirtualService (-want, +got):", diff)
 			return HookIncomplete
 		}
 		return HookComplete
@@ -142,7 +142,7 @@ func TestReconcileVirtualService_Update(t *testing.T) {
 
 	ReconcileVirtualService(ctx, ownerObj, desired, accessor)
 	if err := h.WaitForHooks(3 * time.Second); err != nil {
-		t.Errorf("Failed to Reconcile VirtualService: %v", err)
+		t.Error("Failed to Reconcile VirtualService:", err)
 	}
 }
 
@@ -160,7 +160,7 @@ func setup(ctx context.Context, vses []*v1alpha3.VirtualService,
 
 	waitInformers, err := controller.RunInformers(ctx.Done(), vsInformer.Informer())
 	if err != nil {
-		t.Fatalf("failed to start virtualservice informer: %v", err)
+		t.Fatal("failed to start virtualservice informer:", err)
 	}
 
 	return &FakeAccessor{

@@ -38,12 +38,12 @@ func TestStoreLoadWithContext(t *testing.T) {
 
 	expectedIstio, _ := NewIstioFromConfigMap(istioConfig)
 	if diff := cmp.Diff(expectedIstio, config.Istio); diff != "" {
-		t.Errorf("Unexpected istio config (-want, +got): %v", diff)
+		t.Error("Unexpected istio config (-want, +got):", diff)
 	}
 
 	expectNetworkConfig, _ := network.NewConfigFromConfigMap(networkConfig)
 	if diff := cmp.Diff(expectNetworkConfig, config.Network); diff != "" {
-		t.Errorf("Unexpected TLS mode (-want, +got): %s", diff)
+		t.Error("Unexpected TLS mode (-want, +got):", diff)
 	}
 }
 

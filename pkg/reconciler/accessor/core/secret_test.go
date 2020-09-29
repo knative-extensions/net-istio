@@ -107,7 +107,7 @@ func TestReconcileSecretCreate(t *testing.T) {
 	h.OnCreate(&kubeClient.Fake, "secrets", func(obj runtime.Object) HookResult {
 		got := obj.(*corev1.Secret)
 		if diff := cmp.Diff(got, desired); diff != "" {
-			t.Logf("Unexpected Secret (-want, +got): %v", diff)
+			t.Log("Unexpected Secret (-want, +got):", diff)
 			return HookIncomplete
 		}
 		return HookComplete
@@ -122,7 +122,7 @@ func TestReconcileSecretCreate(t *testing.T) {
 	ReconcileSecret(ctx, ownerObj, desired, accessor)
 
 	if err := h.WaitForHooks(3 * time.Second); err != nil {
-		t.Errorf("Failed to Reconcile Secret: %v", err)
+		t.Error("Failed to Reconcile Secret:", err)
 	}
 }
 
@@ -140,7 +140,7 @@ func TestReconcileSecretUpdate(t *testing.T) {
 	h.OnUpdate(&kubeClient.Fake, "secrets", func(obj runtime.Object) HookResult {
 		got := obj.(*corev1.Secret)
 		if diff := cmp.Diff(got, desired); diff != "" {
-			t.Logf("Unexpected Secret (-want, +got): %v", diff)
+			t.Log("Unexpected Secret (-want, +got):", diff)
 			return HookIncomplete
 		}
 		return HookComplete
@@ -148,7 +148,7 @@ func TestReconcileSecretUpdate(t *testing.T) {
 
 	ReconcileSecret(ctx, ownerObj, desired, accessor)
 	if err := h.WaitForHooks(3 * time.Second); err != nil {
-		t.Errorf("Failed to Reconcile Secret: %v", err)
+		t.Error("Failed to Reconcile Secret:", err)
 	}
 }
 
@@ -167,7 +167,7 @@ func TestNotOwnedFailure(t *testing.T) {
 		t.Error("Expected to get error when calling ReconcileSecret, but got no error.")
 	}
 	if !kaccessor.IsNotOwned(err) {
-		t.Errorf("Expected to get NotOwnedError but got %v", err)
+		t.Error("Expected to get NotOwnedError but got", err)
 	}
 }
 
@@ -184,7 +184,7 @@ func setup(ctx context.Context, secrets []*corev1.Secret,
 
 	waitInformers, err := controller.RunInformers(ctx.Done(), secretInformer.Informer())
 	if err != nil {
-		t.Fatalf("failed to start secret informer: %v", err)
+		t.Fatal("failed to start secret informer:", err)
 	}
 
 	return &FakeAccessor{

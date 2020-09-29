@@ -172,7 +172,7 @@ func TestGetServers(t *testing.T) {
 	}}
 
 	if diff := cmp.Diff(expected, servers); diff != "" {
-		t.Errorf("Unexpected servers (-want +got): %v", diff)
+		t.Error("Unexpected servers (-want +got):", diff)
 	}
 }
 
@@ -189,7 +189,7 @@ func TestGetHTTPServer(t *testing.T) {
 		},
 	}
 	if diff := cmp.Diff(expected, server); diff != "" {
-		t.Errorf("Unexpected server (-want +got): %v", diff)
+		t.Error("Unexpected server (-want +got):", diff)
 	}
 }
 
@@ -275,7 +275,7 @@ func TestMakeTLSServers(t *testing.T) {
 				t.Fatalf("Test: %s; MakeServers error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
 			if diff := cmp.Diff(c.expected, servers); diff != "" {
-				t.Errorf("Unexpected servers (-want, +got): %v", diff)
+				t.Error("Unexpected servers (-want, +got):", diff)
 			}
 		})
 	}
@@ -320,7 +320,7 @@ func TestMakeHTTPServer(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			got := MakeHTTPServer(c.httpProtocol, []string{"*"})
 			if diff := cmp.Diff(c.expected, got); diff != "" {
-				t.Errorf("Unexpected HTTP Server (-want, +got): %v", diff)
+				t.Error("Unexpected HTTP Server (-want, +got):", diff)
 			}
 		})
 	}
@@ -537,7 +537,7 @@ func TestUpdateGateway(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			g := UpdateGateway(&c.original, c.newServers, c.existingServers)
 			if diff := cmp.Diff(&c.expected, g); diff != "" {
-				t.Errorf("Unexpected gateway (-want, +got): %v", diff)
+				t.Error("Unexpected gateway (-want, +got):", diff)
 			}
 		})
 	}
@@ -672,7 +672,7 @@ func TestMakeWildcardGateways(t *testing.T) {
 				t.Fatalf("Test: %s; MakeWildcardGateways error = %v, WantErr %v", tc.name, err, tc.wantErr)
 			}
 			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("Unexpected Gateways (-want, +got): %v", diff)
+				t.Error("Unexpected Gateways (-want, +got):", diff)
 			}
 		})
 	}
@@ -693,7 +693,7 @@ func TestGatewayRef(t *testing.T) {
 	}
 	got := GatewayRef(gw)
 	if diff := cmp.Diff(want, got); diff != "" {
-		t.Fatalf("GatewayRef failed. diff %s", diff)
+		t.Fatal("GatewayRef failed. diff", diff)
 	}
 }
 
@@ -836,7 +836,7 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 				t.Fatalf("Test: %s; MakeIngressTLSGateways error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
 			if diff := cmp.Diff(c.want, got); diff != "" {
-				t.Errorf("Unexpected Gateways (-want, +got): %v", diff)
+				t.Error("Unexpected Gateways (-want, +got):", diff)
 			}
 		})
 	}
