@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"sort"
 
+	"go.uber.org/zap"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"knative.dev/pkg/controller"
@@ -89,7 +90,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ingress *v1alpha1.Ingres
 
 	reconcileErr := r.reconcileIngress(ctx, ingress)
 	if reconcileErr != nil {
-		logger.Errorf("Failed to reconcile Ingress: %v", reconcileErr)
+		logger.Errorw("Failed to reconcile Ingress: ", zap.Error(reconcileErr))
 		ingress.Status.MarkIngressNotReady(notReconciledReason, notReconciledMessage)
 		return reconcileErr
 	}
