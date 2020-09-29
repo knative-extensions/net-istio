@@ -627,6 +627,9 @@ func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 		Route: []*istiov1alpha3.HTTPRouteDestination{{
 			Destination: &istiov1alpha3.Destination{
 				Host: "the-local-gateway.svc.url",
+				Port: &istiov1alpha3.PortSelector{
+					Number: 80,
+				},
 			},
 			Weight: 100,
 		}},
@@ -647,7 +650,6 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 		},
 		Splits: []v1alpha1.IngressBackendSplit{{
 			IngressBackend: v1alpha1.IngressBackend{
-
 				ServiceNamespace: "test-ns",
 				ServiceName:      "revision-service",
 				ServicePort:      intstr.FromInt(80),
