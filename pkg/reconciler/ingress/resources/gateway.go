@@ -107,7 +107,7 @@ func MakeIngressTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressT
 	}
 	gateways := make([]*v1alpha3.Gateway, len(gatewayServices))
 	for i, gatewayService := range gatewayServices {
-		gateway, err := makeIngressTLSGateway(ctx, ing, ingressTLS, originSecrets, gatewayService.Spec.Selector, gatewayService)
+		gateway, err := makeIngressTLSGateway(ing, originSecrets, gatewayService.Spec.Selector, gatewayService)
 		if err != nil {
 			return nil, err
 		}
@@ -211,7 +211,7 @@ func GatewayRef(gw *v1alpha3.Gateway) tracker.Reference {
 	}
 }
 
-func makeIngressTLSGateway(ctx context.Context, ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, originSecrets map[string]*corev1.Secret, selector map[string]string, gatewayService *corev1.Service) (*v1alpha3.Gateway, error) {
+func makeIngressTLSGateway(ing *v1alpha1.Ingress, originSecrets map[string]*corev1.Secret, selector map[string]string, gatewayService *corev1.Service) (*v1alpha3.Gateway, error) {
 	ns := ing.GetNamespace()
 	if len(ns) == 0 {
 		ns = system.Namespace()

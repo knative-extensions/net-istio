@@ -1172,12 +1172,6 @@ func ingressWithFinalizers(name string, generation int64, tls []v1alpha1.Ingress
 	return ingress
 }
 
-func ingressWithFinalizersAndStatus(name string, generation int64, finalizers []string, status v1alpha1.IngressStatus) *v1alpha1.Ingress {
-	ingress := ingressWithFinalizers(name, generation, []v1alpha1.IngressTLS{}, finalizers, nil)
-	ingress.Status = status
-	return ingress
-}
-
 func ingressWithTLS(name string, generation int64, tls []v1alpha1.IngressTLS) *v1alpha1.Ingress {
 	return ingressWithTLSAndStatus(name, generation, tls, v1alpha1.IngressStatus{})
 }

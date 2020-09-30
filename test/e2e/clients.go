@@ -18,13 +18,15 @@ package e2e
 import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
 	nettest "knative.dev/networking/test"
 	"knative.dev/pkg/test"
+
+	// Required to run e2e tests against OpenID based clusters.
+	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 )
 
 // Clients holds instances of interfaces for making requests to Knative Serving.
