@@ -449,17 +449,6 @@ func qualifiedGatewayNamesFromContext(ctx context.Context) map[v1alpha1.IngressV
 	}
 }
 
-// gatewayServiceURLFromContext return an address of a load-balancer
-// that the given Ingress is exposed to, or empty string if
-// none.
-func gatewayServiceURLFromContext(ctx context.Context, ing *v1alpha1.Ingress) string {
-	if isIngressPublic(ing) {
-		return publicGatewayServiceURLFromContext(ctx)
-	}
-
-	return privateGatewayServiceURLFromContext(ctx)
-}
-
 func publicGatewayServiceURLFromContext(ctx context.Context) string {
 	cfg := config.FromContext(ctx).Istio
 	if len(cfg.IngressGateways) > 0 {

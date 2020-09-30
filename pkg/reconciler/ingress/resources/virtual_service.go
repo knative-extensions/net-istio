@@ -37,14 +37,6 @@ import (
 	"knative.dev/pkg/system"
 )
 
-var retriableConditions = strings.Join([]string{
-	"5xx",
-	"connect-failure",
-	"refused-stream",
-	"cancelled",
-	"resource-exhausted",
-	"retriable-status-codes"}, ",")
-
 // VirtualServiceNamespace gives the namespace of the child
 // VirtualServices for a given Ingress.
 func VirtualServiceNamespace(ing *v1alpha1.Ingress) string {
@@ -140,7 +132,8 @@ func makeVirtualServiceSpec(ctx context.Context, ing *v1alpha1.Ingress, gateways
 
 	gw := sets.String{}
 	for _, rule := range ing.Spec.Rules {
-		for _, p := range rule.HTTP.Paths {
+		for i := range rule.HTTP.Paths {
+			p := rule.HTTP.Paths[i]
 			hosts := hosts.Intersection(sets.NewString(rule.Hosts...))
 			if hosts.Len() != 0 {
 				http := makeVirtualServiceRoute(ctx, hosts, &p, gateways, rule.Visibility)
