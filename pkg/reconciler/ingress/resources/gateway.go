@@ -40,6 +40,9 @@ import (
 	"knative.dev/pkg/tracker"
 )
 
+// GatewayHTTPPort is the HTTP port the gateways listen on.
+const GatewayHTTPPort = 80
+
 var httpServerPortName = "http-server"
 
 var gatewayGvk = v1alpha3.SchemeGroupVersion.WithKind("Gateway")
@@ -311,7 +314,7 @@ func MakeHTTPServer(httpProtocol network.HTTPProtocol, hosts []string) *istiov1a
 		Hosts: hosts,
 		Port: &istiov1alpha3.Port{
 			Name:     httpServerPortName,
-			Number:   80,
+			Number:   GatewayHTTPPort,
 			Protocol: "HTTP",
 		},
 	}
