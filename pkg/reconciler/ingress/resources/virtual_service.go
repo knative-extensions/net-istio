@@ -207,6 +207,9 @@ func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alp
 			Weight: 100,
 			Destination: &istiov1alpha3.Destination{
 				Host: privateGatewayServiceURLFromContext(ctx),
+				Port: &istiov1alpha3.PortSelector{
+					Number: GatewayHTTPPort,
+				},
 			},
 		}}
 	}
