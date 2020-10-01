@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # Download and unpack Istio
-ISTIO_VERSION=1.7.1
+ISTIO_VERSION=1.7.3
 ISTIO_TARBALL=istio-${ISTIO_VERSION}-linux-amd64.tar.gz
 DOWNLOAD_URL=https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/${ISTIO_TARBALL}
 
@@ -24,7 +24,7 @@ if [ $? != 0 ]; then
   echo "Failed to download Istio package"
   exit 1
 fi
-tar xzf ${ISTIO_TARBALL} 
+tar xzf ${ISTIO_TARBALL}
 
 # Install Istio
 ./istio-${ISTIO_VERSION}/bin/istioctl install -f "$(dirname $0)/$1"

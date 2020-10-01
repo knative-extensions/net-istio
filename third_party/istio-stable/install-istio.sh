@@ -14,8 +14,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source $(dirname $0)/../../vendor/knative.dev/test-infra/scripts/e2e-tests.sh
+# Download and unpack Istio
+ISTIO_VERSION=1.7.1
+ISTIO_TARBALL=istio-${ISTIO_VERSION}-linux-amd64.tar.gz
+DOWNLOAD_URL=https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/${ISTIO_TARBALL}
 
-kubectl apply -f "$(dirname $0)/istio-crds.yaml" || return 1
-wait_until_batch_job_complete istio-system || return 1
-kubectl apply -f "$(dirname $0)/$1" || return 1
+wget --no-check-certificate $DOWNLOAD_URL
+if [ $? != 0 ]; then
+  echo "Failed to download Istio package"
+  exit 1
+fi
+tar xzf ${ISTIO_TARBALL}
+
+# Install Istio
+./istio-${ISTIO_VERSION}/bin/istioctl install -f "$(dirname $0)/$1"
+
+# Enable mTLS STRICT in mesh mode
+if [[ $MESH -eq 1 ]]; then
+  kubectl apply -f "$(dirname $0)/extra/global-mtls.yaml"
+fi
+
+# Clean up
+rm -rf istio-${ISTIO_VERSION}
+rm ${ISTIO_TARBALL}
+
+## Add in the `istio-system` namespace to reduce number of commands.
+#patch istio-crds.yaml namespace.yaml.patch
+#patch istio-ci-mesh.yaml namespace.yaml.patch
+#patch istio-ci-no-mesh.yaml namespace.yaml.patch
+#patch istio-minimal.yaml namespace.yaml.patch
+#
+## Increase termination drain duration seconds.
+#patch -l istio-ci-mesh.yaml drain-seconds.yaml.patch
+
