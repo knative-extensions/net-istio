@@ -1152,8 +1152,7 @@ func ingressWithStatus(name string, generation int64, status v1alpha1.IngressSta
 			ResourceVersion: "v1",
 		},
 		Spec: v1alpha1.IngressSpec{
-			DeprecatedGeneration: generation,
-			Rules:                ingressRules,
+			Rules: ingressRules,
 		},
 		Status: status,
 	}
