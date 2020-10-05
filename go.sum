@@ -1782,11 +1782,12 @@ honnef.co/go/tools v0.0.1-2020.1.3/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9
 honnef.co/go/tools v0.0.1-2020.1.4 h1:UoveltGrhghAA7ePc+e+QYDHXrBps2PqFZiHkGR/xK8=
 honnef.co/go/tools v0.0.1-2020.1.4/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9vFzvIQ3k=
 istio.io/api v0.0.0-20200512234804-e5412c253ffe/go.mod h1:kyq3g5w42zl/AKlbzDGppYpGMQYMYMyZKeq0/eexML8=
-istio.io/api v0.0.0-20200615162408-9b5293c30ef5 h1:iinHfXFQvjFxnjUN6zyqUrXHhLUUdZG3sDKlKF70QEA=
-istio.io/api v0.0.0-20200615162408-9b5293c30ef5/go.mod h1:uXD10AwGZkxIrVKTntYm2uyFWQQfNzhAGkIxLfRNocs=
+istio.io/api v0.0.0-20200807024414-e900e2f47215/go.mod h1:88HN3o1fSD1jo+Z1WTLlJfMm9biopur6Ct9BFKjiB64=
+istio.io/api v0.0.0-20201002153436-e6e7bbc4ebea h1:0xmp80RX+UEnjvObyFjfScT+tj58hS0ewHURCYBE2ZI=
+istio.io/api v0.0.0-20201002153436-e6e7bbc4ebea/go.mod h1:88HN3o1fSD1jo+Z1WTLlJfMm9biopur6Ct9BFKjiB64=
 istio.io/client-go v0.0.0-20200513000250-b1d6e9886b7b/go.mod h1:aUDVNCOKom8n53OPEb7JxKucbKVNveDY4WJj7PGQb14=
-istio.io/client-go v0.0.0-20200615164228-d77b0b53b6a0 h1:xeY9LpoaZ14+XMorriB/Uox6vQMfAj6hHyCc74WpdaY=
-istio.io/client-go v0.0.0-20200615164228-d77b0b53b6a0/go.mod h1:W+REwu9Vz96+hFyDL05C9QVHkYjROjeeup0nznYE/sc=
+istio.io/client-go v0.0.0-20200807182027-d287a5abb594 h1:Rdokv2iBpeIgsER6tas937QlCKB2dTB6p+X3uP6Dzsw=
+istio.io/client-go v0.0.0-20200807182027-d287a5abb594/go.mod h1:q726ySPDHo2Ob6LHZ9oXWr8nNf8Sm0uIzYQ7B4XjnvA=
 istio.io/gogo-genproto v0.0.0-20190930162913-45029607206a h1:w7zILua2dnYo9CxImhpNW4NE/8ZxEoc/wfBfHrhUhrE=
 istio.io/gogo-genproto v0.0.0-20190930162913-45029607206a/go.mod h1:OzpAts7jljZceG4Vqi5/zXy/pOg1b209T3jb7Nv5wIs=
 istio.io/gogo-genproto v0.0.0-20191029161641-f7d19ec0141d h1:OCJTcFsWtB/2RBM8iZa5Bb8YnHpCUUSgnQBggCbJH4w=
@@ -1877,8 +1878,8 @@ knative.dev/test-infra v0.0.0-20201002164834-8c07ff018549 h1:8UObRJ0lnWvU9FuD8ub
 knative.dev/test-infra v0.0.0-20201002164834-8c07ff018549/go.mod h1:Pmg2c7Z7q7BGFUV/GOpU5BlrD3ePJft4MPqx8AYBplc=
 knative.dev/test-infra v0.0.0-20201005021934-df2084cec789/go.mod h1:Pmg2c7Z7q7BGFUV/GOpU5BlrD3ePJft4MPqx8AYBplc=
 knative.dev/test-infra v0.0.0-20201008002321-0e7582f33f9a/go.mod h1:Qj8sZPA2mTFusTOH13YVns7jY7xsnrLsZdPB0aTdejs=
-knative.dev/test-infra v0.0.0-20201008043522-20ae6ee1a359 h1:5bnnjqpixMucz7Xids6VVfqE1JyoBimgrRzLn450RuU=
-knative.dev/test-infra v0.0.0-20201008043522-20ae6ee1a359/go.mod h1:Qj8sZPA2mTFusTOH13YVns7jY7xsnrLsZdPB0aTdejs=
+knative.dev/test-infra v0.0.0-20201008163221-4c019302d9bb h1:m+osILKy7luWeELluiwjbxybcmHl0Mb3Eg61Coh1lc0=
+knative.dev/test-infra v0.0.0-20201008163221-4c019302d9bb/go.mod h1:Qj8sZPA2mTFusTOH13YVns7jY7xsnrLsZdPB0aTdejs=
 mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed/go.mod h1:Xkxe497xwlCKkIaQYRfC7CSLworTXY9RMqwhhCm+8Nc=
 mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b/go.mod h1:2odslEg/xrtNQqCYg2/jCoyKnw3vv5biOc3JnIcYfL4=
 mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f/go.mod h1:4G1h5nDURzA3bwVMZIVpwbkw+04kSxk3rAtzlimaUJw=

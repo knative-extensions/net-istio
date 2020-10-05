@@ -193,7 +193,6 @@ option go_package = "istio.io/api/networking/v1alpha3";
 // representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. 
 // Clients may not set this value. It is represented in RFC3339 form and is in UTC.
 // Populated by the system. Read-only. Null for lists. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata"
-// +cue-gen:VirtualService:preserveUnknownFields:false
 // -->
 //
 // <!-- go code generation tags
@@ -603,7 +602,7 @@ message HTTPRoute {
   reserved 5;
   reserved "websocket_upgrade";
 
-  // Timeout for HTTP requests.
+  // Timeout for HTTP requests, default is disabled.
   google.protobuf.Duration timeout = 6;
 
   // Retry policy for HTTP requests.
@@ -786,7 +785,6 @@ message Delegate {
 // ```
 // {{</tab>}}
 // {{</tabset>}}
-
 message Headers {
   // Header manipulation rules to apply before forwarding a request
   // to the destination service
@@ -1538,13 +1536,17 @@ message StringMatch {
 // {{</tabset>}}
 //
 message HTTPRetry {
-  // Number of retries for a given request. The interval
-  // between retries will be determined automatically (25ms+). Actual
-  // number of retries attempted depends on the request `timeout` of the
-  // [HTTP route](https://istio.io/docs/reference/config/networking/virtual-service/#HTTPRoute).
+  // Number of retries to be allowed for a given request. The interval
+  // between retries will be determined automatically (25ms+). When request 
+  // `timeout` of the [HTTP route](https://istio.io/docs/reference/config/networking/virtual-service/#HTTPRoute) 
+  // or `per_try_timeout` is configured, the actual number of retries attempted also depends on
+  // the specified request `timeout` and `per_try_timeout` values.
   int32 attempts = 1 [(google.api.field_behavior) = REQUIRED];
 
   // Timeout per retry attempt for a given request. format: 1h/1m/1s/1ms. MUST BE >=1ms.
+  // Default is same value as request 
+  // `timeout` of the [HTTP route](https://istio.io/docs/reference/config/networking/virtual-service/#HTTPRoute), 
+  // which means no timeout.
   google.protobuf.Duration per_try_timeout = 2;
 
   // Specifies the conditions under which retry takes place.
@@ -1642,7 +1644,7 @@ message CorsPolicy {
   // resource. Serialized to Access-Control-Allow-Headers header.
   repeated string allow_headers = 3;
 
-  // A white list of HTTP headers that the browsers are allowed to
+  // A list of HTTP headers that the browsers are allowed to
   // access. Serialized into Access-Control-Expose-Headers header.
   repeated string expose_headers = 4;
 
