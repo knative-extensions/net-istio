@@ -109,7 +109,6 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	ing.Status.InitializeConditions()
 	logger.Infof("Reconciling ingress: %#v", ing)
 
-	ing.Status.ObservedGeneration = ing.GetGeneration()
 	gatewayNames := qualifiedGatewayNamesFromContext(ctx)
 	if r.shouldReconcileTLS(ctx, ing) {
 		originSecrets, err := resources.GetSecrets(ing, r.secretLister)
@@ -229,6 +228,8 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	} else {
 		ing.Status.MarkLoadBalancerNotReady()
 	}
+
+	ing.Status.ObservedGeneration = ing.GetGeneration()
 
 	// TODO(zhiminx): Mark Route status to indicate that Gateway is configured.
 	logger.Info("Ingress successfully synced")
