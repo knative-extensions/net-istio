@@ -32,6 +32,8 @@ import (
 	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
 	fakeingressclient "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
 	"knative.dev/networking/pkg/ingress"
+	"knative.dev/networking/pkg/status"
+	fakestatusmanager "knative.dev/networking/pkg/testing/status"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints/fake"
@@ -394,7 +396,37 @@ func TestReconcile(t *testing.T) {
 		WantPatches: []clientgotesting.PatchActionImpl{
 			patchAddFinalizerAction("reconcile-virtualservice", "ingresses.networking.internal.knative.dev"),
 		},
+		PostConditions: []func(*testing.T, *TableRow){
+			// ensure that prober gets invoked once
+			func(t *testing.T, tr *TableRow) {
+				statusManager := tr.Ctx.Value(FakeStatusManagerKey).(*fakestatusmanager.FakeStatusManager)
+				callCount := statusManager.IsReadyCallCount(tr.Objects[0].(*v1alpha1.Ingress))
+				if callCount != 1 {
+					t.Errorf("statusManager.IsReady called %v times, wanted %v", callCount, 1)
+				}
+			},
+		},
 		Key: "test-ns/reconcile-virtualservice",
+	}, {
+		Name: "if ingress is already ready, we shouldn't call statusManager.IsReady",
+		Key:  "test-ns/ingress-ready",
+		Objects: []runtime.Object{
+			basicReconciledIngress("ingress-ready", 1234),
+			resources.MakeMeshVirtualService(context.Background(), insertProbe(ing("ingress-ready", 1234)),
+				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
+			resources.MakeIngressVirtualService(context.Background(), insertProbe(ing("ingress-ready", 1234)),
+				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
+		},
+		PostConditions: []func(*testing.T, *TableRow){
+			// ensure that prober never gets called
+			func(t *testing.T, tr *TableRow) {
+				statusManager := tr.Ctx.Value(FakeStatusManagerKey).(*fakestatusmanager.FakeStatusManager)
+				callCount := statusManager.IsReadyCallCount(tr.Objects[0].(*v1alpha1.Ingress))
+				if callCount != 0 {
+					t.Errorf("statusManager.IsReady called %v times, wanted %v", callCount, 0)
+				}
+			},
+		},
 	}, {}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
@@ -403,11 +435,7 @@ func TestReconcile(t *testing.T) {
 			istioClientSet:       istioclient.Get(ctx),
 			virtualServiceLister: listers.GetVirtualServiceLister(),
 			gatewayLister:        listers.GetGatewayLister(),
-			statusManager: &fakeStatusManager{
-				FakeIsReady: func(ctx context.Context, ing *v1alpha1.Ingress) (bool, error) {
-					return true, nil
-				},
-			},
+			statusManager:        ctx.Value(FakeStatusManagerKey).(status.Manager),
 		}
 
 		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakenetworkingclient.Get(ctx),
@@ -960,7 +988,7 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			secretLister:         listers.GetSecretLister(),
 			svcLister:            listers.GetK8sServiceLister(),
 			tracker:              &NullTracker{},
-			statusManager: &fakeStatusManager{
+			statusManager: &fakestatusmanager.FakeStatusManager{
 				FakeIsReady: func(ctx context.Context, ing *v1alpha1.Ingress) (bool, error) {
 					return true, nil
 				},
@@ -1171,6 +1199,28 @@ func ingressWithFinalizers(name string, generation int64, tls []v1alpha1.Ingress
 	return ingress
 }
 
+func basicReconciledIngress(name string, generation int64) *v1alpha1.Ingress {
+	ingress := ingressWithFinalizers(name, generation, []v1alpha1.IngressTLS{}, []string{"ingresses.networking.internal.knative.dev"}, nil)
+	ingress.Status = v1alpha1.IngressStatus{
+		Status: duckv1.Status{
+			Conditions: duckv1.Conditions{{
+				Type:   v1alpha1.IngressConditionLoadBalancerReady,
+				Status: corev1.ConditionTrue,
+			}, {
+				Type:   v1alpha1.IngressConditionNetworkConfigured,
+				Status: corev1.ConditionTrue,
+			}, {
+				Type:   v1alpha1.IngressConditionReady,
+				Status: corev1.ConditionTrue,
+			}},
+		},
+		PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}}},
+		PublicLoadBalancer:  &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{DomainInternal: "test-ingressgateway.istio-system.svc.cluster.local"}}},
+	}
+
+	return ingress
+}
+
 func ingressWithTLS(name string, generation int64, tls []v1alpha1.IngressTLS) *v1alpha1.Ingress {
 	return ingressWithTLSAndStatus(name, generation, tls, v1alpha1.IngressStatus{})
 }
@@ -1214,7 +1264,7 @@ func newTestSetup(t *testing.T, configs ...*corev1.ConfigMap) (
 	controller := newControllerWithOptions(ctx,
 		configMapWatcher,
 		func(r *Reconciler) {
-			r.statusManager = &fakeStatusManager{
+			r.statusManager = &fakestatusmanager.FakeStatusManager{
 				FakeIsReady: func(ctx context.Context, ing *v1alpha1.Ingress) (bool, error) {
 					return true, nil
 				},
@@ -1466,12 +1516,4 @@ func makeGatewayMap(publicGateways []string, privateGateways []string) map[v1alp
 		v1alpha1.IngressVisibilityExternalIP:   sets.NewString(publicGateways...),
 		v1alpha1.IngressVisibilityClusterLocal: sets.NewString(privateGateways...),
 	}
-}
-
-type fakeStatusManager struct {
-	FakeIsReady func(ctx context.Context, ing *v1alpha1.Ingress) (bool, error)
-}
-
-func (m *fakeStatusManager) IsReady(ctx context.Context, ing *v1alpha1.Ingress) (bool, error) {
-	return m.FakeIsReady(ctx, ing)
 }

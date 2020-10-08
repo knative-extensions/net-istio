@@ -109,7 +109,6 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	ing.Status.InitializeConditions()
 	logger.Infof("Reconciling ingress: %#v", ing)
 
-	ing.Status.ObservedGeneration = ing.GetGeneration()
 	gatewayNames := qualifiedGatewayNamesFromContext(ctx)
 	if r.shouldReconcileTLS(ctx, ing) {
 		originSecrets, err := resources.GetSecrets(ing, r.secretLister)
@@ -201,10 +200,27 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	// Update status
 	ing.Status.MarkNetworkConfigured()
 
-	ready, err := r.statusManager.IsReady(ctx, ing)
-	if err != nil {
-		return fmt.Errorf("failed to probe Ingress %s/%s: %w", ing.GetNamespace(), ing.GetName(), err)
+	var ready bool
+	if ing.IsReady() {
+		// When the kingress has already been marked Ready for this generation,
+		// then it must have been successfully probed.  The status manager has
+		// caching built-in, which makes this exception unnecessary for the case
+		// of global resyncs.  HOWEVER, that caching doesn't help at all for
+		// the failover case (cold caches), and the initial sync turns into a
+		// thundering herd.
+		// As this is an optimization, we don't worry about the ObservedGeneration
+		// skew we might see when the resource is actually in flux, we simply care
+		// about the steady state.
+		logger.Debug("Kingress is ready, skipping probe.")
+		ready = true
+	} else {
+		readyStatus, err := r.statusManager.IsReady(ctx, ing)
+		if err != nil {
+			return fmt.Errorf("failed to probe Ingress %s/%s: %w", ing.GetNamespace(), ing.GetName(), err)
+		}
+		ready = readyStatus
 	}
+
 	if ready {
 		publicLbs := getLBStatus(publicGatewayServiceURLFromContext(ctx))
 		privateLbs := getLBStatus(privateGatewayServiceURLFromContext(ctx))
@@ -212,6 +228,10 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	} else {
 		ing.Status.MarkLoadBalancerNotReady()
 	}
+
+	// Now that we've finished reconciling, we can update the ObservedGeneration
+	// to reflect the current state of the ingress.
+	ing.Status.ObservedGeneration = ing.GetGeneration()
 
 	// TODO(zhiminx): Mark Route status to indicate that Gateway is configured.
 	logger.Info("Ingress successfully synced")
