@@ -211,7 +211,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		// As this is an optimization, we don't worry about the ObservedGeneration
 		// skew we might see when the resource is actually in flux, we simply care
 		// about the steady state.
-		logger.Debug("kingress is ready, skipping probe.")
+		logger.Debug("Kingress is ready, skipping probe.")
 		ready = true
 	} else {
 		readyStatus, err := r.statusManager.IsReady(ctx, ing)
