@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
 
 	"go.uber.org/zap"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
@@ -510,4 +511,39 @@ func isIngressPublic(ing *v1alpha1.Ingress) bool {
 		}
 	}
 	return false
+}
+
+// virtualServicesReady checks if a virtual service has a status, and if so if it's ready.
+// the return values are (hasStatus, ready, error), where
+//	hasStatus indicates whether the virtualService has a status field
+//	ready indicates whether it's been reconciled and able to receive requests
+//	error contains any errors that occurred during this
+func (r *Reconciler) virtualServiceReady(ctx context.Context, vs *v1alpha3.VirtualService) (bool, bool, error) {
+	logger := logging.FromContext(ctx)
+
+	currentState, err := r.virtualServiceLister.VirtualServices(vs.Namespace).Get(vs.Name)
+	if err != nil {
+		return false, false, fmt.Errorf("failed to get VirtualService: %w", err)
+	}
+
+	if len(currentState.Status.Conditions) == 0 {
+		// VirtualService doesn't have status. Return that.
+		return false, false, nil
+	}
+
+	logger.Infof("VirtualService %v, status: %#v", vs.Name, vs.Status)
+
+	errs := make([]error, 1)
+	ready := true
+	for _, cond := range currentState.Status.Conditions {
+		var status bool
+		if status, err = strconv.ParseBool(cond.Status); err != nil {
+			errs = append(errs, err)
+		}
+
+		// true only if all conditions are true
+		ready = ready && status
+	}
+
+	return true, ready, errors.NewAggregate(errs)
 }
