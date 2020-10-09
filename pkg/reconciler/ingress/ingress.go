@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
+	istiov1alpha1 "istio.io/api/meta/v1alpha1"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"knative.dev/pkg/controller"
@@ -56,9 +57,10 @@ import (
 )
 
 const (
-	virtualServiceNotReconciled = "ReconcileVirtualServiceFailed"
-	notReconciledReason         = "ReconcileIngressFailed"
-	notReconciledMessage        = "Ingress reconciliation failed"
+	virtualServiceConditionReconciled = "Reconciled"
+	virtualServiceNotReconciled       = "ReconcileVirtualServiceFailed"
+	notReconciledReason               = "ReconcileIngressFailed"
+	notReconciledMessage              = "Ingress reconciliation failed"
 )
 
 // Reconciler implements the control loop for the Ingress resources.
@@ -561,19 +563,20 @@ func (r *Reconciler) virtualServiceReady(ctx context.Context, vs *v1alpha3.Virtu
 		return false, false, fmt.Errorf("failed to get VirtualService %q: %w", vs.Name, err)
 	}
 
-	if len(currentState.Status.Conditions) == 0 {
+	logger.Debugf("VirtualService %v, status: %#v", vs.Name, vs.Status)
+
+	var condition *istiov1alpha1.IstioCondition
+	for _, cond := range currentState.Status.Conditions {
+		// Reconciled condition can be "true", "false", or "unknown"
+		if strings.EqualFold(cond.Type, virtualServiceConditionReconciled) {
+			condition = cond
+		}
+	}
+
+	if condition == nil {
 		// VirtualService doesn't have status. Return that.
 		return false, false, nil
 	}
 
-	logger.Debugf("VirtualService %v, status: %#v", vs.Name, vs.Status)
-
-	ready := true
-	for _, cond := range currentState.Status.Conditions {
-		// condition.status can be "true", "false", or "unknown"
-		// virtualService is ready if all are "true"
-		ready = ready && strings.EqualFold(cond.Status, "true")
-	}
-
-	return true, ready, nil
+	return true, strings.EqualFold(condition.Type, virtualServiceConditionReconciled), nil
 }
