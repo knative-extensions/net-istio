@@ -902,7 +902,7 @@ knative.dev/networking/test/test_images/runtime/handlers
 knative.dev/networking/test/test_images/timeout
 knative.dev/networking/test/test_images/wsserver
 knative.dev/networking/test/types
-# knative.dev/pkg v0.0.0-20201009023821-73da5142da72
+# knative.dev/pkg v0.0.0-20201009153721-3eb7d13daebe
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -976,7 +976,7 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/configmaps
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
-# knative.dev/test-infra v0.0.0-20201008221921-aeca2ff2371a
+# knative.dev/test-infra v0.0.0-20201009170521-9cecbccfd17c
 ## explicit
 knative.dev/test-infra/scripts
 knative.dev/test-infra/tools/dep-collector
