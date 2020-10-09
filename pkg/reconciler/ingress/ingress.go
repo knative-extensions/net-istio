@@ -214,6 +214,10 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		// about the steady state.
 		logger.Debug("Kingress is ready, skipping probe.")
 		ready = true
+	} else if hasStatus, readyStatus := r.virtualServicesReady(ctx, vses); hasStatus {
+		// Check if our VirtualServices have a status property.
+		// If they do and we're ready, we can
+		ready = readyStatus
 	} else {
 		readyStatus, err := r.statusManager.IsReady(ctx, ing)
 		if err != nil {
@@ -513,7 +517,14 @@ func isIngressPublic(ing *v1alpha1.Ingress) bool {
 	return false
 }
 
-func (r *Reconciler) virtualServicesReady(ctx context.Context, vses []*v1alpha3.VirtualService) (bool, bool, error) {
+// virtualServicesReady checks if a virtual service has a status, and if so if it's ready.
+// the return values are (hasStatus, ready, error), where
+//	hasStatus indicates whether the virtualService has a status field
+//	ready indicates whether it's been reconciled and able to receive requests
+//	error contains any errors that occurred during this
+func (r *Reconciler) virtualServicesReady(ctx context.Context, vses []*v1alpha3.VirtualService) (bool, bool) {
+	logger := logging.FromContext(ctx)
+
 	var errs []error
 	hasStatus := true
 	ready := true
@@ -527,7 +538,14 @@ func (r *Reconciler) virtualServicesReady(ctx context.Context, vses []*v1alpha3.
 		ready = ready && _ready
 	}
 
-	return hasStatus, ready, errors.NewAggregate(errs)
+	if len(errs) > 0 {
+		// Log errors here, but don't return them
+		// If errors occurred while probing VSes, we'll just default to probing
+		logger.Warnf("errors occurred while probing virtual services for status: %w",
+			errors.NewAggregate(errs))
+	}
+
+	return hasStatus, ready
 }
 
 // virtualServiceReady checks if a virtual service has a status, and if so if it's ready.
@@ -540,7 +558,7 @@ func (r *Reconciler) virtualServiceReady(ctx context.Context, vs *v1alpha3.Virtu
 
 	currentState, err := r.virtualServiceLister.VirtualServices(vs.Namespace).Get(vs.Name)
 	if err != nil {
-		return false, false, fmt.Errorf("failed to get VirtualService: %w", err)
+		return false, false, fmt.Errorf("failed to get VirtualService %q: %w", vs.Name, err)
 	}
 
 	if len(currentState.Status.Conditions) == 0 {
@@ -548,7 +566,7 @@ func (r *Reconciler) virtualServiceReady(ctx context.Context, vs *v1alpha3.Virtu
 		return false, false, nil
 	}
 
-	logger.Infof("VirtualService %v, status: %#v", vs.Name, vs.Status)
+	logger.Debugf("VirtualService %v, status: %#v", vs.Name, vs.Status)
 
 	var errs []error
 	ready := true
