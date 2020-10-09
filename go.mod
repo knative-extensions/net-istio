@@ -8,15 +8,15 @@ require (
 	github.com/google/go-cmp v0.5.2
 	go.uber.org/zap v1.15.0
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
-	istio.io/api v0.0.0-20200615162408-9b5293c30ef5
-	istio.io/client-go v0.0.0-20200615164228-d77b0b53b6a0
+	istio.io/api v0.0.0-20201002153436-e6e7bbc4ebea
+	istio.io/client-go v0.0.0-20200807182027-d287a5abb594
 	istio.io/gogo-genproto v0.0.0-20191029161641-f7d19ec0141d // indirect
 	k8s.io/api v0.18.8
 	k8s.io/apimachinery v0.18.8
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	knative.dev/networking v0.0.0-20201008041421-a124f20c3c7c
 	knative.dev/pkg v0.0.0-20201008052621-c0496d5e1b2b
-	knative.dev/test-infra v0.0.0-20201008043522-20ae6ee1a359
+	knative.dev/test-infra v0.0.0-20201008163221-4c019302d9bb
 )
 
 replace (
