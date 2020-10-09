@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"strconv"
+	"strings"
 
 	"go.uber.org/zap"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
@@ -568,17 +568,12 @@ func (r *Reconciler) virtualServiceReady(ctx context.Context, vs *v1alpha3.Virtu
 
 	logger.Debugf("VirtualService %v, status: %#v", vs.Name, vs.Status)
 
-	var errs []error
 	ready := true
 	for _, cond := range currentState.Status.Conditions {
-		var status bool
-		if status, err = strconv.ParseBool(cond.Status); err != nil {
-			errs = append(errs, err)
-		}
-
-		// true only if all conditions are true
-		ready = ready && status
+		// condition.status can be "true", "false", or "unknown"
+		// virtualService is ready if all are "true"
+		ready = ready && strings.EqualFold(cond.Status, "true")
 	}
 
-	return true, ready, errors.NewAggregate(errs)
+	return true, ready, nil
 }
