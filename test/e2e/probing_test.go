@@ -274,7 +274,7 @@ func TestIstioProbing(t *testing.T) {
 						u,
 						pkgTest.MatchesAllOf(pkgTest.IsStatusOK),
 						"istio probe",
-						test.ServingFlags.ResolvableDomain,
+						test.NetworkingFlags.ResolvableDomain,
 						1*time.Minute,
 						transportOptions...); err != nil {
 						return fmt.Errorf("failed to probe %s: %w", u, err)
