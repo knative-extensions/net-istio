@@ -219,6 +219,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	} else if hasStatus, readyStatus := r.virtualServicesReady(ctx, vses); hasStatus {
 		// Check if our VirtualServices have a status property.
 		// If they do and we're ready, we can
+		logger.Debugf("vs has status, %v", readyStatus)
 		ready = readyStatus
 	} else {
 		readyStatus, err := r.statusManager.IsReady(ctx, ing)
@@ -563,7 +564,7 @@ func (r *Reconciler) virtualServiceReady(ctx context.Context, vs *v1alpha3.Virtu
 		return false, false, fmt.Errorf("failed to get VirtualService %q: %w", vs.Name, err)
 	}
 
-	logger.Debugf("VirtualService %v, status: %#v", vs.Name, vs.Status)
+	logger.Debugf("VirtualService %v, status: %#v", vs.Name, currentState.Status)
 
 	var condition *istiov1alpha1.IstioCondition
 	for _, cond := range currentState.Status.Conditions {
@@ -578,5 +579,5 @@ func (r *Reconciler) virtualServiceReady(ctx context.Context, vs *v1alpha3.Virtu
 		return false, false, nil
 	}
 
-	return true, strings.EqualFold(condition.Type, virtualServiceConditionReconciled), nil
+	return true, strings.EqualFold(condition.Status, "true"), nil
 }

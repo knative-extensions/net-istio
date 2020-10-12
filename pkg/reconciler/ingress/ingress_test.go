@@ -497,6 +497,62 @@ func TestReconcile(t *testing.T) {
 				}
 			},
 		},
+	}, {
+		Name: "virtualService status not ready should still avoid probing",
+		Key:  "test-ns/ingress-virtualservice-notready",
+		Objects: []runtime.Object{
+			ingressWithStatusAndFinalizers("ingress-virtualservice-notready", 1234, v1alpha1.IngressStatus{
+				Status: duckv1.Status{
+					Conditions: duckv1.Conditions{{
+						Type:    v1alpha1.IngressConditionLoadBalancerReady,
+						Reason:  "Uninitialized",
+						Status:  corev1.ConditionUnknown,
+						Message: "Waiting for load balancer to be ready",
+					}, {
+						Type:   v1alpha1.IngressConditionNetworkConfigured,
+						Status: corev1.ConditionTrue,
+					}, {
+						Type:    v1alpha1.IngressConditionReady,
+						Reason:  "Uninitialized",
+						Status:  corev1.ConditionUnknown,
+						Message: "Waiting for load balancer to be ready",
+					}},
+				},
+				PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}}},
+				PublicLoadBalancer:  &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{DomainInternal: "test-ingressgateway.istio-system.svc.cluster.local"}}},
+			},
+				[]string{"ingresses.networking.internal.knative.dev"}),
+			meshVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-notready", 1234)),
+				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
+				istiov1alpha1.IstioStatus{
+					Conditions: []*istiov1alpha1.IstioCondition{
+						&istiov1alpha1.IstioCondition{
+							Type:   "Reconciled",
+							Status: "True",
+						},
+					},
+				}),
+			ingressVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-notready", 1234)),
+				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
+				istiov1alpha1.IstioStatus{
+					Conditions: []*istiov1alpha1.IstioCondition{
+						&istiov1alpha1.IstioCondition{
+							Type:   "Reconciled",
+							Status: "False",
+						},
+					},
+				}),
+		},
+		PostConditions: []func(*testing.T, *TableRow){
+			// ensure that prober never gets called
+			func(t *testing.T, tr *TableRow) {
+				statusManager := tr.Ctx.Value(FakeStatusManagerKey).(*fakestatusmanager.FakeStatusManager)
+				callCount := statusManager.IsReadyCallCount(tr.Objects[0].(*v1alpha1.Ingress))
+				if callCount != 0 {
+					t.Errorf("statusManager.IsReady called %v times, wanted %v", callCount, 0)
+				}
+			},
+		},
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
