@@ -218,8 +218,13 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		ready = true
 	} else if hasStatus, readyStatus := r.virtualServicesReady(ctx, vses); hasStatus {
 		// Check if our VirtualServices have a status property.
-		// If they do and we're ready, we can
-		logger.Debugf("vs has status, %v", readyStatus)
+		// If they do and we're ready, we can use that to determine readiness.
+
+		if p, ok := r.statusManager.(*status.Prober); ok {
+			// if possible, cancel probing in case we've started it
+			p.CancelIngressProbing(ing)
+		}
+
 		ready = readyStatus
 	} else {
 		readyStatus, err := r.statusManager.IsReady(ctx, ing)
