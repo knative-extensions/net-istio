@@ -45,6 +45,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/sync/errgroup"
+	istiov1alpha1 "istio.io/api/meta/v1alpha1"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
@@ -416,6 +417,76 @@ func TestReconcile(t *testing.T) {
 			resources.MakeIngressVirtualService(context.Background(), insertProbe(ing("ingress-ready")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
 		},
+		PostConditions: []func(*testing.T, *TableRow){
+			// ensure that prober never gets called
+			func(t *testing.T, tr *TableRow) {
+				statusManager := tr.Ctx.Value(FakeStatusManagerKey).(*fakestatusmanager.FakeStatusManager)
+				callCount := statusManager.IsReadyCallCount(tr.Objects[0].(*v1alpha1.Ingress))
+				if callCount != 0 {
+					t.Errorf("statusManager.IsReady called %v times, wanted %v", callCount, 0)
+				}
+			},
+		},
+	}, {
+		Name: "virtualService status ready should make ingress ready without probing",
+		Key:  "test-ns/ingress-virtualservice-ready",
+		Objects: []runtime.Object{
+			ingressWithStatusAndFinalizers("ingress-virtualservice-ready", v1alpha1.IngressStatus{
+				Status: duckv1.Status{
+					Conditions: duckv1.Conditions{{
+						Type:   v1alpha1.IngressConditionLoadBalancerReady,
+						Status: corev1.ConditionFalse,
+					}, {
+						Type:   v1alpha1.IngressConditionNetworkConfigured,
+						Status: corev1.ConditionTrue,
+					}, {
+						Type:   v1alpha1.IngressConditionReady,
+						Status: corev1.ConditionFalse,
+					}},
+				},
+				PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}}},
+				PublicLoadBalancer:  &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{DomainInternal: "test-ingressgateway.istio-system.svc.cluster.local"}}},
+			},
+				[]string{"ingresses.networking.internal.knative.dev"}),
+			meshVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-ready")),
+				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
+				istiov1alpha1.IstioStatus{
+					Conditions: []*istiov1alpha1.IstioCondition{
+						&istiov1alpha1.IstioCondition{
+							Type:   "Reconciled",
+							Status: "True",
+						},
+					},
+				}),
+			ingressVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-ready")),
+				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
+				istiov1alpha1.IstioStatus{
+					Conditions: []*istiov1alpha1.IstioCondition{
+						&istiov1alpha1.IstioCondition{
+							Type:   "Reconciled",
+							Status: "True",
+						},
+					},
+				}),
+		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ingressWithStatusAndFinalizers("ingress-virtualservice-ready", v1alpha1.IngressStatus{
+				Status: duckv1.Status{
+					Conditions: duckv1.Conditions{{
+						Type:   v1alpha1.IngressConditionLoadBalancerReady,
+						Status: corev1.ConditionTrue,
+					}, {
+						Type:   v1alpha1.IngressConditionNetworkConfigured,
+						Status: corev1.ConditionTrue,
+					}, {
+						Type:   v1alpha1.IngressConditionReady,
+						Status: corev1.ConditionTrue,
+					}},
+				},
+				PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}}},
+				PublicLoadBalancer:  &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{DomainInternal: "test-ingressgateway.istio-system.svc.cluster.local"}}},
+			},
+				[]string{"ingresses.networking.internal.knative.dev"})}},
 		PostConditions: []func(*testing.T, *TableRow){
 			// ensure that prober never gets called
 			func(t *testing.T, tr *TableRow) {
@@ -1166,6 +1237,12 @@ func ReconcilerTestConfig() *config.Config {
 	}
 }
 
+func ingressWithStatusAndFinalizers(name string, status v1alpha1.IngressStatus, finalizers []string) *v1alpha1.Ingress {
+	ing := ingressWithStatus(name, status)
+	ing.Finalizers = finalizers
+	return ing
+}
+
 func ingressWithStatus(name string, status v1alpha1.IngressStatus) *v1alpha1.Ingress {
 	return &v1alpha1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1199,8 +1276,7 @@ func ingressWithFinalizers(name string, tls []v1alpha1.IngressTLS, finalizers []
 }
 
 func basicReconciledIngress(name string) *v1alpha1.Ingress {
-	ingress := ingressWithFinalizers(name, []v1alpha1.IngressTLS{}, []string{"ingresses.networking.internal.knative.dev"}, nil)
-	ingress.Status = v1alpha1.IngressStatus{
+	ingress := ingressWithStatusAndFinalizers(name, v1alpha1.IngressStatus{
 		Status: duckv1.Status{
 			Conditions: duckv1.Conditions{{
 				Type:   v1alpha1.IngressConditionLoadBalancerReady,
@@ -1215,7 +1291,7 @@ func basicReconciledIngress(name string) *v1alpha1.Ingress {
 		},
 		PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}}},
 		PublicLoadBalancer:  &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{DomainInternal: "test-ingressgateway.istio-system.svc.cluster.local"}}},
-	}
+	}, []string{"ingresses.networking.internal.knative.dev"})
 
 	return ingress
 }
@@ -1248,6 +1324,20 @@ func ingressWithTLSAndStatusClusterLocal(name string, tls []v1alpha1.IngressTLS,
 	ci := ingressWithTLSClusterLocal(name, tls)
 	ci.Status = status
 	return ci
+}
+
+func meshVirtualServiceWithStatus(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, status istiov1alpha1.IstioStatus) *v1alpha3.VirtualService {
+	vs := resources.MakeMeshVirtualService(ctx, ing, gateways)
+	vs.Status = status
+
+	return vs
+}
+
+func ingressVirtualServiceWithStatus(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, status istiov1alpha1.IstioStatus) *v1alpha3.VirtualService {
+	vs := resources.MakeIngressVirtualService(ctx, ing, gateways)
+	vs.Status = status
+
+	return vs
 }
 
 func newTestSetup(t *testing.T, configs ...*corev1.ConfigMap) (
