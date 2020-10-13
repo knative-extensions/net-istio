@@ -501,7 +501,7 @@ func TestReconcile(t *testing.T) {
 		Name: "virtualService status not ready should still avoid probing",
 		Key:  "test-ns/ingress-virtualservice-notready",
 		Objects: []runtime.Object{
-			ingressWithStatusAndFinalizers("ingress-virtualservice-notready", 1234, v1alpha1.IngressStatus{
+			ingressWithStatusAndFinalizers("ingress-virtualservice-notready", v1alpha1.IngressStatus{
 				Status: duckv1.Status{
 					Conditions: duckv1.Conditions{{
 						Type:    v1alpha1.IngressConditionLoadBalancerReady,
@@ -522,7 +522,7 @@ func TestReconcile(t *testing.T) {
 				PublicLoadBalancer:  &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{DomainInternal: "test-ingressgateway.istio-system.svc.cluster.local"}}},
 			},
 				[]string{"ingresses.networking.internal.knative.dev"}),
-			meshVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-notready", 1234)),
+			meshVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-notready")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
 				istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
@@ -532,7 +532,7 @@ func TestReconcile(t *testing.T) {
 						},
 					},
 				}),
-			ingressVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-notready", 1234)),
+			ingressVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-notready")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
 				istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
