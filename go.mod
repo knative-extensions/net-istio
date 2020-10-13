@@ -28,4 +28,8 @@ replace (
 	k8s.io/client-go => k8s.io/client-go v0.18.8
 	k8s.io/code-generator => k8s.io/code-generator v0.18.8
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
+	knative.dev/networking => ../networking
+
+	// DO NOT SUBMIT
+	knative.dev/pkg => ../pkg
 )

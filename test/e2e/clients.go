@@ -16,22 +16,25 @@ limitations under the License.
 package e2e
 
 import (
+	"context"
+
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
-	nettest "knative.dev/networking/test"
-	"knative.dev/pkg/test"
+	"knative.dev/pkg/injection/clients/dynamicclient"
 
 	// Required to run e2e tests against OpenID based clusters.
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
+
+	nettest "knative.dev/networking/test"
+	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
 )
 
 // Clients holds instances of interfaces for making requests to Knative Serving.
 type Clients struct {
-	KubeClient       *test.KubeClient
+	KubeClient       kubernetes.Interface
 	NetworkingClient *nettest.Clients
 	Dynamic          dynamic.Interface
 	IstioClient      istioclientset.Interface
@@ -40,40 +43,14 @@ type Clients struct {
 // NewClients instantiates and returns several clientsets required for making request to the
 // Knative Serving cluster specified by the combination of clusterName and configPath. Clients can
 // make requests within namespace.
-func NewClients(configPath string, clusterName string, namespace string) (*Clients, error) {
-	cfg, err := BuildClientConfig(configPath, clusterName)
-	if err != nil {
-		return nil, err
+func NewClients(ctx context.Context, namespace string) (*Clients, error) {
+	clients := &Clients{
+		KubeClient:       kubeclient.Get(ctx),
+		Dynamic:          dynamicclient.Get(ctx),
+		IstioClient:      istioclient.Get(ctx),
 	}
-
-	// We poll, so set our limits high.
-	cfg.QPS = 100
-	cfg.Burst = 200
-
-	return NewClientsFromConfig(cfg, namespace)
-}
-
-// NewClientsFromConfig instantiates and returns several clientsets required for making request to the
-// Knative Serving cluster specified by the rest Config. Clients can make requests within namespace.
-func NewClientsFromConfig(cfg *rest.Config, namespace string) (*Clients, error) {
-	clients := &Clients{}
-	kubeClient, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-	clients.KubeClient = &test.KubeClient{Kube: kubeClient}
-
-	clients.Dynamic, err = dynamic.NewForConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	clients.IstioClient, err = istioclientset.NewForConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	clients.NetworkingClient, err = nettest.NewClientsFromConfig(cfg, nettest.ServingNamespace)
+	var err error
+	clients.NetworkingClient, err = nettest.NewClientsFromCtx(ctx, namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -81,14 +58,3 @@ func NewClientsFromConfig(cfg *rest.Config, namespace string) (*Clients, error) 
 	return clients, nil
 }
 
-// BuildClientConfig builds client config for testing.
-func BuildClientConfig(kubeConfigPath string, clusterName string) (*rest.Config, error) {
-	overrides := clientcmd.ConfigOverrides{}
-	// Override the cluster name if provided.
-	if clusterName != "" {
-		overrides.Context.Cluster = clusterName
-	}
-	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeConfigPath},
-		&overrides).ClientConfig()
-}

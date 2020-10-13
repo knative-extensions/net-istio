@@ -24,6 +24,7 @@ import (
 
 	pkgTest "knative.dev/pkg/test"
 	"knative.dev/pkg/test/logstream"
+	injectiontest "knative.dev/pkg/injection/test"
 
 	// Mysteriously required to support GCP auth (required by k8s libs). Apparently just importing it is enough. @_@ side effects @_@. https://github.com/kubernetes/client-go/issues/242
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -68,7 +69,7 @@ func Setup(t pkgTest.TLegacy) *Clients {
 	cancel := logstream.Start(t)
 	t.Cleanup(cancel)
 
-	clients, err := NewClients(pkgTest.Flags.Kubeconfig, pkgTest.Flags.Cluster, ServingNamespace)
+	clients, err := NewClientsFromCtx(injectiontest.InjectionContext(), ServingNamespace)
 	if err != nil {
 		t.Fatal("Couldn't initialize clients", "error", err.Error())
 	}

@@ -24,6 +24,7 @@ import (
 
 	"knative.dev/networking/test"
 	pkgTest "knative.dev/pkg/test"
+	injectiontest "knative.dev/pkg/injection/test"
 	"knative.dev/pkg/test/logstream"
 )
 
@@ -34,7 +35,7 @@ func Setup(t pkgTest.TLegacy) *Clients {
 	cancel := logstream.Start(t)
 	t.Cleanup(cancel)
 
-	clients, err := NewClients(pkgTest.Flags.Kubeconfig, pkgTest.Flags.Cluster, test.ServingNamespace)
+	clients, err := NewClients(injectiontest.InjectionContext(), test.ServingNamespace)
 	if err != nil {
 		t.Fatal("Couldn't initialize clients", "error", err.Error())
 	}

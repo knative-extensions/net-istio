@@ -29,12 +29,11 @@ import (
 
 	"knative.dev/networking/pkg/client/clientset/versioned"
 	networkingv1alpha1 "knative.dev/networking/pkg/client/clientset/versioned/typed/networking/v1alpha1"
-	"knative.dev/pkg/test"
 )
 
 // Clients holds instances of interfaces for making requests to Knative Serving.
 type Clients struct {
-	KubeClient       *test.KubeClient
+	KubeClient       kubernetes.Interface
 	NetworkingClient *NetworkingClients
 	Dynamic          dynamic.Interface
 }
@@ -50,6 +49,7 @@ type NetworkingClients struct {
 // NewClients instantiates and returns several clientsets required for making request to the
 // Knative Serving cluster specified by the combination of clusterName and configPath. Clients can
 // make requests within namespace.
+// Deprecated: use NewClientsFromCtx
 func NewClients(configPath string, clusterName string, namespace string) (*Clients, error) {
 	cfg, err := BuildClientConfig(configPath, clusterName)
 	if err != nil {
@@ -65,13 +65,14 @@ func NewClients(configPath string, clusterName string, namespace string) (*Clien
 
 // NewClientsFromConfig instantiates and returns several clientsets required for making request to the
 // Knative Serving cluster specified by the rest Config. Clients can make requests within namespace.
+// Deprecated: use NewClientsFromCtx
 func NewClientsFromConfig(cfg *rest.Config, namespace string) (*Clients, error) {
 	clients := &Clients{}
 	kubeClient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
-	clients.KubeClient = &test.KubeClient{Kube: kubeClient}
+	clients.KubeClient = kubeClient
 
 	clients.Dynamic, err = dynamic.NewForConfig(cfg)
 	if err != nil {
