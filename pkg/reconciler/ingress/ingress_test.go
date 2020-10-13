@@ -452,7 +452,7 @@ func TestReconcile(t *testing.T) {
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
 				istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
-						&istiov1alpha1.IstioCondition{
+						{
 							Type:   "Reconciled",
 							Status: "True",
 						},
@@ -462,7 +462,7 @@ func TestReconcile(t *testing.T) {
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
 				istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
-						&istiov1alpha1.IstioCondition{
+						{
 							Type:   "Reconciled",
 							Status: "True",
 						},
@@ -526,7 +526,7 @@ func TestReconcile(t *testing.T) {
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
 				istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
-						&istiov1alpha1.IstioCondition{
+						{
 							Type:   "Reconciled",
 							Status: "True",
 						},
@@ -536,7 +536,7 @@ func TestReconcile(t *testing.T) {
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
 				istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
-						&istiov1alpha1.IstioCondition{
+						{
 							Type:   "Reconciled",
 							Status: "False",
 						},
