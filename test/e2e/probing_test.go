@@ -319,7 +319,7 @@ func setupGateway(t *testing.T, clients *Clients, namespace string, servers []*i
 
 	selector := labels.SelectorFromSet(gw.Spec.Selector).String()
 	// Restart the Gateway pods: this is needed because Istio without SDS won't refresh the cert when the secret is updated
-	pods, err := clients.KubeClient.Kube.CoreV1().Pods("istio-system").List(context.Background(), metav1.ListOptions{LabelSelector: selector})
+	pods, err := clients.KubeClient.CoreV1().Pods("istio-system").List(context.Background(), metav1.ListOptions{LabelSelector: selector})
 	if err != nil {
 		t.Fatal("Failed to list Gateway pods:", err)
 	}
@@ -328,7 +328,7 @@ func setupGateway(t *testing.T, clients *Clients, namespace string, servers []*i
 
 	var wg sync.WaitGroup
 	wg.Add(len(pods.Items))
-	wtch, err := clients.KubeClient.Kube.CoreV1().Pods("istio-system").Watch(context.Background(), metav1.ListOptions{LabelSelector: selector})
+	wtch, err := clients.KubeClient.CoreV1().Pods("istio-system").Watch(context.Background(), metav1.ListOptions{LabelSelector: selector})
 	if err != nil {
 		t.Fatal("Failed to watch Gateway pods:", err)
 	}
@@ -348,7 +348,7 @@ func setupGateway(t *testing.T, clients *Clients, namespace string, servers []*i
 		}
 	}()
 
-	err = clients.KubeClient.Kube.CoreV1().Pods("istio-system").DeleteCollection(context.Background(), metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: selector})
+	err = clients.KubeClient.CoreV1().Pods("istio-system").DeleteCollection(context.Background(), metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: selector})
 	if err != nil {
 		t.Fatal("Failed to delete Gateway pods:", err)
 	}
@@ -376,8 +376,8 @@ func setupHTTPS(t *testing.T, kubeClient *pkgTest.KubeClient, hosts []string) sp
 		t.Fatalf("Failed to add the certificate to the root CA")
 	}
 
-	kubeClient.Kube.CoreV1().Secrets("istio-system").Delete(context.Background(), "istio-ingressgateway-certs", metav1.DeleteOptions{})
-	_, err = kubeClient.Kube.CoreV1().Secrets("istio-system").Create(context.Background(), &corev1.Secret{
+	kubeClient.CoreV1().Secrets("istio-system").Delete(context.Background(), "istio-ingressgateway-certs", metav1.DeleteOptions{})
+	_, err = kubeClient.CoreV1().Secrets("istio-system").Create(context.Background(), &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "istio-system",
 			Name:      "istio-ingressgateway-certs",
