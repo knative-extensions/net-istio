@@ -72,6 +72,7 @@ described below.
 ### Install Istio
 
 Run the following command to install Istio for development purpose:
+
 ```shell
 third_party/istio-stable/install-istio.sh istio-ci-no-mesh.yaml
 ```
