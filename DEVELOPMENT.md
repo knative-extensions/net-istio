@@ -24,7 +24,6 @@ You must install these tools:
 1. [`go`](https://golang.org/doc/install): The language Knative `net-istio` is
    built in
 1. [`git`](https://help.github.com/articles/set-up-git/): For source control
-1. [`dep`](https://github.com/golang/dep): For managing external dependencies.
 
 ### Environment setup
 
@@ -69,3 +68,10 @@ _Adding the `upstream` remote sets you up nicely for regularly
 
 Once you reach this point you are ready to do a full build and deploy as
 described below.
+
+### Install Istio
+
+Run the following command to install Istio for development purpose:
+```shell
+third_party/istio-stable/install-istio.sh istio-ci-no-mesh.yaml
+```
