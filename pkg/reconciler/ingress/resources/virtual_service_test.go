@@ -19,7 +19,6 @@ package resources
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
@@ -36,9 +35,8 @@ import (
 )
 
 var (
-	defaultMaxRevisionTimeout = 90 * time.Second
-	defaultGateways           = makeGatewayMap([]string{"gateway"}, []string{"private-gateway"})
-	defaultIngressRuleValue   = &v1alpha1.HTTPIngressRuleValue{
+	defaultGateways         = makeGatewayMap([]string{"gateway"}, []string{"private-gateway"})
+	defaultIngressRuleValue = &v1alpha1.HTTPIngressRuleValue{
 		Paths: []v1alpha1.HTTPIngressPath{{
 			Splits: []v1alpha1.IngressBackendSplit{{
 				Percent: 100,
