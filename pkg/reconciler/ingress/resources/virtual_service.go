@@ -24,7 +24,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"github.com/gogo/protobuf/types"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
@@ -219,9 +218,6 @@ func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alp
 		Route:   weights,
 		Rewrite: rewrite,
 		Headers: h,
-	}
-	if http.Timeout != nil {
-		route.Timeout = types.DurationProto(http.Timeout.Duration)
 	}
 	return route
 }

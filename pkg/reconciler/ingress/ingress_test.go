@@ -157,8 +157,7 @@ var (
 					},
 					Percent: 100,
 				}},
-				Timeout: &metav1.Duration{Duration: time.Duration(90) * time.Second}},
-			},
+			}},
 		},
 		Visibility: v1alpha1.IngressVisibilityExternalIP,
 	}}

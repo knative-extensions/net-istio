@@ -21,7 +21,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogo/protobuf/types"
 	"github.com/google/go-cmp/cmp"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,7 +40,6 @@ var (
 	defaultGateways           = makeGatewayMap([]string{"gateway"}, []string{"private-gateway"})
 	defaultIngressRuleValue   = &v1alpha1.HTTPIngressRuleValue{
 		Paths: []v1alpha1.HTTPIngressPath{{
-			Timeout: &metav1.Duration{Duration: time.Minute},
 			Splits: []v1alpha1.IngressBackendSplit{{
 				Percent: 100,
 				IngressBackend: v1alpha1.IngressBackend{
@@ -385,7 +383,6 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 						AppendHeaders: map[string]string{
 							"foo": "bar",
 						},
-						Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
 					}},
 				},
 			}, {
@@ -406,7 +403,6 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 						AppendHeaders: map[string]string{
 							"foo": "baz",
 						},
-						Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
 					}},
 				},
 			}},
@@ -443,7 +439,6 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 				},
 			},
 		},
-		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
 	}}
 
 	routes := MakeMeshVirtualService(context.Background(), ci, defaultGateways).Spec.Http
@@ -494,7 +489,6 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 						AppendHeaders: map[string]string{
 							"foo": "bar",
 						},
-						Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
 					}},
 				},
 				Visibility: v1alpha1.IngressVisibilityExternalIP,
@@ -516,7 +510,6 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 						AppendHeaders: map[string]string{
 							"foo": "baz",
 						},
-						Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
 					}},
 				},
 			}},
@@ -562,7 +555,6 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 				},
 			},
 		},
-		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
 	}, {
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Uri: &istiov1alpha3.StringMatch{
@@ -587,7 +579,6 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 				},
 			},
 		},
-		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
 	}}
 
 	routes := MakeIngressVirtualService(context.Background(), ci, makeGatewayMap([]string{"gateway.public"}, []string{"gateway.private"})).Spec.Http
@@ -599,7 +590,6 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 	ingressPath := &v1alpha1.HTTPIngressPath{
 		RewriteHost: "the.target.host",
-		Timeout:     &metav1.Duration{Duration: defaultMaxRevisionTimeout},
 	}
 	ctx := config.ToContext(context.Background(), &config.Config{
 		Istio: &config.Istio{
@@ -633,7 +623,6 @@ func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 			},
 			Weight: 100,
 		}},
-		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
 	}
 	if diff := cmp.Diff(expected, route); diff != "" {
 		t.Error("Unexpected route  (-want +got):", diff)
@@ -656,7 +645,6 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 			},
 			Percent: 100,
 		}},
-		Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
 	}
 	route := makeVirtualServiceRoute(context.Background(), sets.NewString("a.com", "b.org"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1alpha3.HTTPRoute{
@@ -692,7 +680,6 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 			},
 			Weight: 100,
 		}},
-		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
 	}
 	if diff := cmp.Diff(expected, route); diff != "" {
 		t.Error("Unexpected route  (-want +got):", diff)
@@ -717,7 +704,6 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 			},
 			Percent: 10,
 		}},
-		Timeout: &metav1.Duration{Duration: defaultMaxRevisionTimeout},
 	}
 	route := makeVirtualServiceRoute(context.Background(), sets.NewString("test.org"), ingressPath, makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1alpha3.HTTPRoute{
@@ -740,7 +726,6 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 			},
 			Weight: 10,
 		}},
-		Timeout: types.DurationProto(defaultMaxRevisionTimeout),
 	}
 	if diff := cmp.Diff(expected, route); diff != "" {
 		t.Error("Unexpected route  (-want +got):", diff)
