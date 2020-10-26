@@ -17,6 +17,7 @@ limitations under the License.
 package e2e
 
 import (
+	"testing"
 	// Mysteriously required to support GCP auth (required by k8s libs).
 	// Apparently just importing it is enough. @_@ side effects @_@.
 	// https://github.com/kubernetes/client-go/issues/242
@@ -28,7 +29,7 @@ import (
 )
 
 // Setup creates client to run Knative Service requests
-func Setup(t pkgTest.TLegacy) *Clients {
+func Setup(t testing.TB) *Clients {
 	t.Helper()
 
 	cancel := logstream.Start(t)
