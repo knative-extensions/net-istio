@@ -76,3 +76,20 @@ Run the following command to install Istio for development purpose:
 ```shell
 third_party/istio-stable/install-istio.sh istio-ci-no-mesh.yaml
 ```
+
+### Install Knative Serving
+
+Run the following command to install Knative
+
+```shell
+kubectl apply --filename https://storage.googleapis.com/knative-nightly/serving/latest/serving-crds.yaml
+kubectl apply --filename https://storage.googleapis.com/knative-nightly/serving/latest/serving-core.yaml
+```
+
+### Install Knative net-istio
+
+Run the following command to install net-istio components
+
+```shell
+ko apply -f config/
+```
