@@ -82,8 +82,8 @@ third_party/istio-stable/install-istio.sh istio-ci-no-mesh.yaml
 Run the following command to install Knative
 
 ```shell
-kubectl apply -f https://github.com/knative/serving/releases/download/v0.18.0/serving-crds.yaml
-kubectl apply -f https://github.com/knative/serving/releases/download/v0.18.0/serving-core.yaml
+kubectl apply --filename https://storage.googleapis.com/knative-nightly/serving/latest/serving-crds.yaml
+kubectl apply --filename https://storage.googleapis.com/knative-nightly/serving/latest/serving-core.yaml
 ```
 
 ### Install Knative net-istio
