@@ -35,12 +35,14 @@ KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT}; ls -d -1 ./vendor/
 ${REPO_ROOT}/hack/update-deps.sh
 
 # Knative Injection (for istio)
+chmod +x ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh
 ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   knative.dev/net-istio/pkg/client/istio istio.io/client-go/pkg/apis \
   "networking:v1alpha3" \
   --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
 
 # Generate our own client for istio (otherwise injection won't work)
+chmod +x ${KNATIVE_CODEGEN_PKG}/${CODEGEN_PKG}/generate-groups.sh
 ${CODEGEN_PKG}/generate-groups.sh "client,informer,lister" \
   knative.dev/net-istio/pkg/client/istio istio.io/client-go/pkg/apis \
   "networking:v1alpha3" \
