@@ -15,7 +15,7 @@
 # limitations under the License.
 
 readonly ROOT_DIR="$( cd "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P )"
-source ${ROOT_DIR}/vendor/knative.dev/test-infra/scripts/library.sh
+source ${ROOT_DIR}/vendor/knative.dev/hack/library.sh
 
 set -o errexit
 set -o nounset

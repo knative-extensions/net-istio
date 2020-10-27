@@ -44,8 +44,13 @@ type KubeClient struct {
 // NewSpoofingClient returns a spoofing client to make requests
 func NewSpoofingClient(ctx context.Context, client kubernetes.Interface, logf logging.FormatLogger,
 	domain string, resolvable bool, opts ...spoof.TransportOption) (*spoof.SpoofingClient, error) {
+<<<<<<< HEAD
 	return spoof.New(ctx, client, logf, domain, resolvable, flags.Flags().IngressEndpoint,
 		flags.Flags().SpoofRequestInterval, flags.Flags().SpoofRequestTimeout, opts...)
+=======
+	return spoof.New(ctx, client, logf, domain, resolvable, Flags.IngressEndpoint,
+		Flags.SpoofRequestInterval, Flags.SpoofRequestTimeout, opts...)
+>>>>>>> use new test/KubeClient from pkg
 }
 
 // NewKubeClient instantiates and returns several clientsets required for making request to the

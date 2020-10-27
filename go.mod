@@ -14,9 +14,15 @@ require (
 	k8s.io/api v0.18.8
 	k8s.io/apimachinery v0.18.8
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
+<<<<<<< HEAD
 	knative.dev/networking v0.0.0-20201027015433-dc85b99d4646
 	knative.dev/pkg v0.0.0-20201027121533-273ba59a1132
 	knative.dev/test-infra v0.0.0-20201026182042-46291de4ab66
+=======
+	knative.dev/networking v0.0.0-20201014172631-b3b2c758d7e6
+	knative.dev/pkg v0.0.0-20201014165131-5a5f68637e27
+	knative.dev/test-infra v0.0.0-20201014021030-ae3984a33f82
+>>>>>>> use new test/KubeClient from pkg
 )
 
 replace (

@@ -809,7 +809,11 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
+<<<<<<< HEAD
 # knative.dev/networking v0.0.0-20201027015433-dc85b99d4646
+=======
+# knative.dev/networking v0.0.0-20201014172631-b3b2c758d7e6
+>>>>>>> use new test/KubeClient from pkg
 ## explicit
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
@@ -849,7 +853,11 @@ knative.dev/networking/test/test_images/runtime/handlers
 knative.dev/networking/test/test_images/timeout
 knative.dev/networking/test/test_images/wsserver
 knative.dev/networking/test/types
+<<<<<<< HEAD
 # knative.dev/pkg v0.0.0-20201027121533-273ba59a1132
+=======
+# knative.dev/pkg v0.0.0-20201014165131-5a5f68637e27
+>>>>>>> use new test/KubeClient from pkg
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -924,7 +932,11 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/configmaps
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
+<<<<<<< HEAD
 # knative.dev/test-infra v0.0.0-20201026182042-46291de4ab66
+=======
+# knative.dev/test-infra v0.0.0-20201014021030-ae3984a33f82
+>>>>>>> use new test/KubeClient from pkg
 ## explicit
 knative.dev/test-infra/scripts
 knative.dev/test-infra/tools/dep-collector
