@@ -14,59 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-readonly ROOT_DIR="$( cd "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P )"
-source ${ROOT_DIR}/vendor/knative.dev/hack/library.sh
 
 set -o errexit
 set -o nounset
 set -o pipefail
 
-cd ${ROOT_DIR}
+source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
 
-# We need these flags for things to work properly.
-export GO111MODULE=on
-
-# This controls the release branch we track.
-VERSION="master"
-
-# The list of dependencies that we track at HEAD and periodically
-# float forward in this repository.
-FLOATING_DEPS=(
-  "knative.dev/networking@${VERSION}"
-  "knative.dev/pkg@${VERSION}"
-  "knative.dev/test-infra@${VERSION}"
-)
-
-# Parse flags to determine any we should pass to dep.
-GO_GET=0
-while [[ $# -ne 0 ]]; do
-  parameter=$1
-  case ${parameter} in
-    --upgrade) GO_GET=1 ;;
-    *) abort "unknown option ${parameter}" ;;
-  esac
-  shift
-done
-readonly GO_GET
-
-if (( GO_GET )); then
-  go get -d ${FLOATING_DEPS[@]}
-fi
-
-# Prune modules.
-go mod tidy
-go mod vendor
-
-# Make the OWNER check robot happy.
-# TODO: Fix the robot to ignore vendor/ instead.
-rm -rf $(find vendor/ -name 'OWNERS')
-# Remove unit tests & e2e tests.
-rm -rf $(find vendor/ -path '*/pkg/*_test.go')
-rm -rf $(find vendor/ -path '*/e2e/*_test.go')
-rm -rf $(find vendor/ -path '*/test/e2e/*.go')
-
-# Add permission for shell scripts
-chmod +x $(find vendor -name '*.sh')
-
-export GOFLAGS=-mod=vendor
-update_licenses third_party/VENDOR-LICENSE "./..."
+go_update_deps "$@"

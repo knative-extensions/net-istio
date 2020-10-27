@@ -120,13 +120,6 @@ github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
 # github.com/google/gofuzz v1.1.0
 github.com/google/gofuzz
-# github.com/google/licenseclassifier v0.0.0-20200708223521-3d09a0ea2f39
-github.com/google/licenseclassifier
-github.com/google/licenseclassifier/internal/sets
-github.com/google/licenseclassifier/stringclassifier
-github.com/google/licenseclassifier/stringclassifier/internal/pq
-github.com/google/licenseclassifier/stringclassifier/searchset
-github.com/google/licenseclassifier/stringclassifier/searchset/tokenizer
 # github.com/google/uuid v1.1.1
 github.com/google/uuid
 # github.com/googleapis/gax-go/v2 v2.0.5
@@ -196,8 +189,6 @@ github.com/rogpeppe/go-internal/module
 github.com/rogpeppe/go-internal/semver
 # github.com/rs/dnscache v0.0.0-20190621150935-06bb5526f76b
 github.com/rs/dnscache
-# github.com/sergi/go-diff v1.1.0
-github.com/sergi/go-diff/diffmatchpatch
 # github.com/sirupsen/logrus v1.6.0
 github.com/sirupsen/logrus
 # github.com/spf13/pflag v1.0.5
@@ -809,11 +800,10 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-<<<<<<< HEAD
-# knative.dev/networking v0.0.0-20201027015433-dc85b99d4646
-=======
-# knative.dev/networking v0.0.0-20201014172631-b3b2c758d7e6
->>>>>>> use new test/KubeClient from pkg
+# knative.dev/hack v0.0.0-20201027221733-0d7f2f064b7b
+## explicit
+knative.dev/hack
+# knative.dev/networking v0.0.0-20201027230234-f0e013a2a1e2
 ## explicit
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
@@ -853,11 +843,7 @@ knative.dev/networking/test/test_images/runtime/handlers
 knative.dev/networking/test/test_images/timeout
 knative.dev/networking/test/test_images/wsserver
 knative.dev/networking/test/types
-<<<<<<< HEAD
-# knative.dev/pkg v0.0.0-20201027121533-273ba59a1132
-=======
-# knative.dev/pkg v0.0.0-20201014165131-5a5f68637e27
->>>>>>> use new test/KubeClient from pkg
+# knative.dev/pkg v0.0.0-20201027223833-826303ca0653
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -932,14 +918,6 @@ knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/configmaps
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
-<<<<<<< HEAD
-# knative.dev/test-infra v0.0.0-20201026182042-46291de4ab66
-=======
-# knative.dev/test-infra v0.0.0-20201014021030-ae3984a33f82
->>>>>>> use new test/KubeClient from pkg
-## explicit
-knative.dev/test-infra/scripts
-knative.dev/test-infra/tools/dep-collector
 # sigs.k8s.io/structured-merge-diff/v3 v3.0.1-0.20200706213357-43c19bbb7fba
 sigs.k8s.io/structured-merge-diff/v3/value
 # sigs.k8s.io/yaml v1.2.0
