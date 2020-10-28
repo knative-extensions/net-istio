@@ -46,28 +46,31 @@ const (
 
 	// KnativeLocalGateway is the name of the local gateway (will be promoted)
 	KnativeLocalGateway = "knative-local-gateway"
+
+	// IstioIngressGateway is the name of the Istio ingress gateway
+	IstioIngressGateway = "istio-ingressgateway"
+
+	// IstioNamespace is the namespace containing Istio
+	IstioNamespace = "istio-system"
 )
 
 func defaultIngressGateways() []Gateway {
 	return []Gateway{{
-		Namespace: system.Namespace(),
-		Name:      KnativeIngressGateway,
-		ServiceURL: fmt.Sprintf("istio-ingressgateway.istio-system.svc.%s",
-			network.GetClusterDomainName()),
+		Namespace:  system.Namespace(),
+		Name:       KnativeIngressGateway,
+		ServiceURL: network.GetServiceHostname(IstioIngressGateway, IstioNamespace),
 	}}
 }
 
 func defaultLocalGateways() []Gateway {
 	return []Gateway{{
-		Namespace: system.Namespace(),
-		Name:      ClusterLocalGateway,
-		ServiceURL: fmt.Sprintf(ClusterLocalGateway+".istio-system.svc.%s",
-			network.GetClusterDomainName()),
+		Namespace:  system.Namespace(),
+		Name:       ClusterLocalGateway,
+		ServiceURL: network.GetServiceHostname(ClusterLocalGateway, IstioNamespace),
 	}, {
-		Namespace: system.Namespace(),
-		Name:      KnativeLocalGateway,
-		ServiceURL: fmt.Sprintf(KnativeLocalGateway+".knative-serving.svc.%s",
-			network.GetClusterDomainName()),
+		Namespace:  system.Namespace(),
+		Name:       KnativeLocalGateway,
+		ServiceURL: network.GetServiceHostname(KnativeLocalGateway, IstioNamespace),
 	}}
 }
 
