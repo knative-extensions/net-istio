@@ -31,9 +31,6 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT}; ls -d -1 ./vendor/k8s.io/code-gene
 
 KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT}; ls -d -1 ./vendor/knative.dev/pkg 2>/dev/null || echo ../pkg)}
 
-# Make sure our dependencies are up-to-date
-${REPO_ROOT}/hack/update-deps.sh
-
 # Knative Injection (for istio)
 chmod +x ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh
 ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
@@ -54,3 +51,7 @@ ${GOPATH}/bin/deepcopy-gen \
   --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt \
   -i knative.dev/net-istio/pkg/reconciler/ingress/config \
   -i knative.dev/net-istio/pkg/defaults
+
+# Make sure our dependencies are up-to-date
+${REPO_ROOT}/hack/update-deps.sh
+
