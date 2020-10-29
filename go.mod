@@ -6,7 +6,7 @@ require (
 	github.com/gobuffalo/envy v1.9.0 // indirect
 	github.com/gogo/protobuf v1.3.1
 	github.com/google/go-cmp v0.5.2
-	go.uber.org/zap v1.15.0
+	go.uber.org/zap v1.16.0
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	istio.io/api v0.0.0-20201002153436-e6e7bbc4ebea
 	istio.io/client-go v0.0.0-20200807182027-d287a5abb594
@@ -14,9 +14,9 @@ require (
 	k8s.io/api v0.18.8
 	k8s.io/apimachinery v0.18.8
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	knative.dev/networking v0.0.0-20201028132534-429a6210295c
-	knative.dev/pkg v0.0.0-20201028133634-8ae84fe12a61
-	knative.dev/test-infra v0.0.0-20201028004634-fe8002e29c05
+	knative.dev/networking v0.0.0-20201029015534-8ec2eff034d5
+	knative.dev/pkg v0.0.0-20201029020134-08619d8055ca
+	knative.dev/test-infra v0.0.0-20201029015435-f6958afdb9ac
 )
 
 replace (

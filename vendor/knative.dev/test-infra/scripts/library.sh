@@ -575,16 +575,10 @@ function go_update_deps() {
 # Run kntest tool, error out and ask users to install it if it's not currently installed.
 # Parameters: $1..$n - parameters passed to the tool.
 function run_kntest() {
-  # If the current repo is test-infra, run kntest from source.
-  if [[ "${REPO_NAME}" == "test-infra" ]]; then
-    go run "${REPO_ROOT_DIR}"/kntest/cmd/kntest "$@"
-  # Otherwise kntest must be installed.
-  else
-    if [[ ! -x "$(command -v kntest)" ]]; then
-      echo "--- FAIL: kntest not installed, please clone test-infra repo and run \`go install ./kntest/cmd/kntest\` to install it"; return 1;
-    fi
-    kntest "$@"
+  if [[ ! -x "$(command -v kntest)" ]]; then
+    echo "--- FAIL: kntest not installed, please clone knative test-infra repo and run \`go install ./kntest/cmd/kntest\` to install it"; return 1;
   fi
+  kntest "$@"
 }
 
 # Run go-licenses to update licenses.
