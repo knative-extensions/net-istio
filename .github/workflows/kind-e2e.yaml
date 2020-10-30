@@ -136,9 +136,7 @@ jobs:
         # Build and Publish our containers to the docker daemon (including test assets)
         export GO111MODULE=on
         export GOFLAGS=-mod=vendor
-        ko resolve -f test/config/ -f config/ | \
-          sed 's/imagePullPolicy:/# DISABLED: imagePullPolicy:/g' | \
-          kubectl apply -f -
+        ko resolve -f test/config/ -f config/ | kubectl apply -f -
 
         echo "GATEWAY_NAMESPACE_OVERRIDE=istio-system" >> $GITHUB_ENV
 
