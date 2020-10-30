@@ -19,9 +19,8 @@ limitations under the License.
 package tools
 
 import (
+	_ "knative.dev/hack"
 	_ "knative.dev/pkg/hack"
-	_ "knative.dev/test-infra/scripts"
-	_ "knative.dev/test-infra/tools/dep-collector"
 
 	// For chaos testing the leaderelection stuff.
 	_ "knative.dev/pkg/leaderelection/chaosduck"
