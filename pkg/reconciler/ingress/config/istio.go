@@ -41,10 +41,7 @@ const (
 	// KnativeIngressGateway is the name of the ingress gateway
 	KnativeIngressGateway = "knative-ingress-gateway"
 
-	// ClusterLocalGateway is the name of the local gateway (will be deprecated)
-	ClusterLocalGateway = "cluster-local-gateway"
-
-	// KnativeLocalGateway is the name of the local gateway (will be promoted)
+	// KnativeLocalGateway is the name of the local gateway
 	KnativeLocalGateway = "knative-local-gateway"
 
 	// IstioIngressGateway is the name of the Istio ingress gateway
@@ -64,10 +61,6 @@ func defaultIngressGateways() []Gateway {
 
 func defaultLocalGateways() []Gateway {
 	return []Gateway{{
-		Namespace:  system.Namespace(),
-		Name:       ClusterLocalGateway,
-		ServiceURL: network.GetServiceHostname(ClusterLocalGateway, IstioNamespace),
-	}, {
 		Namespace:  system.Namespace(),
 		Name:       KnativeLocalGateway,
 		ServiceURL: network.GetServiceHostname(KnativeLocalGateway, IstioNamespace),
