@@ -576,6 +576,11 @@ func (r *Reconciler) virtualServiceReady(ctx context.Context, vs *v1alpha3.Virtu
 
 	logger.Debugf("VirtualService %v, status: %#v", vs.Name, currentState.Status)
 
+	if currentState.Generation != currentState.Status.ObservedGeneration {
+		logger.Debugf("VirtualService %v status is stale; checking again...", vs.Name)
+		return true, false, nil
+	}
+
 	var condition *istiov1alpha1.IstioCondition
 	for _, cond := range currentState.Status.Conditions {
 		// Reconciled condition can be "true", "false", or "unknown"
