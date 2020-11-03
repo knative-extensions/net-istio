@@ -564,6 +564,11 @@ func (r *Reconciler) virtualServicesReady(ctx context.Context, vses []*v1alpha3.
 func (r *Reconciler) virtualServiceReady(ctx context.Context, vs *v1alpha3.VirtualService) (bool, bool, error) {
 	logger := logging.FromContext(ctx)
 
+	if !config.FromContext(ctx).Istio.EnableVirtualServiceStatus {
+		logger.Debugf("VirtualService status not enabled, not checking for its presence.")
+		return false, false, nil
+	}
+
 	currentState, err := r.virtualServiceLister.VirtualServices(vs.Namespace).Get(vs.Name)
 	if err != nil {
 		return false, false, fmt.Errorf("failed to get VirtualService %q: %w", vs.Name, err)

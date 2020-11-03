@@ -1286,6 +1286,7 @@ func ReconcilerTestConfig() *config.Config {
 				Name:       config.KnativeIngressGateway,
 				ServiceURL: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system"),
 			}},
+			EnableVirtualServiceStatus: true,
 		},
 		Network: &network.Config{
 			AutoTLS: false,
