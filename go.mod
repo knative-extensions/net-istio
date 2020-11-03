@@ -3,9 +3,12 @@ module knative.dev/net-istio
 go 1.14
 
 require (
+	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/gobuffalo/envy v1.9.0 // indirect
 	github.com/gogo/protobuf v1.3.1
 	github.com/google/go-cmp v0.5.2
+	github.com/json-iterator/go v1.1.10 // indirect
+	github.com/prometheus/procfs v0.0.11 // indirect
 	go.uber.org/zap v1.16.0
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	istio.io/api v0.0.0-20201002153436-e6e7bbc4ebea
@@ -14,9 +17,9 @@ require (
 	k8s.io/api v0.18.8
 	k8s.io/apimachinery v0.18.8
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	knative.dev/hack v0.0.0-20201028205534-fe80f1c8af68
-	knative.dev/networking v0.0.0-20201101040934-f77f64474b76
-	knative.dev/pkg v0.0.0-20201030200734-72451e0d5973
+	knative.dev/hack v0.0.0-20201102193445-9349aeeb6701
+	knative.dev/networking v0.0.0-20201103013404-f79e1df6f035
+	knative.dev/pkg v0.0.0-20201103013304-6dee979d9807
 )
 
 replace (
