@@ -47,14 +47,15 @@ function build_release() {
   for yaml in "${!COMPONENTS[@]}"; do
     local config="${COMPONENTS[${yaml}]}"
     echo "Building Knative net-istio - ${config}"
-    ko resolve --strict ${KO_FLAGS} -f ${config}/ | "${LABEL_YAML_CMD[@]}" > ${yaml}
+    echo "# Generated when HEAD was $(git rev-parse HEAD)" > ${yaml}
+    echo "#" >> ${yaml}
+    ko resolve --strict ${KO_FLAGS} -f ${config}/ | "${LABEL_YAML_CMD[@]}" >> ${yaml}
     all_yamls+=(${yaml})
   done
   # Assemble the release
   for yaml in "${!RELEASES[@]}"; do
     echo "Assembling Knative net-istio - ${yaml}"
-    echo "# Generated when HEAD was $(git rev-parse HEAD)" > ${yaml}
-    echo "#" >> ${yaml}
+    echo "" > ${yaml}
     for component in ${RELEASES[${yaml}]}; do
       echo "---" >> ${yaml}
       echo "# ${component}" >> ${yaml}
