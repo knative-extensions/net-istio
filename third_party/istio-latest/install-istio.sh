@@ -33,7 +33,7 @@ tar xzf ${ISTIO_TARBALL}
 # Enable mTLS STRICT in mesh mode
 if [[ $MESH -eq 1 ]]; then
   kubectl apply -f "$(dirname $0)/extra/global-mtls.yaml"
-  kubectl patch configmap/config-istio -n knative-serving --patch='{"data":{"local-gateway.mesh":"mesh"}}'
+  kubectl patch configmap/config-istio -n ${SYSTEM_NAMESPACE} --patch='{"data":{"local-gateway.mesh":"mesh"}}'
 fi
 
 # Clean up
