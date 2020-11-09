@@ -24,8 +24,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
+	"github.com/gogo/protobuf/types"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	"knative.dev/net-istio/pkg/reconciler/ingress/annotations/cors"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources/names"
 	"knative.dev/networking/pkg/apis/networking"
@@ -135,7 +137,8 @@ func makeVirtualServiceSpec(ctx context.Context, ing *v1alpha1.Ingress, gateways
 			p := rule.HTTP.Paths[i]
 			hosts := hosts.Intersection(sets.NewString(rule.Hosts...))
 			if hosts.Len() != 0 {
-				http := makeVirtualServiceRoute(ctx, hosts, &p, gateways, rule.Visibility)
+				corsConfig := cors.Parse(ing)
+				http := makeVirtualServiceRoute(ctx, hosts, &p, gateways, rule.Visibility, corsConfig)
 				// Add all the Gateways that exist inside the http.match section of
 				// the VirtualService.
 				// This ensures that we are only using the Gateways that actually appear
@@ -151,7 +154,8 @@ func makeVirtualServiceSpec(ctx context.Context, ing *v1alpha1.Ingress, gateways
 	return &spec
 }
 
-func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.String, visibility v1alpha1.IngressVisibility) *istiov1alpha3.HTTPRoute {
+func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.String,
+	visibility v1alpha1.IngressVisibility, corsConfig *cors.Config) *istiov1alpha3.HTTPRoute {
 	matches := []*istiov1alpha3.HTTPMatchRequest{}
 	clusterDomainName := network.GetClusterDomainName()
 	for _, host := range hosts.List() {
@@ -214,12 +218,35 @@ func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alp
 	}
 
 	route := &istiov1alpha3.HTTPRoute{
-		Match:   matches,
-		Route:   weights,
-		Rewrite: rewrite,
-		Headers: h,
+		Match:      matches,
+		Route:      weights,
+		Rewrite:    rewrite,
+		Headers:    h,
+		CorsPolicy: makeCorsPolicy(corsConfig),
 	}
 	return route
+}
+
+func makeCorsPolicy(corsConfig *cors.Config) *istiov1alpha3.CorsPolicy {
+	if !corsConfig.CorsEnabled {
+		return nil
+	}
+	policy := &istiov1alpha3.CorsPolicy{
+		AllowOrigin:      getStringSlice(corsConfig.CorsAllowOrigins),
+		AllowMethods:     getStringSlice(corsConfig.CorsAllowMethods),
+		AllowHeaders:     getStringSlice(corsConfig.CorsAllowHeaders),
+		ExposeHeaders:    getStringSlice(corsConfig.CorsExposeHeaders),
+		MaxAge:           &types.Duration{Seconds: int64(corsConfig.CorsMaxAge)},
+		AllowCredentials: &types.BoolValue{Value: corsConfig.CorsAllowCredentials},
+	}
+	return policy
+}
+
+func getStringSlice(headers string) []string {
+	if headers == "" {
+		return nil
+	}
+	return strings.Split(headers, ",")
 }
 
 func keepLocalHostnames(hosts sets.String) sets.String {

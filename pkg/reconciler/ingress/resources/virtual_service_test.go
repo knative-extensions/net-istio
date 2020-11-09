@@ -18,13 +18,16 @@ package resources
 
 import (
 	"context"
+	"strings"
 	"testing"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/google/go-cmp/cmp"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"knative.dev/net-istio/pkg/reconciler/ingress/annotations/cors"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
@@ -596,7 +599,16 @@ func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 			}},
 		},
 	})
-	route := makeVirtualServiceRoute(ctx, sets.NewString("a.vanity.url", "another.vanity.url"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	corsConfig := &cors.Config{
+		CorsAllowOrigins:     "*",
+		CorsEnabled:          true,
+		CorsAllowMethods:     cors.DefaultCorsMethods,
+		CorsAllowHeaders:     cors.DefaultCorsHeaders,
+		CorsMaxAge:           1728000,
+		CorsAllowCredentials: true,
+	}
+	route := makeVirtualServiceRoute(ctx, sets.NewString("a.vanity.url", "another.vanity.url"), ingressPath,
+		makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP, corsConfig)
 	expected := &istiov1alpha3.HTTPRoute{
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Gateways: []string{"gateway-1"},
@@ -621,6 +633,14 @@ func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 			},
 			Weight: 100,
 		}},
+		CorsPolicy: &istiov1alpha3.CorsPolicy{
+			AllowOrigin:      []string{"*"},
+			AllowMethods:     strings.Split(cors.DefaultCorsMethods, ","),
+			AllowHeaders:     strings.Split(cors.DefaultCorsHeaders, ","),
+			ExposeHeaders:    nil,
+			MaxAge:           &types.Duration{Seconds: 1728000},
+			AllowCredentials: &types.BoolValue{Value: true},
+		},
 	}
 	if diff := cmp.Diff(expected, route); diff != "" {
 		t.Error("Unexpected route  (-want +got):", diff)
@@ -644,7 +664,16 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 			Percent: 100,
 		}},
 	}
-	route := makeVirtualServiceRoute(context.Background(), sets.NewString("a.com", "b.org"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	corsConfig := &cors.Config{
+		CorsAllowOrigins:     "*",
+		CorsEnabled:          false,
+		CorsAllowMethods:     cors.DefaultCorsMethods,
+		CorsAllowHeaders:     cors.DefaultCorsHeaders,
+		CorsMaxAge:           1728000,
+		CorsAllowCredentials: true,
+	}
+	route := makeVirtualServiceRoute(context.Background(), sets.NewString("a.com", "b.org"),
+		ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP, corsConfig)
 	expected := &istiov1alpha3.HTTPRoute{
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Gateways: []string{"gateway-1"},
@@ -703,7 +732,11 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 			Percent: 10,
 		}},
 	}
-	route := makeVirtualServiceRoute(context.Background(), sets.NewString("test.org"), ingressPath, makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	corsConfig := &cors.Config{
+		CorsEnabled: false,
+	}
+	route := makeVirtualServiceRoute(context.Background(), sets.NewString("test.org"), ingressPath,
+		makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP, corsConfig)
 	expected := &istiov1alpha3.HTTPRoute{
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Gateways: []string{"knative-testing/gateway-1"},
