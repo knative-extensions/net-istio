@@ -229,10 +229,6 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		ing.Status.MarkLoadBalancerNotReady()
 	}
 
-	// Now that we've finished reconciling, we can update the ObservedGeneration
-	// to reflect the current state of the ingress.
-	ing.Status.ObservedGeneration = ing.GetGeneration()
-
 	// TODO(zhiminx): Mark Route status to indicate that Gateway is configured.
 	logger.Info("Ingress successfully synced")
 	return nil
