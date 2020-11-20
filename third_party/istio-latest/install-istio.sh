@@ -36,7 +36,7 @@ fi
 tar xzf ${ISTIO_TARBALL}
 
 # Install Istio
-./istio-${ISTIO_VERSION}/bin/istioctl install -f "$(dirname $0)/$1"
+./istio-${ISTIO_VERSION}/bin/istioctl install -f "$(dirname $0)/$1" -y
 
 # Enable mTLS STRICT in mesh mode
 if [[ $MESH -eq 1 ]]; then
