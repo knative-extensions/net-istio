@@ -49,7 +49,7 @@ function build_release() {
     echo "Building Knative net-istio - ${config}"
     echo "# Generated when HEAD was $(git rev-parse HEAD)" > ${yaml}
     echo "#" >> ${yaml}
-    ko resolve --strict ${KO_FLAGS} -f ${config}/ | "${LABEL_YAML_CMD[@]}" >> ${yaml}
+    ko resolve --strict --platform=all ${KO_FLAGS} -f ${config}/ | "${LABEL_YAML_CMD[@]}" >> ${yaml}
     all_yamls+=(${yaml})
   done
   # Assemble the release
