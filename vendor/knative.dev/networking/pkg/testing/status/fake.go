@@ -19,6 +19,7 @@ package status
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/types"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/status"
 )
@@ -27,7 +28,7 @@ import (
 type FakeStatusManager struct {
 	FakeIsReady func(ctx context.Context, ing *v1alpha1.Ingress) (bool, error)
 
-	isReadyCallCount map[string]int
+	isReadyCallCount map[types.NamespacedName]int
 }
 
 var _ status.Manager = (*FakeStatusManager)(nil)
@@ -35,15 +36,17 @@ var _ status.Manager = (*FakeStatusManager)(nil)
 // IsReady implements IsReady
 func (m *FakeStatusManager) IsReady(ctx context.Context, ing *v1alpha1.Ingress) (bool, error) {
 	if m.isReadyCallCount == nil {
-		m.isReadyCallCount = make(map[string]int, 1)
+		m.isReadyCallCount = make(map[types.NamespacedName]int, 1)
 	}
 
-	m.isReadyCallCount[status.IngressKey(ing)]++
+	key := types.NamespacedName{Namespace: ing.Namespace, Name: ing.Name}
+	m.isReadyCallCount[key]++
 
 	return m.FakeIsReady(ctx, ing)
 }
 
 // IsReadyCallCount returns how many times IsReady has been called for a given ingress
 func (m *FakeStatusManager) IsReadyCallCount(ing *v1alpha1.Ingress) int {
-	return m.isReadyCallCount[status.IngressKey(ing)]
+	key := types.NamespacedName{Namespace: ing.Namespace, Name: ing.Name}
+	return m.isReadyCallCount[key]
 }
