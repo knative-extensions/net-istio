@@ -49,7 +49,7 @@ function test_setup() {
   echo ">> Publishing test images"
   $(dirname $0)/upload-test-images.sh || fail_test "Error uploading test images"
   echo ">> Creating test resources (test/config/)"
-  ko apply ${KO_FLAGS} -f test/config/ || return 1
+  ko apply --platform=all ${KO_FLAGS} -f test/config/ || return 1
 
   # Bringing up controllers.
   echo ">> Bringing up Istio"
@@ -58,7 +58,7 @@ function test_setup() {
   #echo ">> Running Istio"
   ${istio_dir}/install-istio.sh istio-ci-no-mesh.yaml || return 1
   echo ">> Bringing up net-istio Ingress Controller"
-  ko apply -f config/ || return 1
+  ko apply --platform=all -f config/ || return 1
 
   scale_controlplane networking-istio istio-webhook
   
