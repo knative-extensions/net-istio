@@ -426,7 +426,7 @@ func TestReconcile(t *testing.T) {
 				}
 			},
 		},
-	}, {}}
+	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		r := &Reconciler{
