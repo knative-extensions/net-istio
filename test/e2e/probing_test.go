@@ -50,7 +50,7 @@ import (
 	"knative.dev/networking/test"
 	"knative.dev/networking/test/conformance/ingress"
 	"knative.dev/pkg/system"
-	pkgTest "knative.dev/pkg/test"
+	pkgtest "knative.dev/pkg/test"
 	"knative.dev/pkg/test/spoof"
 )
 
@@ -267,12 +267,12 @@ func TestIstioProbing(t *testing.T) {
 					if err != nil {
 						return fmt.Errorf("failed to parse URL: %w", err)
 					}
-					if _, err := pkgTest.WaitForEndpointStateWithTimeout(
+					if _, err := pkgtest.WaitForEndpointStateWithTimeout(
 						context.Background(),
 						clients.KubeClient,
 						t.Logf,
 						u,
-						pkgTest.MatchesAllOf(pkgTest.IsStatusOK),
+						spoof.MatchesAllOf(spoof.IsStatusOK),
 						"istio probe",
 						test.NetworkingFlags.ResolvableDomain,
 						1*time.Minute,
@@ -359,7 +359,7 @@ func setupGateway(t *testing.T, clients *Clients, namespace string, servers []*i
 
 // setupHTTPS creates a self-signed certificate, installs it as a Secret and returns an *http.Transport
 // trusting the certificate as a root CA.
-func setupHTTPS(t *testing.T, kubeClient *pkgTest.KubeClient, hosts []string) spoof.TransportOption {
+func setupHTTPS(t *testing.T, kubeClient *pkgtest.KubeClient, hosts []string) spoof.TransportOption {
 	t.Helper()
 
 	cert, key, err := generateCertificate(hosts)
