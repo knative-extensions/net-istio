@@ -23,7 +23,7 @@ case "${OSTYPE}" in
 esac
 
 # Download and unpack Istio
-ISTIO_VERSION=1.7.4
+ISTIO_VERSION=1.8.1
 ISTIO_TARBALL=istio-${ISTIO_VERSION}-${ARCH}.tar.gz
 DOWNLOAD_URL=https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/${ISTIO_TARBALL}
 SYSTEM_NAMESPACE="${SYSTEM_NAMESPACE:-"knative-serving"}"
@@ -36,7 +36,7 @@ fi
 tar xzf ${ISTIO_TARBALL}
 
 # Install Istio
-./istio-${ISTIO_VERSION}/bin/istioctl install -f "$(dirname $0)/$1"
+./istio-${ISTIO_VERSION}/bin/istioctl install -f "$(dirname $0)/$1" -y
 
 # Enable mTLS STRICT in mesh mode
 if [[ $MESH -eq 1 ]]; then
