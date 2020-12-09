@@ -38,6 +38,8 @@ type Interface interface {
 	VirtualServices() VirtualServiceInformer
 	// WorkloadEntries returns a WorkloadEntryInformer.
 	WorkloadEntries() WorkloadEntryInformer
+	// WorkloadGroups returns a WorkloadGroupInformer.
+	WorkloadGroups() WorkloadGroupInformer
 }
 
 type version struct {
@@ -84,4 +86,9 @@ func (v *version) VirtualServices() VirtualServiceInformer {
 // WorkloadEntries returns a WorkloadEntryInformer.
 func (v *version) WorkloadEntries() WorkloadEntryInformer {
 	return &workloadEntryInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// WorkloadGroups returns a WorkloadGroupInformer.
+func (v *version) WorkloadGroups() WorkloadGroupInformer {
+	return &workloadGroupInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

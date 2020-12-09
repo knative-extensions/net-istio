@@ -234,7 +234,7 @@
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: bookinfo-Mongo
+//   name: bookinfo-mongo
 //   namespace: bookinfo-namespace
 // spec:
 //   hosts:
@@ -259,7 +259,7 @@
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: bookinfo-Mongo
+//   name: bookinfo-mongo
 //   namespace: bookinfo-namespace
 // spec:
 //   hosts:
@@ -462,6 +462,7 @@ func (ServerTLSSettings_TLSProtocol) EnumDescriptor() ([]byte, []int) {
 // +cue-gen:Gateway:subresource:status
 // +cue-gen:Gateway:scope:Namespaced
 // +cue-gen:Gateway:resource:categories=istio-io,networking-istio-io,shortNames=gw
+// +cue-gen:Gateway:preserveUnknownFields:false
 // -->
 //
 // <!-- go code generation tags
@@ -478,7 +479,7 @@ type Gateway struct {
 	// By default workloads are searched across all namespaces based on label selectors.
 	// This implies that a gateway resource in the namespace "foo" can select pods in
 	// the namespace "bar" based on labels.
-	// This behavior can be controlled via the PILOT_SCOPE_GATEWAY_TO_NAMESPACE
+	// This behavior can be controlled via the `PILOT_SCOPE_GATEWAY_TO_NAMESPACE`
 	// environment variable in istiod. If this variable is set
 	// to true, the scope of label search is restricted to the configuration
 	// namespace in which the the resource is present. In other words, the Gateway
@@ -912,7 +913,9 @@ type ServerTLSSettings struct {
 	// feature is enabled in the proxy by setting
 	// `ISTIO_META_USER_SDS` metadata variable.  The secret (of type
 	// `generic`) should contain the following keys and values: `key:
-	// <privateKey>`, `cert: <serverCert>`, `cacert: <CACertificate>`.
+	// <privateKey>` and `cert: <serverCert>`. For mutual TLS,
+	// `cacert: <CACertificate>` can be provided in the same secret or
+	// a separate secret named `<secret>-cacert`.
 	// Secret of type tls for server certificates along with
 	// ca.crt key for CA certificates is also supported.
 	// Only one of server certificates and CA certificate

@@ -879,6 +879,7 @@ func (ServiceEntry_Resolution) EnumDescriptor() ([]byte, []int) {
 // representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations.
 // Clients may not set this value. It is represented in RFC3339 form and is in UTC.
 // Populated by the system. Read-only. Null for lists. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata"
+// +cue-gen:ServiceEntry:preserveUnknownFields:false
 // -->
 //
 // <!-- go code generation tags
@@ -966,9 +967,6 @@ type ServiceEntry struct {
 	// For a Kubernetes Service, the equivalent effect can be achieved by setting
 	// the annotation "networking.istio.io/exportTo" to a comma-separated list
 	// of namespace names.
-	//
-	// NOTE: in the current release, the `exportTo` value is restricted to
-	// "." or "*" (i.e., the current namespace or all namespaces).
 	ExportTo []string `protobuf:"bytes,7,rep,name=export_to,json=exportTo,proto3" json:"export_to,omitempty"`
 	// If specified, the proxy will verify that the server certificate's
 	// subject alternate name matches one of the specified values.

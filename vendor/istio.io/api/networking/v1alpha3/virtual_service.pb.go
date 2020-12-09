@@ -191,6 +191,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations.
 // Clients may not set this value. It is represented in RFC3339 form and is in UTC.
 // Populated by the system. Read-only. Null for lists. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata"
+// +cue-gen:VirtualService:preserveUnknownFields:false
 // -->
 //
 // <!-- go code generation tags
@@ -1008,7 +1009,7 @@ func (m *Delegate) GetNamespace() string {
 // be specified for a specific route destination or for all destinations.
 // The following VirtualService adds a `test` header with the value `true`
 // to requests that are routed to any `reviews` service destination.
-// It also romoves the `foo` response header, but only from responses
+// It also removes the `foo` response header, but only from responses
 // coming from the `v1` subset (version) of the `reviews` service.
 //
 // {{<tabset category-name="example">}}
@@ -1333,7 +1334,7 @@ func (m *TLSRoute) GetRoute() []*RouteDestination {
 // apiVersion: networking.istio.io/v1alpha3
 // kind: VirtualService
 // metadata:
-//   name: bookinfo-Mongo
+//   name: bookinfo-mongo
 // spec:
 //   hosts:
 //   - mongo.prod.svc.cluster.local
@@ -1353,7 +1354,7 @@ func (m *TLSRoute) GetRoute() []*RouteDestination {
 // apiVersion: networking.istio.io/v1beta1
 // kind: VirtualService
 // metadata:
-//   name: bookinfo-Mongo
+//   name: bookinfo-mongo
 // spec:
 //   hosts:
 //   - mongo.prod.svc.cluster.local
