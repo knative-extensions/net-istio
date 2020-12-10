@@ -42,6 +42,7 @@ tar xzf ${ISTIO_TARBALL}
 #if [[ $MESH -eq 1 ]]; then
   kubectl apply -f "$(dirname $0)/extra/global-mtls.yaml"
   kubectl patch configmap/config-istio -n ${SYSTEM_NAMESPACE} --patch='{"data":{"local-gateway.mesh":"mesh"}}'
+  kubectl delete pods -n ${SYSTEM_NAMESPACE} --all
 #fi
 
 # Clean up
