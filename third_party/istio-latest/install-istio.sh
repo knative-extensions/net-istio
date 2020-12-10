@@ -39,10 +39,10 @@ tar xzf ${ISTIO_TARBALL}
 ./istio-${ISTIO_VERSION}/bin/istioctl install -f "$(dirname $0)/$1" -y
 
 # Enable mTLS STRICT in mesh mode
-if [[ $MESH -eq 1 ]]; then
+#if [[ $MESH -eq 1 ]]; then
   kubectl apply -f "$(dirname $0)/extra/global-mtls.yaml"
   kubectl patch configmap/config-istio -n ${SYSTEM_NAMESPACE} --patch='{"data":{"local-gateway.mesh":"mesh"}}'
-fi
+#fi
 
 # Clean up
 rm -rf istio-${ISTIO_VERSION}
