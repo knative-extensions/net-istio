@@ -16,6 +16,7 @@
 
 source $(dirname $0)/e2e-common.sh
 
+MESH=1
 
 # Script entry point.
 initialize $@  --skip-istio-addon
