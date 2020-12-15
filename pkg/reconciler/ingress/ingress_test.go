@@ -396,17 +396,8 @@ func TestReconcile(t *testing.T) {
 		WantPatches: []clientgotesting.PatchActionImpl{
 			patchAddFinalizerAction("reconcile-virtualservice", "ingresses.networking.internal.knative.dev"),
 		},
-		PostConditions: []func(*testing.T, *TableRow){
-			// ensure that prober gets invoked once
-			func(t *testing.T, tr *TableRow) {
-				statusManager := tr.Ctx.Value(FakeStatusManagerKey).(*fakestatusmanager.FakeStatusManager)
-				callCount := statusManager.IsReadyCallCount(tr.Objects[0].(*v1alpha1.Ingress))
-				if callCount != 1 {
-					t.Errorf("statusManager.IsReady called %v times, wanted %v", callCount, 1)
-				}
-			},
-		},
-		Key: "test-ns/reconcile-virtualservice",
+		PostConditions: []func(*testing.T, *TableRow){virtualServiceCalledTimes(1)},
+		Key:            "test-ns/reconcile-virtualservice",
 	}, {
 		Name: "if ingress is already ready, we shouldn't call statusManager.IsReady",
 		Key:  "test-ns/ingress-ready",
@@ -417,16 +408,7 @@ func TestReconcile(t *testing.T) {
 			resources.MakeIngressVirtualService(context.Background(), insertProbe(ing("ingress-ready")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
 		},
-		PostConditions: []func(*testing.T, *TableRow){
-			// ensure that prober never gets called
-			func(t *testing.T, tr *TableRow) {
-				statusManager := tr.Ctx.Value(FakeStatusManagerKey).(*fakestatusmanager.FakeStatusManager)
-				callCount := statusManager.IsReadyCallCount(tr.Objects[0].(*v1alpha1.Ingress))
-				if callCount != 0 {
-					t.Errorf("statusManager.IsReady called %v times, wanted %v", callCount, 0)
-				}
-			},
-		},
+		PostConditions: []func(*testing.T, *TableRow){virtualServiceCalledTimes(0)},
 	}, {
 		Name: "virtualService status ready should make ingress ready without probing",
 		Key:  "test-ns/ingress-virtualservice-ready",
@@ -487,16 +469,7 @@ func TestReconcile(t *testing.T) {
 				PublicLoadBalancer:  &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{DomainInternal: "test-ingressgateway.istio-system.svc.cluster.local"}}},
 			},
 				[]string{"ingresses.networking.internal.knative.dev"})}},
-		PostConditions: []func(*testing.T, *TableRow){
-			// ensure that prober never gets called
-			func(t *testing.T, tr *TableRow) {
-				statusManager := tr.Ctx.Value(FakeStatusManagerKey).(*fakestatusmanager.FakeStatusManager)
-				callCount := statusManager.IsReadyCallCount(tr.Objects[0].(*v1alpha1.Ingress))
-				if callCount != 0 {
-					t.Errorf("statusManager.IsReady called %v times, wanted %v", callCount, 0)
-				}
-			},
-		},
+		PostConditions: []func(*testing.T, *TableRow){virtualServiceCalledTimes(0)},
 	}, {
 		Name: "virtualService status not ready should still avoid probing",
 		Key:  "test-ns/ingress-virtualservice-notready",
@@ -543,16 +516,7 @@ func TestReconcile(t *testing.T) {
 					},
 				}, 0),
 		},
-		PostConditions: []func(*testing.T, *TableRow){
-			// ensure that prober never gets called
-			func(t *testing.T, tr *TableRow) {
-				statusManager := tr.Ctx.Value(FakeStatusManagerKey).(*fakestatusmanager.FakeStatusManager)
-				callCount := statusManager.IsReadyCallCount(tr.Objects[0].(*v1alpha1.Ingress))
-				if callCount != 0 {
-					t.Errorf("statusManager.IsReady called %v times, wanted %v", callCount, 0)
-				}
-			},
-		},
+		PostConditions: []func(*testing.T, *TableRow){virtualServiceCalledTimes(0)},
 	}, {
 		Name: "virtualService stale status should be the same as not ready",
 		Key:  "test-ns/ingress-virtualservice-stale",
@@ -599,16 +563,7 @@ func TestReconcile(t *testing.T) {
 					},
 				}, 1),
 		},
-		PostConditions: []func(*testing.T, *TableRow){
-			// ensure that prober never gets called
-			func(t *testing.T, tr *TableRow) {
-				statusManager := tr.Ctx.Value(FakeStatusManagerKey).(*fakestatusmanager.FakeStatusManager)
-				callCount := statusManager.IsReadyCallCount(tr.Objects[0].(*v1alpha1.Ingress))
-				if callCount != 0 {
-					t.Errorf("statusManager.IsReady called %v times, wanted %v", callCount, 0)
-				}
-			},
-		},
+		PostConditions: []func(*testing.T, *TableRow){virtualServiceCalledTimes(0)},
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
@@ -1719,5 +1674,16 @@ func makeGatewayMap(publicGateways []string, privateGateways []string) map[v1alp
 	return map[v1alpha1.IngressVisibility]sets.String{
 		v1alpha1.IngressVisibilityExternalIP:   sets.NewString(publicGateways...),
 		v1alpha1.IngressVisibilityClusterLocal: sets.NewString(privateGateways...),
+	}
+}
+
+func virtualServiceCalledTimes(n int) func(*testing.T, *TableRow) {
+	return func(t *testing.T, tr *TableRow) {
+		// ensure that prober gets invoked once
+		statusManager := tr.Ctx.Value(FakeStatusManagerKey).(*fakestatusmanager.FakeStatusManager)
+		callCount := statusManager.IsReadyCallCount(tr.Objects[0].(*v1alpha1.Ingress))
+		if callCount != n {
+			t.Errorf("statusManager.IsReady called %v times, wanted %v", callCount, 1)
+		}
 	}
 }
