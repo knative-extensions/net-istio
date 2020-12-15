@@ -1154,6 +1154,40 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 	}))
 }
 
+func TestReconcile_DisableStatus(t *testing.T) {
+	table := TableTest{{
+		Name: "if ingress is already ready, we shouldn't call statusManager.IsReady",
+		Key:  "test-ns/ingress-ready",
+		Objects: []runtime.Object{
+			basicReconciledIngress("ingress-ready"),
+			resources.MakeMeshVirtualService(context.Background(), insertProbe(ing("ingress-ready")),
+				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
+			resources.MakeIngressVirtualService(context.Background(), insertProbe(ing("ingress-ready")),
+				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
+		},
+		PostConditions: []func(*testing.T, *TableRow){virtualServiceCalledTimes(0)},
+	}}
+
+	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
+		r := &Reconciler{
+			kubeclient:           kubeclient.Get(ctx),
+			istioClientSet:       istioclient.Get(ctx),
+			virtualServiceLister: listers.GetVirtualServiceLister(),
+			gatewayLister:        listers.GetGatewayLister(),
+			statusManager:        ctx.Value(FakeStatusManagerKey).(status.Manager),
+		}
+
+		config := ReconcilerTestConfig()
+		config.Istio.EnableVirtualServiceStatus = false
+
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakenetworkingclient.Get(ctx),
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, network.IstioIngressClassName, controller.Options{
+				ConfigStore: &testConfigStore{
+					config: ReconcilerTestConfig(),
+				}})
+	}))
+}
+
 func getGatewaysFromObjects(objects []runtime.Object) []*v1alpha3.Gateway {
 	gateways := []*v1alpha3.Gateway{}
 	for _, object := range objects {
