@@ -1156,15 +1156,65 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 
 func TestReconcile_DisableStatus(t *testing.T) {
 	table := TableTest{{
-		Name: "if ingress is already ready, we shouldn't call statusManager.IsReady",
-		Key:  "test-ns/ingress-ready",
+		Name: "if status is disabled, we should probe even if virtualservice is ready",
+		Key:  "test-ns/ingress-vs-status-disabled",
 		Objects: []runtime.Object{
-			basicReconciledIngress("ingress-ready"),
-			resources.MakeMeshVirtualService(context.Background(), insertProbe(ing("ingress-ready")),
-				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
-			resources.MakeIngressVirtualService(context.Background(), insertProbe(ing("ingress-ready")),
-				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
+			ingressWithStatusAndFinalizers("ingress-vs-status-disabled", v1alpha1.IngressStatus{
+				Status: duckv1.Status{
+					Conditions: duckv1.Conditions{{
+						Type:   v1alpha1.IngressConditionLoadBalancerReady,
+						Status: corev1.ConditionFalse,
+					}, {
+						Type:   v1alpha1.IngressConditionNetworkConfigured,
+						Status: corev1.ConditionTrue,
+					}, {
+						Type:   v1alpha1.IngressConditionReady,
+						Status: corev1.ConditionFalse,
+					}},
+				},
+				PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}}},
+				PublicLoadBalancer:  &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{DomainInternal: "test-ingressgateway.istio-system.svc.cluster.local"}}},
+			},
+				[]string{"ingresses.networking.internal.knative.dev"}),
+			meshVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-vs-status-disabled")),
+				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
+				istiov1alpha1.IstioStatus{
+					Conditions: []*istiov1alpha1.IstioCondition{
+						{
+							Type:   "Reconciled",
+							Status: "True",
+						},
+					},
+				}, 0),
+			ingressVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-vs-status-disabled")),
+				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
+				istiov1alpha1.IstioStatus{
+					Conditions: []*istiov1alpha1.IstioCondition{
+						{
+							Type:   "Reconciled",
+							Status: "True",
+						},
+					},
+				}, 0),
 		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ingressWithStatusAndFinalizers("ingress-vs-status-disabled", v1alpha1.IngressStatus{
+				Status: duckv1.Status{
+					Conditions: duckv1.Conditions{{
+						Type:   v1alpha1.IngressConditionLoadBalancerReady,
+						Status: corev1.ConditionTrue,
+					}, {
+						Type:   v1alpha1.IngressConditionNetworkConfigured,
+						Status: corev1.ConditionTrue,
+					}, {
+						Type:   v1alpha1.IngressConditionReady,
+						Status: corev1.ConditionTrue,
+					}},
+				},
+				PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}}},
+				PublicLoadBalancer:  &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{DomainInternal: "test-ingressgateway.istio-system.svc.cluster.local"}}},
+			},
+				[]string{"ingresses.networking.internal.knative.dev"})}},
 		PostConditions: []func(*testing.T, *TableRow){virtualServiceCalledTimes(0)},
 	}}
 
