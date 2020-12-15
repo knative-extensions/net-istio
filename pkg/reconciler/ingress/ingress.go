@@ -557,10 +557,9 @@ func (r *Reconciler) virtualServicesReady(ctx context.Context, vses []*v1alpha3.
 }
 
 // virtualServiceReady checks if a virtual service has a status, and if so if it's ready.
-// the return values are (hasStatus, ready, error), where
+// the return values are (hasStatus, ready), where
 //	hasStatus indicates whether the virtualService has a status field
 //	ready indicates whether it's been reconciled and able to receive requests
-//	error contains any errors that occurred during this
 func (r *Reconciler) virtualServiceReady(ctx context.Context, vs *v1alpha3.VirtualService) (bool, bool, error) {
 	logger := logging.FromContext(ctx)
 
