@@ -33,6 +33,7 @@ type NetworkingV1alpha3Interface interface {
 	SidecarsGetter
 	VirtualServicesGetter
 	WorkloadEntriesGetter
+	WorkloadGroupsGetter
 }
 
 // NetworkingV1alpha3Client is used to interact with features provided by the networking.istio.io group.
@@ -66,6 +67,10 @@ func (c *NetworkingV1alpha3Client) VirtualServices(namespace string) VirtualServ
 
 func (c *NetworkingV1alpha3Client) WorkloadEntries(namespace string) WorkloadEntryInterface {
 	return newWorkloadEntries(c, namespace)
+}
+
+func (c *NetworkingV1alpha3Client) WorkloadGroups(namespace string) WorkloadGroupInterface {
+	return newWorkloadGroups(c, namespace)
 }
 
 // NewForConfig creates a new NetworkingV1alpha3Client for the given config.

@@ -426,14 +426,14 @@ gopkg.in/evanphx/json-patch.v4
 gopkg.in/inf.v0
 # gopkg.in/yaml.v2 v2.3.0
 gopkg.in/yaml.v2
-# istio.io/api v0.0.0-20201002153436-e6e7bbc4ebea
+# istio.io/api v0.0.0-20201123152548-197f11e4ea09
 ## explicit
 istio.io/api/analysis/v1alpha1
 istio.io/api/label
 istio.io/api/meta/v1alpha1
 istio.io/api/networking/v1alpha3
 istio.io/api/networking/v1beta1
-# istio.io/client-go v0.0.0-20200807182027-d287a5abb594
+# istio.io/client-go v1.8.1
 ## explicit
 istio.io/client-go/pkg/apis/networking/v1alpha3
 # istio.io/gogo-genproto v0.0.0-20191029161641-f7d19ec0141d

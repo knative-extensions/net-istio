@@ -8,8 +8,8 @@ require (
 	github.com/google/go-cmp v0.5.2
 	go.uber.org/zap v1.16.0
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
-	istio.io/api v0.0.0-20201002153436-e6e7bbc4ebea
-	istio.io/client-go v0.0.0-20200807182027-d287a5abb594
+	istio.io/api v0.0.0-20201123152548-197f11e4ea09
+	istio.io/client-go v1.8.1
 	istio.io/gogo-genproto v0.0.0-20191029161641-f7d19ec0141d // indirect
 	k8s.io/api v0.18.12
 	k8s.io/apimachinery v0.18.12
