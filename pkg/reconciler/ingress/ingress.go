@@ -544,6 +544,11 @@ func (r *Reconciler) areVirtualServicesReady(ctx context.Context, vses []*v1alph
 
 		hasStatus = hasStatus && _hasStatus
 		ready = ready && _ready
+
+		if !hasStatus || !ready {
+			logger.Debugf("virtual service %q does not have status or not ready; skipping checks for others. hasStatus: %v, ready: %v", hasStatus, ready)
+			break
+		}
 	}
 
 	if len(errs) > 0 {
