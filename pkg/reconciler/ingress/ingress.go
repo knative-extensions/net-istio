@@ -216,7 +216,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		// about the steady state.
 		logger.Debug("Kingress is ready, skipping probe.")
 		ready = true
-	} else if hasStatus, readyStatus := r.virtualServicesReady(ctx, vses); hasStatus {
+	} else if hasStatus, readyStatus := r.areVirtualServicesReady(ctx, vses); hasStatus {
 		// Check if our VirtualServices have a status property.
 		// If they do and we're ready, we can use that to determine readiness.
 
@@ -525,19 +525,19 @@ func isIngressPublic(ing *v1alpha1.Ingress) bool {
 	return false
 }
 
-// virtualServicesReady checks if a virtual service has a status, and if so if it's ready.
+// areVirtualServicesReady checks if a virtual service has a status, and if so if it's ready.
 // the return values are (hasStatus, ready, error), where
 //	hasStatus indicates whether the virtualService has a status field
 //	ready indicates whether it's been reconciled and able to receive requests
 //	error contains any errors that occurred during this
-func (r *Reconciler) virtualServicesReady(ctx context.Context, vses []*v1alpha3.VirtualService) (bool, bool) {
+func (r *Reconciler) areVirtualServicesReady(ctx context.Context, vses []*v1alpha3.VirtualService) (bool, bool) {
 	logger := logging.FromContext(ctx)
 
 	var errs []error
 	hasStatus := true
 	ready := true
 	for _, vs := range vses {
-		_hasStatus, _ready, err := r.virtualServiceReady(ctx, vs)
+		_hasStatus, _ready, err := r.isVirtualServiceReady(ctx, vs)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -556,11 +556,11 @@ func (r *Reconciler) virtualServicesReady(ctx context.Context, vses []*v1alpha3.
 	return hasStatus, ready
 }
 
-// virtualServiceReady checks if a virtual service has a status, and if so if it's ready.
+// isVirtualServiceReady checks if a virtual service has a status, and if so if it's ready.
 // the return values are (hasStatus, ready), where
 //	hasStatus indicates whether the virtualService has a status field
 //	ready indicates whether it's been reconciled and able to receive requests
-func (r *Reconciler) virtualServiceReady(ctx context.Context, vs *v1alpha3.VirtualService) (bool, bool, error) {
+func (r *Reconciler) isVirtualServiceReady(ctx context.Context, vs *v1alpha3.VirtualService) (bool, bool, error) {
 	logger := logging.FromContext(ctx)
 
 	if !config.FromContext(ctx).Istio.EnableVirtualServiceStatus {
