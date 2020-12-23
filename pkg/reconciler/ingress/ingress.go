@@ -590,6 +590,7 @@ func (r *Reconciler) isVirtualServiceReady(ctx context.Context, vs *v1alpha3.Vir
 		// Reconciled condition can be "true", "false", or "unknown"
 		if strings.EqualFold(cond.Type, virtualServiceConditionReconciled) {
 			condition = cond
+			break
 		}
 	}
 
