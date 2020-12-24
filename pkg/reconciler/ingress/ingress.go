@@ -20,8 +20,10 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 
 	"go.uber.org/zap"
+	istiov1alpha1 "istio.io/api/meta/v1alpha1"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"knative.dev/pkg/controller"
@@ -55,9 +57,10 @@ import (
 )
 
 const (
-	virtualServiceNotReconciled = "ReconcileVirtualServiceFailed"
-	notReconciledReason         = "ReconcileIngressFailed"
-	notReconciledMessage        = "Ingress reconciliation failed"
+	virtualServiceConditionReconciled = "Reconciled"
+	virtualServiceNotReconciled       = "ReconcileVirtualServiceFailed"
+	notReconciledReason               = "ReconcileIngressFailed"
+	notReconciledMessage              = "Ingress reconciliation failed"
 )
 
 // Reconciler implements the control loop for the Ingress resources.
@@ -213,6 +216,16 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		// about the steady state.
 		logger.Debug("Kingress is ready, skipping probe.")
 		ready = true
+	} else if hasStatus, readyStatus := r.areVirtualServicesReady(ctx, vses); hasStatus {
+		// Check if our VirtualServices have a status property.
+		// If they do and we're ready, we can use that to determine readiness.
+
+		if p, ok := r.statusManager.(*status.Prober); ok {
+			// if possible, cancel probing in case we've started it
+			p.CancelIngressProbing(ing)
+		}
+
+		ready = readyStatus
 	} else {
 		readyStatus, err := r.statusManager.IsReady(ctx, ing)
 		if err != nil {
@@ -510,4 +523,81 @@ func isIngressPublic(ing *v1alpha1.Ingress) bool {
 		}
 	}
 	return false
+}
+
+// areVirtualServicesReady checks if a virtual service has a status, and if so if it's ready.
+// the return values are (hasStatus, ready, error), where
+//	hasStatus indicates whether the virtualService has a status field
+//	ready indicates whether it's been reconciled and able to receive requests
+//	error contains any errors that occurred during this
+func (r *Reconciler) areVirtualServicesReady(ctx context.Context, vses []*v1alpha3.VirtualService) (bool, bool) {
+	logger := logging.FromContext(ctx)
+
+	var errs []error
+	hasStatus := true
+	ready := true
+	for _, vs := range vses {
+		_hasStatus, _ready, err := r.isVirtualServiceReady(ctx, vs)
+		if err != nil {
+			errs = append(errs, err)
+		}
+
+		hasStatus = hasStatus && _hasStatus
+		ready = ready && _ready
+
+		if !hasStatus || !ready {
+			logger.Debugf("virtual service %q does not have status or not ready; skipping checks for others. hasStatus: %v, ready: %v", hasStatus, ready)
+			break
+		}
+	}
+
+	if len(errs) > 0 {
+		// Log errors here, but don't return them
+		// If errors occurred while probing VSes, we'll just default to probing
+		logger.Warnf("errors occurred while probing virtual services for status: %w",
+			errors.NewAggregate(errs))
+	}
+
+	return hasStatus, ready
+}
+
+// isVirtualServiceReady checks if a virtual service has a status, and if so if it's ready.
+// the return values are (hasStatus, ready), where
+//	hasStatus indicates whether the virtualService has a status field
+//	ready indicates whether it's been reconciled and able to receive requests
+func (r *Reconciler) isVirtualServiceReady(ctx context.Context, vs *v1alpha3.VirtualService) (bool, bool, error) {
+	logger := logging.FromContext(ctx)
+
+	if !config.FromContext(ctx).Istio.EnableVirtualServiceStatus {
+		logger.Debugf("VirtualService status not enabled, not checking for its presence.")
+		return false, false, nil
+	}
+
+	currentState, err := r.virtualServiceLister.VirtualServices(vs.Namespace).Get(vs.Name)
+	if err != nil {
+		return false, false, fmt.Errorf("failed to get VirtualService %q: %w", vs.Name, err)
+	}
+
+	logger.Debugf("VirtualService %v, status: %#v", vs.Name, currentState.Status)
+
+	if currentState.Generation != currentState.Status.ObservedGeneration {
+		logger.Debugf("VirtualService %v status is stale; checking again...", vs.Name)
+		return true, false, nil
+	}
+
+	var condition *istiov1alpha1.IstioCondition
+	for _, cond := range currentState.Status.Conditions {
+		// Reconciled condition can be "true", "false", or "unknown"
+		if strings.EqualFold(cond.Type, virtualServiceConditionReconciled) {
+			condition = cond
+			break
+		}
+	}
+
+	if condition == nil {
+		// VirtualService doesn't have status. Return that.
+		return false, false, nil
+	}
+
+	return true, strings.EqualFold(condition.Status, "true"), nil
 }
