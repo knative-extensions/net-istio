@@ -28,9 +28,6 @@ ISTIO_TARBALL=istio-${ISTIO_VERSION}-${ARCH}.tar.gz
 DOWNLOAD_URL=https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/${ISTIO_TARBALL}
 SYSTEM_NAMESPACE="${SYSTEM_NAMESPACE:-"knative-serving"}"
 
-# Enable testing with Istio VirtualService status enabled
-export ENABLE_VIRTUALSERVICE_STATUS=1
-
 wget --no-check-certificate $DOWNLOAD_URL
 if [ $? != 0 ]; then
   echo "Failed to download Istio package"
