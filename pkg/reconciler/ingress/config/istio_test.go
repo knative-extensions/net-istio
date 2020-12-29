@@ -253,3 +253,61 @@ func TestGatewayConfiguration(t *testing.T) {
 		})
 	}
 }
+
+func TestVSStatusEnabled(t *testing.T) {
+	vsStatusTests := []struct {
+		name        string
+		wantErr     bool
+		wantEnabled interface{}
+		config      *corev1.ConfigMap
+	}{{
+		name:        "enabled",
+		wantEnabled: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"enable-virtualservice-status": "true",
+			},
+		},
+	}, {
+		name:        "disabled",
+		wantEnabled: false,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"enable-virtualservice-status": "false",
+			},
+		},
+	}, {
+		name:    "invalid",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"enable-virtualservice-status": "not_a_bool",
+			},
+		},
+	},
+	}
+	for _, tt := range vsStatusTests {
+		t.Run(tt.name, func(t *testing.T) {
+			config, err := NewIstioFromConfigMap(tt.config)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("Test: %q; NewIstioFromConfigMap() error = %v, WantErr %v", tt.name, err, tt.wantErr)
+			}
+
+			if err == nil && config.EnableVirtualServiceStatus != tt.wantEnabled {
+				t.Errorf("Want %v, but got %v", tt.wantEnabled, config.EnableVirtualServiceStatus)
+			}
+		})
+	}
+}
