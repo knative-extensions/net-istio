@@ -37,12 +37,10 @@ tar xzf ${ISTIO_TARBALL}
 
 # Install Istio with VirtualService status enabled
 ./istio-${ISTIO_VERSION}/bin/istioctl install -f "$(dirname $0)/$1" -y --set values.pilot.env.PILOT_ENABLE_STATUS=true --set values.global.istiod.enableAnalysis=true
-kubectl patch configmap/config-istio -n ${SYSTEM_NAMESPACE} --patch='{"data":{"enable-virtualservice-status":"true"}}'
 
 # Enable mTLS STRICT in mesh mode
 if [[ $MESH -eq 1 ]]; then
   kubectl apply -f "$(dirname $0)/extra/global-mtls.yaml"
-  kubectl patch configmap/config-istio -n ${SYSTEM_NAMESPACE} --patch='{"data":{"local-gateway.mesh":"mesh"}}'
 fi
 
 # Clean up
