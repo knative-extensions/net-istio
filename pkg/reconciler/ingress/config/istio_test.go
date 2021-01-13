@@ -273,15 +273,12 @@ func TestVSStatusEnabled(t *testing.T) {
 			},
 		},
 	}, {
-		name:        "disabled",
+		name:        "disabled default",
 		wantEnabled: false,
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: system.Namespace(),
 				Name:      IstioConfigName,
-			},
-			Data: map[string]string{
-				"enable-virtualservice-status": "false",
 			},
 		},
 	}, {
