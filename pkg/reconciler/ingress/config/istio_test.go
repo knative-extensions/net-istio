@@ -302,7 +302,7 @@ func TestVSStatusEnabled(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			config, err := NewIstioFromConfigMap(tt.config)
 			if (err != nil) != tt.wantErr {
-				t.Fatalf("Test: %q; NewIstioFromConfigMap() error = %v, WantErr %v", tt.name, err, tt.wantErr)
+				t.Fatalf("NewIstioFromConfigMap() error = %v, WantErr %v", err, tt.wantErr)
 			}
 
 			if err == nil && config.EnableVirtualServiceStatus != tt.wantEnabled {
