@@ -50,6 +50,9 @@ const (
 
 	// IstioNamespace is the namespace containing Istio
 	IstioNamespace = "istio-system"
+
+	// EnableVSStatus is the config for enabling using Istio's Virtual Service status to determine its readiness
+	EnableVSStatus = "enable-virtualservice-status"
 )
 
 func defaultIngressGateways() []Gateway {
@@ -149,7 +152,7 @@ func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
 
 	var statusEnabled bool
 	if err := cm.Parse(configMap.Data,
-		cm.AsBool("enable-virtualservice-status", &statusEnabled),
+		cm.AsBool(EnableVSStatus, &statusEnabled),
 	); err != nil {
 		return nil, err
 	}
