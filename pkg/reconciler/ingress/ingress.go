@@ -537,12 +537,12 @@ func (r *Reconciler) areVirtualServicesReady(ctx context.Context, vses []*v1alph
 		if err != nil {
 			// Log errors here, but don't return them.
 			// If an error occurred while checking VirtualService status, we'll just default to probing.
-			logger.Warnf("error occurred while checking virtual service status: %w", err)
+			logger.Warnf("error occurred while checking virtual service status: %v", err)
 			return false, false
 		}
 
 		if !hasStatus || !ready {
-			logger.Debugf("virtual service %q does not have status or has status and is not ready; skipping checks for others. hasStatus: %v, ready: %v", vs.Name, hasStatus, ready)
+			logger.Debugf("Virtual Service %q hasStatus=%v, ready=%v; skipping checks for others.", vs.Name, hasStatus, ready)
 			return hasStatus, ready
 		}
 	}
