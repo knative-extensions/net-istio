@@ -526,46 +526,37 @@ func isIngressPublic(ing *v1alpha1.Ingress) bool {
 }
 
 // areVirtualServicesReady checks if a virtual service has a status, and if so if it's ready.
-// the return values are (hasStatus, ready, error), where
+// The return values are (hasStatus, ready), where:
 //	hasStatus indicates whether the virtualService has a status field
 //	ready indicates whether it's been reconciled and able to receive requests
-//	error contains any errors that occurred during this
-func (r *Reconciler) areVirtualServicesReady(ctx context.Context, vses []*v1alpha3.VirtualService) (bool, bool) {
+func (r *Reconciler) areVirtualServicesReady(ctx context.Context, vses []*v1alpha3.VirtualService) (hasStatus bool, ready bool) {
 	logger := logging.FromContext(ctx)
 
-	var errs []error
-	hasStatus := true
-	ready := true
 	for _, vs := range vses {
-		_hasStatus, _ready, err := r.isVirtualServiceReady(ctx, vs)
+		hasStatus, ready, err := r.isVirtualServiceReady(ctx, vs)
 		if err != nil {
-			errs = append(errs, err)
+			// Log errors here, but don't return them.
+			// If an error occurred while checking VirtualService status, we'll just default to probing.
+			logger.Warnf("Error occurred while checking virtual service status: %v", err)
+			return false, false
 		}
-
-		hasStatus = hasStatus && _hasStatus
-		ready = ready && _ready
 
 		if !hasStatus || !ready {
-			logger.Debugf("virtual service %q does not have status or not ready; skipping checks for others. hasStatus: %v, ready: %v", hasStatus, ready)
-			break
+			logger.Debugf("Virtual Service %q hasStatus=%v, ready=%v; skipping checks for others.", vs.Name, hasStatus, ready)
+			return hasStatus, ready
 		}
 	}
 
-	if len(errs) > 0 {
-		// Log errors here, but don't return them
-		// If errors occurred while probing VSes, we'll just default to probing
-		logger.Warnf("errors occurred while probing virtual services for status: %w",
-			errors.NewAggregate(errs))
-	}
-
-	return hasStatus, ready
+	// If either `hasStatus` or `ready` was ever false we would have already returned.
+	return true, true
 }
 
 // isVirtualServiceReady checks if a virtual service has a status, and if so if it's ready.
-// the return values are (hasStatus, ready), where
+// The return values are (hasStatus, ready, err), where:
 //	hasStatus indicates whether the virtualService has a status field
 //	ready indicates whether it's been reconciled and able to receive requests
-func (r *Reconciler) isVirtualServiceReady(ctx context.Context, vs *v1alpha3.VirtualService) (bool, bool, error) {
+//	err indicates an error occurred while looking up the status.
+func (r *Reconciler) isVirtualServiceReady(ctx context.Context, vs *v1alpha3.VirtualService) (hasStatus bool, ready bool, err error) {
 	logger := logging.FromContext(ctx)
 
 	if !config.FromContext(ctx).Istio.EnableVirtualServiceStatus {
