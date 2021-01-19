@@ -23,22 +23,27 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
-	istiov1alpha1 "istio.io/api/meta/v1alpha1"
+
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
-	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
 
 	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/tracker"
 
+	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
+	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
+	coreaccessor "knative.dev/net-istio/pkg/reconciler/accessor/core"
+	istioaccessor "knative.dev/net-istio/pkg/reconciler/accessor/istio"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
 	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	ingressreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 	"knative.dev/networking/pkg/status"
+	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -49,11 +54,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
 	corev1listers "k8s.io/client-go/listers/core/v1"
-	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
-	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
-	coreaccessor "knative.dev/net-istio/pkg/reconciler/accessor/core"
-	istioaccessor "knative.dev/net-istio/pkg/reconciler/accessor/istio"
-	ingressreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
 )
 
 const (
@@ -327,10 +327,10 @@ func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1
 		vses, err := r.virtualServiceLister.VirtualServices(ing.GetNamespace()).List(
 			labels.SelectorFromSet(labels.Set{k: v}))
 		if err != nil {
-			return fmt.Errorf("failed to get VirtualServices: %w", err)
+			return fmt.Errorf("failed to list VirtualServices: %w", err)
 		}
 
-		// Sort the virtual services by their name to get a stable deletion order.
+		// Sort the virtual services by name to get a stable deletion order.
 		sort.Slice(vses, func(i, j int) bool {
 			return vses[i].Name < vses[j].Name
 		})
@@ -462,13 +462,14 @@ func (r *Reconciler) GetVirtualServiceLister() istiolisters.VirtualServiceLister
 
 // qualifiedGatewayNamesFromContext get gateway names from context
 func qualifiedGatewayNamesFromContext(ctx context.Context) map[v1alpha1.IngressVisibility]sets.String {
-	publicGateways := sets.NewString()
-	for _, gw := range config.FromContext(ctx).Istio.IngressGateways {
+	ci := config.FromContext(ctx).Istio
+	publicGateways := make(sets.String, len(ci.IngressGateways))
+	for _, gw := range ci.IngressGateways {
 		publicGateways.Insert(gw.QualifiedName())
 	}
 
-	privateGateways := sets.NewString()
-	for _, gw := range config.FromContext(ctx).Istio.LocalGateways {
+	privateGateways := make(sets.String, len(ci.LocalGateways))
+	for _, gw := range ci.LocalGateways {
 		privateGateways.Insert(gw.QualifiedName())
 	}
 
@@ -525,11 +526,11 @@ func isIngressPublic(ing *v1alpha1.Ingress) bool {
 	return false
 }
 
-// areVirtualServicesReady checks if a virtual service has a status, and if so if it's ready.
+// areVirtualServicesReady checks if *all* the provided virtual services have a status, and if so if it's ready.
 // The return values are (hasStatus, ready), where:
-//	hasStatus indicates whether the virtualService has a status field
-//	ready indicates whether it's been reconciled and able to receive requests
-func (r *Reconciler) areVirtualServicesReady(ctx context.Context, vses []*v1alpha3.VirtualService) (hasStatus bool, ready bool) {
+//	hasStatus indicates whether all the virtualServices have a status field
+//	ready indicates whether they all have been reconciled and are able to receive requests
+func (r *Reconciler) areVirtualServicesReady(ctx context.Context, vses []*v1alpha3.VirtualService) (hasStatus, ready bool) {
 	logger := logging.FromContext(ctx)
 
 	for _, vs := range vses {
@@ -556,11 +557,11 @@ func (r *Reconciler) areVirtualServicesReady(ctx context.Context, vses []*v1alph
 //	hasStatus indicates whether the virtualService has a status field
 //	ready indicates whether it's been reconciled and able to receive requests
 //	err indicates an error occurred while looking up the status.
-func (r *Reconciler) isVirtualServiceReady(ctx context.Context, vs *v1alpha3.VirtualService) (hasStatus bool, ready bool, err error) {
+func (r *Reconciler) isVirtualServiceReady(ctx context.Context, vs *v1alpha3.VirtualService) (hasStatus, ready bool, err error) {
 	logger := logging.FromContext(ctx)
 
 	if !config.FromContext(ctx).Istio.EnableVirtualServiceStatus {
-		logger.Debugf("VirtualService status not enabled, not checking for its presence.")
+		logger.Debug("VirtualService status not enabled, not checking for its presence.")
 		return false, false, nil
 	}
 
@@ -569,26 +570,21 @@ func (r *Reconciler) isVirtualServiceReady(ctx context.Context, vs *v1alpha3.Vir
 		return false, false, fmt.Errorf("failed to get VirtualService %q: %w", vs.Name, err)
 	}
 
-	logger.Debugf("VirtualService %v, status: %#v", vs.Name, currentState.Status)
+	logger.Debugf("VirtualService %s, status: %#v", vs.Name, currentState.Status)
 
 	if currentState.Generation != currentState.Status.ObservedGeneration {
-		logger.Debugf("VirtualService %v status is stale; checking again...", vs.Name)
+		logger.Debugf("VirtualService %s status is stale; checking again...", vs.Name)
 		return true, false, nil
 	}
 
-	var condition *istiov1alpha1.IstioCondition
 	for _, cond := range currentState.Status.Conditions {
-		// Reconciled condition can be "true", "false", or "unknown"
+		// Reconciled condition can be "true", "false", or "unknown".
 		if strings.EqualFold(cond.Type, virtualServiceConditionReconciled) {
-			condition = cond
-			break
+			return true, strings.EqualFold(cond.Status, "true"), nil
 		}
 	}
 
-	if condition == nil {
-		// VirtualService doesn't have status. Return that.
-		return false, false, nil
-	}
+	// VirtualService doesn't have status. Return that.
+	return false, false, nil
 
-	return true, strings.EqualFold(condition.Status, "true"), nil
 }

@@ -40,14 +40,15 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
-	"knative.dev/pkg/logging"
 
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/sync/errgroup"
+
 	istiov1alpha1 "istio.io/api/meta/v1alpha1"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -57,12 +58,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientgotesting "k8s.io/client-go/testing"
-	"knative.dev/pkg/apis"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-	"knative.dev/pkg/configmap"
-	"knative.dev/pkg/controller"
-	"knative.dev/pkg/kmeta"
-	pkgreconciler "knative.dev/pkg/reconciler"
 
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
@@ -70,12 +65,19 @@ import (
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	ingressreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/configmap"
+	"knative.dev/pkg/controller"
+	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/logging"
 	pkgnet "knative.dev/pkg/network"
+	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/system"
-	_ "knative.dev/pkg/system/testing"
 
 	. "knative.dev/net-istio/pkg/reconciler/testing"
 	. "knative.dev/pkg/reconciler/testing"
+	_ "knative.dev/pkg/system/testing"
 )
 
 const (
