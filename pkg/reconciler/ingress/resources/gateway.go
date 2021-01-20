@@ -264,7 +264,7 @@ func getGatewayServices(ctx context.Context, svcLister corev1listers.ServiceList
 // given ingress gateway service.
 func GatewayName(accessor kmeta.Accessor, gatewaySvc *corev1.Service) string {
 	gatewayServiceKey := fmt.Sprintf("%s/%s", gatewaySvc.Namespace, gatewaySvc.Name)
-	return fmt.Sprintf("%s-%d", accessor.GetName(), adler32.Checksum([]byte(gatewayServiceKey)))
+	return fmt.Sprint(accessor.GetName()+"-", adler32.Checksum([]byte(gatewayServiceKey)))
 }
 
 // MakeTLSServers creates the expected Gateway TLS `Servers` based on the given IngressTLS.
@@ -390,8 +390,7 @@ func UpdateGateway(gateway *v1alpha3.Gateway, want []*istiov1alpha3.Server, exis
 		servers = append(servers, &placeholderServer)
 	}
 
-	SortServers(servers)
-	gateway.Spec.Servers = servers
+	gateway.Spec.Servers = SortServers(servers)
 	return gateway
 }
 
