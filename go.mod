@@ -11,10 +11,10 @@ require (
 	istio.io/api v0.0.0-20201123152548-197f11e4ea09
 	istio.io/client-go v1.8.1
 	istio.io/gogo-genproto v0.0.0-20191029161641-f7d19ec0141d // indirect
-	k8s.io/api v0.18.12
-	k8s.io/apimachinery v0.18.12
-	k8s.io/client-go v0.18.12
+	k8s.io/api v0.19.7
+	k8s.io/apimachinery v0.19.7
+	k8s.io/client-go v0.19.7
 	knative.dev/hack v0.0.0-20210120165453-8d623a0af457
-	knative.dev/networking v0.0.0-20210121025453-4db00b8ae77a
-	knative.dev/pkg v0.0.0-20210121025054-992644aa1905
+	knative.dev/networking v0.0.0-20210123150554-8b522a9049a1
+	knative.dev/pkg v0.0.0-20210124203454-7101e9d4f6c6
 )
