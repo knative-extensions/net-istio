@@ -54,7 +54,7 @@ const (
 func GenerateCertificate(host string, secretName string, namespace string) (*corev1.Secret, error) {
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate private key: %v", err)
+		return nil, fmt.Errorf("failed to generate private key: %w", err)
 	}
 
 	notBefore := time.Now().Add(-5 * time.Minute)
@@ -63,7 +63,7 @@ func GenerateCertificate(host string, secretName string, namespace string) (*cor
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate serial number: %v", err)
+		return nil, fmt.Errorf("failed to generate serial number: %w", err)
 	}
 
 	template := x509.Certificate{
@@ -87,17 +87,17 @@ func GenerateCertificate(host string, secretName string, namespace string) (*cor
 
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create the certificate: %v", err)
+		return nil, fmt.Errorf("failed to create the certificate: %w", err)
 	}
 
 	var certBuf bytes.Buffer
 	if err := pem.Encode(&certBuf, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
-		return nil, fmt.Errorf("failed to encode the certificate: %v", err)
+		return nil, fmt.Errorf("failed to encode the certificate: %w", err)
 	}
 
 	var keyBuf bytes.Buffer
 	if err := pem.Encode(&keyBuf, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)}); err != nil {
-		return nil, fmt.Errorf("failed to encode the private key: %v", err)
+		return nil, fmt.Errorf("failed to encode the private key: %w", err)
 	}
 
 	return &corev1.Secret{
