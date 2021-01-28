@@ -28,6 +28,10 @@ function parse_flags() {
       readonly INGRESS_CLASS="istio.ingress.networking.knative.dev"
       return 2
       ;;
+    --mesh)
+      readonly MESH=1
+      return 1
+      ;;
   esac
   return 0
 }
@@ -61,7 +65,7 @@ function test_setup() {
   ko apply --platform=all -f config/ || return 1
 
   scale_controlplane networking-istio istio-webhook
-  
+
   # Wait for pods to be running.
   echo ">> Waiting for Istio components to be running..."
   wait_until_pods_running istio-system || return 1
