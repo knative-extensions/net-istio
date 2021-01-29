@@ -28,6 +28,10 @@ function parse_flags() {
       readonly INGRESS_CLASS="istio.ingress.networking.knative.dev"
       return 2
       ;;
+    --mesh)
+      readonly MESH=1
+      return 1
+      ;;
   esac
   return 0
 }
@@ -50,6 +54,10 @@ function test_setup() {
   $(dirname $0)/upload-test-images.sh || fail_test "Error uploading test images"
   echo ">> Creating test resources (test/config/)"
   ko apply --platform=all ${KO_FLAGS} -f test/config/ || return 1
+  if (( MESH )); then
+    kubectl label namespace serving-tests istio-injection=enabled
+    kubectl label namespace serving-tests-alt istio-injection=enabled
+  fi
 
   # Bringing up controllers.
   echo ">> Bringing up Istio"
@@ -61,7 +69,7 @@ function test_setup() {
   ko apply --platform=all -f config/ || return 1
 
   scale_controlplane networking-istio istio-webhook
-  
+
   # Wait for pods to be running.
   echo ">> Waiting for Istio components to be running..."
   wait_until_pods_running istio-system || return 1
