@@ -54,6 +54,10 @@ function test_setup() {
   $(dirname $0)/upload-test-images.sh || fail_test "Error uploading test images"
   echo ">> Creating test resources (test/config/)"
   ko apply --platform=all ${KO_FLAGS} -f test/config/ || return 1
+  if (( MESH )); then
+    kubectl label namespace serving-tests istio-injection=enabled
+    kubectl label namespace serving-tests-alt istio-injection=enabled
+  fi
 
   # Bringing up controllers.
   echo ">> Bringing up Istio"
