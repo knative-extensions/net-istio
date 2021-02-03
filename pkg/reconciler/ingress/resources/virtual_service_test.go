@@ -234,10 +234,10 @@ func TestMakeVirtualServicesSpec_CorrectGateways(t *testing.T) {
 				},
 			},
 			gateways: map[v1alpha1.IngressVisibility]sets.String{
-				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("cluster-local-gateway/knative-serving"),
+				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("knative-local-gateway/knative-serving"),
 				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("knative-ingress-gateway/knative-serving"),
 			},
-			expectedGateways: sets.NewString("cluster-local-gateway/knative-serving"),
+			expectedGateways: sets.NewString("knative-local-gateway/knative-serving"),
 		},
 		{
 			name: "public visibility",
@@ -253,7 +253,7 @@ func TestMakeVirtualServicesSpec_CorrectGateways(t *testing.T) {
 				},
 			},
 			gateways: map[v1alpha1.IngressVisibility]sets.String{
-				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("cluster-local-gateway/knative-serving"),
+				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("knative-local-gateway/knative-serving"),
 				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("knative-ingress-gateway/knative-serving"),
 			},
 			expectedGateways: sets.NewString("knative-ingress-gateway/knative-serving"),
@@ -277,11 +277,11 @@ func TestMakeVirtualServicesSpec_CorrectGateways(t *testing.T) {
 				},
 			},
 			gateways: map[v1alpha1.IngressVisibility]sets.String{
-				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("cluster-local-gateway/knative-serving"),
+				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("knative-local-gateway/knative-serving"),
 				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("knative-ingress-gateway/knative-serving"),
 			},
 			expectedGateways: sets.NewString("knative-ingress-gateway/knative-serving",
-				"cluster-local-gateway/knative-serving"),
+				"knative-local-gateway/knative-serving"),
 		},
 	}
 
