@@ -12,8 +12,9 @@ spec:
   selector:
     matchLabels:
       app: webhook
-  mtls:
-    mode: PERMISSIVE
+  portLevelMtls:
+    8443:
+      mode: PERMISSIVE
 ---
 apiVersion: "security.istio.io/v1beta1"
 kind: "PeerAuthentication"
@@ -27,8 +28,9 @@ spec:
   selector:
     matchLabels:
       app: domainmapping-webhook
-  mtls:
-    mode: PERMISSIVE
+  portLevelMtls:
+    8443:
+      mode: PERMISSIVE
 ---
 apiVersion: "security.istio.io/v1beta1"
 kind: "PeerAuthentication"
@@ -42,5 +44,6 @@ spec:
   selector:
     matchLabels:
       app: istio-webhook
-  mtls:
-    mode: PERMISSIVE
+  portLevelMtls:
+    8443:
+      mode: PERMISSIVE
