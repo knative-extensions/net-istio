@@ -135,7 +135,7 @@ func makeVirtualServiceSpec(ctx context.Context, ing *v1alpha1.Ingress, gateways
 			p := rule.HTTP.Paths[i]
 			hosts := hosts.Intersection(sets.NewString(rule.Hosts...))
 			if hosts.Len() != 0 {
-				http := makeVirtualServiceRoute(ctx, hosts, &p, gateways, rule.Visibility)
+				http := makeVirtualServiceRoute(hosts, &p, gateways, rule.Visibility)
 				// Add all the Gateways that exist inside the http.match section of
 				// the VirtualService.
 				// This ensures that we are only using the Gateways that actually appear
@@ -151,7 +151,7 @@ func makeVirtualServiceSpec(ctx context.Context, ing *v1alpha1.Ingress, gateways
 	return &spec
 }
 
-func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.String, visibility v1alpha1.IngressVisibility) *istiov1alpha3.HTTPRoute {
+func makeVirtualServiceRoute(hosts sets.String, http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.String, visibility v1alpha1.IngressVisibility) *istiov1alpha3.HTTPRoute {
 	matches := []*istiov1alpha3.HTTPMatchRequest{}
 	clusterDomainName := network.GetClusterDomainName()
 	for _, host := range hosts.List() {
@@ -201,16 +201,6 @@ func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alp
 		rewrite = &istiov1alpha3.HTTPRewrite{
 			Authority: http.RewriteHost,
 		}
-
-		weights = []*istiov1alpha3.HTTPRouteDestination{{
-			Weight: 100,
-			Destination: &istiov1alpha3.Destination{
-				Host: privateGatewayServiceURLFromContext(ctx),
-				Port: &istiov1alpha3.PortSelector{
-					Number: GatewayHTTPPort,
-				},
-			},
-		}}
 	}
 
 	route := &istiov1alpha3.HTTPRoute{

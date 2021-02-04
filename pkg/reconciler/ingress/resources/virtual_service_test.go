@@ -25,7 +25,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/ingress"
@@ -588,15 +587,16 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 	ingressPath := &v1alpha1.HTTPIngressPath{
 		RewriteHost: "the.target.host",
+		Splits: []v1alpha1.IngressBackendSplit{{
+			Percent: 100,
+			IngressBackend: v1alpha1.IngressBackend{
+				ServiceName:      "the-svc",
+				ServiceNamespace: "the-ns",
+				ServicePort:      intstr.FromInt(8080),
+			},
+		}},
 	}
-	ctx := config.ToContext(context.Background(), &config.Config{
-		Istio: &config.Istio{
-			LocalGateways: []config.Gateway{{
-				ServiceURL: "the-local-gateway.svc.url",
-			}},
-		},
-	})
-	route := makeVirtualServiceRoute(ctx, sets.NewString("a.vanity.url", "another.vanity.url"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	route := makeVirtualServiceRoute(sets.NewString("a.vanity.url", "another.vanity.url"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1alpha3.HTTPRoute{
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Gateways: []string{"gateway-1"},
@@ -614,9 +614,9 @@ func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 		},
 		Route: []*istiov1alpha3.HTTPRouteDestination{{
 			Destination: &istiov1alpha3.Destination{
-				Host: "the-local-gateway.svc.url",
+				Host: "the-svc.the-ns.svc.cluster.local",
 				Port: &istiov1alpha3.PortSelector{
-					Number: 80,
+					Number: 8080,
 				},
 			},
 			Weight: 100,
@@ -644,7 +644,7 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 			Percent: 100,
 		}},
 	}
-	route := makeVirtualServiceRoute(context.Background(), sets.NewString("a.com", "b.org"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	route := makeVirtualServiceRoute(sets.NewString("a.com", "b.org"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1alpha3.HTTPRoute{
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Gateways: []string{"gateway-1"},
@@ -703,7 +703,7 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 			Percent: 10,
 		}},
 	}
-	route := makeVirtualServiceRoute(context.Background(), sets.NewString("test.org"), ingressPath, makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	route := makeVirtualServiceRoute(sets.NewString("test.org"), ingressPath, makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1alpha3.HTTPRoute{
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Gateways: []string{"knative-testing/gateway-1"},
