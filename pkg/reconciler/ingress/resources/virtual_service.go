@@ -214,6 +214,7 @@ func makeVirtualServiceRoute(ctx context.Context, hosts sets.String, http *v1alp
 	}
 
 	route := &istiov1alpha3.HTTPRoute{
+		Retries: &istiov1alpha3.HTTPRetry{}, // Override default istio behaviour of retrying twice.
 		Match:   matches,
 		Route:   weights,
 		Rewrite: rewrite,

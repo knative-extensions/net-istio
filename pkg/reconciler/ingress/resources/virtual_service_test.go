@@ -407,6 +407,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 		},
 	}
 	expected := []*istiov1alpha3.HTTPRoute{{
+		Retries: &istiov1alpha3.HTTPRetry{},
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Uri: &istiov1alpha3.StringMatch{
 				MatchType: &istiov1alpha3.StringMatch_Regex{Regex: "^/pets/(.*?)?"},
@@ -515,6 +516,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 	}
 
 	expected := []*istiov1alpha3.HTTPRoute{{
+		Retries: &istiov1alpha3.HTTPRetry{},
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Uri: &istiov1alpha3.StringMatch{
 				MatchType: &istiov1alpha3.StringMatch_Regex{Regex: "^/pets/(.*?)?"},
@@ -554,6 +556,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 			},
 		},
 	}, {
+		Retries: &istiov1alpha3.HTTPRetry{},
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Uri: &istiov1alpha3.StringMatch{
 				MatchType: &istiov1alpha3.StringMatch_Regex{Regex: "^/pets/(.*?)?"},
@@ -598,6 +601,7 @@ func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 	})
 	route := makeVirtualServiceRoute(ctx, sets.NewString("a.vanity.url", "another.vanity.url"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1alpha3.HTTPRoute{
+		Retries: &istiov1alpha3.HTTPRetry{},
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Gateways: []string{"gateway-1"},
 			Authority: &istiov1alpha3.StringMatch{
@@ -646,6 +650,7 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 	}
 	route := makeVirtualServiceRoute(context.Background(), sets.NewString("a.com", "b.org"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1alpha3.HTTPRoute{
+		Retries: &istiov1alpha3.HTTPRetry{},
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Gateways: []string{"gateway-1"},
 			Authority: &istiov1alpha3.StringMatch{
@@ -705,6 +710,7 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 	}
 	route := makeVirtualServiceRoute(context.Background(), sets.NewString("test.org"), ingressPath, makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1alpha3.HTTPRoute{
+		Retries: &istiov1alpha3.HTTPRetry{},
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Gateways: []string{"knative-testing/gateway-1"},
 			Authority: &istiov1alpha3.StringMatch{
