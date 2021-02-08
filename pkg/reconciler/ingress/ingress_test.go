@@ -441,7 +441,7 @@ func TestReconcile(t *testing.T) {
 							Status: "True",
 						},
 					},
-				}, 0),
+				}, 1, 1),
 			ingressVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-ready")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
 				istiov1alpha1.IstioStatus{
@@ -451,7 +451,7 @@ func TestReconcile(t *testing.T) {
 							Status: "True",
 						},
 					},
-				}, 0),
+				}, 1, 1),
 		},
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ingressWithStatusAndFinalizers("ingress-virtualservice-ready", v1alpha1.IngressStatus{
@@ -506,7 +506,7 @@ func TestReconcile(t *testing.T) {
 							Status: "True",
 						},
 					},
-				}, 0),
+				}, 1, 1),
 			ingressVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-notready")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
 				istiov1alpha1.IstioStatus{
@@ -516,7 +516,7 @@ func TestReconcile(t *testing.T) {
 							Status: "False",
 						},
 					},
-				}, 0),
+				}, 1, 1),
 		},
 		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(0)},
 	}, {
@@ -553,7 +553,7 @@ func TestReconcile(t *testing.T) {
 							Status: "True",
 						},
 					},
-				}, 0),
+				}, 2, 2),
 			ingressVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-stale")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
 				istiov1alpha1.IstioStatus{
@@ -563,9 +563,74 @@ func TestReconcile(t *testing.T) {
 							Status: "True",
 						},
 					},
-				}, 1),
+				}, 2, 1),
 		},
 		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(0)},
+	}, {
+		Name: "virtualService status 0 should revert to probers",
+		Key:  "test-ns/ingress-virtualservice-nostatus",
+		Objects: []runtime.Object{
+			ingressWithStatusAndFinalizers("ingress-virtualservice-nostatus", v1alpha1.IngressStatus{
+				Status: duckv1.Status{
+					Conditions: duckv1.Conditions{{
+						Type:    v1alpha1.IngressConditionLoadBalancerReady,
+						Reason:  "Uninitialized",
+						Status:  corev1.ConditionUnknown,
+						Message: "Waiting for load balancer to be ready",
+					}, {
+						Type:   v1alpha1.IngressConditionNetworkConfigured,
+						Status: corev1.ConditionTrue,
+					}, {
+						Type:    v1alpha1.IngressConditionReady,
+						Reason:  "Uninitialized",
+						Status:  corev1.ConditionUnknown,
+						Message: "Waiting for load balancer to be ready",
+					}},
+				},
+				PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}}},
+				PublicLoadBalancer:  &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{DomainInternal: "test-ingressgateway.istio-system.svc.cluster.local"}}},
+			},
+				[]string{"ingresses.networking.internal.knative.dev"}),
+			meshVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-nostatus")),
+				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
+				istiov1alpha1.IstioStatus{
+					Conditions: []*istiov1alpha1.IstioCondition{
+						{
+							Type:   "Reconciled",
+							Status: "True",
+						},
+					},
+				}, 1, 0),
+			ingressVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-nostatus")),
+				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
+				istiov1alpha1.IstioStatus{
+					Conditions: []*istiov1alpha1.IstioCondition{
+						{
+							Type:   "Reconciled",
+							Status: "True",
+						},
+					},
+				}, 1, 0),
+		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ingressWithStatusAndFinalizers("ingress-virtualservice-nostatus", v1alpha1.IngressStatus{
+				Status: duckv1.Status{
+					Conditions: duckv1.Conditions{{
+						Type:   v1alpha1.IngressConditionLoadBalancerReady,
+						Status: corev1.ConditionTrue,
+					}, {
+						Type:   v1alpha1.IngressConditionNetworkConfigured,
+						Status: corev1.ConditionTrue,
+					}, {
+						Type:   v1alpha1.IngressConditionReady,
+						Status: corev1.ConditionTrue,
+					}},
+				},
+				PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}}},
+				PublicLoadBalancer:  &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{DomainInternal: "test-ingressgateway.istio-system.svc.cluster.local"}}},
+			},
+				[]string{"ingresses.networking.internal.knative.dev"})}},
+		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(1)},
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
@@ -1187,7 +1252,7 @@ func TestReconcile_DisableStatus(t *testing.T) {
 							Status: "True",
 						},
 					},
-				}, 0),
+				}, 1, 1),
 			ingressVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-vs-status-disabled")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
 				istiov1alpha1.IstioStatus{
@@ -1197,7 +1262,7 @@ func TestReconcile_DisableStatus(t *testing.T) {
 							Status: "True",
 						},
 					},
-				}, 0),
+				}, 1, 1),
 		},
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ingressWithStatusAndFinalizers("ingress-vs-status-disabled", v1alpha1.IngressStatus{
@@ -1480,18 +1545,20 @@ func ingressWithTLSAndStatusClusterLocal(name string, tls []v1alpha1.IngressTLS,
 	return ci
 }
 
-func meshVirtualServiceWithStatus(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, status istiov1alpha1.IstioStatus, generationDelay int64) *v1alpha3.VirtualService {
+func meshVirtualServiceWithStatus(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, status istiov1alpha1.IstioStatus, generation int64, observedGeneration int64) *v1alpha3.VirtualService {
 	vs := resources.MakeMeshVirtualService(ctx, ing, gateways)
 	vs.Status = status
-	vs.Status.ObservedGeneration = vs.Generation - generationDelay
+	vs.ObjectMeta.Generation = generation
+	vs.Status.ObservedGeneration = observedGeneration
 
 	return vs
 }
 
-func ingressVirtualServiceWithStatus(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, status istiov1alpha1.IstioStatus, generationDelay int64) *v1alpha3.VirtualService {
+func ingressVirtualServiceWithStatus(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, status istiov1alpha1.IstioStatus, generation int64, observedGeneration int64) *v1alpha3.VirtualService {
 	vs := resources.MakeIngressVirtualService(ctx, ing, gateways)
 	vs.Status = status
-	vs.Status.ObservedGeneration = vs.Generation - generationDelay
+	vs.ObjectMeta.Generation = generation
+	vs.Status.ObservedGeneration = observedGeneration
 
 	return vs
 }

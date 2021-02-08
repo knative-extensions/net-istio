@@ -573,6 +573,16 @@ func (r *Reconciler) isVirtualServiceReady(ctx context.Context, vs *v1alpha3.Vir
 	logger.Debugf("VirtualService %s, status: %#v", vs.Name, currentState.Status)
 
 	if currentState.Generation != currentState.Status.ObservedGeneration {
+		if currentState.Status.ObservedGeneration == 0 &&
+			len(currentState.Status.Conditions) > 0 {
+			// If the VirtualService has a status but not an ObservedGeneration,
+			// this means the user is running a version of Istio where status existed but
+			// observedGeneration did not. We have no way of knowing if the status is
+			// current, so rely on probing instead.
+			logger.Debugf("VirtualService %s has status but no ObservedGeneration. Using probers instead.", vs.Name)
+			return false, false, nil
+		}
+
 		logger.Debugf("VirtualService %s status is stale; checking again...", vs.Name)
 		return true, false, nil
 	}
@@ -585,6 +595,7 @@ func (r *Reconciler) isVirtualServiceReady(ctx context.Context, vs *v1alpha3.Vir
 	}
 
 	// VirtualService doesn't have status. Return that.
+	logger.Debugf("VirtualService %s doesn't have a status. Using probers instead.", vs.Name)
 	return false, false, nil
 
 }
