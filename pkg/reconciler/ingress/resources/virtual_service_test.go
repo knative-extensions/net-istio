@@ -286,7 +286,7 @@ func TestMakeVirtualServicesSpec_CorrectGateways(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			vs := makeVirtualServiceSpec(context.Background(), tc.ingress, tc.gateways, ingress.ExpandedHosts(getHosts(tc.ingress)))
+			vs := makeVirtualServiceSpec(tc.ingress, tc.gateways, ingress.ExpandedHosts(getHosts(tc.ingress)))
 			actualGateways := sets.NewString(vs.Gateways...)
 			if !actualGateways.Equal(tc.expectedGateways) {
 				t.Fatalf("Got gateways %v, expected %v", actualGateways.List(), tc.expectedGateways.List())

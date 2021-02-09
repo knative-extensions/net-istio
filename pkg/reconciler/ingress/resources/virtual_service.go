@@ -26,7 +26,6 @@ import (
 
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
-	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources/names"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
@@ -55,7 +54,7 @@ func MakeIngressVirtualService(ctx context.Context, ing *v1alpha1.Ingress, gatew
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 			Annotations:     ing.GetAnnotations(),
 		},
-		Spec: *makeVirtualServiceSpec(ctx, ing, gateways, ingress.ExpandedHosts(getHosts(ing))),
+		Spec: *makeVirtualServiceSpec(ing, gateways, ingress.ExpandedHosts(getHosts(ing))),
 	}
 
 	// Populate the Ingress labels.
@@ -84,7 +83,7 @@ func MakeMeshVirtualService(ctx context.Context, ing *v1alpha1.Ingress, gateways
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 			Annotations:     ing.GetAnnotations(),
 		},
-		Spec: *makeVirtualServiceSpec(ctx, ing, map[v1alpha1.IngressVisibility]sets.String{
+		Spec: *makeVirtualServiceSpec(ing, map[v1alpha1.IngressVisibility]sets.String{
 			v1alpha1.IngressVisibilityExternalIP:   sets.NewString("mesh"),
 			v1alpha1.IngressVisibilityClusterLocal: sets.NewString("mesh"),
 		}, hosts),
@@ -124,7 +123,7 @@ func MakeVirtualServices(ctx context.Context, ing *v1alpha1.Ingress, gateways ma
 	return vss, nil
 }
 
-func makeVirtualServiceSpec(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, hosts sets.String) *istiov1alpha3.VirtualService {
+func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, hosts sets.String) *istiov1alpha3.VirtualService {
 	spec := istiov1alpha3.VirtualService{
 		Hosts: hosts.List(),
 	}
@@ -290,13 +289,4 @@ func getPublicIngressRules(i *v1alpha1.Ingress) []v1alpha1.IngressRule {
 	}
 
 	return result
-}
-
-func privateGatewayServiceURLFromContext(ctx context.Context) string {
-	cfg := config.FromContext(ctx).Istio
-	if len(cfg.LocalGateways) > 0 {
-		return cfg.LocalGateways[0].ServiceURL
-	}
-
-	return ""
 }
