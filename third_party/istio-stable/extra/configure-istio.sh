@@ -17,5 +17,3 @@
 if [[ $MESH -eq 1 ]]; then
   kubectl patch configmap/config-istio -n ${SYSTEM_NAMESPACE} --patch='{"data":{"local-gateway.mesh":"mesh"}}'
 fi
-
-kubectl patch configmap/config-istio -n ${SYSTEM_NAMESPACE} --patch='{"data":{"enable-virtualservice-status":"true"}}'
