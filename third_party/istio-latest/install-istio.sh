@@ -17,7 +17,7 @@
 source $(dirname $0)/../download-istio.sh
 
 # Download Istio
-download_istio 1.8.2
+download_istio 1.9.0
 trap cleanup_istio EXIT
 
 # Install Istio with VirtualService status enabled
