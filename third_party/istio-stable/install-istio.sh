@@ -22,7 +22,8 @@ trap cleanup_istio EXIT
 
 ${ISTIO_DIR}/bin/istioctl install -f "$(dirname $0)/$1" -y
 
+# Temporarily disable this (https://github.com/knative-sandbox/net-istio/issues/503)
 # Enable mTLS STRICT in mesh mode
-if [[ $MESH -eq 1 ]]; then
-  kubectl apply -f "$(dirname $0)/extra/global-mtls.yaml"
-fi
+# if [[ $MESH -eq 1 ]]; then
+#   kubectl apply -f "$(dirname $0)/extra/global-mtls.yaml"
+# fi
