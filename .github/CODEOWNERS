@@ -1,10 +1,2 @@
 # Default owners are Networking WG leads and TOC
-* @knative-sandbox/technical-oversight-committee
-* @knative-sandbox/knative-release-leads
-* @knative-sandbox/networking-wg-leads
-# Last match takes precedence for reviews
-* @knative-sandbox/net-istio-approvers
-
-# hack and test are owned by productivity
-/hack/* @knative-sandbox/productivity-wg-leads
-/test/* @knative-sandbox/productivity-wg-leads
+* @knative-sandbox/technical-oversight-committee @knative-sandbox/knative-release-leads @knative-sandbox/networking-wg-leads @knative-sandbox/net-istio-approvers
