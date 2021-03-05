@@ -203,7 +203,7 @@ func makeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]
 // if this function is changed in the upstream (for example, Istio allows the dot in the future), we don't want to
 // import the change without awareness because it could break the compatibility of Gateway name generation.
 func isDNS1123Label(value string) bool {
-	return len(value) <= dNS1123LabelMaxLength && dns1123LabelRegexp.MatchString(value)
+	return len(value) <= dns1123LabelMaxLength && dns1123LabelRegexp.MatchString(value)
 }
 
 // WildcardGatewayName creates the name of wildcard Gateway.
@@ -323,7 +323,7 @@ func MakeTLSServers(ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, gat
 	return SortServers(servers), nil
 }
 
-func portNamePrefix(prefix, suffx string) string {
+func portNamePrefix(prefix, suffix string) string {
 	if !isDNS1123Label(suffix) {
 		suffix = fmt.Sprint(adler32.Checksum([]byte(suffix)))
 	}
