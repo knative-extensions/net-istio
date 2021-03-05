@@ -44,7 +44,7 @@ import (
 // GatewayHTTPPort is the HTTP port the gateways listen on.
 const (
 	GatewayHTTPPort       = 80
-	DNS1123LabelMaxLength = 63 // Public for testing only.
+	dns1123LabelMaxLength = 63 // Public for testing only.
 	dns1123LabelFmt       = "[a-zA-Z0-9](?:[-a-zA-Z0-9]*[a-zA-Z0-9])?"
 )
 
@@ -203,7 +203,7 @@ func makeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]
 // if this function is changed in the upstream (for example, Istio allows the dot in the future), we don't want to
 // import the change without awareness because it could break the compatibility of Gateway name generation.
 func isDNS1123Label(value string) bool {
-	return len(value) <= DNS1123LabelMaxLength && dns1123LabelRegexp.MatchString(value)
+	return len(value) <= dNS1123LabelMaxLength && dns1123LabelRegexp.MatchString(value)
 }
 
 // WildcardGatewayName creates the name of wildcard Gateway.
@@ -323,8 +323,7 @@ func MakeTLSServers(ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, gat
 	return SortServers(servers), nil
 }
 
-func portNamePrefix(prefix, ingressName string) string {
-	suffix := ingressName
+func portNamePrefix(prefix, suffx string) string {
 	if !isDNS1123Label(suffix) {
 		suffix = fmt.Sprint(adler32.Checksum([]byte(suffix)))
 	}
