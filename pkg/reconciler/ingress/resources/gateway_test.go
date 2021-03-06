@@ -155,6 +155,14 @@ var ingressResource = v1alpha1.Ingress{
 	Spec: ingressSpec,
 }
 
+var ingressResourceWithDotName = v1alpha1.Ingress{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "ingress.com",
+		Namespace: "test-ns",
+	},
+	Spec: ingressSpec,
+}
+
 func TestGetServers(t *testing.T) {
 	servers := GetServers(&gateway, &ingressResource)
 	expected := []*istiov1alpha3.Server{{
@@ -795,6 +803,47 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 						ServerCertificate: corev1.TLSCertKey,
 						PrivateKey:        corev1.TLSPrivateKeyKey,
 						CredentialName:    secret.Name,
+					},
+				}},
+			},
+		}},
+	}, {
+		name: "ingress name has dot",
+
+		ia:            &ingressResourceWithDotName,
+		originSecrets: originSecrets,
+		gatewayService: &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "istio-ingressgateway",
+				Namespace: "istio-system",
+			},
+			Spec: corev1.ServiceSpec{
+				Selector: selector,
+			},
+		},
+		want: []*v1alpha3.Gateway{{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:            fmt.Sprintf("%d-%d", adler32.Checksum([]byte("ingress.com")), adler32.Checksum([]byte("istio-system/istio-ingressgateway"))),
+				Namespace:       "test-ns",
+				OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(&ingressResourceWithDotName)},
+				Labels: map[string]string{
+					networking.IngressLabelKey: "ingress.com",
+				},
+			},
+			Spec: istiov1alpha3.Gateway{
+				Selector: selector,
+				Servers: []*istiov1alpha3.Server{{
+					Hosts: []string{"host1.example.com"},
+					Port: &istiov1alpha3.Port{
+						Name:     fmt.Sprintf("test-ns/%d:0", adler32.Checksum([]byte("ingress.com"))),
+						Number:   443,
+						Protocol: "HTTPS",
+					},
+					Tls: &istiov1alpha3.ServerTLSSettings{
+						Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
+						ServerCertificate: corev1.TLSCertKey,
+						PrivateKey:        corev1.TLSPrivateKeyKey,
+						CredentialName:    targetSecret(&secret, &ingressResourceWithDotName),
 					},
 				}},
 			},

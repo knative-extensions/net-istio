@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"hash/adler32"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -41,7 +42,11 @@ import (
 )
 
 // GatewayHTTPPort is the HTTP port the gateways listen on.
-const GatewayHTTPPort = 80
+const (
+	GatewayHTTPPort       = 80
+	dns1123LabelMaxLength = 63 // Public for testing only.
+	dns1123LabelFmt       = "[a-zA-Z0-9](?:[-a-zA-Z0-9]*[a-zA-Z0-9])?"
+)
 
 var httpServerPortName = "http-server"
 
@@ -57,6 +62,8 @@ var placeholderServer = istiov1alpha3.Server{
 		Protocol: "HTTP",
 	},
 }
+
+var dns1123LabelRegexp = regexp.MustCompile("^" + dns1123LabelFmt + "$")
 
 // GetServers gets the `Servers` from `Gateway` that belongs to the given Ingress.
 func GetServers(gateway *v1alpha3.Gateway, ing *v1alpha1.Ingress) []*istiov1alpha3.Server {
@@ -87,7 +94,7 @@ func belongsToIngress(server *istiov1alpha3.Server, ing *v1alpha1.Ingress) bool 
 	if len(portNameSplits) != 2 {
 		return false
 	}
-	return portNameSplits[0] == ing.GetNamespace()+"/"+ing.GetName()
+	return portNameSplits[0] == portNamePrefix(ing.GetNamespace(), ing.GetName())
 }
 
 // SortServers sorts `Server` according to its port name.
@@ -189,6 +196,16 @@ func makeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]
 	return gateways, nil
 }
 
+// IsDNS1123Label tests for a string that conforms to the definition of a label in
+// DNS (RFC 1123).
+// This function is copied from https://github.com/istio/istio/blob/806fb24bc121bf93ea06f6a38b7ccb3d78d1f326/pkg/config/labels/instance.go#L97
+// We directly copy this function instead of importing it into vendor and using it because
+// if this function is changed in the upstream (for example, Istio allows the dot in the future), we don't want to
+// import the change without awareness because it could break the compatibility of Gateway name generation.
+func isDNS1123Label(value string) bool {
+	return len(value) <= dns1123LabelMaxLength && dns1123LabelRegexp.MatchString(value)
+}
+
 // WildcardGatewayName creates the name of wildcard Gateway.
 func WildcardGatewayName(secretName, gatewayServiceNamespace, gatewayServiceName string) string {
 	return fmt.Sprintf("wildcard-%x", adler32.Checksum([]byte(secretName+"-"+gatewayServiceNamespace+"-"+gatewayServiceName)))
@@ -263,8 +280,12 @@ func getGatewayServices(ctx context.Context, svcLister corev1listers.ServiceList
 // GatewayName create a name for the Gateway that is built based on the given Ingress and bonds to the
 // given ingress gateway service.
 func GatewayName(accessor kmeta.Accessor, gatewaySvc *corev1.Service) string {
+	prefix := accessor.GetName()
+	if !isDNS1123Label(prefix) {
+		prefix = fmt.Sprint(adler32.Checksum([]byte(prefix)))
+	}
 	gatewayServiceKey := fmt.Sprintf("%s/%s", gatewaySvc.Namespace, gatewaySvc.Name)
-	return fmt.Sprint(accessor.GetName()+"-", adler32.Checksum([]byte(gatewayServiceKey)))
+	return fmt.Sprint(prefix+"-", adler32.Checksum([]byte(gatewayServiceKey)))
 }
 
 // MakeTLSServers creates the expected Gateway TLS `Servers` based on the given IngressTLS.
@@ -284,12 +305,10 @@ func MakeTLSServers(ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, gat
 			credentialName = targetSecret(originSecret, ing)
 		}
 
-		port := ing.GetNamespace() + "/" + ing.GetName()
-
 		servers[i] = &istiov1alpha3.Server{
 			Hosts: tls.Hosts,
 			Port: &istiov1alpha3.Port{
-				Name:     fmt.Sprintf("%s:%d", port, i),
+				Name:     fmt.Sprintf(portNamePrefix(ing.GetNamespace(), ing.GetName())+":%d", i),
 				Number:   443,
 				Protocol: "HTTPS",
 			},
@@ -302,6 +321,13 @@ func MakeTLSServers(ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, gat
 		}
 	}
 	return SortServers(servers), nil
+}
+
+func portNamePrefix(prefix, suffix string) string {
+	if !isDNS1123Label(suffix) {
+		suffix = fmt.Sprint(adler32.Checksum([]byte(suffix)))
+	}
+	return prefix + "/" + suffix
 }
 
 // MakeHTTPServer creates a HTTP Gateway `Server` based on the HTTPProtocol
