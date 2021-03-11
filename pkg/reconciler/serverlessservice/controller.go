@@ -53,10 +53,10 @@ func NewController(
 	}
 	impl := sksreconciler.NewImpl(ctx, c, func(impl *controller.Impl) controller.Options {
 		logger.Info("Setting up ConfigMap receivers")
-		resyncIngressesOnConfigChange := configmap.TypeFilter(&config.Istio{})(func(string, interface{}) {
+		resync := configmap.TypeFilter(&config.Istio{})(func(string, interface{}) {
 			impl.GlobalResync(sksInformer.Informer())
 		})
-		configStore := config.NewStore(logger.Named("config-store"), resyncIngressesOnConfigChange)
+		configStore := config.NewStore(logger.Named("config-store"), resync)
 		configStore.WatchConfigs(cmw)
 
 		return controller.Options{
