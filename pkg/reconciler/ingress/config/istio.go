@@ -53,6 +53,9 @@ const (
 
 	// EnableVSStatus is the config for enabling using Istio's Virtual Service status to determine its readiness
 	EnableVSStatus = "enable-virtualservice-status"
+
+	// EnableMeshPodAddressabilityKey is the config for enabling pod addressability in mesh.
+	EnableMeshPodAddressabilityKey = "enable-mesh-pod-addressability"
 )
 
 func defaultIngressGateways() []Gateway {
@@ -95,6 +98,11 @@ type Istio struct {
 	// EnableVirtualServiceStatus specifies whether we should look for a status field
 	// to determine istio VirtualService readiness.
 	EnableVirtualServiceStatus bool
+
+	// EnableMeshPodAddressability specifies whether we're adding additional
+	// configuration to deployed applications to make their pods directly accessible
+	// via their IPs even if mesh is enabled.
+	EnableMeshPodAddressability bool
 }
 
 func parseGateways(configMap *corev1.ConfigMap, prefix string) ([]Gateway, error) {
@@ -150,17 +158,19 @@ func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
 	}
 	localGateways = removeMeshGateway(localGateways)
 
-	var statusEnabled bool
+	var statusEnabled, podAddressability bool
 	if err := cm.Parse(configMap.Data,
 		cm.AsBool(EnableVSStatus, &statusEnabled),
+		cm.AsBool(EnableMeshPodAddressabilityKey, &podAddressability),
 	); err != nil {
 		return nil, err
 	}
 
 	return &Istio{
-		IngressGateways:            gateways,
-		LocalGateways:              localGateways,
-		EnableVirtualServiceStatus: statusEnabled,
+		IngressGateways:             gateways,
+		LocalGateways:               localGateways,
+		EnableVirtualServiceStatus:  statusEnabled,
+		EnableMeshPodAddressability: podAddressability,
 	}, nil
 }
 

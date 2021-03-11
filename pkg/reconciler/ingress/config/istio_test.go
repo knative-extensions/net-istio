@@ -308,3 +308,58 @@ func TestVSStatusEnabled(t *testing.T) {
 		})
 	}
 }
+
+func TestPodAddressabilityEnabled(t *testing.T) {
+	vsStatusTests := []struct {
+		name        string
+		wantErr     bool
+		wantEnabled interface{}
+		config      *corev1.ConfigMap
+	}{{
+		name:        "enabled",
+		wantEnabled: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				EnableMeshPodAddressabilityKey: "true",
+			},
+		},
+	}, {
+		name:        "disabled default",
+		wantEnabled: false,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+		},
+	}, {
+		name:    "invalid",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				EnableMeshPodAddressabilityKey: "not_a_bool",
+			},
+		},
+	},
+	}
+	for _, tt := range vsStatusTests {
+		t.Run(tt.name, func(t *testing.T) {
+			config, err := NewIstioFromConfigMap(tt.config)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("NewIstioFromConfigMap() error = %v, WantErr %v", err, tt.wantErr)
+			}
+
+			if err == nil && config.EnableMeshPodAddressability != tt.wantEnabled {
+				t.Errorf("Want %v, but got %v", tt.wantEnabled, config.EnableMeshPodAddressability)
+			}
+		})
+	}
+}
