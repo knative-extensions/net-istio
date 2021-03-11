@@ -310,7 +310,7 @@ func TestVSStatusEnabled(t *testing.T) {
 }
 
 func TestPodAddressabilityEnabled(t *testing.T) {
-	vsStatusTests := []struct {
+	tests := []struct {
 		name        string
 		wantErr     bool
 		wantEnabled interface{}
@@ -350,7 +350,7 @@ func TestPodAddressabilityEnabled(t *testing.T) {
 		},
 	},
 	}
-	for _, tt := range vsStatusTests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			config, err := NewIstioFromConfigMap(tt.config)
 			if (err != nil) != tt.wantErr {
