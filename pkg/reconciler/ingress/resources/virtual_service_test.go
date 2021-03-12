@@ -365,7 +365,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 				},
 				HTTP: &v1alpha1.HTTPIngressRuleValue{
 					Paths: []v1alpha1.HTTPIngressPath{{
-						Path: "^/pets/(.*?)?",
+						Path: "/pets/",
 						Splits: []v1alpha1.IngressBackendSplit{{
 							IngressBackend: v1alpha1.IngressBackend{
 								ServiceNamespace: "test-ns",
@@ -388,7 +388,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 				},
 				HTTP: &v1alpha1.HTTPIngressRuleValue{
 					Paths: []v1alpha1.HTTPIngressPath{{
-						Path: "^/pets/(.*?)?",
+						Path: "/pets/",
 						Splits: []v1alpha1.IngressBackendSplit{{
 							IngressBackend: v1alpha1.IngressBackend{
 								ServiceNamespace: "test-ns",
@@ -409,7 +409,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 		Retries: &istiov1alpha3.HTTPRetry{},
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Uri: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Regex{Regex: "^/pets/(.*?)?"},
+				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: "/pets/"},
 			},
 			Authority: &istiov1alpha3.StringMatch{
 				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `test-route.test-ns`},
@@ -472,7 +472,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 				},
 				HTTP: &v1alpha1.HTTPIngressRuleValue{
 					Paths: []v1alpha1.HTTPIngressPath{{
-						Path: "^/pets/(.*?)?",
+						Path: "/pets/",
 						Splits: []v1alpha1.IngressBackendSplit{{
 							IngressBackend: v1alpha1.IngressBackend{
 								ServiceNamespace: "test-ns",
@@ -496,7 +496,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 				},
 				HTTP: &v1alpha1.HTTPIngressRuleValue{
 					Paths: []v1alpha1.HTTPIngressPath{{
-						Path: "^/pets/(.*?)?",
+						Path: "/pets/",
 						Splits: []v1alpha1.IngressBackendSplit{{
 							IngressBackend: v1alpha1.IngressBackend{
 								ServiceNamespace: "test-ns",
@@ -518,7 +518,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 		Retries: &istiov1alpha3.HTTPRetry{},
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Uri: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Regex{Regex: "^/pets/(.*?)?"},
+				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: "/pets/"},
 			},
 			Authority: &istiov1alpha3.StringMatch{
 				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `domain.com`},
@@ -526,7 +526,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 			Gateways: []string{"gateway.public"},
 		}, {
 			Uri: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Regex{Regex: "^/pets/(.*?)?"},
+				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: "/pets/"},
 			},
 			Authority: &istiov1alpha3.StringMatch{
 				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `test-route.test-ns`},
@@ -558,7 +558,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 		Retries: &istiov1alpha3.HTTPRetry{},
 		Match: []*istiov1alpha3.HTTPMatchRequest{{
 			Uri: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Regex{Regex: "^/pets/(.*?)?"},
+				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: "/pets/"},
 			},
 			Authority: &istiov1alpha3.StringMatch{
 				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `v1.domain.com`},

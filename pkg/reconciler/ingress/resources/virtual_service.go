@@ -223,7 +223,7 @@ func keepLocalHostnames(hosts sets.String) sets.String {
 	return retained
 }
 
-func makeMatch(host string, pathRegExp string, headers map[string]v1alpha1.HeaderMatch, gateways sets.String) *istiov1alpha3.HTTPMatchRequest {
+func makeMatch(host, path string, headers map[string]v1alpha1.HeaderMatch, gateways sets.String) *istiov1alpha3.HTTPMatchRequest {
 	match := &istiov1alpha3.HTTPMatchRequest{
 		Gateways: gateways.List(),
 		Authority: &istiov1alpha3.StringMatch{
@@ -231,11 +231,11 @@ func makeMatch(host string, pathRegExp string, headers map[string]v1alpha1.Heade
 			MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: hostPrefix(host)},
 		},
 	}
-	// Empty pathRegExp is considered match all path. We only need to
-	// consider pathRegExp when it's non-empty.
-	if pathRegExp != "" {
+	// Empty path is considered match all path. We only need to consider path
+	// when it's non-empty.
+	if path != "" {
 		match.Uri = &istiov1alpha3.StringMatch{
-			MatchType: &istiov1alpha3.StringMatch_Regex{Regex: pathRegExp},
+			MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: path},
 		}
 	}
 
