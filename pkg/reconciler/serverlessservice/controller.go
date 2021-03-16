@@ -27,7 +27,6 @@ import (
 	netv1alpha1 "knative.dev/networking/pkg/apis/networking/v1alpha1"
 	sksinformer "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/serverlessservice"
 	sksreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/serverlessservice"
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -46,7 +45,6 @@ func NewController(
 	destinationRuleInformer := destinationruleinformer.Get(ctx)
 
 	c := &reconciler{
-		kubeclient:            kubeclient.Get(ctx),
 		istioclient:           istioclient.Get(ctx),
 		virtualServiceLister:  virtualServiceInformer.Lister(),
 		destinationRuleLister: destinationRuleInformer.Lister(),
