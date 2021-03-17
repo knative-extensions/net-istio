@@ -191,7 +191,6 @@ func TestReconcile(t *testing.T) {
 		return sksreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakenetworkingclient.Get(ctx),
 			listers.GetServerlessServiceLister(), controller.GetEventRecorder(ctx), r, controller.Options{
 				ConfigStore: &testConfigStore{
-					// Enable reconciling gateway.
 					config: &config.Config{
 						Istio: &config.Istio{
 							EnableMeshPodAddressability: true,

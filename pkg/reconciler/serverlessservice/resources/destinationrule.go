@@ -17,8 +17,6 @@ limitations under the License.
 package resources
 
 import (
-	"fmt"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
@@ -38,7 +36,7 @@ const (
 func MakeDestinationRule(sks *v1alpha1.ServerlessService) *v1alpha3.DestinationRule {
 	ns := sks.Namespace
 	name := kmeta.ChildName(sks.Name, "-private")
-	host := fmt.Sprintf("%s.%s.svc.%s", name, ns, pkgnetwork.GetClusterDomainName())
+	host := pkgnetwork.GetServiceHostname(name, ns)
 
 	return &v1alpha3.DestinationRule{
 		ObjectMeta: metav1.ObjectMeta{
