@@ -36,7 +36,7 @@ spec:
     spec:
       serviceAccountName: controller
       containers:
-      - name: webhook
+      - name: istio-webhook
         # This is the Go import path for the binary that is containerized
         # and substituted here.
         image: ko://knative.dev/net-istio/cmd/webhook
@@ -64,7 +64,8 @@ spec:
           value: knative.dev/net-istio
         - name: WEBHOOK_NAME
           value: istio-webhook
-
+        - name: WEBHOOK_PORT
+          value: '8443'
         securityContext:
           allowPrivilegeEscalation: false
 
