@@ -88,6 +88,11 @@ func (l *Listers) GetIngressLister() networkinglisters.IngressLister {
 	return networkinglisters.NewIngressLister(l.IndexerFor(&networking.Ingress{}))
 }
 
+// GetServerlessServiceLister get lister for ServerlessService resource.
+func (l *Listers) GetServerlessServiceLister() networkinglisters.ServerlessServiceLister {
+	return networkinglisters.NewServerlessServiceLister(l.IndexerFor(&networking.ServerlessService{}))
+}
+
 // GetGatewayLister get lister for Gateway resource.
 func (l *Listers) GetGatewayLister() istiolisters.GatewayLister {
 	return istiolisters.NewGatewayLister(l.IndexerFor(&istiov1alpha3.Gateway{}))
@@ -96,6 +101,11 @@ func (l *Listers) GetGatewayLister() istiolisters.GatewayLister {
 // GetVirtualServiceLister get lister for istio VirtualService resource.
 func (l *Listers) GetVirtualServiceLister() istiolisters.VirtualServiceLister {
 	return istiolisters.NewVirtualServiceLister(l.IndexerFor(&istiov1alpha3.VirtualService{}))
+}
+
+// GetDestinationRuleLister get lister for istio DestinationRule resource.
+func (l *Listers) GetDestinationRuleLister() istiolisters.DestinationRuleLister {
+	return istiolisters.NewDestinationRuleLister(l.IndexerFor(&istiov1alpha3.DestinationRule{}))
 }
 
 // GetK8sServiceLister get lister for K8s Service resource.
