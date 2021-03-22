@@ -19,6 +19,7 @@ package main
 import (
 	"istio.io/api/networking/v1beta1"
 	"knative.dev/net-istio/pkg/reconciler/ingress"
+	"knative.dev/net-istio/pkg/reconciler/serverlessservice"
 
 	// This defines the shared main for injected controllers.
 	"knative.dev/pkg/injection/sharedmain"
@@ -30,5 +31,5 @@ func main() {
 	v1beta1.VirtualServiceUnmarshaler.AllowUnknownFields = true
 	v1beta1.GatewayUnmarshaler.AllowUnknownFields = true
 
-	sharedmain.Main("istiocontroller", ingress.NewController)
+	sharedmain.Main("istiocontroller", ingress.NewController, serverlessservice.NewController)
 }
