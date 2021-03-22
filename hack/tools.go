@@ -25,6 +25,9 @@ import (
 	// For chaos testing the leaderelection stuff.
 	_ "knative.dev/pkg/leaderelection/chaosduck"
 
+	// To get the networking CRDs
+	_ "knative.dev/networking/config"
+
 	_ "knative.dev/networking/test/conformance/ingress"
 	_ "knative.dev/networking/test/test_images/grpc-ping"
 	_ "knative.dev/networking/test/test_images/httpproxy"
