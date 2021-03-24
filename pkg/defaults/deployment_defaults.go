@@ -68,14 +68,14 @@ func (r *IstioDeployment) SetDefaults(ctx context.Context) {
 
 	revisionName := r.Labels[servingRevisionLabelKey]
 	if revisionName != "" {
-		r.Labels[istiolabels.IstioCanonicalServiceRevision] = revisionName
-		r.Spec.Template.Labels[istiolabels.IstioCanonicalServiceRevision] = revisionName
+		r.Labels[istiolabels.ServiceCanonicalRevision.Name] = revisionName
+		r.Spec.Template.Labels[istiolabels.ServiceCanonicalRevision.Name] = revisionName
 	}
 
 	servingName := r.servingName()
 	if servingName != "" {
-		r.Labels[istiolabels.IstioCanonicalServiceName] = servingName
-		r.Spec.Template.Labels[istiolabels.IstioCanonicalServiceName] = servingName
+		r.Labels[istiolabels.ServiceCanonicalName.Name] = servingName
+		r.Spec.Template.Labels[istiolabels.ServiceCanonicalName.Name] = servingName
 	}
 }
 
