@@ -16,3 +16,9 @@ require (
 	knative.dev/networking v0.0.0-20210323181619-8fc278deb519
 	knative.dev/pkg v0.0.0-20210323202917-b558677ab034
 )
+
+replace (
+	k8s.io/api => k8s.io/api v0.19.7
+	k8s.io/apimachinery => k8s.io/apimachinery v0.19.7
+	k8s.io/client-go => k8s.io/client-go v0.19.7
+)
