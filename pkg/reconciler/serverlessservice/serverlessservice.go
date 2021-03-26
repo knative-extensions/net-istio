@@ -48,7 +48,7 @@ var (
 
 // Reconcile compares the actual state with the desired, and attempts to converge the two.
 func (r *reconciler) ReconcileKind(ctx context.Context, sks *netv1alpha1.ServerlessService) pkgreconciler.Event {
-	if !config.FromContext(ctx).Istio.EnableMeshPodAddressability {
+	if !config.FromContext(ctx).Network.EnableMeshPodAddressability {
 		// Just ignore if we're disabled.
 		return nil
 	}

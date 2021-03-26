@@ -71,7 +71,3 @@ data:
     # If true, knative will use the Istio VirtualService's status to determine
     # endpoint readiness. Otherwise, probe as usual.
     enable-virtualservice-status: "false"
-
-    # If true, knative will add additional information to all deployed applications to
-    # make their pods directly accessible via their IPs even if mesh is enabled.
-    enable-mesh-pod-addressability: "false"
