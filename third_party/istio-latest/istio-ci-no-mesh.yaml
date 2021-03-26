@@ -30,8 +30,8 @@ spec:
         targetAverageUtilization: 60
     gateways:
       istio-ingressgateway:
-        autoscaleMin: 2
-        autoscaleMax: 5
+        autoscaleMin: 3
+        autoscaleMax: 3
 
   addonComponents:
     pilot:

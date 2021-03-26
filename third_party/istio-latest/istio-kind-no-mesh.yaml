@@ -32,7 +32,7 @@ spec:
     gateways:
       istio-ingressgateway:
         autoscaleMin: 1
-        autoscaleMax: 3
+        autoscaleMax: 1
         type: NodePort
 
   addonComponents:
