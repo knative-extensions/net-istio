@@ -192,10 +192,10 @@ func TestReconcile(t *testing.T) {
 			listers.GetServerlessServiceLister(), controller.GetEventRecorder(ctx), r, controller.Options{
 				ConfigStore: &testConfigStore{
 					config: &config.Config{
-						Istio: &config.Istio{
+						Istio: &config.Istio{},
+						Network: &network.Config{
 							EnableMeshPodAddressability: true,
 						},
-						Network: &network.Config{},
 					},
 				},
 			})
