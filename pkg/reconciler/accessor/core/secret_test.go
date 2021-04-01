@@ -31,7 +31,6 @@ import (
 	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	fakesecretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
-	"knative.dev/pkg/controller"
 	"knative.dev/pkg/ptr"
 
 	. "knative.dev/pkg/reconciler/testing"
@@ -182,7 +181,7 @@ func setup(ctx context.Context, secrets []*corev1.Secret,
 		secretInformer.Informer().GetIndexer().Add(secret)
 	}
 
-	waitInformers, err := controller.RunInformers(ctx.Done(), secretInformer.Informer())
+	waitInformers, err := RunAndSyncInformers(ctx, secretInformer.Informer())
 	if err != nil {
 		t.Fatal("failed to start secret informer:", err)
 	}

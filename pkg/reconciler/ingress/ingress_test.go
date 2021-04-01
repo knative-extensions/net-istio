@@ -1633,7 +1633,7 @@ func TestGlobalResyncOnUpdateGatewayConfigMap(t *testing.T) {
 		return HookComplete
 	})
 
-	waitInformers, err := controller.RunInformers(ctx.Done(), informers...)
+	waitInformers, err := RunAndSyncInformers(ctx, informers...)
 	if err != nil {
 		t.Fatal("Failed to start informers:", err)
 	}
@@ -1733,7 +1733,7 @@ func TestGlobalResyncOnUpdateNetwork(t *testing.T) {
 		return HookComplete
 	})
 
-	waitInformers, err := controller.RunInformers(ctx.Done(), informers...)
+	waitInformers, err := RunAndSyncInformers(ctx, informers...)
 	if err != nil {
 		t.Fatal("Failed to start ingress manager:", err)
 	}

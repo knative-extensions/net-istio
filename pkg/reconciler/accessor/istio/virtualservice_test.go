@@ -32,7 +32,6 @@ import (
 	istioinformers "knative.dev/net-istio/pkg/client/istio/informers/externalversions"
 	fakeistioclient "knative.dev/net-istio/pkg/client/istio/injection/client/fake"
 	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
-	"knative.dev/pkg/controller"
 	"knative.dev/pkg/ptr"
 
 	. "knative.dev/pkg/reconciler/testing"
@@ -158,7 +157,7 @@ func setup(ctx context.Context, vses []*v1alpha3.VirtualService,
 		vsInformer.Informer().GetIndexer().Add(vs)
 	}
 
-	waitInformers, err := controller.RunInformers(ctx.Done(), vsInformer.Informer())
+	waitInformers, err := RunAndSyncInformers(ctx, vsInformer.Informer())
 	if err != nil {
 		t.Fatal("failed to start virtualservice informer:", err)
 	}

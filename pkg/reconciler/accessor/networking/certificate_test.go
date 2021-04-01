@@ -32,7 +32,6 @@ import (
 	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
 	fakecertinformer "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/certificate/fake"
 	listers "knative.dev/networking/pkg/client/listers/networking/v1alpha1"
-	"knative.dev/pkg/controller"
 	"knative.dev/pkg/ptr"
 
 	. "knative.dev/pkg/reconciler/testing"
@@ -157,7 +156,7 @@ func setup(ctx context.Context, certs []*v1alpha1.Certificate,
 		certInformer.Informer().GetIndexer().Add(cert)
 	}
 
-	waitInformers, err := controller.RunInformers(ctx.Done(), certInformer.Informer())
+	waitInformers, err := RunAndSyncInformers(ctx, certInformer.Informer())
 	if err != nil {
 		t.Fatal("failed to start Certificate informer:", err)
 	}
