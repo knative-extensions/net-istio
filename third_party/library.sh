@@ -87,7 +87,7 @@ metadata:
 EOF
 
     ${ISTIO_DIR}/bin/istioctl manifest generate -f "$file"  "$@" | \
-      run_go_tool github.com/k14s/ytt \
+      run_go_tool github.com/k14s/ytt/cmd/ytt \
         ytt --ignore-unknown-comments -f - -f "${lib_path}/label-crd-overlay.ytt.yaml" \
       >> "${target_dir}/istio.yaml"
 
