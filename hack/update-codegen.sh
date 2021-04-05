@@ -22,6 +22,10 @@ source $(dirname $0)/../vendor/knative.dev/hack/codegen-library.sh
 
 # If we run with -mod=vendor here, then generate-groups.sh looks for vendor files in the wrong place.
 export GOFLAGS=-mod=
+# hack's codegen shell library overrides GOBIN
+# we need it on the path so run_go_tool works
+export PATH="${PATH}:${GOBIN}"
+
 
 echo "=== Update Codegen for $MODULE_NAME"
 
