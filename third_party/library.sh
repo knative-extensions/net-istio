@@ -123,7 +123,7 @@ function generate() {
 }
 
 function install_yaml() {
-  kubectl apply --selector knative.dev/crd-install=true -f "$1"
+  kubectl apply --selector="knative.dev/crd-install=true" -f "$1"
   kubectl wait --for=condition=Established --all crd
   kubectl apply -f "$1"
 }
