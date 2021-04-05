@@ -17,3 +17,7 @@
 source "$(dirname $0)/../library.sh"
 
 install_yaml "$(dirname $0)/${1%%.*}/istio.yaml"
+
+if [[ -f "$(dirname $0)/${1%%.*}/config-istio.yaml" ]]; then
+  install_yaml "$(dirname $0)/${1%%.*}/config-istio.yaml"
+fi
