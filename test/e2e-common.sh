@@ -56,7 +56,6 @@ function test_setup() {
   ko apply --platform=all ${KO_FLAGS} -f test/config/ || return 1
   if (( MESH )); then
     kubectl label namespace serving-tests istio-injection=enabled
-    kubectl label namespace serving-tests-alt istio-injection=enabled
   fi
 
   # Bringing up controllers.
