@@ -55,3 +55,19 @@ group "Update deps post-codegen"
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT_DIR}/hack/update-deps.sh
 
+group "Update istio generated manifests"
+
+# We don't update HEAD since it changes regularly and we don't
+# want our presubmit checks to fail because a diff occurred
+# ${REPO_ROOT_DIR}/third_party/istio-head/generate_manifests.sh
+
+# We don't update stable - manifest generate (1.8.4) seems to have
+# bugs where it outputs duplicate resources in a non-deterministic order.
+# So re-running the command will produce a diff.
+#
+# Renable this once we reach a version # where that is fixed (ie. 1.9 seems fine)
+# ${REPO_ROOT_DIR}/third_party/istio-stable/generate-manifests.sh
+
+# Update latest cause the istioctl version seems to generate
+# reproducible yaml. So let's check for unexpected diffs
+${REPO_ROOT_DIR}/third_party/istio-latest/generate-manifests.sh

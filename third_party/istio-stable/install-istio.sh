@@ -14,16 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source $(dirname $0)/../download-istio.sh
 
-# Download Istio
-download_istio 1.8.4
-trap cleanup_istio EXIT
+source "$(dirname $0)/../library.sh"
 
-${ISTIO_DIR}/bin/istioctl install -f "$(dirname $0)/$1" -y
-
-# Temporarily disable this (https://github.com/knative-sandbox/net-istio/issues/503)
-# Enable mTLS STRICT in mesh mode
-# if [[ $MESH -eq 1 ]]; then
-#   kubectl apply -f "$(dirname $0)/extra/global-mtls.yaml"
-# fi
+install_yaml "$(dirname $0)/${1%%.*}/istio.yaml"
