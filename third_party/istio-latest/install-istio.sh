@@ -14,16 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source $(dirname $0)/../download-istio.sh
+source "$(dirname $0)/../library.sh"
 
-# Download Istio
-download_istio 1.9.1
-trap cleanup_istio EXIT
-
-# Install Istio with VirtualService status enabled
-${ISTIO_DIR}/bin/istioctl install -f "$(dirname $0)/$1" -y --set values.pilot.env.PILOT_ENABLE_STATUS=true --set values.global.istiod.enableAnalysis=true
-
-# Enable mTLS STRICT in mesh mode
-if [[ $MESH -eq 1 ]]; then
-  kubectl apply -f "$(dirname $0)/extra/global-mtls.yaml"
-fi
+install_yaml "$(dirname $0)/${1%%.*}/istio.yaml"

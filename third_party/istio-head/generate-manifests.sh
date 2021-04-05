@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2019 The Knative Authors
+# Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,4 +16,6 @@
 
 source "$(dirname $0)/../library.sh"
 
-install_yaml "$(dirname $0)/${1%%.*}/istio.yaml"
+generate HEAD "$(dirname $0)" \
+      --set values.pilot.env.PILOT_ENABLE_STATUS=true \
+      --set values.global.istiod.enableAnalysis=true \
