@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2019 The Knative Authors
+# Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 source "$(dirname $0)/../library.sh"
 
-install_yaml "$(dirname $0)/${1%%.*}/istio.yaml"
+if [[ -f "$(dirname $0)/${1%%.*}/config-istio.yaml" ]]; then
+  install_yaml "$(dirname $0)/${1%%.*}/config-istio.yaml"
+fi

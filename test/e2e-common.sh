@@ -61,14 +61,18 @@ function test_setup() {
   # Bringing up controllers.
   echo ">> Bringing up Istio"
   local istio_dir=third_party/istio-${ISTIO_VERSION}
+  local istio_profile=istio-ci-no-mesh
+
   if (( MESH )); then
-    ${istio_dir}/install-istio.sh istio-ci-mesh || return 1
-  else
-    ${istio_dir}/install-istio.sh istio-ci-no-mesh || return 1
+    istio_profile=istio-ci-mesh
   fi
+
+  ${istio_dir}/install-istio.sh ${istio_profile} || return 1
 
   echo ">> Bringing up net-istio Ingress Controller"
   ko apply --platform=all -f config/ || return 1
+
+  ${istio_dir}/install-config-istio.sh ${istio_profile} || return 1
 
   scale_controlplane networking-istio istio-webhook
 
