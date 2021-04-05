@@ -132,10 +132,10 @@ jobs:
         set -o pipefail
 
         # Replace cluster.local with random suffix.
-        sed -ie "s/cluster\.local/${CLUSTER_SUFFIX}/g" third_party/istio-${{ matrix.istio-version }}/istio-kind-no-mesh.yaml
+        sed -ie "s/cluster\.local/${CLUSTER_SUFFIX}/g" third_party/istio-${{ matrix.istio-version }}/istio-kind-no-mesh/istio.yaml
 
         # Deploy Istio
-        ./third_party/istio-${{ matrix.istio-version }}/install-istio.sh istio-kind-no-mesh.yaml
+        ./third_party/istio-${{ matrix.istio-version }}/install-istio.sh istio-kind-no-mesh
 
         # Build and Publish our containers to the docker daemon (including test assets)
         export GO111MODULE=on
