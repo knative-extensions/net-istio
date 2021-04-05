@@ -140,7 +140,7 @@ jobs:
         # Build and Publish our containers to the docker daemon (including test assets)
         export GO111MODULE=on
         export GOFLAGS=-mod=vendor
-        ko resolve -f test/config/ -f config/ | kubectl apply -f -
+        ko resolve --platform=linux/amd64 -f test/config/ -f config/ | kubectl apply -f -
 
         ./third_party/istio-${{ matrix.istio-version }}/install-config-istio.sh istio-kind-no-mesh
 

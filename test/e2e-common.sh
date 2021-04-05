@@ -53,7 +53,7 @@ function test_setup() {
   echo ">> Publishing test images"
   $(dirname $0)/upload-test-images.sh || fail_test "Error uploading test images"
   echo ">> Creating test resources (test/config/)"
-  ko apply --platform=all ${KO_FLAGS} -f test/config/ || return 1
+  ko apply --platform=linux/amd64 ${KO_FLAGS} -f test/config/ || return 1
   if (( MESH )); then
     kubectl label namespace serving-tests istio-injection=enabled
   fi
@@ -70,7 +70,7 @@ function test_setup() {
   ${istio_dir}/install-istio.sh ${istio_profile} || return 1
 
   echo ">> Bringing up net-istio Ingress Controller"
-  ko apply --platform=all -f config/ || return 1
+  ko apply --platform=linux/amd64 -f config/ || return 1
 
   ${istio_dir}/install-config-istio.sh ${istio_profile} || return 1
 
