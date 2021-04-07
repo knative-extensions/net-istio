@@ -18,7 +18,6 @@
 # at https://github.com/knative/hack#using-the-releasesh-helper-script
 
 source $(dirname $0)/../vendor/knative.dev/hack/release.sh
-source $(dirname $0)/../third_party/download-istio.sh
 
 # Yaml files to generate, and the source config dir for them.
 declare -A COMPONENTS
@@ -66,18 +65,8 @@ function build_release() {
   done
 
   # Build Istio YAML
-  ISTIO_STABLE="$(dirname $0)/../third_party/istio-stable"
-  ISTIO_VERSION=$(awk '/download_istio/ {print $2}' ${ISTIO_STABLE}/install-istio.sh)
-  ISTIO_YAML="istio.yaml"
-
-  echo "Downloading Istio"
-  download_istio $ISTIO_VERSION
-  trap cleanup_istio EXIT
-
-  echo "Assembling istio.yaml"
-  # `istiocl manifest generate` doesn't create the `istio-system` namespace
-  cat "${ISTIO_STABLE}/extra/istio-namespace.yaml" > ${ISTIO_YAML}
-  ${ISTIO_DIR}/bin/istioctl manifest generate -f $(realpath "${ISTIO_STABLE}/istio-ci-no-mesh.yaml") >> ${ISTIO_YAML}
+  ISTIO_YAML="$(dirname $0)/../third_party/istio-stable/istio-ci-no-mesh/istio.yaml"
+  ISTIO_YAML="$(realpath $ISTIO_YAML)"
   all_yamls+=(${ISTIO_YAML})
 
   ARTIFACTS_TO_PUBLISH="${all_yamls[@]}"
