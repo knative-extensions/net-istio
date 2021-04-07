@@ -53,20 +53,28 @@ function test_setup() {
   echo ">> Publishing test images"
   $(dirname $0)/upload-test-images.sh || fail_test "Error uploading test images"
   echo ">> Creating test resources (test/config/)"
-  ko apply --platform=all ${KO_FLAGS} -f test/config/ || return 1
+  ko apply --platform=linux/amd64 ${KO_FLAGS} -f test/config/ || return 1
   if (( MESH )); then
     kubectl label namespace serving-tests istio-injection=enabled
-    kubectl label namespace serving-tests-alt istio-injection=enabled
   fi
 
   # Bringing up controllers.
   echo ">> Bringing up Istio"
   local istio_dir=third_party/istio-${ISTIO_VERSION}
-  #kubectl apply -f ${istio_dir}/istio-crds.yaml || return 1
-  #echo ">> Running Istio"
-  ${istio_dir}/install-istio.sh istio-ci-no-mesh.yaml || return 1
+  local istio_profile=istio-ci-no-mesh
+
+  if (( MESH )); then
+    istio_profile=istio-ci-mesh
+  fi
+
+  ${istio_dir}/install-istio.sh ${istio_profile} || return 1
+
   echo ">> Bringing up net-istio Ingress Controller"
-  ko apply --platform=all -f config/ || return 1
+  ko apply --platform=linux/amd64 -f config/ || return 1
+
+  if [[ -f "${istio_dir}/${istio_profile}/config-istio.yaml" ]]; then
+    kubectl apply -f "${istio_dir}/${istio_profile}/config-istio.yaml"
+  fi
 
   scale_controlplane networking-istio istio-webhook
 
