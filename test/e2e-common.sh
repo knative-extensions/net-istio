@@ -72,7 +72,9 @@ function test_setup() {
   echo ">> Bringing up net-istio Ingress Controller"
   ko apply --platform=linux/amd64 -f config/ || return 1
 
-  ${istio_dir}/install-config-istio.sh ${istio_profile} || return 1
+  if [[ -f "${istio_dir}/${istio_profile}/config-istio.yaml" ]]; then
+    kubectl apply -f "${istio_dir}/${istio_profile}/config-istio.yaml"
+  fi
 
   scale_controlplane networking-istio istio-webhook
 
