@@ -142,7 +142,10 @@ jobs:
         export GOFLAGS=-mod=vendor
         ko resolve --platform=linux/amd64 -f test/config/ -f config/ | kubectl apply -f -
 
-        ./third_party/istio-${{ matrix.istio-version }}/install-config-istio.sh istio-kind-no-mesh
+        CONFIG_ISTIO="./third_party/istio-${{ matrix.istio-version }}/istio-kind-no-mesh/config-istio.yaml"
+        if [[ -f "${CONFIG_ISTIO}" ]]; then
+           kubectl apply -f "${CONFIG_ISTIO}"
+        fi
 
         echo "GATEWAY_NAMESPACE_OVERRIDE=istio-system" >> $GITHUB_ENV
 
