@@ -61,9 +61,13 @@ function cleanup_istio() {
   rm -rf $ISTIO_TMP
 }
 
-function generate_manifests() {
+function add_crd_label() {
   local lib_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  run_go_tool github.com/k14s/ytt/cmd/ytt \
+    ytt --ignore-unknown-comments -f - -f "${lib_path}/label-crd-overlay.ytt.yaml"
+}
 
+function generate_manifests() {
   local dir=$1
   shift
 
@@ -86,10 +90,7 @@ metadata:
 ---
 EOF
 
-    ${ISTIO_DIR}/bin/istioctl manifest generate -f "$file"  "$@" | \
-      run_go_tool github.com/k14s/ytt/cmd/ytt \
-        ytt --ignore-unknown-comments -f - -f "${lib_path}/label-crd-overlay.ytt.yaml" \
-      >> "${target_dir}/istio.yaml"
+    ${ISTIO_DIR}/bin/istioctl manifest generate -f "$file"  "$@" | add_crd_label >> "${target_dir}/istio.yaml"
 
     local config_istio_extra="$dir/extra/config-istio.yaml"
     local istio_extra="$dir/extra/istio.yaml"
