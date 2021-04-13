@@ -123,11 +123,36 @@ function generate() {
   generate_manifests "$path" "$@"
 }
 
-function install_yaml() {
-  if grep -q "CustomResourceDefinition" "$1"; then
-    kubectl apply --selector="knative.dev/crd-install=true" -f "$1"
-    kubectl wait --for=condition=Established --all crd
-  fi
+function run_yq() {
+  run_go_tool github.com/mikefarah/yq/v4 yq "$@"
+}
 
+function install_yaml() {
+  local order=(
+    Namespace
+    ServiceAccount
+    ClusterRole
+    ClusterRoleBinding
+    Role
+    RoleBinding
+    CustomResourceDefinition
+    ConfigMap
+    Deployment
+    Service
+    HorizontalPodAutoscaler
+    PodDisruptionBudget
+    MutatingWebhookConfiguration
+    ValidatingWebhookConfiguration
+
+    # Istio resources
+    EnvoyFilter
+    PeerAuthentication
+  )
+
+  for kind in "${order[@]}"; do
+    run_yq eval "select(.kind == \"${kind}\")" "$1" | kubectl apply -f -
+  done
+
+  # In case we missed anything in our list
   kubectl apply -f "$1"
 }
