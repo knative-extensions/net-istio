@@ -124,7 +124,13 @@ function generate() {
 }
 
 function run_yq() {
-  run_go_tool github.com/mikefarah/yq/v4 yq "$@"
+  local yq_module=github.com/mikefarah/yq/v4
+
+  if [[ "$(go version)" == *"1.15"* ]]; then
+    yq_module=github.com/mikefarah/yq
+  fi
+
+  run_go_tool "${yq_module}" yq "$@"
 }
 
 function install_yaml() {
