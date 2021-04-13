@@ -4528,7 +4528,7 @@ data:
         "istiod": {
           "enableAnalysis": true
         },
-        "jwtPolicy": "first-party-jwt",
+        "jwtPolicy": "third-party-jwt",
         "logAsJson": false,
         "logging": {
           "level": "default:info"
@@ -4548,7 +4548,7 @@ data:
         "pilotCertProvider": "istiod",
         "priorityClassName": "",
         "proxy": {
-          "autoInject": "disabled",
+          "autoInject": "enabled",
           "clusterDomain": "cluster.local",
           "componentLogLevel": "misc:error",
           "enableCoreDump": false,
@@ -4642,7 +4642,7 @@ data:
   config: |-
     # defaultTemplates defines the default template to use for pods that do not explicitly specify a template
     defaultTemplates: [sidecar]
-    policy: disabled
+    policy: enabled
     alwaysInjectSelector:
       []
     neverInjectSelector:
@@ -5274,7 +5274,7 @@ spec:
         - name: TERMINATION_DRAIN_DURATION_SECONDS
           value: "20"
         - name: JWT_POLICY
-          value: first-party-jwt
+          value: third-party-jwt
         - name: PILOT_CERT_PROVIDER
           value: istiod
         - name: CA_ADDR
@@ -5373,6 +5373,9 @@ spec:
           name: config-volume
         - mountPath: /var/run/secrets/istio
           name: istiod-ca-cert
+        - mountPath: /var/run/secrets/tokens
+          name: istio-token
+          readOnly: true
         - mountPath: /var/lib/istio/data
           name: istio-data
         - mountPath: /etc/istio/pod
@@ -5416,6 +5419,13 @@ spec:
         name: istio-envoy
       - emptyDir: {}
         name: istio-data
+      - name: istio-token
+        projected:
+          sources:
+          - serviceAccountToken:
+              audience: istio-ca
+              expirationSeconds: 43200
+              path: istio-token
       - configMap:
           name: istio
           optional: true
@@ -5476,7 +5486,7 @@ spec:
         - name: REVISION
           value: default
         - name: JWT_POLICY
-          value: first-party-jwt
+          value: third-party-jwt
         - name: PILOT_CERT_PROVIDER
           value: istiod
         - name: POD_NAME
@@ -5542,6 +5552,9 @@ spec:
         volumeMounts:
         - mountPath: /etc/istio/config
           name: config-volume
+        - mountPath: /var/run/secrets/tokens
+          name: istio-token
+          readOnly: true
         - mountPath: /var/run/secrets/istio-dns
           name: local-certs
         - mountPath: /etc/cacerts
@@ -5560,6 +5573,13 @@ spec:
       - emptyDir:
           medium: Memory
         name: local-certs
+      - name: istio-token
+        projected:
+          sources:
+          - serviceAccountToken:
+              audience: istio-ca
+              expirationSeconds: 43200
+              path: istio-token
       - name: cacerts
         secret:
           optional: true
