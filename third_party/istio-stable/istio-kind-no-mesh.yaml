@@ -18,12 +18,7 @@ spec:
   values:
     global:
       proxy:
-        autoInject: disabled
         clusterDomain: cluster.local
-      useMCP: false
-      # The third-party-jwt is not enabled on all k8s.
-      # See: https://istio.io/docs/ops/best-practices/security/#configure-third-party-service-account-tokens
-      jwtPolicy: first-party-jwt
     pilot:
       autoscaleMin: 1
       autoscaleMax: 3
@@ -33,10 +28,6 @@ spec:
       istio-ingressgateway:
         autoscaleEnabled: false
         type: NodePort
-
-  addonComponents:
-    pilot:
-      enabled: true
 
   components:
     ingressGateways:
