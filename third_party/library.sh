@@ -16,6 +16,28 @@
 
 source "$(git rev-parse --show-toplevel)/vendor/knative.dev/hack/library.sh"
 
+readonly APPLY_ORDER=(
+  Namespace
+  ServiceAccount
+  ClusterRole
+  ClusterRoleBinding
+  Role
+  RoleBinding
+  CustomResourceDefinition
+  ConfigMap
+  Deployment
+  Service
+  HorizontalPodAutoscaler
+  PodDisruptionBudget
+  MutatingWebhookConfiguration
+  ValidatingWebhookConfiguration
+
+  # Istio resources
+  EnvoyFilter
+  PeerAuthentication
+)
+
+
 function download_istio() {
   # Find the right arch so we can download the correct istioctl version
   case "${OSTYPE}" in
@@ -81,8 +103,11 @@ function generate_manifests() {
     echo "Generating manifest from $(basename $(dirname $file))/$(basename $file)"
     echo "  using istioctl flags $@"
 
+    tmpfile=$(mktemp)
+    rm "${target_dir}/istio.yaml" || true
+
     # manifest generate doesn't include the istio namespace
-    cat <<EOF > "${target_dir}/istio.yaml"
+    cat <<EOF > "${tmpfile}"
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -90,7 +115,18 @@ metadata:
 ---
 EOF
 
-    ${ISTIO_DIR}/bin/istioctl manifest generate -f "$file"  "$@" | add_crd_label >> "${target_dir}/istio.yaml"
+    ${ISTIO_DIR}/bin/istioctl manifest generate -f "$file"  "$@" | add_crd_label >> "${tmpfile}"
+
+    for kind in "${APPLY_ORDER[@]}"; do
+      run_yq eval "select(.kind == \"${kind}\")" "${tmpfile}" >> "${target_dir}/istio.yaml"
+      echo "---" >> "${target_dir}/istio.yaml"
+
+      # Remove the kind we added - after iteration we'll add what's remaining
+      run_yq eval --inplace "select(.kind != \"${kind}\")" "${tmpfile}"
+    done
+
+    # Add any resources that weren't on our prioritized list
+    cat "${tmpfile}" >> "${target_dir}/istio.yaml"
 
     local config_istio_extra="$dir/extra/config-istio.yaml"
     local istio_extra="$dir/extra/istio.yaml"
@@ -109,6 +145,9 @@ EOF
       echo "  appending ${istio_extra}"
       cat "${istio_extra}" >> "${target_dir}/istio.yaml"
     fi
+
+    # Remove documents with no content
+    run_yq eval --inplace 'select(. != null)' "${target_dir}/istio.yaml"
   done
 }
 
@@ -123,11 +162,15 @@ function generate() {
   generate_manifests "$path" "$@"
 }
 
-function install_yaml() {
-  if grep -q "CustomResourceDefinition" "$1"; then
-    kubectl apply --selector="knative.dev/crd-install=true" -f "$1"
-    kubectl wait --for=condition=Established --all crd
-  fi
+function run_yq() {
+  GO111MODULE=on run_go_tool github.com/mikefarah/yq/v4 yq "$@"
+}
 
+function install_yaml() {
+  for kind in "${APPLY_ORDER[@]}"; do
+    run_yq eval "select(.kind == \"${kind}\")" "$1" | kubectl apply -f -
+  done
+
+  # In case we missed anything in our list
   kubectl apply -f "$1"
 }
