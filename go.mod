@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/go-cmp v0.5.5
+	github.com/mikefarah/yq/v4 v4.7.0 // indirect
 	go.uber.org/zap v1.16.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	istio.io/api v0.0.0-20210322145030-ec7ef4cd6eaf
