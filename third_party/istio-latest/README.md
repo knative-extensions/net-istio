@@ -7,5 +7,3 @@ The profiles are:
   tests.
 - istio-ci-mesh.yaml: used in our continuous testing of Knative with Istio
   having sidecar and mTLS enabled.
-- istio-minimal.yaml: a minimal Istio installation used for development
-  purposes.

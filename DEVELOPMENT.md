@@ -74,7 +74,7 @@ described below.
 Run the following command to install Istio for development purpose:
 
 ```shell
-third_party/istio-stable/install-istio.sh istio-ci-no-mesh
+istioctl install -y
 ```
 
 ### Install Knative Serving
