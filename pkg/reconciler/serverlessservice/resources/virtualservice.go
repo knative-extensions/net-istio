@@ -31,7 +31,7 @@ import (
 // pod addressability, even for mesh cases.
 func MakeVirtualService(sks *v1alpha1.ServerlessService) *v1alpha3.VirtualService {
 	ns := sks.Namespace
-	name := kmeta.ChildName(sks.Name, "-private")
+	name := sks.Status.PrivateServiceName
 	host := pkgnetwork.GetServiceHostname(name, ns)
 
 	return &v1alpha3.VirtualService{

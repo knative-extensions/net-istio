@@ -48,6 +48,9 @@ func sks(name string) *netv1alpha1.ServerlessService {
 			Namespace: "testing",
 			Name:      name,
 		},
+		Status: netv1alpha1.ServerlessServiceStatus{
+			PrivateServiceName: name + "-foo",
+		},
 	}
 
 	// Status has no effect on this reconciler, so just default it.
@@ -90,8 +93,8 @@ func TestReconcile(t *testing.T) {
 			dr("test"),
 		},
 		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "test-private"),
-			Eventf(corev1.EventTypeNormal, "Created", "Created DestinationRule %q", "test-private"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "test-foo"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created DestinationRule %q", "test-foo"),
 		},
 	}, {
 		Name: "create only VirtualService",
@@ -104,7 +107,7 @@ func TestReconcile(t *testing.T) {
 			vs("test"),
 		},
 		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "test-private"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "test-foo"),
 		},
 	}, {
 		Name: "create only DestinationRule",
@@ -117,7 +120,7 @@ func TestReconcile(t *testing.T) {
 			dr("test"),
 		},
 		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "Created", "Created DestinationRule %q", "test-private"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created DestinationRule %q", "test-foo"),
 		},
 	}, {
 		Name: "fix both",
@@ -141,8 +144,8 @@ func TestReconcile(t *testing.T) {
 			Object: dr("test"),
 		}},
 		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "Updated", "Updated VirtualService %s", "testing/test-private"),
-			Eventf(corev1.EventTypeNormal, "Updated", "Updated DestinationRule %s", "testing/test-private"),
+			Eventf(corev1.EventTypeNormal, "Updated", "Updated VirtualService %s", "testing/test-foo"),
+			Eventf(corev1.EventTypeNormal, "Updated", "Updated DestinationRule %s", "testing/test-foo"),
 		},
 	}, {
 		Name:    "failure for VirtualService",
@@ -159,7 +162,7 @@ func TestReconcile(t *testing.T) {
 			vs("test"),
 		},
 		WantEvents: []string{
-			Eventf(corev1.EventTypeWarning, "CreationFailed", "Failed to create VirtualService %s: inducing failure for create virtualservices", "testing/test-private"),
+			Eventf(corev1.EventTypeWarning, "CreationFailed", "Failed to create VirtualService %s: inducing failure for create virtualservices", "testing/test-foo"),
 			Eventf(corev1.EventTypeWarning, "InternalError", "failed to reconcile VirtualService: failed to create VirtualService: inducing failure for create virtualservices"),
 		},
 	}, {
@@ -177,7 +180,7 @@ func TestReconcile(t *testing.T) {
 			dr("test"),
 		},
 		WantEvents: []string{
-			Eventf(corev1.EventTypeWarning, "CreationFailed", "Failed to create DestinationRule %s: inducing failure for create destinationrules", "testing/test-private"),
+			Eventf(corev1.EventTypeWarning, "CreationFailed", "Failed to create DestinationRule %s: inducing failure for create destinationrules", "testing/test-foo"),
 			Eventf(corev1.EventTypeWarning, "InternalError", "failed to reconcile DestinationRule: failed to create DestinationRule: inducing failure for create destinationrules"),
 		},
 	}}
