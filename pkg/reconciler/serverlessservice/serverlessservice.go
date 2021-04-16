@@ -53,6 +53,11 @@ func (r *reconciler) ReconcileKind(ctx context.Context, sks *netv1alpha1.Serverl
 		return nil
 	}
 
+	if sks.Status.PrivateServiceName == "" {
+		// No private service yet, nothing to do here.
+		return nil
+	}
+
 	vs := resources.MakeVirtualService(sks)
 	if _, err := istioaccessor.ReconcileVirtualService(ctx, sks, vs, r); err != nil {
 		return fmt.Errorf("failed to reconcile VirtualService: %w", err)

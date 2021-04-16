@@ -35,7 +35,7 @@ const (
 // loadbalancer for the service in question, to allow for pod addressability, even in mesh.
 func MakeDestinationRule(sks *v1alpha1.ServerlessService) *v1alpha3.DestinationRule {
 	ns := sks.Namespace
-	name := kmeta.ChildName(sks.Name, "-private")
+	name := sks.Status.PrivateServiceName
 	host := pkgnetwork.GetServiceHostname(name, ns)
 
 	return &v1alpha3.DestinationRule{
