@@ -16,7 +16,7 @@
 
 source "$(dirname $0)/../library.sh"
 
-generate "1.8.4" "$(dirname $0)"
+generate "1.9.1" "$(dirname $0)"
 
 # Temporarily disable mTLS STRICT in mesh mode
 # see: this (https://github.com/knative-sandbox/net-istio/issues/503)
