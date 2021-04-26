@@ -86,7 +86,7 @@ function cleanup_istio() {
 function add_crd_label() {
   local lib_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   run_go_tool github.com/k14s/ytt/cmd/ytt \
-    ytt --ignore-unknown-comments -f - -f "${lib_path}/label-crd-overlay.ytt.yaml"
+    ytt -f - -f "${lib_path}/label-crd-overlay.ytt.yaml"
 }
 
 function generate_manifests() {
