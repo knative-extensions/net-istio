@@ -17,18 +17,3 @@
 source "$(dirname $0)/../library.sh"
 
 generate "1.9.1" "$(dirname $0)"
-
-# Temporarily disable mTLS STRICT in mesh mode
-# see: this (https://github.com/knative-sandbox/net-istio/issues/503)
-# To reenable this create the file extra/istio-mesh.yaml with the following
-#
-# ---
-# apiVersion: "security.istio.io/v1beta1"
-# kind: "PeerAuthentication"
-# metadata:
-#   name: "default"
-#   namespace: "istio-system"
-# spec:
-#   mtls:
-#     mode: STRICT
-
