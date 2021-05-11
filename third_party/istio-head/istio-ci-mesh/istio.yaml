@@ -6225,7 +6225,7 @@ data:
         "sts": {
           "servicePort": 0
         },
-        "tag": "1.11-alpha.f177e200f0e78b4be3e1ead48b7d8ac2951d92e0",
+        "tag": "1.11-alpha.b18a9b08f9fda5463c2bd33afa44130dfd222f58",
         "tracer": {
           "datadog": {
             "address": "$(HOST_IP):8126"
@@ -6417,7 +6417,7 @@ data:
             {{- end }}
             restartPolicy: Always
           {{ end -}}
-          {{- if eq .Values.global.proxy.enableCoreDump true }}
+          {{- if eq (annotation .ObjectMeta `sidecar.istio.io/enableCoreDump` .Values.global.proxy.enableCoreDump) "true" }}
           - name: enable-core-dump
             args:
             - -c
@@ -6460,12 +6460,6 @@ data:
             - sidecar
             - --domain
             - $(POD_NAMESPACE).svc.{{ .Values.global.proxy.clusterDomain }}
-            - --serviceCluster
-            {{ if ne "" (index .ObjectMeta.Labels "app") -}}
-            - "{{ index .ObjectMeta.Labels `app` }}.$(POD_NAMESPACE)"
-            {{ else -}}
-            - "{{ valueOrDefault .DeploymentMeta.Name `istio-proxy` }}.{{ valueOrDefault .DeploymentMeta.Namespace `default` }}"
-            {{ end -}}
             - --proxyLogLevel={{ annotation .ObjectMeta `sidecar.istio.io/logLevel` .Values.global.proxy.logLevel }}
             - --proxyComponentLogLevel={{ annotation .ObjectMeta `sidecar.istio.io/componentLogLevel` .Values.global.proxy.componentLogLevel }}
             - --log_output_level={{ annotation .ObjectMeta `sidecar.istio.io/agentLogLevel` .Values.global.logging.level }}
@@ -6525,14 +6519,6 @@ data:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
-            - name: CANONICAL_SERVICE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['service.istio.io/canonical-name']
-            - name: CANONICAL_REVISION
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['service.istio.io/canonical-revision']
             - name: PROXY_CONFIG
               value: |
                      {{ protoToJSON .ProxyConfig }}
@@ -6559,11 +6545,6 @@ data:
             - name: ISTIO_META_NETWORK
               value: "{{ .Values.global.network }}"
             {{- end }}
-            {{ if .ObjectMeta.Annotations }}
-            - name: ISTIO_METAJSON_ANNOTATIONS
-              value: |
-                     {{ toJSON .ObjectMeta.Annotations }}
-            {{ end }}
             {{- if .DeploymentMeta.Name }}
             - name: ISTIO_META_WORKLOAD_NAME
               value: "{{ .DeploymentMeta.Name }}"
@@ -6623,7 +6604,7 @@ data:
                 drop:
                 - ALL
               privileged: {{ .Values.global.proxy.privileged }}
-              readOnlyRootFilesystem: {{ not .Values.global.proxy.enableCoreDump }}
+              readOnlyRootFilesystem: {{ ne (annotation .ObjectMeta `sidecar.istio.io/enableCoreDump` .Values.global.proxy.enableCoreDump) "true" }}
               runAsGroup: 1337
               fsGroup: 1337
               {{ if or (eq (annotation .ObjectMeta `sidecar.istio.io/interceptionMode` .ProxyConfig.InterceptionMode) `TPROXY`) (eq (annotation .ObjectMeta `sidecar.istio.io/capNetBindService` .Values.global.proxy.capNetBindService) `true`) -}}
@@ -6888,11 +6869,6 @@ data:
             - name: ISTIO_META_NETWORK
               value: "{{ .Values.global.network }}"
             {{- end }}
-            {{ if .ObjectMeta.Annotations }}
-            - name: ISTIO_METAJSON_ANNOTATIONS
-              value: |
-                     {{ toJSON .ObjectMeta.Annotations }}
-            {{ end }}
             {{- if .DeploymentMeta.Name }}
             - name: ISTIO_META_WORKLOAD_NAME
               value: "{{ .DeploymentMeta.Name }}"
@@ -7155,7 +7131,7 @@ spec:
               value: "20"
             - name: ISTIO_META_CLUSTER_ID
               value: Kubernetes
-          image: gcr.io/istio-testing/proxyv2:1.11-alpha.f177e200f0e78b4be3e1ead48b7d8ac2951d92e0
+          image: gcr.io/istio-testing/proxyv2:1.11-alpha.b18a9b08f9fda5463c2bd33afa44130dfd222f58
           name: istio-proxy
           ports:
             - containerPort: 15021
@@ -7331,6 +7307,8 @@ spec:
                   fieldPath: spec.serviceAccountName
             - name: KUBECONFIG
               value: /var/run/secrets/remote/config
+            - name: PILOT_ENABLED_SERVICE_APIS
+              value: "true"
             - name: PILOT_ENABLE_STATUS
               value: "true"
             - name: PILOT_TRACE_SAMPLING
@@ -7345,9 +7323,7 @@ spec:
               value: "true"
             - name: CLUSTER_ID
               value: Kubernetes
-            - name: EXTERNAL_ISTIOD
-              value: "false"
-          image: gcr.io/istio-testing/pilot:1.11-alpha.f177e200f0e78b4be3e1ead48b7d8ac2951d92e0
+          image: gcr.io/istio-testing/pilot:1.11-alpha.b18a9b08f9fda5463c2bd33afa44130dfd222f58
           name: discovery
           ports:
             - containerPort: 8080
@@ -7551,6 +7527,7 @@ webhooks:
         name: istiod
         namespace: istio-system
         path: /inject
+        port: 443
       caBundle: ""
     sideEffects: None
     rules:
@@ -7586,6 +7563,7 @@ webhooks:
         name: istiod
         namespace: istio-system
         path: /inject
+        port: 443
       caBundle: ""
     sideEffects: None
     rules:
@@ -7623,6 +7601,7 @@ webhooks:
         name: istiod
         namespace: istio-system
         path: /inject
+        port: 443
       caBundle: ""
     sideEffects: None
     rules:
@@ -7656,6 +7635,7 @@ webhooks:
         name: istiod
         namespace: istio-system
         path: /inject
+        port: 443
       caBundle: ""
     sideEffects: None
     rules:

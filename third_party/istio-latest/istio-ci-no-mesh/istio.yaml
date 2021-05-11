@@ -4974,6 +4974,8 @@ spec:
                   fieldPath: spec.serviceAccountName
             - name: KUBECONFIG
               value: /var/run/secrets/remote/config
+            - name: PILOT_ENABLED_SERVICE_APIS
+              value: "true"
             - name: PILOT_ENABLE_STATUS
               value: "true"
             - name: PILOT_TRACE_SAMPLING

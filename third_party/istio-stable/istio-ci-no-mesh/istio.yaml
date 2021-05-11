@@ -4650,44 +4650,39 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: istiod
-  namespace: istio-system
   labels:
     app: istiod
-    istio.io/rev: default
     install.operator.istio.io/owning-resource: unknown
-    operator.istio.io/component: Pilot
     istio: pilot
+    istio.io/rev: default
+    operator.istio.io/component: Pilot
     release: istio
+  name: istiod
+  namespace: istio-system
 spec:
+  selector:
+    matchLabels:
+      istio: pilot
   strategy:
     rollingUpdate:
       maxSurge: 100%
       maxUnavailable: 25%
-  selector:
-    matchLabels:
-      istio: pilot
   template:
     metadata:
-      labels:
-        app: istiod
-        istio.io/rev: default
-        install.operator.istio.io/owning-resource: unknown
-        sidecar.istio.io/inject: "false"
-        operator.istio.io/component: Pilot
-        istio: pilot
       annotations:
         prometheus.io/port: "15014"
         prometheus.io/scrape: "true"
         sidecar.istio.io/inject: "false"
+      labels:
+        app: istiod
+        install.operator.istio.io/owning-resource: unknown
+        istio: pilot
+        istio.io/rev: default
+        operator.istio.io/component: Pilot
+        sidecar.istio.io/inject: "false"
     spec:
-      serviceAccountName: istiod-service-account
-      securityContext:
-        fsGroup: 1337
       containers:
-        - name: discovery
-          image: docker.io/istio/pilot:1.9.1
-          args:
+        - args:
             - discovery
             - --monitoringAddr=:15014
             - --log_output_level=default:info
@@ -4695,20 +4690,6 @@ spec:
             - cluster.local
             - --keepaliveMaxServerConnectionAge
             - 30m
-          ports:
-            - containerPort: 8080
-              protocol: TCP
-            - containerPort: 15010
-              protocol: TCP
-            - containerPort: 15017
-              protocol: TCP
-          readinessProbe:
-            httpGet:
-              path: /ready
-              port: 8080
-            initialDelaySeconds: 1
-            periodSeconds: 3
-            timeoutSeconds: 5
           env:
             - name: REVISION
               value: default
@@ -4733,6 +4714,8 @@ spec:
                   fieldPath: spec.serviceAccountName
             - name: KUBECONFIG
               value: /var/run/secrets/remote/config
+            - name: PILOT_ENABLED_SERVICE_APIS
+              value: "true"
             - name: PILOT_TRACE_SAMPLING
               value: "1"
             - name: PILOT_ENABLE_PROTOCOL_SNIFFING_FOR_OUTBOUND
@@ -4747,34 +4730,53 @@ spec:
               value: Kubernetes
             - name: EXTERNAL_ISTIOD
               value: "false"
+          image: docker.io/istio/pilot:1.9.1
+          name: discovery
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 15010
+              protocol: TCP
+            - containerPort: 15017
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 1
+            periodSeconds: 3
+            timeoutSeconds: 5
           resources:
             requests:
               cpu: 500m
               memory: 2048Mi
           securityContext:
-            runAsUser: 1337
-            runAsGroup: 1337
-            runAsNonRoot: true
             capabilities:
               drop:
                 - ALL
+            runAsGroup: 1337
+            runAsNonRoot: true
+            runAsUser: 1337
           volumeMounts:
-            - name: config-volume
-              mountPath: /etc/istio/config
-            - name: istio-token
-              mountPath: /var/run/secrets/tokens
+            - mountPath: /etc/istio/config
+              name: config-volume
+            - mountPath: /var/run/secrets/tokens
+              name: istio-token
               readOnly: true
-            - name: local-certs
-              mountPath: /var/run/secrets/istio-dns
-            - name: cacerts
-              mountPath: /etc/cacerts
+            - mountPath: /var/run/secrets/istio-dns
+              name: local-certs
+            - mountPath: /etc/cacerts
+              name: cacerts
               readOnly: true
-            - name: istio-kubeconfig
-              mountPath: /var/run/secrets/remote
+            - mountPath: /var/run/secrets/remote
+              name: istio-kubeconfig
               readOnly: true
-            - name: inject
-              mountPath: /var/lib/istio/inject
+            - mountPath: /var/lib/istio/inject
+              name: inject
               readOnly: true
+      securityContext:
+        fsGroup: 1337
+      serviceAccountName: istiod-service-account
       volumes:
         - emptyDir:
             medium: Memory
@@ -4788,18 +4790,18 @@ spec:
                   path: istio-token
         - name: cacerts
           secret:
-            secretName: cacerts
             optional: true
+            secretName: cacerts
         - name: istio-kubeconfig
           secret:
-            secretName: istio-kubeconfig
             optional: true
-        - name: inject
-          configMap:
+            secretName: istio-kubeconfig
+        - configMap:
             name: istio-sidecar-injector
-        - name: config-volume
-          configMap:
+          name: inject
+        - configMap:
             name: istio
+          name: config-volume
 ---
 apiVersion: v1
 kind: Service
