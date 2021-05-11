@@ -21,6 +21,8 @@ spec:
       autoscaleMax: 10
       cpu:
         targetAverageUtilization: 60
+      env:
+        PILOT_ENABLED_SERVICE_APIS: true
     gateways:
       istio-ingressgateway:
         autoscaleEnabled: false
