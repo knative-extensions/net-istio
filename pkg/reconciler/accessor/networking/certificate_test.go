@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
+	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	clientset "knative.dev/networking/pkg/client/clientset/versioned"
 	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
@@ -73,6 +74,17 @@ var (
 		},
 		Spec: v1alpha1.CertificateSpec{
 			DNSNames:   []string{"desired.example.com"},
+			SecretName: "secret0",
+		},
+	}
+
+	notOwned = &v1alpha1.Certificate{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "cert",
+			Namespace: "default",
+		},
+		Spec: v1alpha1.CertificateSpec{
+			DNSNames:   []string{"origin.example.com"},
 			SecretName: "secret0",
 		},
 	}
@@ -142,6 +154,25 @@ func TestReconcileCertificateUpdate(t *testing.T) {
 	ReconcileCertificate(ctx, ownerObj, desired, accessor)
 	if err := h.WaitForHooks(3 * time.Second); err != nil {
 		t.Error("Failed to Reconcile Certificate:", err)
+	}
+}
+
+func TestNotOwnedFailure(t *testing.T) {
+	ctx, cancel, _ := SetupFakeContextWithCancel(t)
+
+	client := fakenetworkingclient.Get(ctx)
+	accessor, waitInformers := setup(ctx, []*v1alpha1.Certificate{notOwned}, client, t)
+	defer func() {
+		cancel()
+		waitInformers()
+	}()
+
+	_, err := ReconcileCertificate(ctx, ownerObj, desired, accessor)
+	if err == nil {
+		t.Error("Expected to get error when calling ReconcileCertificate, but got no error.")
+	}
+	if !kaccessor.IsNotOwned(err) {
+		t.Error("Expected to get NotOwnedError but got", err)
 	}
 }
 
