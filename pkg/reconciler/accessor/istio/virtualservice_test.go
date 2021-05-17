@@ -32,6 +32,7 @@ import (
 	istioinformers "knative.dev/net-istio/pkg/client/istio/informers/externalversions"
 	fakeistioclient "knative.dev/net-istio/pkg/client/istio/injection/client/fake"
 	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
+	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
 	"knative.dev/pkg/ptr"
 
 	. "knative.dev/pkg/reconciler/testing"
@@ -72,6 +73,16 @@ var (
 		},
 		Spec: istiov1alpha3.VirtualService{
 			Hosts: []string{"desired.example.com"},
+		},
+	}
+
+	notOwned = &v1alpha3.VirtualService{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "vs",
+			Namespace: "default",
+		},
+		Spec: istiov1alpha3.VirtualService{
+			Hosts: []string{"origin.example.com"},
 		},
 	}
 )
@@ -143,6 +154,27 @@ func TestReconcileVirtualService_Update(t *testing.T) {
 	if err := h.WaitForHooks(3 * time.Second); err != nil {
 		t.Error("Failed to Reconcile VirtualService:", err)
 	}
+}
+
+func TestReconcileVirtualService_NotOwnedFailure(t *testing.T) {
+	ctx, _ := SetupFakeContext(t)
+	ctx, cancel := context.WithCancel(ctx)
+
+	istioClient := fakeistioclient.Get(ctx)
+	accessor, waitInformers := setup(ctx, []*v1alpha3.VirtualService{notOwned}, istioClient, t)
+	defer func() {
+		cancel()
+		waitInformers()
+	}()
+
+	_, err := ReconcileVirtualService(ctx, ownerObj, desired, accessor)
+	if err == nil {
+		t.Error("Expected to get error when calling ReconcileVirtualService, but got no error.")
+	}
+	if !kaccessor.IsNotOwned(err) {
+		t.Error("Expected to get NotOwnedError but got", err)
+	}
+
 }
 
 func setup(ctx context.Context, vses []*v1alpha3.VirtualService,

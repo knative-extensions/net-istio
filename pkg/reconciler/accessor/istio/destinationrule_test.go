@@ -29,6 +29,7 @@ import (
 	fakeistioclient "knative.dev/net-istio/pkg/client/istio/injection/client/fake"
 	fakedrinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/destinationrule/fake"
 	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
+	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
 
 	. "knative.dev/pkg/reconciler/testing"
 )
@@ -53,6 +54,16 @@ var (
 		},
 		Spec: istiov1alpha3.DestinationRule{
 			Host: "desired.example.com",
+		},
+	}
+
+	notOwnedDR = &v1alpha3.DestinationRule{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dr",
+			Namespace: "default",
+		},
+		Spec: istiov1alpha3.DestinationRule{
+			Host: "origin.example.com",
 		},
 	}
 )
@@ -143,5 +154,37 @@ func TestReconcileDestinationRule_Update(t *testing.T) {
 	ReconcileDestinationRule(ctx, ownerObj, desiredDR, accessor)
 	if err := h.WaitForHooks(3 * time.Second); err != nil {
 		t.Error("Failed to Reconcile DestinationRule:", err)
+	}
+}
+
+func TestReconcileDestinationRule_NotOwnedFailure(t *testing.T) {
+	ctx, cancel, informers := SetupFakeContextWithCancel(t)
+
+	istio := fakeistioclient.Get(ctx)
+	drInformer := fakedrinformer.Get(ctx)
+
+	waitInformers, err := RunAndSyncInformers(ctx, informers...)
+	if err != nil {
+		t.Fatal("Failed to start informers")
+	}
+	defer func() {
+		cancel()
+		waitInformers()
+	}()
+
+	accessor := &FakeDestinatioRuleAccessor{
+		client:   istio,
+		drLister: drInformer.Lister(),
+	}
+
+	istio.NetworkingV1alpha3().DestinationRules(origin.Namespace).Create(ctx, notOwnedDR, metav1.CreateOptions{})
+	drInformer.Informer().GetIndexer().Add(notOwnedDR)
+
+	_, err = ReconcileDestinationRule(ctx, ownerObj, desiredDR, accessor)
+	if err == nil {
+		t.Error("Expected to get error when calling ReconcileDestinationRule, but got no error.")
+	}
+	if !kaccessor.IsNotOwned(err) {
+		t.Error("Expected to get NotOwnedError but got", err)
 	}
 }
