@@ -11,9 +11,9 @@ linters:
   enable:
     - asciicheck
     - errorlint
-    - golint
     - gosec
     - prealloc
+    - revive
     - stylecheck
     - unconvert
     - unparam
