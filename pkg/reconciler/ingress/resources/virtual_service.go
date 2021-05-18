@@ -19,6 +19,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -153,7 +154,11 @@ func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 func makeVirtualServiceRoute(hosts sets.String, http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.String, visibility v1alpha1.IngressVisibility) *istiov1alpha3.HTTPRoute {
 	matches := []*istiov1alpha3.HTTPMatchRequest{}
 	clusterDomainName := network.GetClusterDomainName()
-	for _, host := range hosts.List() {
+
+	// Deduplicate hosts to avoid excessive matches, which cause a combinatorial expansion in Istio
+	distinctHosts := getDistinctHostPrefixes(hosts)
+
+	for _, host := range distinctHosts.List() {
 		g := gateways[visibility]
 		if strings.HasSuffix(host, clusterDomainName) && len(gateways[v1alpha1.IngressVisibilityClusterLocal]) > 0 {
 			// For local hostname, always use private gateway
@@ -212,6 +217,32 @@ func makeVirtualServiceRoute(hosts sets.String, http *v1alpha1.HTTPIngressPath, 
 	return route
 }
 
+// getDistinctHostPrefixes deduplicate a set of prefix matches. For example, the set {a, aabb} can be
+// reduced to {a}, as a prefix match on {a} accepts all the same inputs as {a, aabb}.
+func getDistinctHostPrefixes(hosts sets.String) sets.String {
+	all := hosts.List()
+	// First we sort the list. This ensures that we always process the smallest elements (which match against
+	// the most patterns, as they are less specific) first.
+	sort.Strings(all)
+	ns := sets.NewString()
+	for _, h := range all {
+		prefixExists := false
+		h = hostPrefix(h)
+		// For each element, check if any existing elements are a prefix. We only insert if none are
+		// For example, if we already have {a} and we are looking at "ab", we would not add it as it has a prefix of "a"
+		for e := range ns {
+			if strings.HasPrefix(h, e) {
+				prefixExists = true
+				break
+			}
+		}
+		if !prefixExists {
+			ns.Insert(h)
+		}
+	}
+	return ns
+}
+
 func keepLocalHostnames(hosts sets.String) sets.String {
 	localSvcSuffix := ".svc." + network.GetClusterDomainName()
 	retained := sets.NewString()
@@ -228,7 +259,7 @@ func makeMatch(host, path string, headers map[string]v1alpha1.HeaderMatch, gatew
 		Gateways: gateways.List(),
 		Authority: &istiov1alpha3.StringMatch{
 			// Do not use Regex as Istio 1.4 or later has 100 bytes limitation.
-			MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: hostPrefix(host)},
+			MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: host},
 		},
 	}
 	// Empty path is considered match all path. We only need to consider path
