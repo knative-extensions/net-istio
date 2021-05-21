@@ -363,6 +363,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 				Hosts: []string{
 					"test-route.test-ns.svc.cluster.local",
 				},
+				Visibility: v1alpha1.IngressVisibilityClusterLocal,
 				HTTP: &v1alpha1.HTTPIngressRuleValue{
 					Paths: []v1alpha1.HTTPIngressPath{{
 						Path: "/pets/",
@@ -386,6 +387,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 				Hosts: []string{
 					"v1.domain.com",
 				},
+				Visibility: v1alpha1.IngressVisibilityClusterLocal,
 				HTTP: &v1alpha1.HTTPIngressRuleValue{
 					Paths: []v1alpha1.HTTPIngressPath{{
 						Path: "/pets/",
@@ -531,7 +533,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 			Authority: &istiov1alpha3.StringMatch{
 				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `test-route.test-ns`},
 			},
-			Gateways: []string{"gateway.private"},
+			Gateways: []string{"gateway.public"},
 		}},
 		Route: []*istiov1alpha3.HTTPRouteDestination{{
 			Destination: &istiov1alpha3.Destination{

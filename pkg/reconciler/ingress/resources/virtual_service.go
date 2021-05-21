@@ -19,7 +19,6 @@ package resources
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -153,18 +152,11 @@ func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 
 func makeVirtualServiceRoute(hosts sets.String, http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.String, visibility v1alpha1.IngressVisibility) *istiov1alpha3.HTTPRoute {
 	matches := []*istiov1alpha3.HTTPMatchRequest{}
-	clusterDomainName := network.GetClusterDomainName()
-
 	// Deduplicate hosts to avoid excessive matches, which cause a combinatorial expansion in Istio
 	distinctHosts := getDistinctHostPrefixes(hosts)
 
 	for _, host := range distinctHosts.List() {
-		g := gateways[visibility]
-		if strings.HasSuffix(host, clusterDomainName) && len(gateways[v1alpha1.IngressVisibilityClusterLocal]) > 0 {
-			// For local hostname, always use private gateway
-			g = gateways[v1alpha1.IngressVisibilityClusterLocal]
-		}
-		matches = append(matches, makeMatch(host, http.Path, http.Headers, g))
+		matches = append(matches, makeMatch(host, http.Path, http.Headers, gateways[visibility]))
 	}
 
 	weights := []*istiov1alpha3.HTTPRouteDestination{}
@@ -220,10 +212,9 @@ func makeVirtualServiceRoute(hosts sets.String, http *v1alpha1.HTTPIngressPath, 
 // getDistinctHostPrefixes deduplicate a set of prefix matches. For example, the set {a, aabb} can be
 // reduced to {a}, as a prefix match on {a} accepts all the same inputs as {a, aabb}.
 func getDistinctHostPrefixes(hosts sets.String) sets.String {
-	all := hosts.List()
 	// First we sort the list. This ensures that we always process the smallest elements (which match against
 	// the most patterns, as they are less specific) first.
-	sort.Strings(all)
+	all := hosts.List()
 	ns := sets.NewString()
 	for _, h := range all {
 		prefixExists := false
