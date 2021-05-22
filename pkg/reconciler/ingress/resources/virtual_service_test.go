@@ -363,6 +363,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 				Hosts: []string{
 					"test-route.test-ns.svc.cluster.local",
 				},
+				Visibility: v1alpha1.IngressVisibilityClusterLocal,
 				HTTP: &v1alpha1.HTTPIngressRuleValue{
 					Paths: []v1alpha1.HTTPIngressPath{{
 						Path: "/pets/",
@@ -386,6 +387,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 				Hosts: []string{
 					"v1.domain.com",
 				},
+				Visibility: v1alpha1.IngressVisibilityClusterLocal,
 				HTTP: &v1alpha1.HTTPIngressRuleValue{
 					Paths: []v1alpha1.HTTPIngressPath{{
 						Path: "/pets/",
@@ -531,7 +533,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 			Authority: &istiov1alpha3.StringMatch{
 				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `test-route.test-ns`},
 			},
-			Gateways: []string{"gateway.private"},
+			Gateways: []string{"gateway.public"},
 		}},
 		Route: []*istiov1alpha3.HTTPRouteDestination{{
 			Destination: &istiov1alpha3.Destination{
@@ -689,6 +691,41 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 	}
 }
 
+// One active target.
+func TestMakeVirtualServiceRoute_Internal(t *testing.T) {
+	ingressPath := &v1alpha1.HTTPIngressPath{
+		Splits: []v1alpha1.IngressBackendSplit{{
+			IngressBackend: v1alpha1.IngressBackend{
+				ServiceNamespace: "test-ns",
+				ServiceName:      "revision-service",
+				ServicePort:      intstr.FromInt(80),
+			},
+			Percent: 100,
+		}},
+	}
+	route := makeVirtualServiceRoute(sets.NewString("a.default", "a.default.svc", "a.default.svc.cluster.local"),
+		ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	expected := &istiov1alpha3.HTTPRoute{
+		Retries: &istiov1alpha3.HTTPRetry{},
+		Match: []*istiov1alpha3.HTTPMatchRequest{{
+			Gateways: []string{"gateway-1"},
+			Authority: &istiov1alpha3.StringMatch{
+				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `a.default`},
+			},
+		}},
+		Route: []*istiov1alpha3.HTTPRouteDestination{{
+			Destination: &istiov1alpha3.Destination{
+				Host: "revision-service.test-ns.svc.cluster.local",
+				Port: &istiov1alpha3.PortSelector{Number: 80},
+			},
+			Weight: 100,
+		}},
+	}
+	if diff := cmp.Diff(expected, route); diff != "" {
+		t.Error("Unexpected route  (-want +got):", diff)
+	}
+}
+
 // Two active targets.
 func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 	ingressPath := &v1alpha1.HTTPIngressPath{
@@ -757,5 +794,27 @@ func makeGatewayMap(publicGateways []string, privateGateways []string) map[v1alp
 	return map[v1alpha1.IngressVisibility]sets.String{
 		v1alpha1.IngressVisibilityExternalIP:   sets.NewString(publicGateways...),
 		v1alpha1.IngressVisibilityClusterLocal: sets.NewString(privateGateways...),
+	}
+}
+
+func TestGetDistinctHostPrefixes(t *testing.T) {
+	cases := []struct {
+		name string
+		in   sets.String
+		out  sets.String
+	}{
+		{"empty", sets.NewString(), sets.NewString()},
+		{"single element", sets.NewString("a"), sets.NewString("a")},
+		{"no overlap", sets.NewString("a", "b"), sets.NewString("a", "b")},
+		{"overlap", sets.NewString("a", "ab", "abc"), sets.NewString("a")},
+		{"multiple overlaps", sets.NewString("a", "ab", "abc", "xyz", "xy", "m"), sets.NewString("a", "xy", "m")},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			got := getDistinctHostPrefixes(tt.in)
+			if !tt.out.Equal(got) {
+				t.Fatalf("Expected %v, got %v", tt.out, got)
+			}
+		})
 	}
 }
