@@ -17,3 +17,5 @@ kind: ConfigMap
 metadata:
   name: config-network
   namespace: knative-serving
+data:
+  autoTLS: "Enabled" # TODO: Remove this by solving https://github.com/knative/serving/issues/6373.

@@ -292,15 +292,15 @@ func TestMakeTLSServers(t *testing.T) {
 func TestMakeHTTPServer(t *testing.T) {
 	cases := []struct {
 		name         string
-		httpProtocol network.HTTPProtocol
+		httpProtocol v1alpha1.HTTPOption
 		expected     *istiov1alpha3.Server
 	}{{
 		name:         "nil HTTP Server",
-		httpProtocol: network.HTTPDisabled,
+		httpProtocol: "",
 		expected:     nil,
 	}, {
 		name:         "HTTP server",
-		httpProtocol: network.HTTPEnabled,
+		httpProtocol: v1alpha1.HTTPOptionEnabled,
 		expected: &istiov1alpha3.Server{
 			Hosts: []string{"*"},
 			Port: &istiov1alpha3.Port{
@@ -311,7 +311,7 @@ func TestMakeHTTPServer(t *testing.T) {
 		},
 	}, {
 		name:         "Redirect HTTP server",
-		httpProtocol: network.HTTPRedirected,
+		httpProtocol: v1alpha1.HTTPOptionRedirected,
 		expected: &istiov1alpha3.Server{
 			Hosts: []string{"*"},
 			Port: &istiov1alpha3.Port{
@@ -675,7 +675,7 @@ func TestMakeWildcardGateways(t *testing.T) {
 			},
 		})
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := MakeWildcardGateways(ctx, tc.wildcardSecrets, svcLister)
+			got, err := MakeWildcardGateways(ctx, tc.wildcardSecrets, svcLister, v1alpha1.HTTPOptionEnabled)
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("Test: %s; MakeWildcardGateways error = %v, WantErr %v", tc.name, err, tc.wantErr)
 			}

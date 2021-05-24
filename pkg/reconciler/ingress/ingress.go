@@ -151,7 +151,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		// same wildcard host. We need to handle wildcard certificate specially because Istio does
 		// not fully support multiple TLS Servers (or Gateways) share the same certificate.
 		// https://istio.io/docs/ops/common-problems/network-issues/
-		desiredWildcardGateways, err := resources.MakeWildcardGateways(ctx, wildcardSecrets, r.svcLister)
+		desiredWildcardGateways, err := resources.MakeWildcardGateways(ctx, wildcardSecrets, r.svcLister, ing.Spec.HTTPOption)
 		if err != nil {
 			return err
 		}
@@ -169,7 +169,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	// TODO(zhiminx): figure out a better way to handle HTTP behavior.
 	// https://github.com/knative/serving/issues/6373
 	if config.FromContext(ctx).Network.AutoTLS {
-		desiredHTTPServer := resources.MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, []string{"*"})
+		desiredHTTPServer := resources.MakeHTTPServer(ing.Spec.HTTPOption, []string{"*"})
 		for _, gw := range config.FromContext(ctx).Istio.IngressGateways {
 			if err := r.reconcileHTTPServer(ctx, ing, gw, desiredHTTPServer); err != nil {
 				return err

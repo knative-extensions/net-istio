@@ -33,7 +33,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
-	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/kmeta"
@@ -129,7 +128,7 @@ func MakeIngressTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressT
 // MakeWildcardGateways creates gateways with wildcard hosts based on the wildcard secret information.
 // For each public ingress service, we will create a list of Gateways. Each Gateway of the list corresponds to a wildcard cert secret.
 func MakeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]*corev1.Secret,
-	svcLister corev1listers.ServiceLister) ([]*v1alpha3.Gateway, error) {
+	svcLister corev1listers.ServiceLister, httpOption v1alpha1.HTTPOption) ([]*v1alpha3.Gateway, error) {
 	if len(originWildcardSecrets) == 0 {
 		return []*v1alpha3.Gateway{}, nil
 	}
@@ -139,7 +138,7 @@ func MakeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]
 	}
 	gateways := []*v1alpha3.Gateway{}
 	for _, gatewayService := range gatewayServices {
-		gws, err := makeWildcardGateways(ctx, originWildcardSecrets, gatewayService)
+		gws, err := makeWildcardGateways(originWildcardSecrets, gatewayService, httpOption)
 		if err != nil {
 			return nil, err
 		}
@@ -148,8 +147,8 @@ func MakeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]
 	return gateways, nil
 }
 
-func makeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]*corev1.Secret,
-	gatewayService *corev1.Service) ([]*v1alpha3.Gateway, error) {
+func makeWildcardGateways(originWildcardSecrets map[string]*corev1.Secret,
+	gatewayService *corev1.Service, httpOption v1alpha1.HTTPOption) ([]*v1alpha3.Gateway, error) {
 	gateways := make([]*v1alpha3.Gateway, 0, len(originWildcardSecrets))
 	for _, secret := range originWildcardSecrets {
 		hosts, err := GetHostsFromCertSecret(secret)
@@ -176,7 +175,7 @@ func makeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]
 				CredentialName:    credentialName,
 			},
 		}}
-		httpServer := MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, hosts)
+		httpServer := MakeHTTPServer(httpOption, hosts)
 		if httpServer != nil {
 			servers = append(servers, httpServer)
 		}
@@ -332,8 +331,8 @@ func portNamePrefix(prefix, suffix string) string {
 
 // MakeHTTPServer creates a HTTP Gateway `Server` based on the HTTPProtocol
 // configuration.
-func MakeHTTPServer(httpProtocol network.HTTPProtocol, hosts []string) *istiov1alpha3.Server {
-	if httpProtocol == network.HTTPDisabled {
+func MakeHTTPServer(httpProtocol v1alpha1.HTTPOption, hosts []string) *istiov1alpha3.Server {
+	if httpProtocol != v1alpha1.HTTPOptionEnabled && httpProtocol != v1alpha1.HTTPOptionRedirected {
 		return nil
 	}
 	server := &istiov1alpha3.Server{
@@ -344,7 +343,7 @@ func MakeHTTPServer(httpProtocol network.HTTPProtocol, hosts []string) *istiov1a
 			Protocol: "HTTP",
 		},
 	}
-	if httpProtocol == network.HTTPRedirected {
+	if httpProtocol == v1alpha1.HTTPOptionRedirected {
 		server.Tls = &istiov1alpha3.ServerTLSSettings{
 			HttpsRedirect: true,
 		}
