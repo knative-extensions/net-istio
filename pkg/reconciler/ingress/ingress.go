@@ -85,7 +85,7 @@ var (
 	_ istioaccessor.VirtualServiceAccessor = (*Reconciler)(nil)
 )
 
-// Reconcile compares the actual state with the desired, and attempts to
+// ReconcileKind compares the actual state with the desired, and attempts to
 // converge the two. It then updates the Status block of the Ingress resource
 // with the current status of the resource.
 func (r *Reconciler) ReconcileKind(ctx context.Context, ingress *v1alpha1.Ingress) pkgreconciler.Event {
