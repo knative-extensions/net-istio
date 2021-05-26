@@ -363,16 +363,6 @@ func GetNonWildcardIngressTLS(ingressTLS []v1alpha1.IngressTLS, nonWildcardSecre
 	return result
 }
 
-// ServiceNamespaceFromURL extracts the namespace part from the service URL.
-// TODO(nghia):  Remove this by parsing at config parsing time.
-func ServiceNamespaceFromURL(svc string) (string, error) {
-	parts := strings.SplitN(svc, ".", 3)
-	if len(parts) != 3 {
-		return "", fmt.Errorf("unexpected service URL form: %s", svc)
-	}
-	return parts[1], nil
-}
-
 // GetIngressGatewaySvcNameNamespaces gets the Istio ingress namespaces from ConfigMap.
 // TODO(nghia):  Remove this by parsing at config parsing time.
 func GetIngressGatewaySvcNameNamespaces(ctx context.Context) ([]metav1.ObjectMeta, error) {
