@@ -42,6 +42,7 @@ metadata:
   labels:
     serving.knative.dev/release: devel
     networking.knative.dev/ingress-provider: istio
+    experimental.istio.io/disable-gateway-port-translation: "true"
 spec:
   type: ClusterIP
   selector:
