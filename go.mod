@@ -5,8 +5,7 @@ go 1.15
 require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/go-cmp v0.5.6
-	github.com/stretchr/testify v1.7.0 // indirect
-	go.uber.org/zap v1.16.0
+	go.uber.org/zap v1.17.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	istio.io/api v0.0.0-20210322145030-ec7ef4cd6eaf
@@ -15,8 +14,8 @@ require (
 	k8s.io/apimachinery v0.20.5
 	k8s.io/client-go v0.20.5
 	knative.dev/hack v0.0.0-20210601210329-de04b70e00d0
-	knative.dev/networking v0.0.0-20210602063131-a442bb6a4d29
-	knative.dev/pkg v0.0.0-20210602044730-a2869ae1dce3
+	knative.dev/networking v0.0.0-20210602143631-9c0fc00ae8fe
+	knative.dev/pkg v0.0.0-20210602095030-0e61d6763dd6
 )
 
 replace (
