@@ -115,6 +115,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	//gatewayNames := qualifiedGatewayNamesFromContext(ctx)
 	gatewayNames := map[v1alpha1.IngressVisibility]sets.String{}
 	gatewayNames[v1alpha1.IngressVisibilityClusterLocal] = qualifiedGatewayNamesFromContext(ctx)[v1alpha1.IngressVisibilityClusterLocal]
+	gatewayNames[v1alpha1.IngressVisibilityExternalIP] = sets.String{}
 	if shouldReconcileTLS(ctx, ing) {
 		originSecrets, err := resources.GetSecrets(ing, r.secretLister)
 		if err != nil {
