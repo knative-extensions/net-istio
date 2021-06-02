@@ -112,8 +112,10 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	ing.Status.InitializeConditions()
 	logger.Infof("Reconciling ingress: %#v", ing)
 
-	gatewayNames := qualifiedGatewayNamesFromContext(ctx)
-	if r.shouldReconcileTLS(ctx, ing) {
+	//gatewayNames := qualifiedGatewayNamesFromContext(ctx)
+	gatewayNames := map[v1alpha1.IngressVisibility]sets.String{}
+	gatewayNames[v1alpha1.IngressVisibilityClusterLocal] = qualifiedGatewayNamesFromContext(ctx)[v1alpha1.IngressVisibilityClusterLocal]
+	if shouldReconcileTLS(ctx, ing) {
 		originSecrets, err := resources.GetSecrets(ing, r.secretLister)
 		if err != nil {
 			return err
@@ -165,16 +167,17 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(desiredWildcardGateways)...)
 	}
 
-	// HTTPProtocol should be effective only when Auto TLS is enabled per its definition.
-	// TODO(zhiminx): figure out a better way to handle HTTP behavior.
-	// https://github.com/knative/serving/issues/6373
-	if config.FromContext(ctx).Network.AutoTLS {
+	if shouldReconcileHTTPServer(ctx, ing) {
 		desiredHTTPServer := resources.MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, []string{"*"})
-		for _, gw := range config.FromContext(ctx).Istio.IngressGateways {
-			if err := r.reconcileHTTPServer(ctx, ing, gw, desiredHTTPServer); err != nil {
+		for gw := range gatewayNames[v1alpha1.IngressVisibilityExternalIP] {
+			if err := r.reconcileHTTPServer(ctx, ing, convertToConfigGateway(gw), desiredHTTPServer); err != nil {
 				return err
 			}
 		}
+	} else {
+		// Otherwise, we use the default global Gateways
+		defaultGlobalHTTPGateways := qualifiedGatewayNamesFromContext(ctx)[v1alpha1.IngressVisibilityExternalIP]
+		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(defaultGlobalHTTPGateways.List()...)
 	}
 
 	vses, err := resources.MakeVirtualServices(ctx, ing, gatewayNames)
@@ -186,18 +189,6 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	if err := r.reconcileVirtualServices(ctx, ing, vses); err != nil {
 		ing.Status.MarkLoadBalancerFailed(virtualServiceNotReconciled, err.Error())
 		return err
-	}
-
-	if r.shouldReconcileTLS(ctx, ing) {
-		// For backward compatibility reason, we need to remove the TLS servers corresponding to the Ingress
-		// from the global Gateways. This code should be deleted in release 0.18.
-		// We should handle the deletion after VirtualService is created with the newly generated non-wildcard Gateway
-		// in order to make sure the ongoing traffic won't be affected.
-		for _, gw := range config.FromContext(ctx).Istio.IngressGateways {
-			if err := r.reconcileIngressServers(ctx, ing, gw, []*istiov1alpha3.Server{}); err != nil {
-				return err
-			}
-		}
 	}
 
 	// Update status
@@ -368,7 +359,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, ing *v1alpha1.Ingress) pk
 }
 
 func (r *Reconciler) reconcileDeletion(ctx context.Context, ing *v1alpha1.Ingress) error {
-	if !r.shouldReconcileTLS(ctx, ing) {
+	if !shouldReconcileTLS(ctx, ing) {
 		return nil
 	}
 
@@ -405,6 +396,15 @@ func (r *Reconciler) reconcileIngressServers(ctx context.Context, ing *v1alpha1.
 	}
 	existing := resources.GetServers(gateway, ing)
 	return r.reconcileGateway(ctx, ing, gateway, existing, desired)
+}
+
+func convertToConfigGateway(gwKey string) config.Gateway {
+	// gwKey has the format "{namespace}/{name}"
+	splits := strings.Split(gwKey, "/")
+	return config.Gateway{
+		Namespace: splits[0],
+		Name:      splits[1],
+	}
 }
 
 func (r *Reconciler) reconcileHTTPServer(ctx context.Context, ing *v1alpha1.Ingress, gw config.Gateway, desiredHTTP *istiov1alpha3.Server) error {
@@ -511,10 +511,17 @@ func getLBStatus(gatewayServiceURL string) []v1alpha1.LoadBalancerIngressStatus 
 	}
 }
 
-func (r *Reconciler) shouldReconcileTLS(ctx context.Context, ing *v1alpha1.Ingress) bool {
+func shouldReconcileTLS(ctx context.Context, ing *v1alpha1.Ingress) bool {
 	// We should keep reconciling the Ingress whose TLS has been reconciled before
 	// to make sure deleting IngressTLS will clean up the TLS server in the Gateway.
 	return isIngressPublic(ing) && ((len(ing.Spec.TLS) > 0) || config.FromContext(ctx).Network.AutoTLS)
+}
+
+func shouldReconcileHTTPServer(ctx context.Context, ing *v1alpha1.Ingress) bool {
+	// We will create a Ingress specific HTTPServer when
+	// 1. auto TLS is enabled as in this case users want us to fully handle the TLS/HTTP behavior,
+	// 2. HTTPOption is set to Redirected as we don't have default HTTP server supporting HTTP redirection.
+	return isIngressPublic(ing) && (ing.Spec.HTTPOption == v1alpha1.HTTPOptionRedirected || config.FromContext(ctx).Network.AutoTLS)
 }
 
 func isIngressPublic(ing *v1alpha1.Ingress) bool {
