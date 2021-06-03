@@ -169,7 +169,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	}
 
 	if shouldReconcileHTTPServer(ctx, ing) {
-		desiredHTTPServer := resources.MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, []string{"*"})
+		desiredHTTPServer := resources.MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, getPublicHosts(ing))
 		for gw := range gatewayNames[v1alpha1.IngressVisibilityExternalIP] {
 			if err := r.reconcileHTTPServer(ctx, ing, convertToConfigGateway(gw), desiredHTTPServer); err != nil {
 				return err
@@ -237,6 +237,16 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	// TODO(zhiminx): Mark Route status to indicate that Gateway is configured.
 	logger.Info("Ingress successfully synced")
 	return nil
+}
+
+func getPublicHosts(ing *v1alpha1.Ingress) []string {
+	hosts := sets.String{}
+	for _, rule := range ing.Spec.Rules {
+		if rule.Visibility == v1alpha1.IngressVisibilityExternalIP {
+			hosts.Insert(rule.Hosts...)
+		}
+	}
+	return hosts.List()
 }
 
 func (r *Reconciler) reconcileCertSecrets(ctx context.Context, ing *v1alpha1.Ingress, desiredSecrets []*corev1.Secret) error {
