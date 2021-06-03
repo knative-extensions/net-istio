@@ -151,7 +151,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		// same wildcard host. We need to handle wildcard certificate specially because Istio does
 		// not fully support multiple TLS Servers (or Gateways) share the same certificate.
 		// https://istio.io/docs/ops/common-problems/network-issues/
-		desiredWildcardGateways, err := resources.MakeWildcardGateways(ctx, wildcardSecrets, r.svcLister)
+		desiredWildcardGateways, err := resources.MakeWildcardTLSGateways(ctx, wildcardSecrets, r.svcLister)
 		if err != nil {
 			return err
 		}
