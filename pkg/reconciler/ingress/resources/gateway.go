@@ -139,7 +139,7 @@ func MakeWildcardTLSGateways(ctx context.Context, originWildcardSecrets map[stri
 	}
 	gateways := []*v1alpha3.Gateway{}
 	for _, gatewayService := range gatewayServices {
-		gws, err := makeWildcardTLSGateways(ctx, originWildcardSecrets, gatewayService)
+		gws, err := makeWildcardTLSGateways(originWildcardSecrets, gatewayService)
 		if err != nil {
 			return nil, err
 		}
@@ -148,7 +148,7 @@ func MakeWildcardTLSGateways(ctx context.Context, originWildcardSecrets map[stri
 	return gateways, nil
 }
 
-func makeWildcardTLSGateways(ctx context.Context, originWildcardSecrets map[string]*corev1.Secret,
+func makeWildcardTLSGateways(originWildcardSecrets map[string]*corev1.Secret,
 	gatewayService *corev1.Service) ([]*v1alpha3.Gateway, error) {
 	gateways := make([]*v1alpha3.Gateway, 0, len(originWildcardSecrets))
 	for _, secret := range originWildcardSecrets {
