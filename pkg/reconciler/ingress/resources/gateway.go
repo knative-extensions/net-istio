@@ -126,9 +126,9 @@ func MakeIngressTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressT
 	return gateways, nil
 }
 
-// MakeWildcardGateways creates gateways with wildcard hosts based on the wildcard secret information.
+// MakeWildcardTLSGateways creates gateways that only contain TLS server with wildcard hosts based on the wildcard secret information.
 // For each public ingress service, we will create a list of Gateways. Each Gateway of the list corresponds to a wildcard cert secret.
-func MakeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]*corev1.Secret,
+func MakeWildcardTLSGateways(ctx context.Context, originWildcardSecrets map[string]*corev1.Secret,
 	svcLister corev1listers.ServiceLister) ([]*v1alpha3.Gateway, error) {
 	if len(originWildcardSecrets) == 0 {
 		return []*v1alpha3.Gateway{}, nil
@@ -139,7 +139,7 @@ func MakeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]
 	}
 	gateways := []*v1alpha3.Gateway{}
 	for _, gatewayService := range gatewayServices {
-		gws, err := makeWildcardGateways(ctx, originWildcardSecrets, gatewayService)
+		gws, err := makeWildcardTLSGateways(originWildcardSecrets, gatewayService)
 		if err != nil {
 			return nil, err
 		}
@@ -148,7 +148,7 @@ func MakeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]
 	return gateways, nil
 }
 
-func makeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]*corev1.Secret,
+func makeWildcardTLSGateways(originWildcardSecrets map[string]*corev1.Secret,
 	gatewayService *corev1.Service) ([]*v1alpha3.Gateway, error) {
 	gateways := make([]*v1alpha3.Gateway, 0, len(originWildcardSecrets))
 	for _, secret := range originWildcardSecrets {
@@ -176,10 +176,6 @@ func makeWildcardGateways(ctx context.Context, originWildcardSecrets map[string]
 				CredentialName:    credentialName,
 			},
 		}}
-		httpServer := MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, hosts)
-		if httpServer != nil {
-			servers = append(servers, httpServer)
-		}
 		gvk := schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
 		gateways = append(gateways, &v1alpha3.Gateway{
 			ObjectMeta: metav1.ObjectMeta{

@@ -591,13 +591,6 @@ func TestMakeWildcardGateways(t *testing.T) {
 						PrivateKey:        corev1.TLSPrivateKeyKey,
 						CredentialName:    targetWildcardSecretName(wildcardSecret.Name, wildcardSecret.Namespace),
 					},
-				}, {
-					Hosts: []string{"*.example.com"},
-					Port: &istiov1alpha3.Port{
-						Name:     httpServerPortName,
-						Number:   80,
-						Protocol: "HTTP",
-					},
 				}},
 			},
 		}},
@@ -634,13 +627,6 @@ func TestMakeWildcardGateways(t *testing.T) {
 						PrivateKey:        corev1.TLSPrivateKeyKey,
 						CredentialName:    wildcardSecret.Name,
 					},
-				}, {
-					Hosts: []string{"*.example.com"},
-					Port: &istiov1alpha3.Port{
-						Name:     httpServerPortName,
-						Number:   80,
-						Protocol: "HTTP",
-					},
 				}},
 			},
 		}},
@@ -675,7 +661,7 @@ func TestMakeWildcardGateways(t *testing.T) {
 			},
 		})
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := MakeWildcardGateways(ctx, tc.wildcardSecrets, svcLister)
+			got, err := MakeWildcardTLSGateways(ctx, tc.wildcardSecrets, svcLister)
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("Test: %s; MakeWildcardGateways error = %v, WantErr %v", tc.name, err, tc.wantErr)
 			}
