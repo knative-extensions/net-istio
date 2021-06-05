@@ -240,10 +240,6 @@ func makeIngressTLSGateway(ing *v1alpha1.Ingress, originSecrets map[string]*core
 	if err != nil {
 		return nil, err
 	}
-	hosts := sets.String{}
-	for _, rule := range ing.Spec.Rules {
-		hosts.Insert(rule.Hosts...)
-	}
 	return &v1alpha3.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            GatewayName(ing, gatewayService),
