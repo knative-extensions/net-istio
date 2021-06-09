@@ -23,7 +23,6 @@ import (
 
 	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
 	nettest "knative.dev/networking/test"
-	"knative.dev/pkg/test"
 
 	// Required to run e2e tests against OpenID based clusters.
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
@@ -31,7 +30,7 @@ import (
 
 // Clients holds instances of interfaces for making requests to Knative Serving.
 type Clients struct {
-	KubeClient       *test.KubeClient
+	KubeClient       kubernetes.Interface
 	NetworkingClient *nettest.Clients
 	Dynamic          dynamic.Interface
 	IstioClient      istioclientset.Interface
@@ -61,7 +60,7 @@ func NewClientsFromConfig(cfg *rest.Config, namespace string) (*Clients, error) 
 	if err != nil {
 		return nil, err
 	}
-	clients.KubeClient = &test.KubeClient{Interface: kubeClient}
+	clients.KubeClient = kubeClient
 
 	clients.Dynamic, err = dynamic.NewForConfig(cfg)
 	if err != nil {
