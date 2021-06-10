@@ -125,6 +125,7 @@ func MakeIngressTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressT
 	return gateways, nil
 }
 
+// MakeIngressGateways creates Gateways with given Servers for a given Ingress.
 func MakeIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, servers []*istiov1alpha3.Server, svcLister corev1listers.ServiceLister) ([]*v1alpha3.Gateway, error) {
 	gatewayServices, err := getGatewayServices(ctx, svcLister)
 	if err != nil {

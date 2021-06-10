@@ -163,6 +163,16 @@ var ingressResourceWithDotName = v1alpha1.Ingress{
 	Spec: ingressSpec,
 }
 
+var defaultGatewayService = corev1.Service{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "istio-ingressgateway",
+		Namespace: "istio-system",
+	},
+	Spec: corev1.ServiceSpec{
+		Selector: selector,
+	},
+}
+
 func TestGetServers(t *testing.T) {
 	servers := GetServers(&gateway, &ingressResource)
 	expected := []*istiov1alpha3.Server{{
@@ -701,6 +711,77 @@ func TestGetQualifiedGatewayNames(t *testing.T) {
 	want := []string{"knative-serving/istio-ingress-gateway"}
 	if got := GetQualifiedGatewayNames(gateways); cmp.Diff(want, got) != "" {
 		t.Fatalf("GetQualifiedGatewayNames failed. Want: %v, got: %v", want, got)
+	}
+}
+
+func TestMakeIngressGateways(t *testing.T) {
+	cases := []struct {
+		name    string
+		ia      *v1alpha1.Ingress
+		servers []*istiov1alpha3.Server
+		want    []*v1alpha3.Gateway
+		wantErr bool
+	}{{
+		name:    "HTTP server",
+		ia:      &ingressResource,
+		servers: []*istiov1alpha3.Server{&httpServer},
+		want: []*v1alpha3.Gateway{{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:            fmt.Sprintf("ingress-%d", adler32.Checksum([]byte("istio-system/istio-ingressgateway"))),
+				Namespace:       "test-ns",
+				OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(&ingressResource)},
+				Labels: map[string]string{
+					networking.IngressLabelKey: "ingress",
+				},
+			},
+			Spec: istiov1alpha3.Gateway{
+				Selector: selector,
+				Servers:  []*istiov1alpha3.Server{&httpServer},
+			},
+		}},
+	}, {
+		name:    "HTTPS server",
+		ia:      &ingressResource,
+		servers: []*istiov1alpha3.Server{&modifiedDefaultTLSServer},
+		want: []*v1alpha3.Gateway{{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:            fmt.Sprintf("ingress-%d", adler32.Checksum([]byte("istio-system/istio-ingressgateway"))),
+				Namespace:       "test-ns",
+				OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(&ingressResource)},
+				Labels: map[string]string{
+					networking.IngressLabelKey: "ingress",
+				},
+			},
+			Spec: istiov1alpha3.Gateway{
+				Selector: selector,
+				Servers:  []*istiov1alpha3.Server{&modifiedDefaultTLSServer},
+			},
+		}},
+	}}
+	for _, c := range cases {
+		ctx, cancel, _ := rtesting.SetupFakeContextWithCancel(t)
+		defer cancel()
+		svcLister := serviceLister(ctx, &defaultGatewayService)
+		ctx = config.ToContext(context.Background(), &config.Config{
+			Istio: &config.Istio{
+				IngressGateways: []config.Gateway{{
+					Name:       config.KnativeIngressGateway,
+					ServiceURL: fmt.Sprintf("%s.%s.svc.cluster.local", defaultGatewayService.Name, defaultGatewayService.Namespace),
+				}},
+			},
+			Network: &network.Config{
+				HTTPProtocol: network.HTTPEnabled,
+			},
+		})
+		t.Run(c.name, func(t *testing.T) {
+			got, err := MakeIngressGateways(ctx, c.ia, c.servers, svcLister)
+			if (err != nil) != c.wantErr {
+				t.Fatalf("Test: %s; MakeIngressTLSGateways error = %v, WantErr %v", c.name, err, c.wantErr)
+			}
+			if diff := cmp.Diff(c.want, got); diff != "" {
+				t.Error("Unexpected Gateways (-want, +got):", diff)
+			}
+		})
 	}
 }
 
