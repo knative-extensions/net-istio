@@ -116,6 +116,8 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	gatewayNames := map[v1alpha1.IngressVisibility]sets.String{}
 	gatewayNames[v1alpha1.IngressVisibilityClusterLocal] = qualifiedGatewayNamesFromContext(ctx)[v1alpha1.IngressVisibilityClusterLocal]
 	gatewayNames[v1alpha1.IngressVisibilityExternalIP] = sets.String{}
+
+	ingressGateways := []*v1alpha3.Gateway{}
 	if shouldReconcileTLS(ctx, ing) {
 		originSecrets, err := resources.GetSecrets(ing, r.secretLister)
 		if err != nil {
@@ -141,11 +143,8 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		}
 
 		nonWildcardIngressTLS := resources.GetNonWildcardIngressTLS(ing.Spec.TLS, nonWildcardSecrets)
-		ingressGateways, err := resources.MakeIngressTLSGateways(ctx, ing, nonWildcardIngressTLS, nonWildcardSecrets, r.svcLister)
+		ingressGateways, err = resources.MakeIngressTLSGateways(ctx, ing, nonWildcardIngressTLS, nonWildcardSecrets, r.svcLister)
 		if err != nil {
-			return err
-		}
-		if err := r.reconcileIngressGateways(ctx, ingressGateways); err != nil {
 			return err
 		}
 
@@ -161,24 +160,32 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		if err := r.reconcileWildcardGateways(ctx, desiredWildcardGateways, ing); err != nil {
 			return err
 		}
-
-		// VirtualService will be attached to both global Gateways and the Knative generated Gateways.
-		// We still want to attach to the global Gateways to respect any global Gateway configuration.
-		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(ingressGateways)...)
 		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(desiredWildcardGateways)...)
 	}
 
 	if shouldReconcileHTTPServer(ctx, ing) {
-		desiredHTTPServer := resources.MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, getPublicHosts(ing))
-		for gw := range gatewayNames[v1alpha1.IngressVisibilityExternalIP] {
-			if err := r.reconcileHTTPServer(ctx, ing, convertToConfigGateway(gw), desiredHTTPServer); err != nil {
+		httpServer := resources.MakeHTTPServer(ing.Spec.HTTPOption, getPublicHosts(ing))
+		if len(ingressGateways) == 0 {
+			var err error
+			if ingressGateways, err = resources.MakeIngressGateways(ctx, ing, []*istiov1alpha3.Server{httpServer}, r.svcLister); err != nil {
 				return err
+			}
+		} else {
+			// add HTTP Server into ingressGateways.
+			for i := range ingressGateways {
+				ingressGateways[i].Spec.Servers = append(ingressGateways[i].Spec.Servers, httpServer)
 			}
 		}
 	} else {
-		// Otherwise, we use the default global Gateways
+		// Otherwise, we fall bakc to the default global Gateways for HTTP behavior.
+		// We need this for the backward compatibility.
 		defaultGlobalHTTPGateways := qualifiedGatewayNamesFromContext(ctx)[v1alpha1.IngressVisibilityExternalIP]
 		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(defaultGlobalHTTPGateways.List()...)
+	}
+
+	gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(ingressGateways)...)
+	if err := r.reconcileIngressGateways(ctx, ingressGateways); err != nil {
+		return err
 	}
 
 	vses, err := resources.MakeVirtualServices(ctx, ing, gatewayNames)
@@ -495,7 +502,6 @@ func publicGatewayServiceURLFromContext(ctx context.Context) string {
 	if len(cfg.IngressGateways) > 0 {
 		return cfg.IngressGateways[0].ServiceURL
 	}
-
 	return ""
 }
 
@@ -504,7 +510,6 @@ func privateGatewayServiceURLFromContext(ctx context.Context) string {
 	if len(cfg.LocalGateways) > 0 {
 		return cfg.LocalGateways[0].ServiceURL
 	}
-
 	return ""
 }
 

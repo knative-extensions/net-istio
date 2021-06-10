@@ -291,16 +291,16 @@ func TestMakeTLSServers(t *testing.T) {
 
 func TestMakeHTTPServer(t *testing.T) {
 	cases := []struct {
-		name         string
-		httpProtocol network.HTTPProtocol
-		expected     *istiov1alpha3.Server
+		name       string
+		httpOption v1alpha1.HTTPOption
+		expected   *istiov1alpha3.Server
 	}{{
-		name:         "nil HTTP Server",
-		httpProtocol: network.HTTPDisabled,
-		expected:     nil,
+		name:       "nil HTTP Server",
+		httpOption: "",
+		expected:   nil,
 	}, {
-		name:         "HTTP server",
-		httpProtocol: network.HTTPEnabled,
+		name:       "HTTP server",
+		httpOption: v1alpha1.HTTPOptionEnabled,
 		expected: &istiov1alpha3.Server{
 			Hosts: []string{"*"},
 			Port: &istiov1alpha3.Port{
@@ -310,8 +310,8 @@ func TestMakeHTTPServer(t *testing.T) {
 			},
 		},
 	}, {
-		name:         "Redirect HTTP server",
-		httpProtocol: network.HTTPRedirected,
+		name:       "Redirect HTTP server",
+		httpOption: v1alpha1.HTTPOptionRedirected,
 		expected: &istiov1alpha3.Server{
 			Hosts: []string{"*"},
 			Port: &istiov1alpha3.Port{
@@ -326,7 +326,7 @@ func TestMakeHTTPServer(t *testing.T) {
 	}}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			got := MakeHTTPServer(c.httpProtocol, []string{"*"})
+			got := MakeHTTPServer(c.httpOption, []string{"*"})
 			if diff := cmp.Diff(c.expected, got); diff != "" {
 				t.Error("Unexpected HTTP Server (-want, +got):", diff)
 			}
