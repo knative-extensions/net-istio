@@ -188,18 +188,6 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		return err
 	}
 
-	if r.shouldReconcileTLS(ctx, ing) {
-		// For backward compatibility reason, we need to remove the TLS servers corresponding to the Ingress
-		// from the global Gateways. This code should be deleted in release 0.18.
-		// We should handle the deletion after VirtualService is created with the newly generated non-wildcard Gateway
-		// in order to make sure the ongoing traffic won't be affected.
-		for _, gw := range config.FromContext(ctx).Istio.IngressGateways {
-			if err := r.reconcileIngressServers(ctx, ing, gw, []*istiov1alpha3.Server{}); err != nil {
-				return err
-			}
-		}
-	}
-
 	// Update status
 	ing.Status.MarkNetworkConfigured()
 
@@ -512,9 +500,7 @@ func getLBStatus(gatewayServiceURL string) []v1alpha1.LoadBalancerIngressStatus 
 }
 
 func (r *Reconciler) shouldReconcileTLS(ctx context.Context, ing *v1alpha1.Ingress) bool {
-	// We should keep reconciling the Ingress whose TLS has been reconciled before
-	// to make sure deleting IngressTLS will clean up the TLS server in the Gateway.
-	return isIngressPublic(ing) && ((len(ing.Spec.TLS) > 0) || config.FromContext(ctx).Network.AutoTLS)
+	return isIngressPublic(ing) && len(ing.Spec.TLS) > 0
 }
 
 func isIngressPublic(ing *v1alpha1.Ingress) bool {
