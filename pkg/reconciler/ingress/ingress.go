@@ -113,7 +113,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	logger.Infof("Reconciling ingress: %#v", ing)
 
 	gatewayNames := qualifiedGatewayNamesFromContext(ctx)
-	if r.shouldReconcileTLS(ctx, ing) {
+	if shouldReconcileTLS(ing) {
 		originSecrets, err := resources.GetSecrets(ing, r.secretLister)
 		if err != nil {
 			return err
@@ -356,7 +356,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, ing *v1alpha1.Ingress) pk
 }
 
 func (r *Reconciler) reconcileDeletion(ctx context.Context, ing *v1alpha1.Ingress) error {
-	if !r.shouldReconcileTLS(ctx, ing) {
+	if !shouldReconcileTLS(ing) {
 		return nil
 	}
 
@@ -499,7 +499,7 @@ func getLBStatus(gatewayServiceURL string) []v1alpha1.LoadBalancerIngressStatus 
 	}
 }
 
-func (r *Reconciler) shouldReconcileTLS(ctx context.Context, ing *v1alpha1.Ingress) bool {
+func shouldReconcileTLS(ing *v1alpha1.Ingress) bool {
 	return isIngressPublic(ing) && len(ing.Spec.TLS) > 0
 }
 
