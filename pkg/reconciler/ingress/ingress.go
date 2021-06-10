@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"go.uber.org/zap"
@@ -112,7 +113,6 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	ing.Status.InitializeConditions()
 	logger.Infof("Reconciling ingress: %#v", ing)
 
-	//gatewayNames := qualifiedGatewayNamesFromContext(ctx)
 	gatewayNames := map[v1alpha1.IngressVisibility]sets.String{}
 	gatewayNames[v1alpha1.IngressVisibilityClusterLocal] = qualifiedGatewayNamesFromContext(ctx)[v1alpha1.IngressVisibilityClusterLocal]
 	gatewayNames[v1alpha1.IngressVisibilityExternalIP] = sets.String{}
@@ -416,15 +416,6 @@ func (r *Reconciler) reconcileIngressServers(ctx context.Context, ing *v1alpha1.
 	return r.reconcileGateway(ctx, ing, gateway, existing, desired)
 }
 
-func convertToConfigGateway(gwKey string) config.Gateway {
-	// gwKey has the format "{namespace}/{name}"
-	splits := strings.Split(gwKey, "/")
-	return config.Gateway{
-		Namespace: splits[0],
-		Name:      splits[1],
-	}
-}
-
 func (r *Reconciler) reconcileHTTPServer(ctx context.Context, ing *v1alpha1.Ingress, gw config.Gateway, desiredHTTP *istiov1alpha3.Server) error {
 	gateway, err := r.gatewayLister.Gateways(gw.Namespace).Get(gw.Name)
 	if err != nil {
@@ -537,7 +528,24 @@ func shouldReconcileHTTPServer(ctx context.Context, ing *v1alpha1.Ingress) bool 
 	// We will create a Ingress specific HTTPServer when
 	// 1. auto TLS is enabled as in this case users want us to fully handle the TLS/HTTP behavior,
 	// 2. HTTPOption is set to Redirected as we don't have default HTTP server supporting HTTP redirection.
-	return isIngressPublic(ing) && (ing.Spec.HTTPOption == v1alpha1.HTTPOptionRedirected || config.FromContext(ctx).Network.AutoTLS)
+	return isIngressPublic(ing) && (ing.Spec.HTTPOption == v1alpha1.HTTPOptionRedirected || autoTLSEnabled(ctx, ing))
+}
+
+func autoTLSEnabled(ctx context.Context, ing *v1alpha1.Ingress) bool {
+	if !config.FromContext(ctx).Network.AutoTLS {
+		return false
+	}
+	logger := logging.FromContext(ctx)
+	annotationValue := ing.Annotations[networking.DisableAutoTLSAnnotationKey]
+
+	disabledByAnnotation, err := strconv.ParseBool(annotationValue)
+	if annotationValue != "" && err != nil {
+		// validation should've caught an invalid value here.
+		// if we have one anyways, assume not disabled and log a warning.
+		logger.Warnf("Invalid annotation value for %q. Value: %q",
+			networking.DisableAutoTLSAnnotationKey, annotationValue)
+	}
+	return !disabledByAnnotation
 }
 
 func isIngressPublic(ing *v1alpha1.Ingress) bool {
