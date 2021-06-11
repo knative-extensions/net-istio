@@ -177,7 +177,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 			}
 		}
 	} else {
-		// Otherwise, we fall bakc to the default global Gateways for HTTP behavior.
+		// Otherwise, we fall back to the default global Gateways for HTTP behavior.
 		// We need this for the backward compatibility.
 		defaultGlobalHTTPGateways := qualifiedGatewayNamesFromContext(ctx)[v1alpha1.IngressVisibilityExternalIP]
 		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(defaultGlobalHTTPGateways.List()...)

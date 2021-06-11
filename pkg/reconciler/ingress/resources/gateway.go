@@ -344,7 +344,7 @@ func portNamePrefix(prefix, suffix string) string {
 // MakeHTTPServer creates a HTTP Gateway `Server` based on the HTTP option
 // configuration.
 func MakeHTTPServer(httpOption v1alpha1.HTTPOption, hosts []string) *istiov1alpha3.Server {
-	// Currently we consider when httpOption is emtpy, it means HTTP server is disabled.
+	// Currently we consider when httpOption is empty, it means HTTP server is disabled.
 	// This logic will be deprecated when deprecating "Disabled" HTTPProtocol.
 	// See https://github.com/knative/networking/issues/417
 	if httpOption == "" {
