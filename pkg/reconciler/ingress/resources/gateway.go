@@ -242,14 +242,6 @@ func GatewayRef(gw *v1alpha3.Gateway) tracker.Reference {
 	}
 }
 
-func makeIngressTLSGateway(ing *v1alpha1.Ingress, originSecrets map[string]*corev1.Secret, selector map[string]string, gatewayService *corev1.Service) (*v1alpha3.Gateway, error) {
-	servers, err := MakeTLSServers(ing, ing.Spec.TLS, gatewayService.Namespace, originSecrets)
-	if err != nil {
-		return nil, err
-	}
-	return makeIngressGateway(ing, selector, servers, gatewayService), nil
-}
-
 func makeIngressGateway(ing *v1alpha1.Ingress, selector map[string]string, servers []*istiov1alpha3.Server, gatewayService *corev1.Service) *v1alpha3.Gateway {
 	ns := ing.GetNamespace()
 	if len(ns) == 0 {
