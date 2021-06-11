@@ -341,7 +341,7 @@ func portNamePrefix(prefix, suffix string) string {
 	return prefix + "/" + suffix
 }
 
-// MakeHTTPServer creates a HTTP Gateway `Server` based on the http option
+// MakeHTTPServer creates a HTTP Gateway `Server` based on the HTTP option
 // configuration.
 func MakeHTTPServer(httpOption v1alpha1.HTTPOption, hosts []string) *istiov1alpha3.Server {
 	// Currently we consider when httpOption is emtpy, it means HTTP server is disabled.
