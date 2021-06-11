@@ -39,12 +39,10 @@ data:
     # this example block and unindented to be in the data block
     # to actually change the configuration.
 
-    # Default Knative Gateway after v0.3. It points to the Istio
-    # standard istio-ingressgateway, instead of a custom one that we
-    # used pre-0.3. The configuration format should be `gateway.
-    # {{gateway_namespace}}.{{gateway_name}}: "{{ingress_name}}.
-    # {{ingress_namespace}}.svc.cluster.local"`. The {{gateway_namespace}}
-    # is optional; when it is omitted, the system will search for
+    # A gateway and Istio service to serve external traffic.
+    # The configuration format should be
+    # `gateway.{{gateway_namespace}}.{{gateway_name}}: "{{ingress_name}}.{{ingress_namespace}}.svc.cluster.local"`.
+    # The {{gateway_namespace}} is optional; when it is omitted, the system will search for
     # the gateway in the serving system namespace `knative-serving`
     gateway.knative-serving.knative-ingress-gateway: "istio-ingressgateway.istio-system.svc.cluster.local"
 
