@@ -118,7 +118,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	gatewayNames[v1alpha1.IngressVisibilityExternalIP] = sets.String{}
 
 	ingressGateways := []*v1alpha3.Gateway{}
-	if shouldReconcileTLS(ctx, ing) {
+	if shouldReconcileTLS(ing) {
 		originSecrets, err := resources.GetSecrets(ing, r.secretLister)
 		if err != nil {
 			return err
@@ -377,7 +377,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, ing *v1alpha1.Ingress) pk
 }
 
 func (r *Reconciler) reconcileDeletion(ctx context.Context, ing *v1alpha1.Ingress) error {
-	if !shouldReconcileTLS(ctx, ing) {
+	if !shouldReconcileTLS(ing) {
 		return nil
 	}
 
@@ -500,10 +500,8 @@ func getLBStatus(gatewayServiceURL string) []v1alpha1.LoadBalancerIngressStatus 
 	}
 }
 
-func shouldReconcileTLS(ctx context.Context, ing *v1alpha1.Ingress) bool {
-	// We should keep reconciling the Ingress whose TLS has been reconciled before
-	// to make sure deleting IngressTLS will clean up the TLS server in the Gateway.
-	return isIngressPublic(ing) && ((len(ing.Spec.TLS) > 0) || config.FromContext(ctx).Network.AutoTLS)
+func shouldReconcileTLS(ing *v1alpha1.Ingress) bool {
+	return isIngressPublic(ing) && len(ing.Spec.TLS) > 0
 }
 
 func shouldReconcileHTTPServer(ctx context.Context, ing *v1alpha1.Ingress) bool {

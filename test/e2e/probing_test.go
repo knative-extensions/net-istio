@@ -43,6 +43,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/kubernetes"
 
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/networking/pkg/apis/networking"
@@ -359,7 +360,7 @@ func setupGateway(t *testing.T, clients *Clients, namespace string, servers []*i
 
 // setupHTTPS creates a self-signed certificate, installs it as a Secret and returns an *http.Transport
 // trusting the certificate as a root CA.
-func setupHTTPS(t *testing.T, kubeClient *pkgtest.KubeClient, hosts []string) spoof.TransportOption {
+func setupHTTPS(t *testing.T, kubeClient kubernetes.Interface, hosts []string) spoof.TransportOption {
 	t.Helper()
 
 	cert, key, err := generateCertificate(hosts)
