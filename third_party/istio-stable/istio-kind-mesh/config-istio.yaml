@@ -8,4 +8,3 @@ metadata:
     serving.knative.dev/release: devel
     networking.knative.dev/ingress-provider: istio
 data:
-  local-gateway.mesh: "mesh"
