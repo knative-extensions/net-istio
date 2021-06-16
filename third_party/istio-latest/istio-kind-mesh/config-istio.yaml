@@ -8,7 +8,6 @@ metadata:
     serving.knative.dev/release: devel
     networking.knative.dev/ingress-provider: istio
 data:
-  local-gateway.mesh: "mesh"
   # TODO re-enable when update conformance tests are fixed
   # https://github.com/knative-sandbox/net-istio/issues/585
   # enable-virtualservice-status: "true"
