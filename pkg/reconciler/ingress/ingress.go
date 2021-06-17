@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 
 	"go.uber.org/zap"
@@ -183,10 +182,10 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(defaultGlobalHTTPGateways.List()...)
 	}
 
-	gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(ingressGateways)...)
 	if err := r.reconcileIngressGateways(ctx, ingressGateways); err != nil {
 		return err
 	}
+	gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(ingressGateways)...)
 
 	vses, err := resources.MakeVirtualServices(ctx, ing, gatewayNames)
 	if err != nil {
@@ -508,24 +507,7 @@ func shouldReconcileHTTPServer(ctx context.Context, ing *v1alpha1.Ingress) bool 
 	// We will create a Ingress specific HTTPServer when
 	// 1. auto TLS is enabled as in this case users want us to fully handle the TLS/HTTP behavior,
 	// 2. HTTPOption is set to Redirected as we don't have default HTTP server supporting HTTP redirection.
-	return isIngressPublic(ing) && (ing.Spec.HTTPOption == v1alpha1.HTTPOptionRedirected || autoTLSEnabled(ctx, ing))
-}
-
-func autoTLSEnabled(ctx context.Context, ing *v1alpha1.Ingress) bool {
-	if !config.FromContext(ctx).Network.AutoTLS {
-		return false
-	}
-	logger := logging.FromContext(ctx)
-	annotationValue := ing.Annotations[networking.DisableAutoTLSAnnotationKey]
-
-	disabledByAnnotation, err := strconv.ParseBool(annotationValue)
-	if annotationValue != "" && err != nil {
-		// validation should've caught an invalid value here.
-		// if we have one anyways, assume not disabled and log a warning.
-		logger.Warnf("Invalid annotation value for %q. Value: %q",
-			networking.DisableAutoTLSAnnotationKey, annotationValue)
-	}
-	return !disabledByAnnotation
+	return isIngressPublic(ing) && (ing.Spec.HTTPOption == v1alpha1.HTTPOptionRedirected || len(ing.Spec.TLS) > 0)
 }
 
 func isIngressPublic(ing *v1alpha1.Ingress) bool {

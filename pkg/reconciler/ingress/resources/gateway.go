@@ -36,7 +36,6 @@ import (
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/kmeta"
-	"knative.dev/pkg/system"
 	"knative.dev/pkg/tracker"
 )
 
@@ -243,14 +242,10 @@ func GatewayRef(gw *v1alpha3.Gateway) tracker.Reference {
 }
 
 func makeIngressGateway(ing *v1alpha1.Ingress, selector map[string]string, servers []*istiov1alpha3.Server, gatewayService *corev1.Service) *v1alpha3.Gateway {
-	ns := ing.GetNamespace()
-	if len(ns) == 0 {
-		ns = system.Namespace()
-	}
 	return &v1alpha3.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            GatewayName(ing, gatewayService),
-			Namespace:       ns,
+			Namespace:       ing.GetNamespace(),
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 			Labels: map[string]string{
 				// We need this label to find out all of Gateways of a given Ingress.
