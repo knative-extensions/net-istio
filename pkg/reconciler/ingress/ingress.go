@@ -162,7 +162,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(desiredWildcardGateways)...)
 	}
 
-	if shouldReconcileHTTPServer(ctx, ing) {
+	if shouldReconcileHTTPServer(ing) {
 		httpServer := resources.MakeHTTPServer(ing.Spec.HTTPOption, getPublicHosts(ing))
 		if len(ingressGateways) == 0 {
 			var err error
@@ -503,7 +503,7 @@ func shouldReconcileTLS(ing *v1alpha1.Ingress) bool {
 	return isIngressPublic(ing) && len(ing.Spec.TLS) > 0
 }
 
-func shouldReconcileHTTPServer(ctx context.Context, ing *v1alpha1.Ingress) bool {
+func shouldReconcileHTTPServer(ing *v1alpha1.Ingress) bool {
 	// We will create a Ingress specific HTTPServer when
 	// 1. auto TLS is enabled as in this case users want us to fully handle the TLS/HTTP behavior,
 	// 2. HTTPOption is set to Redirected as we don't have default HTTP server supporting HTTP redirection.
