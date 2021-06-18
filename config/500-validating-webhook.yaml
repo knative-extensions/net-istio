@@ -24,7 +24,7 @@ webhooks:
   - v1beta1
   clientConfig:
     service:
-      name: istio-webhook
+      name: net-istio-webhook
       namespace: knative-serving
   failurePolicy: Fail
   sideEffects: None
