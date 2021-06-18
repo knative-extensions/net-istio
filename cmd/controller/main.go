@@ -31,5 +31,5 @@ func main() {
 	v1beta1.VirtualServiceUnmarshaler.AllowUnknownFields = true
 	v1beta1.GatewayUnmarshaler.AllowUnknownFields = true
 
-	sharedmain.Main("istiocontroller", ingress.NewController, serverlessservice.NewController)
+	sharedmain.Main("net-istio-controller", ingress.NewController, serverlessservice.NewController)
 }
