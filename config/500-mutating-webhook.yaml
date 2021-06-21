@@ -21,6 +21,7 @@ metadata:
     networking.knative.dev/ingress-provider: istio
 webhooks:
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
