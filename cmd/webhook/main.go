@@ -79,13 +79,13 @@ func NewDefaultingAdmissionController(ctx context.Context, cmw configmap.Watcher
 
 func main() {
 	ctx := webhook.WithOptions(signals.NewContext(), webhook.Options{
-		ServiceName: "istio-webhook",
+		ServiceName: "net-istio-webhook",
+		SecretName:  "net-istio-webhook-certs",
 		Port:        8443,
-		SecretName:  "istio-webhook-certs",
 	})
 
 	sharedmain.WebhookMainWithContext(
-		ctx, "istio-webhook",
+		ctx, "net-istio-webhook",
 		certificates.NewController,
 		NewDefaultingAdmissionController,
 		NewConfigValidationController,
