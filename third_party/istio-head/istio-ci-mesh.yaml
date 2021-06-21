@@ -30,17 +30,13 @@ spec:
 
   meshConfig:
     defaultConfig:
-      proxyMetadata:
-        TERMINATION_DRAIN_DURATION_SECONDS: "20"
+      terminationDrainDuration: "20s"
 
   components:
     ingressGateways:
       - name: istio-ingressgateway
         k8s:
           replicaCount: 3
-          env:
-            - name: 'TERMINATION_DRAIN_DURATION_SECONDS'
-              value: '20'
           resources:
             limits:
               cpu: 3000m

@@ -6113,6 +6113,7 @@ data:
     defaultConfig:
       discoveryAddress: istiod.istio-system.svc:15012
       proxyMetadata: {}
+      terminationDrainDuration: 20s
       tracing:
         zipkin:
           address: zipkin.istio-system:9411
@@ -7095,8 +7096,6 @@ spec:
             - --serviceCluster
             - istio-ingressgateway
           env:
-            - name: TERMINATION_DRAIN_DURATION_SECONDS
-              value: "20"
             - name: JWT_POLICY
               value: third-party-jwt
             - name: PILOT_CERT_PROVIDER
