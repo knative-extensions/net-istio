@@ -15,10 +15,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: istio-webhook
+  name: net-istio-webhook
   namespace: knative-serving
   labels:
-    role: istio-webhook
+    role: net-istio-webhook
     serving.knative.dev/release: devel
     networking.knative.dev/ingress-provider: istio
 spec:
@@ -34,4 +34,4 @@ spec:
     port: 443
     targetPort: 8443
   selector:
-    app: istio-webhook
+    app: net-istio-webhook
