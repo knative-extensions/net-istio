@@ -33,11 +33,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
-	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/kmeta"
-	"knative.dev/pkg/system"
 	"knative.dev/pkg/tracker"
 )
 
@@ -105,7 +103,7 @@ func SortServers(servers []*istiov1alpha3.Server) []*istiov1alpha3.Server {
 	return servers
 }
 
-// MakeIngressTLSGateways creates Gateways for a given Ingress.
+// MakeIngressTLSGateways creates Gateways that have only TLS servers for a given Ingress.
 func MakeIngressTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, originSecrets map[string]*corev1.Secret, svcLister corev1listers.ServiceLister) ([]*v1alpha3.Gateway, error) {
 	// No need to create Gateway if there is no related ingress TLS.
 	if len(ingressTLS) == 0 {
@@ -117,11 +115,27 @@ func MakeIngressTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressT
 	}
 	gateways := make([]*v1alpha3.Gateway, len(gatewayServices))
 	for i, gatewayService := range gatewayServices {
-		gateway, err := makeIngressTLSGateway(ing, originSecrets, gatewayService.Spec.Selector, gatewayService)
+		servers, err := MakeTLSServers(ing, ing.Spec.TLS, gatewayService.Namespace, originSecrets)
 		if err != nil {
 			return nil, err
 		}
-		gateways[i] = gateway
+		gateways[i] = makeIngressGateway(ing, gatewayService.Spec.Selector, servers, gatewayService)
+	}
+	return gateways, nil
+}
+
+// MakeIngressGateways creates Gateways with given Servers for a given Ingress.
+func MakeIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, servers []*istiov1alpha3.Server, svcLister corev1listers.ServiceLister) ([]*v1alpha3.Gateway, error) {
+	gatewayServices, err := getGatewayServices(ctx, svcLister)
+	if err != nil {
+		return nil, err
+	}
+	gateways := make([]*v1alpha3.Gateway, len(gatewayServices))
+	for i, gatewayService := range gatewayServices {
+		if err != nil {
+			return nil, err
+		}
+		gateways[i] = makeIngressGateway(ing, gatewayService.Spec.Selector, servers, gatewayService)
 	}
 	return gateways, nil
 }
@@ -227,19 +241,11 @@ func GatewayRef(gw *v1alpha3.Gateway) tracker.Reference {
 	}
 }
 
-func makeIngressTLSGateway(ing *v1alpha1.Ingress, originSecrets map[string]*corev1.Secret, selector map[string]string, gatewayService *corev1.Service) (*v1alpha3.Gateway, error) {
-	ns := ing.GetNamespace()
-	if len(ns) == 0 {
-		ns = system.Namespace()
-	}
-	servers, err := MakeTLSServers(ing, ing.Spec.TLS, gatewayService.Namespace, originSecrets)
-	if err != nil {
-		return nil, err
-	}
+func makeIngressGateway(ing *v1alpha1.Ingress, selector map[string]string, servers []*istiov1alpha3.Server, gatewayService *corev1.Service) *v1alpha3.Gateway {
 	return &v1alpha3.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            GatewayName(ing, gatewayService),
-			Namespace:       ns,
+			Namespace:       ing.GetNamespace(),
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 			Labels: map[string]string{
 				// We need this label to find out all of Gateways of a given Ingress.
@@ -250,7 +256,7 @@ func makeIngressTLSGateway(ing *v1alpha1.Ingress, originSecrets map[string]*core
 			Selector: selector,
 			Servers:  servers,
 		},
-	}, nil
+	}
 }
 
 func getGatewayServices(ctx context.Context, svcLister corev1listers.ServiceLister) ([]*corev1.Service, error) {
@@ -322,10 +328,13 @@ func portNamePrefix(prefix, suffix string) string {
 	return prefix + "/" + suffix
 }
 
-// MakeHTTPServer creates a HTTP Gateway `Server` based on the HTTPProtocol
+// MakeHTTPServer creates a HTTP Gateway `Server` based on the HTTP option
 // configuration.
-func MakeHTTPServer(httpProtocol network.HTTPProtocol, hosts []string) *istiov1alpha3.Server {
-	if httpProtocol == network.HTTPDisabled {
+func MakeHTTPServer(httpOption v1alpha1.HTTPOption, hosts []string) *istiov1alpha3.Server {
+	// Currently we consider when httpOption is empty, it means HTTP server is disabled.
+	// This logic will be deprecated when deprecating "Disabled" HTTPProtocol.
+	// See https://github.com/knative/networking/issues/417
+	if httpOption == "" {
 		return nil
 	}
 	server := &istiov1alpha3.Server{
@@ -336,7 +345,7 @@ func MakeHTTPServer(httpProtocol network.HTTPProtocol, hosts []string) *istiov1a
 			Protocol: "HTTP",
 		},
 	}
-	if httpProtocol == network.HTTPRedirected {
+	if httpOption == v1alpha1.HTTPOptionRedirected {
 		server.Tls = &istiov1alpha3.ServerTLSSettings{
 			HttpsRedirect: true,
 		}

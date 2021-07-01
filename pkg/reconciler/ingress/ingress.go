@@ -112,7 +112,11 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	ing.Status.InitializeConditions()
 	logger.Infof("Reconciling ingress: %#v", ing)
 
-	gatewayNames := qualifiedGatewayNamesFromContext(ctx)
+	gatewayNames := map[v1alpha1.IngressVisibility]sets.String{}
+	gatewayNames[v1alpha1.IngressVisibilityClusterLocal] = qualifiedGatewayNamesFromContext(ctx)[v1alpha1.IngressVisibilityClusterLocal]
+	gatewayNames[v1alpha1.IngressVisibilityExternalIP] = sets.String{}
+
+	ingressGateways := []*v1alpha3.Gateway{}
 	if shouldReconcileTLS(ing) {
 		originSecrets, err := resources.GetSecrets(ing, r.secretLister)
 		if err != nil {
@@ -138,11 +142,8 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		}
 
 		nonWildcardIngressTLS := resources.GetNonWildcardIngressTLS(ing.Spec.TLS, nonWildcardSecrets)
-		ingressGateways, err := resources.MakeIngressTLSGateways(ctx, ing, nonWildcardIngressTLS, nonWildcardSecrets, r.svcLister)
+		ingressGateways, err = resources.MakeIngressTLSGateways(ctx, ing, nonWildcardIngressTLS, nonWildcardSecrets, r.svcLister)
 		if err != nil {
-			return err
-		}
-		if err := r.reconcileIngressGateways(ctx, ingressGateways); err != nil {
 			return err
 		}
 
@@ -158,24 +159,33 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		if err := r.reconcileWildcardGateways(ctx, desiredWildcardGateways, ing); err != nil {
 			return err
 		}
-
-		// VirtualService will be attached to both global Gateways and the Knative generated Gateways.
-		// We still want to attach to the global Gateways to respect any global Gateway configuration.
-		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(ingressGateways)...)
 		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(desiredWildcardGateways)...)
 	}
 
-	// HTTPProtocol should be effective only when Auto TLS is enabled per its definition.
-	// TODO(zhiminx): figure out a better way to handle HTTP behavior.
-	// https://github.com/knative/serving/issues/6373
-	if config.FromContext(ctx).Network.AutoTLS {
-		desiredHTTPServer := resources.MakeHTTPServer(config.FromContext(ctx).Network.HTTPProtocol, []string{"*"})
-		for _, gw := range config.FromContext(ctx).Istio.IngressGateways {
-			if err := r.reconcileHTTPServer(ctx, ing, gw, desiredHTTPServer); err != nil {
+	if shouldReconcileHTTPServer(ing) {
+		httpServer := resources.MakeHTTPServer(ing.Spec.HTTPOption, getPublicHosts(ing))
+		if len(ingressGateways) == 0 {
+			var err error
+			if ingressGateways, err = resources.MakeIngressGateways(ctx, ing, []*istiov1alpha3.Server{httpServer}, r.svcLister); err != nil {
 				return err
 			}
+		} else {
+			// add HTTP Server into ingressGateways.
+			for i := range ingressGateways {
+				ingressGateways[i].Spec.Servers = append(ingressGateways[i].Spec.Servers, httpServer)
+			}
 		}
+	} else {
+		// Otherwise, we fall back to the default global Gateways for HTTP behavior.
+		// We need this for the backward compatibility.
+		defaultGlobalHTTPGateways := qualifiedGatewayNamesFromContext(ctx)[v1alpha1.IngressVisibilityExternalIP]
+		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(defaultGlobalHTTPGateways.List()...)
 	}
+
+	if err := r.reconcileIngressGateways(ctx, ingressGateways); err != nil {
+		return err
+	}
+	gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(ingressGateways)...)
 
 	vses, err := resources.MakeVirtualServices(ctx, ing, gatewayNames)
 	if err != nil {
@@ -233,6 +243,16 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	// TODO(zhiminx): Mark Route status to indicate that Gateway is configured.
 	logger.Info("Ingress successfully synced")
 	return nil
+}
+
+func getPublicHosts(ing *v1alpha1.Ingress) []string {
+	hosts := sets.String{}
+	for _, rule := range ing.Spec.Rules {
+		if rule.Visibility == v1alpha1.IngressVisibilityExternalIP {
+			hosts.Insert(rule.Hosts...)
+		}
+	}
+	return hosts.List()
 }
 
 func (r *Reconciler) reconcileCertSecrets(ctx context.Context, ing *v1alpha1.Ingress, desiredSecrets []*corev1.Secret) error {
@@ -395,24 +415,6 @@ func (r *Reconciler) reconcileIngressServers(ctx context.Context, ing *v1alpha1.
 	return r.reconcileGateway(ctx, ing, gateway, existing, desired)
 }
 
-func (r *Reconciler) reconcileHTTPServer(ctx context.Context, ing *v1alpha1.Ingress, gw config.Gateway, desiredHTTP *istiov1alpha3.Server) error {
-	gateway, err := r.gatewayLister.Gateways(gw.Namespace).Get(gw.Name)
-	if err != nil {
-		// Unlike VirtualService, a default gateway needs to be existent.
-		// It should be installed when installing Knative.
-		return fmt.Errorf("failed to get Gateway: %w", err)
-	}
-	existing := []*istiov1alpha3.Server{}
-	if e := resources.GetHTTPServer(gateway); e != nil {
-		existing = append(existing, e)
-	}
-	desired := []*istiov1alpha3.Server{}
-	if desiredHTTP != nil {
-		desired = append(desired, desiredHTTP)
-	}
-	return r.reconcileGateway(ctx, ing, gateway, existing, desired)
-}
-
 func (r *Reconciler) reconcileGateway(ctx context.Context, ing *v1alpha1.Ingress, gateway *v1alpha3.Gateway, existing []*istiov1alpha3.Server, desired []*istiov1alpha3.Server) error {
 	if equality.Semantic.DeepEqual(existing, desired) {
 		return nil
@@ -472,7 +474,6 @@ func publicGatewayServiceURLFromContext(ctx context.Context) string {
 	if len(cfg.IngressGateways) > 0 {
 		return cfg.IngressGateways[0].ServiceURL
 	}
-
 	return ""
 }
 
@@ -481,7 +482,6 @@ func privateGatewayServiceURLFromContext(ctx context.Context) string {
 	if len(cfg.LocalGateways) > 0 {
 		return cfg.LocalGateways[0].ServiceURL
 	}
-
 	return ""
 }
 
@@ -501,6 +501,13 @@ func getLBStatus(gatewayServiceURL string) []v1alpha1.LoadBalancerIngressStatus 
 
 func shouldReconcileTLS(ing *v1alpha1.Ingress) bool {
 	return isIngressPublic(ing) && len(ing.Spec.TLS) > 0
+}
+
+func shouldReconcileHTTPServer(ing *v1alpha1.Ingress) bool {
+	// We will create a Ingress specific HTTPServer when
+	// 1. auto TLS is enabled as in this case users want us to fully handle the TLS/HTTP behavior,
+	// 2. HTTPOption is set to Redirected as we don't have default HTTP server supporting HTTP redirection.
+	return isIngressPublic(ing) && (ing.Spec.HTTPOption == v1alpha1.HTTPOptionRedirected || len(ing.Spec.TLS) > 0)
 }
 
 func isIngressPublic(ing *v1alpha1.Ingress) bool {
