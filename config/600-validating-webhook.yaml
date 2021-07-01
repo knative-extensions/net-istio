@@ -13,22 +13,24 @@
 # limitations under the License.
 
 apiVersion: admissionregistration.k8s.io/v1
-kind: MutatingWebhookConfiguration
+kind: ValidatingWebhookConfiguration
 metadata:
-  name: webhook.istio.networking.internal.knative.dev
+  name: config.webhook.istio.networking.internal.knative.dev
   labels:
     serving.knative.dev/release: devel
     networking.knative.dev/ingress-provider: istio
 webhooks:
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
-      name: istio-webhook
+      name: net-istio-webhook
       namespace: knative-serving
   failurePolicy: Fail
   sideEffects: None
-  objectSelector:
+  name: config.webhook.istio.networking.internal.knative.dev
+  namespaceSelector:
     matchExpressions:
-      - {key: "serving.knative.dev/configuration", operator: Exists}
-  name: webhook.istio.networking.internal.knative.dev
+    - key: serving.knative.dev/release
+      operator: Exists

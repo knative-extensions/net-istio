@@ -14,8 +14,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [[ $MESH -eq 1 ]]; then
-  kubectl patch configmap/config-istio -n ${SYSTEM_NAMESPACE} --patch='{"data":{"local-gateway.mesh":"mesh"}}'
-fi
-
 kubectl patch configmap/config-istio -n ${SYSTEM_NAMESPACE} --patch='{"data":{"enable-virtualservice-status":"true"}}'

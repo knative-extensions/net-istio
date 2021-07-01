@@ -3730,8 +3730,8 @@ data:
   mesh: |-
     defaultConfig:
       discoveryAddress: istiod.istio-system.svc:15012
-      proxyMetadata:
-        TERMINATION_DRAIN_DURATION_SECONDS: "20"
+      proxyMetadata: {}
+      terminationDrainDuration: 20s
       tracing:
         zipkin:
           address: zipkin.istio-system:9411
@@ -4765,8 +4765,6 @@ spec:
               value: "true"
             - name: ISTIO_META_ROUTER_MODE
               value: standard
-            - name: TERMINATION_DRAIN_DURATION_SECONDS
-              value: "20"
             - name: ISTIO_META_CLUSTER_ID
               value: Kubernetes
           image: docker.io/istio/proxyv2:1.9.5

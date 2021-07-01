@@ -15,7 +15,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: istio-webhook
+  name: net-istio-webhook
   namespace: knative-serving
   labels:
     serving.knative.dev/release: devel
@@ -23,15 +23,15 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: istio-webhook
-      role: istio-webhook
+      app: net-istio-webhook
+      role: net-istio-webhook
   template:
     metadata:
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
       labels:
-        app: istio-webhook
-        role: istio-webhook
+        app: net-istio-webhook
+        role: net-istio-webhook
         serving.knative.dev/release: devel
     spec:
       serviceAccountName: controller
@@ -63,7 +63,7 @@ spec:
         - name: METRICS_DOMAIN
           value: knative.dev/net-istio
         - name: WEBHOOK_NAME
-          value: istio-webhook
+          value: net-istio-webhook
 
         securityContext:
           allowPrivilegeEscalation: false

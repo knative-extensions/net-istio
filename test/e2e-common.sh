@@ -76,7 +76,7 @@ function test_setup() {
     kubectl apply -f "${istio_dir}/${istio_profile}/config-istio.yaml"
   fi
 
-  scale_controlplane networking-istio istio-webhook
+  scale_controlplane net-istio-controller net-istio-webhook
 
   # Wait for pods to be running.
   echo ">> Waiting for Istio components to be running..."

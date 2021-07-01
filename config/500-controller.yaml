@@ -15,7 +15,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: networking-istio
+  name: net-istio-controller
   namespace: knative-serving
   labels:
     serving.knative.dev/release: devel
@@ -23,7 +23,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: networking-istio
+      app: net-istio-controller
   template:
     metadata:
       annotations:
@@ -33,12 +33,12 @@ spec:
         # this is the Istio controller, and so it may be Istio-aware.
         sidecar.istio.io/inject: "false"
       labels:
-        app: networking-istio
+        app: net-istio-controller
         serving.knative.dev/release: devel
     spec:
       serviceAccountName: controller
       containers:
-      - name: networking-istio
+      - name: controller
         # This is the Go import path for the binary that is containerized
         # and substituted here.
         image: ko://knative.dev/net-istio/cmd/controller
