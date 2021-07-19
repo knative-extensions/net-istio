@@ -8520,3 +8520,5 @@ spec:
                   code:
                     local:
                       inline_string: envoy.wasm.stats
+---
+{}
