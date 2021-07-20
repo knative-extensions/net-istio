@@ -19,7 +19,6 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 
 	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
 	nettest "knative.dev/networking/test"
@@ -36,31 +35,22 @@ type Clients struct {
 	IstioClient      istioclientset.Interface
 }
 
-// NewClients instantiates and returns several clientsets required for making request to the
-// Knative Serving cluster specified by the combination of clusterName and configPath. Clients can
-// make requests within namespace.
-func NewClients(configPath string, clusterName string, namespace string) (*Clients, error) {
-	cfg, err := BuildClientConfig(configPath, clusterName)
-	if err != nil {
-		return nil, err
-	}
-
+// NewClientsFromConfig instantiates and returns several clientsets required for making request to the
+// Knative Serving cluster specified by the rest Config. Clients can make requests within namespace.
+func NewClientsFromConfig(cfg *rest.Config, namespace string) (*Clients, error) {
 	// We poll, so set our limits high.
 	cfg.QPS = 100
 	cfg.Burst = 200
 
-	return NewClientsFromConfig(cfg, namespace)
-}
+	var (
+		err     error
+		clients Clients
+	)
 
-// NewClientsFromConfig instantiates and returns several clientsets required for making request to the
-// Knative Serving cluster specified by the rest Config. Clients can make requests within namespace.
-func NewClientsFromConfig(cfg *rest.Config, namespace string) (*Clients, error) {
-	clients := &Clients{}
-	kubeClient, err := kubernetes.NewForConfig(cfg)
+	clients.KubeClient, err = kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
-	clients.KubeClient = kubeClient
 
 	clients.Dynamic, err = dynamic.NewForConfig(cfg)
 	if err != nil {
@@ -77,17 +67,5 @@ func NewClientsFromConfig(cfg *rest.Config, namespace string) (*Clients, error) 
 		return nil, err
 	}
 
-	return clients, nil
-}
-
-// BuildClientConfig builds client config for testing.
-func BuildClientConfig(kubeConfigPath string, clusterName string) (*rest.Config, error) {
-	overrides := clientcmd.ConfigOverrides{}
-	// Override the cluster name if provided.
-	if clusterName != "" {
-		overrides.Context.Cluster = clusterName
-	}
-	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeConfigPath},
-		&overrides).ClientConfig()
+	return &clients, nil
 }
