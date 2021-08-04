@@ -1,6 +1,6 @@
 module knative.dev/net-istio
 
-go 1.15
+go 1.16
 
 require (
 	github.com/gogo/protobuf v1.3.2
