@@ -21,8 +21,15 @@ package workloadentry
 import (
 	context "context"
 
+	apisnetworkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	cache "k8s.io/client-go/tools/cache"
+	versioned "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
 	v1alpha3 "knative.dev/net-istio/pkg/client/istio/informers/externalversions/networking/v1alpha3"
+	client "knative.dev/net-istio/pkg/client/istio/injection/client"
 	factory "knative.dev/net-istio/pkg/client/istio/injection/informers/factory"
+	networkingv1alpha3 "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
 	controller "knative.dev/pkg/controller"
 	injection "knative.dev/pkg/injection"
 	logging "knative.dev/pkg/logging"
@@ -30,6 +37,7 @@ import (
 
 func init() {
 	injection.Default.RegisterInformer(withInformer)
+	injection.Dynamic.RegisterDynamicInformer(withDynamicInformer)
 }
 
 // Key is used for associating the Informer inside the context.Context.
@@ -41,6 +49,11 @@ func withInformer(ctx context.Context) (context.Context, controller.Informer) {
 	return context.WithValue(ctx, Key{}, inf), inf.Informer()
 }
 
+func withDynamicInformer(ctx context.Context) context.Context {
+	inf := &wrapper{client: client.Get(ctx)}
+	return context.WithValue(ctx, Key{}, inf)
+}
+
 // Get extracts the typed informer from the context.
 func Get(ctx context.Context) v1alpha3.WorkloadEntryInformer {
 	untyped := ctx.Value(Key{})
@@ -49,4 +62,45 @@ func Get(ctx context.Context) v1alpha3.WorkloadEntryInformer {
 			"Unable to fetch knative.dev/net-istio/pkg/client/istio/informers/externalversions/networking/v1alpha3.WorkloadEntryInformer from context.")
 	}
 	return untyped.(v1alpha3.WorkloadEntryInformer)
+}
+
+type wrapper struct {
+	client versioned.Interface
+
+	namespace string
+}
+
+var _ v1alpha3.WorkloadEntryInformer = (*wrapper)(nil)
+var _ networkingv1alpha3.WorkloadEntryLister = (*wrapper)(nil)
+
+func (w *wrapper) Informer() cache.SharedIndexInformer {
+	return cache.NewSharedIndexInformer(nil, &apisnetworkingv1alpha3.WorkloadEntry{}, 0, nil)
+}
+
+func (w *wrapper) Lister() networkingv1alpha3.WorkloadEntryLister {
+	return w
+}
+
+func (w *wrapper) WorkloadEntries(namespace string) networkingv1alpha3.WorkloadEntryNamespaceLister {
+	return &wrapper{client: w.client, namespace: namespace}
+}
+
+func (w *wrapper) List(selector labels.Selector) (ret []*apisnetworkingv1alpha3.WorkloadEntry, err error) {
+	lo, err := w.client.NetworkingV1alpha3().WorkloadEntries(w.namespace).List(context.TODO(), v1.ListOptions{
+		LabelSelector: selector.String(),
+		// TODO(mattmoor): Incorporate resourceVersion bounds based on staleness criteria.
+	})
+	if err != nil {
+		return nil, err
+	}
+	for idx := range lo.Items {
+		ret = append(ret, &lo.Items[idx])
+	}
+	return ret, nil
+}
+
+func (w *wrapper) Get(name string) (*apisnetworkingv1alpha3.WorkloadEntry, error) {
+	return w.client.NetworkingV1alpha3().WorkloadEntries(w.namespace).Get(context.TODO(), name, v1.GetOptions{
+		// TODO(mattmoor): Incorporate resourceVersion bounds based on staleness criteria.
+	})
 }
