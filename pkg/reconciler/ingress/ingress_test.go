@@ -1651,7 +1651,7 @@ func TestGlobalResyncOnUpdateGatewayConfigMap(t *testing.T) {
 	if err := watcher.Start(ctx.Done()); err != nil {
 		t.Fatal("Failed to start ingress manager:", err)
 	}
-	grp.Go(func() error { return ctrl.Run(1, ctx.Done()) })
+	grp.Go(func() error { return ctrl.RunContext(ctx, 1) })
 
 	ingress := ingressWithStatus("config-update",
 		v1alpha1.IngressStatus{
@@ -1752,7 +1752,7 @@ func TestGlobalResyncOnUpdateNetwork(t *testing.T) {
 		t.Fatal("Failed to start watcher:", err)
 	}
 
-	grp.Go(func() error { return ctrl.Run(1, ctx.Done()) })
+	grp.Go(func() error { return ctrl.RunContext(ctx, 1) })
 
 	ingress := ingressWithTLSAndStatus("reconciling-ingress",
 		ingressTLS,
