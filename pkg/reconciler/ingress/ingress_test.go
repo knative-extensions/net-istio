@@ -27,8 +27,6 @@ import (
 	// Inject our fakes
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
 	fakeistioclient "knative.dev/net-istio/pkg/client/istio/injection/client/fake"
-	_ "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/gateway/fake"
-	_ "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice/fake"
 	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
 	fakeingressclient "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress/fake"
 	"knative.dev/networking/pkg/ingress"
@@ -36,6 +34,9 @@ import (
 	fakestatusmanager "knative.dev/networking/pkg/testing/status"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+
+	_ "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/gateway/fake"
+	_ "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
@@ -664,6 +665,7 @@ func TestReconcile(t *testing.T) {
 			istioClientSet:       istioclient.Get(ctx),
 			virtualServiceLister: listers.GetVirtualServiceLister(),
 			gatewayLister:        listers.GetGatewayLister(),
+			svcLister:            listers.GetK8sServiceLister(),
 			statusManager:        ctx.Value(FakeStatusManagerKey).(status.Manager),
 		}
 
@@ -1293,6 +1295,7 @@ func TestReconcile_DisableStatus(t *testing.T) {
 			istioClientSet:       istioclient.Get(ctx),
 			virtualServiceLister: listers.GetVirtualServiceLister(),
 			gatewayLister:        listers.GetGatewayLister(),
+			svcLister:            listers.GetK8sServiceLister(),
 			statusManager:        ctx.Value(FakeStatusManagerKey).(status.Manager),
 		}
 

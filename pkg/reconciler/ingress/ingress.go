@@ -233,8 +233,8 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	}
 
 	if ready {
-		publicLbs := getLBStatus(publicGatewayServiceURLFromContext(ctx))
-		privateLbs := getLBStatus(privateGatewayServiceURLFromContext(ctx))
+		publicLbs := r.getLBStatus(publicGatewayFromContext(ctx))
+		privateLbs := r.getLBStatus(privateGatewayFromContext(ctx))
 		ing.Status.MarkLoadBalancerReady(publicLbs, privateLbs)
 	} else {
 		ing.Status.MarkLoadBalancerNotReady()
@@ -469,34 +469,40 @@ func qualifiedGatewayNamesFromContext(ctx context.Context) map[v1alpha1.IngressV
 	}
 }
 
-func publicGatewayServiceURLFromContext(ctx context.Context) string {
+func publicGatewayFromContext(ctx context.Context) *config.Gateway {
 	cfg := config.FromContext(ctx).Istio
 	if len(cfg.IngressGateways) > 0 {
-		return cfg.IngressGateways[0].ServiceURL
+		return &cfg.IngressGateways[0]
 	}
-	return ""
+	return nil
 }
 
-func privateGatewayServiceURLFromContext(ctx context.Context) string {
+func privateGatewayFromContext(ctx context.Context) *config.Gateway {
 	cfg := config.FromContext(ctx).Istio
 	if len(cfg.LocalGateways) > 0 {
-		return cfg.LocalGateways[0].ServiceURL
+		return &cfg.LocalGateways[0]
 	}
-	return ""
+	return nil
 }
 
 // getLBStatus gets the LB Status.
-func getLBStatus(gatewayServiceURL string) []v1alpha1.LoadBalancerIngressStatus {
+func (r *Reconciler) getLBStatus(gateway *config.Gateway) []v1alpha1.LoadBalancerIngressStatus {
 	// The Ingress isn't load-balanced by any particular
 	// Service, but through a Service mesh.
-	if gatewayServiceURL == "" {
+	if gateway == nil {
 		return []v1alpha1.LoadBalancerIngressStatus{
 			{MeshOnly: true},
 		}
 	}
-	return []v1alpha1.LoadBalancerIngressStatus{
-		{DomainInternal: gatewayServiceURL},
+	status := []v1alpha1.LoadBalancerIngressStatus{
+		{DomainInternal: gateway.ServiceURL},
 	}
+
+	if svc, err := r.svcLister.Services(gateway.Namespace).Get(gateway.Name); err == nil {
+		status[0].IP = svc.Spec.ClusterIP
+	}
+
+	return status
 }
 
 func shouldReconcileTLS(ing *v1alpha1.Ingress) bool {
