@@ -50,7 +50,6 @@ func NewController(
 		destinationRuleLister: destinationRuleInformer.Lister(),
 	}
 	impl := sksreconciler.NewImpl(ctx, c, func(impl *controller.Impl) controller.Options {
-		logger.Info("Setting up ConfigMap receivers")
 		resync := configmap.TypeFilter(&config.Istio{})(func(string, interface{}) {
 			impl.GlobalResync(sksInformer.Informer())
 		})
@@ -63,8 +62,6 @@ func NewController(
 			SkipStatusUpdates: true,
 		}
 	})
-
-	logger.Info("Setting up event handlers")
 
 	// Watch all the SKS objects.
 	sksInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
