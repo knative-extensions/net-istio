@@ -40,7 +40,6 @@ import (
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/logging/logkey"
 	"knative.dev/pkg/reconciler"
-	"knative.dev/pkg/tracker"
 
 	v1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
@@ -97,7 +96,6 @@ func newControllerWithOptions(
 	myFilterFunc := reconciler.AnnotationFilterFunc(networking.IngressClassAnnotationKey, network.IstioIngressClassName, true)
 
 	impl := ingressreconciler.NewImpl(ctx, c, network.IstioIngressClassName, func(impl *controller.Impl) controller.Options {
-		logger.Info("Setting up ConfigMap receivers")
 		configsToResync := []interface{}{
 			&config.Istio{},
 			&network.Config{},
@@ -107,22 +105,22 @@ func newControllerWithOptions(
 		})
 		configStore := config.NewStore(logger.Named("config-store"), resyncIngressesOnConfigChange)
 		configStore.WatchConfigs(cmw)
-		return controller.Options{ConfigStore: configStore}
+		return controller.Options{
+			ConfigStore:       configStore,
+			PromoteFilterFunc: myFilterFunc,
+		}
 	})
 
-	logger.Info("Setting up Ingress event handlers")
-	ingressHandler := cache.FilteringResourceEventHandler{
+	ingressInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: myFilterFunc,
 		Handler:    controller.HandleAll(impl.Enqueue),
-	}
-	ingressInformer.Informer().AddEventHandler(ingressHandler)
+	})
 
 	virtualServiceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: myFilterFunc,
+		FilterFunc: controller.FilterController(&v1alpha1.Ingress{}),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
-	logger.Info("Setting up statusManager")
 	endpointsInformer := endpointsinformer.Get(ctx)
 	podInformer := podinformer.Get(ctx)
 	resyncOnIngressReady := func(ing *v1alpha1.Ingress) {
@@ -144,20 +142,18 @@ func newControllerWithOptions(
 		DeleteFunc: statusProber.CancelPodProbing,
 	})
 
-	logger.Info("Setting up secret informer event handler")
-	tracker := tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
-	c.tracker = tracker
+	c.tracker = impl.Tracker
 
 	secretInformer.Informer().AddEventHandler(controller.HandleAll(
 		controller.EnsureTypeMeta(
-			tracker.OnChanged,
+			c.tracker.OnChanged,
 			corev1.SchemeGroupVersion.WithKind("Secret"),
 		),
 	))
 
 	gatewayInformer.Informer().AddEventHandler(controller.HandleAll(
 		controller.EnsureTypeMeta(
-			tracker.OnChanged,
+			c.tracker.OnChanged,
 			v1alpha3.SchemeGroupVersion.WithKind("Gateway"),
 		),
 	))
@@ -166,7 +162,7 @@ func newControllerWithOptions(
 		// Cancel probing when a Ingress is deleted
 		DeleteFunc: combineFunc(
 			statusProber.CancelIngressProbing,
-			tracker.OnDeletedObserver,
+			c.tracker.OnDeletedObserver,
 		),
 	})
 
