@@ -6046,8 +6046,6 @@ spec:
                     local:
                       inline_string: envoy.wasm.stats
 ---
-{}
----
 apiVersion: "security.istio.io/v1beta1"
 kind: "PeerAuthentication"
 metadata:
