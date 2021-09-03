@@ -7,9 +7,6 @@ on:
   push:
     branches: [ 'main', 'release-*' ]
 
-  schedule:
-  - cron: '0 * * * *'
-
 defaults:
   run:
     shell: bash
