@@ -123,6 +123,9 @@ EOF
 
       # Remove the kind we added - after iteration we'll add what's remaining
       run_yq eval --inplace "select(.kind != \"${kind}\")" "${tmpfile}"
+      if [ ! -s ${tmpfile} ]; then
+        break
+      fi
     done
 
     # Add any resources that weren't on our prioritized list
