@@ -818,7 +818,7 @@ k8s.io/utils/trace
 # knative.dev/hack v0.0.0-20210602212444-509255f29a24
 ## explicit
 knative.dev/hack
-# knative.dev/networking v0.0.0-20210512050647-ace2d3306f0b
+# knative.dev/networking v0.0.0-20210608114541-4b1712c029b7
 ## explicit
 knative.dev/networking/config
 knative.dev/networking/pkg
@@ -861,7 +861,7 @@ knative.dev/networking/test/test_images/runtime/handlers
 knative.dev/networking/test/test_images/timeout
 knative.dev/networking/test/test_images/wsserver
 knative.dev/networking/test/types
-# knative.dev/pkg v0.0.0-20210510175900-4564797bf3b7
+# knative.dev/pkg v0.0.0-20210902175106-8d4b5e065ebb
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -934,6 +934,7 @@ knative.dev/pkg/webhook
 knative.dev/pkg/webhook/certificates
 knative.dev/pkg/webhook/certificates/resources
 knative.dev/pkg/webhook/configmaps
+knative.dev/pkg/webhook/json
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 # sigs.k8s.io/structured-merge-diff/v4 v4.0.1
