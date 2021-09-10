@@ -1020,9 +1020,8 @@ k8s.io/utils v0.0.0-20201110183641-67b214c5f920 h1:CbnUZsM497iRC5QMVkHwyl8s2tB3g
 k8s.io/utils v0.0.0-20201110183641-67b214c5f920/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 knative.dev/hack v0.0.0-20210806075220-815cd312d65c h1:nOXoDWAAItwr4o0dp3nHr6skgpVD4IvME/UX84YNl5k=
 knative.dev/hack v0.0.0-20210806075220-815cd312d65c/go.mod h1:PHt8x8yX5Z9pPquBEfIj0X66f8iWkWfR0S/sarACJrI=
-knative.dev/networking v0.0.0-20210909132459-78c491e7b7f0 h1:Bduf2dysbtXWUzOjOF/EL2w+8t8xTz5CSVxzedzzAFo=
-knative.dev/networking v0.0.0-20210909132459-78c491e7b7f0/go.mod h1:ddBnegGBj2SqQrGoKwcfGRYQ0cwOp0WFjlfgOTFSzw8=
-knative.dev/pkg v0.0.0-20210909102158-d569db39a812/go.mod h1:jMSqkNMsrzuy+XR4Yr/BMy7SDVbUOl3KKB6+5MR+ZU8=
+knative.dev/networking v0.0.0-20210910120730-eb37d69eb87f h1:FHPmpIrUnJjoI2xBIpxTAvCoh9Y1nNHAOWRSJRJECww=
+knative.dev/networking v0.0.0-20210910120730-eb37d69eb87f/go.mod h1:Bq/n7aJlzPiieLpB/ndIgZXUJeGf50LXN7AQ/UaL6KA=
 knative.dev/pkg v0.0.0-20210909165259-d4505c660535 h1:1bbKs8NGGodV0LjOyn6s5lo+oAJ/9KtTURUZtpRxr60=
 knative.dev/pkg v0.0.0-20210909165259-d4505c660535/go.mod h1:jMSqkNMsrzuy+XR4Yr/BMy7SDVbUOl3KKB6+5MR+ZU8=
 pgregory.net/rapid v0.3.3/go.mod h1:UYpPVyjFHzYBGHIxLFoupi8vwk6rXNzRY9OMvVxFIOU=
