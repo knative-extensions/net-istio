@@ -336,14 +336,14 @@ google.golang.org/protobuf/types/known/wrapperspb
 gopkg.in/inf.v0
 # gopkg.in/yaml.v2 v2.4.0
 gopkg.in/yaml.v2
-# istio.io/api v0.0.0-20210322145030-ec7ef4cd6eaf
+# istio.io/api v0.0.0-20210713195055-3a340e4f154e
 ## explicit
 istio.io/api/analysis/v1alpha1
 istio.io/api/label
 istio.io/api/meta/v1alpha1
 istio.io/api/networking/v1alpha3
 istio.io/api/networking/v1beta1
-# istio.io/client-go v1.8.1
+# istio.io/client-go v1.10.3
 ## explicit
 istio.io/client-go/pkg/apis/networking/v1alpha3
 # istio.io/gogo-genproto v0.0.0-20210113155706-4daf5697332f
