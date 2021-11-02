@@ -1,5 +1,7 @@
 # Knative `net-istio`
 
+**[This component is GA](https://github.com/knative/community/tree/main/mechanics/MATURITY-LEVELS.md)**
+
 [![GoDoc](https://godoc.org/knative.dev/net-istio?status.svg)](https://godoc.org/knative.dev/net-istio)
 [![Go Report Card](https://goreportcard.com/badge/knative/net-istio)](https://goreportcard.com/report/knative/net-istio)
 
