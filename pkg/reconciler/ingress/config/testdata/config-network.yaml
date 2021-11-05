@@ -18,6 +18,9 @@ metadata:
   name: config-network
   namespace: knative-serving
   labels:
+    app.kubernetes.io/name: istio
+    app.kubernetes.io/part-of: knative-serving
+    app.kubernetes.io/version: devel
     serving.knative.dev/release: devel
 
 data:
