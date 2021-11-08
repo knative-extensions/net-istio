@@ -30,7 +30,7 @@ github.com/emicklei/go-restful
 github.com/emicklei/go-restful/log
 # github.com/evanphx/json-patch v4.9.0+incompatible
 github.com/evanphx/json-patch
-# github.com/evanphx/json-patch/v5 v5.5.0
+# github.com/evanphx/json-patch/v5 v5.6.0
 github.com/evanphx/json-patch/v5
 # github.com/go-kit/log v0.1.0
 github.com/go-kit/log
@@ -47,7 +47,7 @@ github.com/go-openapi/jsonreference
 github.com/go-openapi/spec
 # github.com/go-openapi/swag v0.19.15
 github.com/go-openapi/swag
-# github.com/gobuffalo/flect v0.2.3
+# github.com/gobuffalo/flect v0.2.4
 github.com/gobuffalo/flect
 # github.com/gogo/protobuf v1.3.2
 ## explicit
@@ -113,7 +113,7 @@ github.com/matttproud/golang_protobuf_extensions/pbutil
 github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1
 github.com/modern-go/reflect2
-# github.com/openzipkin/zipkin-go v0.2.5
+# github.com/openzipkin/zipkin-go v0.3.0
 github.com/openzipkin/zipkin-go/model
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
@@ -123,7 +123,7 @@ github.com/prometheus/client_golang/prometheus/internal
 github.com/prometheus/client_golang/prometheus/promhttp
 # github.com/prometheus/client_model v0.2.0
 github.com/prometheus/client_model/go
-# github.com/prometheus/common v0.31.1
+# github.com/prometheus/common v0.32.1
 github.com/prometheus/common/expfmt
 github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
 github.com/prometheus/common/model
@@ -179,7 +179,7 @@ go.uber.org/zap/zaptest
 # golang.org/x/mod v0.4.2
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
+# golang.org/x/net v0.0.0-20211101193420-4a448f8816b3
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/http/httpguts
@@ -189,7 +189,7 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/oauth2 v0.0.0-20211005180243-6b3c2da341f1
+# golang.org/x/oauth2 v0.0.0-20211028175245-ba495a64dcb5
 golang.org/x/oauth2
 golang.org/x/oauth2/authhandler
 golang.org/x/oauth2/google
@@ -202,7 +202,7 @@ golang.org/x/oauth2/jwt
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.0.0-20210917161153-d61c044b1678
+# golang.org/x/sys v0.0.0-20211025201205-69cdffdb9359
 golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
@@ -210,7 +210,7 @@ golang.org/x/sys/unix
 golang.org/x/sys/windows
 # golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d
 golang.org/x/term
-# golang.org/x/text v0.3.6
+# golang.org/x/text v0.3.7
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
@@ -235,7 +235,7 @@ golang.org/x/xerrors
 golang.org/x/xerrors/internal
 # gomodules.xyz/jsonpatch/v2 v2.2.0
 gomodules.xyz/jsonpatch/v2
-# google.golang.org/api v0.58.0
+# google.golang.org/api v0.60.0
 google.golang.org/api/support/bundler
 # google.golang.org/appengine v1.6.7
 google.golang.org/appengine
@@ -248,11 +248,11 @@ google.golang.org/appengine/internal/modules
 google.golang.org/appengine/internal/remote_api
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/urlfetch
-# google.golang.org/genproto v0.0.0-20211016002631-37fc39342514
+# google.golang.org/genproto v0.0.0-20211021150943-2b146023228c
 google.golang.org/genproto/googleapis/api/httpbody
 google.golang.org/genproto/googleapis/rpc/status
 google.golang.org/genproto/protobuf/field_mask
-# google.golang.org/grpc v1.41.0
+# google.golang.org/grpc v1.42.0
 google.golang.org/grpc
 google.golang.org/grpc/attributes
 google.golang.org/grpc/backoff
@@ -775,10 +775,10 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/hack v0.0.0-20211101195839-11d193bf617b
+# knative.dev/hack v0.0.0-20211105231158-29f86c2653b5
 ## explicit
 knative.dev/hack
-# knative.dev/networking v0.0.0-20211101215640-8c71a2708e7d
+# knative.dev/networking v0.0.0-20211104064801-6871f98f7b4d
 ## explicit
 knative.dev/networking/config
 knative.dev/networking/pkg
@@ -821,7 +821,7 @@ knative.dev/networking/test/test_images/runtime/handlers
 knative.dev/networking/test/test_images/timeout
 knative.dev/networking/test/test_images/wsserver
 knative.dev/networking/test/types
-# knative.dev/pkg v0.0.0-20211101212339-96c0204a70dc
+# knative.dev/pkg v0.0.0-20211104101302-51b9e7f161b4
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
