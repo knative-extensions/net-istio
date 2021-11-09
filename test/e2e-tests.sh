@@ -18,7 +18,7 @@ source $(dirname $0)/e2e-common.sh
 
 
 # Script entry point.
-initialize $@  --skip-istio-addon --cluster-version=1.20
+initialize $@  --skip-istio-addon
 
 # TODO Re-enable conformance tests for mesh when everything's been fixed
 # https://github.com/knative-sandbox/net-istio/issues/584
