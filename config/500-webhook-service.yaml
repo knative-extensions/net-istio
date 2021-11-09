@@ -19,8 +19,8 @@ metadata:
   namespace: knative-serving
   labels:
     role: net-istio-webhook
-    app.kubernetes.io/name: istio
-    app.kubernetes.io/part-of: knative-serving
+    app.kubernetes.io/component: net-istio
+    app.kubernetes.io/name: knative-serving
     app.kubernetes.io/version: devel
     serving.knative.dev/release: devel
     networking.knative.dev/ingress-provider: istio
