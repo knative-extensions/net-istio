@@ -21,6 +21,9 @@ metadata:
   name: knative-local-gateway
   namespace: knative-serving
   labels:
+    app.kubernetes.io/component: net-istio
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: devel
     serving.knative.dev/release: devel
     networking.knative.dev/ingress-provider: istio
 spec:
@@ -40,6 +43,9 @@ metadata:
   name: knative-local-gateway
   namespace: istio-system
   labels:
+    app.kubernetes.io/component: net-istio
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: devel
     serving.knative.dev/release: devel
     networking.knative.dev/ingress-provider: istio
     experimental.istio.io/disable-gateway-port-translation: "true"

@@ -18,6 +18,9 @@ metadata:
   # These are the permissions needed by the Istio Ingress implementation.
   name: knative-serving-istio
   labels:
+    app.kubernetes.io/component: net-istio
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: devel
     serving.knative.dev/release: devel
     serving.knative.dev/controller: "true"
     networking.knative.dev/ingress-provider: istio
