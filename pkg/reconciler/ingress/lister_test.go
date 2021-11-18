@@ -1252,6 +1252,118 @@ func TestListProbeTargets(t *testing.T) {
 				{Scheme: "http", Host: "foo.bar.com:80"}},
 		}},
 	}, {
+		name: "one gateway HTTPS with MUTUAL and SIMPLE TLS",
+		ingressGateways: []config.Gateway{{
+			Name:      "gateway",
+			Namespace: "default",
+		}},
+		gatewayLister: &fakeGatewayLister{
+			gateways: []*v1alpha3.Gateway{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "gateway",
+				},
+				Spec: istiov1alpha3.Gateway{
+					Servers: []*istiov1alpha3.Server{
+						{
+							  Hosts: []string{"mutual.example.com"},
+							  Port: &istiov1alpha3.Port{
+								  Name:     "https-mutual",
+								  Number:   8443,
+								  Protocol: "HTTPS",
+							  },
+							  Tls: &istiov1alpha3.ServerTLSSettings{
+								  Mode: istiov1alpha3.ServerTLSSettings_MUTUAL,
+							  },
+						 },
+						{
+							Hosts: []string{"simple.example.com"},
+							Port: &istiov1alpha3.Port{
+								Name:     "https-simple",
+								Number:   8081,
+								Protocol: "HTTPS",
+							},
+							Tls: &istiov1alpha3.ServerTLSSettings{
+								Mode: istiov1alpha3.ServerTLSSettings_SIMPLE,
+							},
+						},
+					},
+					Selector: map[string]string{
+						"gwt": "istio",
+					},
+				},
+			}},
+		},
+		endpointsLister: &fakeEndpointsLister{
+			endpointses: []*v1.Endpoints{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "gateway",
+				},
+				Subsets: []v1.EndpointSubset{{
+					Ports: []v1.EndpointPort{{
+						Name: "simple",
+						Port: 8081,
+					}, {
+						Name: "mutual",
+						Port: 8443,
+					}},
+					Addresses: []v1.EndpointAddress{{
+						IP: "1.1.1.1",
+					}},
+				}},
+			}},
+		},
+		serviceLister: &fakeServiceLister{
+			services: []*v1.Service{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "gateway",
+					Labels: map[string]string{
+						"gwt": "istio",
+					},
+				},
+				Spec: v1.ServiceSpec{
+					Ports: []v1.ServicePort{{
+						Name: "simple",
+						Port: 8081,
+					}, {
+						Name: "mutual",
+						Port: 8443,
+					}},
+				},
+			}},
+		},
+		ingress: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "default",
+				Name:      "whatever",
+			},
+			Spec: v1alpha1.IngressSpec{
+				Rules: []v1alpha1.IngressRule{
+					{
+						 Hosts: []string{
+							  "mutual.example.com",
+						 },
+						 Visibility: v1alpha1.IngressVisibilityExternalIP,
+					 },
+					{
+						Hosts: []string{
+							"simple.example.com",
+						},
+						Visibility: v1alpha1.IngressVisibilityExternalIP,
+					},
+				},
+			},
+		},
+		results: []status.ProbeTarget{{
+			PodIPs:  sets.NewString("1.1.1.1"),
+			PodPort: "8081",
+			Port:    "8081",
+			URLs: []*url.URL{
+				{Scheme: "https", Host: "simple.example.com:8081"}},
+		}},
+	}, {
 		name: "local gateways",
 		localGateways: []config.Gateway{{
 			Name:      "local-gateway",

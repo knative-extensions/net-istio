@@ -73,10 +73,11 @@ func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1al
 		if err != nil {
 			return nil, fmt.Errorf("failed to get Gateway %q: %w", gatewayName, err)
 		}
-		targets, err := l.listGatewayTargets(gateway)
+		targets, excludedHosts, err := l.listGatewayTargets(gateway)
 		if err != nil {
 			return nil, fmt.Errorf("failed to list the probing URLs of Gateway %q: %w", gatewayName, err)
 		}
+
 		if len(targets) == 0 {
 			continue
 		}
@@ -88,8 +89,16 @@ func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1al
 				URLs:    make([]*url.URL, 1),
 			}
 			// Pick a single host since they all end up being used in the same
-			// VirtualService and will be applied atomically by Istio.
-			host := hostsByGateway[gatewayName].List()[0]
+			// VirtualService and will be applied atomically by Istio. However,
+			// it's important to choose a hostname which isn't excluded from the
+			// initial list of gateway targets.
+			var host string
+			for _, hostName := range hostsByGateway[gatewayName].List() {
+				if !excludedHosts.Has(hostName) {
+					host = hostName
+					break
+				}
+			}
 			newURL := *target.URLs[0]
 			newURL.Host = host + ":" + target.Port
 			qualifiedTarget.URLs[0] = &newURL
@@ -110,32 +119,36 @@ func (l *gatewayPodTargetLister) getGateway(name string) (*v1alpha3.Gateway, err
 	return l.gatewayLister.Gateways(namespace).Get(name)
 }
 
-// listGatewayPodsURLs returns a probe targets for a given Gateway.
-func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) ([]status.ProbeTarget, error) {
+// listGatewayPodsURLs returns a probe targets for a given Gateway along with the host names which were excluded.
+func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) ([]status.ProbeTarget, sets.String, error) {
 	selector := labels.SelectorFromSet(gateway.Spec.Selector)
 
 	services, err := l.serviceLister.List(selector)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list Services: %w", err)
+		return nil, nil, fmt.Errorf("failed to list Services: %w", err)
 	}
 	if len(services) == 0 {
 		l.logger.Infof("Skipping Gateway %s/%s because it has no corresponding Service", gateway.Namespace, gateway.Name)
-		return nil, nil
+		return nil, nil, nil
 	}
 	service := services[0]
 
 	endpoints, err := l.endpointsLister.Endpoints(service.Namespace).Get(service.Name)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get Endpoints: %w", err)
+		return nil, nil, fmt.Errorf("failed to get Endpoints: %w", err)
 	}
 
 	seen := sets.NewString()
+	excluded := sets.NewString()
 	targets := []status.ProbeTarget{}
 	for _, server := range gateway.Spec.Servers {
 		tURL := &url.URL{}
 		switch server.Port.Protocol {
 		case "HTTP", "HTTP2":
 			if server.Tls != nil && server.Tls.HttpsRedirect {
+				for _, host := range server.Hosts {
+					excluded.Insert(host)
+				}
 				// ignoring HTTPS redirects.
 				continue
 			}
@@ -143,17 +156,26 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) (
 		case "HTTPS":
 			if server.GetTls().GetMode() == istiov1alpha3.ServerTLSSettings_MUTUAL {
 				l.logger.Infof("Skipping Server %q because HTTPS with TLS mode MUTUAL is not supported", server.Port.Name)
+				for _, host := range server.Hosts {
+					excluded.Insert(host)
+				}
 				continue
 			}
 			tURL.Scheme = "https"
 		default:
 			l.logger.Infof("Skipping Server %q because protocol %q is not supported", server.Port.Name, server.Port.Protocol)
+			for _, host := range server.Hosts {
+				excluded.Insert(host)
+			}
 			continue
 		}
 
 		portName, err := network.NameForPortNumber(service, int32(server.Port.Number))
 		if err != nil {
 			l.logger.Infof("Skipping Server %q because Service %s/%s doesn't contain a port %d", server.Port.Name, service.Namespace, service.Name, server.Port.Number)
+			for _, host := range server.Hosts {
+				excluded.Insert(host)
+			}
 			continue
 		}
 
@@ -185,5 +207,5 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) (
 			targets = append(targets, target)
 		}
 	}
-	return targets, nil
+	return targets, excluded, nil
 }
