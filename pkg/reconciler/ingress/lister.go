@@ -82,12 +82,6 @@ func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1al
 			continue
 		}
 		for _, target := range targets {
-			qualifiedTarget := status.ProbeTarget{
-				PodIPs:  target.PodIPs,
-				PodPort: target.PodPort,
-				Port:    target.Port,
-				URLs:    make([]*url.URL, 1),
-			}
 			// Pick a single host since they all end up being used in the same
 			// VirtualService and will be applied atomically by Istio. However,
 			// it's important to choose a hostname which isn't excluded from the
@@ -98,6 +92,15 @@ func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1al
 					host = hostName
 					break
 				}
+			}
+			if host == "" {
+				continue
+			}
+			qualifiedTarget := status.ProbeTarget{
+				PodIPs:  target.PodIPs,
+				PodPort: target.PodPort,
+				Port:    target.Port,
+				URLs:    make([]*url.URL, 1),
 			}
 			newURL := *target.URLs[0]
 			newURL.Host = host + ":" + target.Port
