@@ -1264,30 +1264,27 @@ func TestListProbeTargets(t *testing.T) {
 					Name:      "gateway",
 				},
 				Spec: istiov1alpha3.Gateway{
-					Servers: []*istiov1alpha3.Server{
-						{
-							  Hosts: []string{"mutual.example.com"},
-							  Port: &istiov1alpha3.Port{
-								  Name:     "https-mutual",
-								  Number:   8443,
-								  Protocol: "HTTPS",
-							  },
-							  Tls: &istiov1alpha3.ServerTLSSettings{
-								  Mode: istiov1alpha3.ServerTLSSettings_MUTUAL,
-							  },
-						 },
-						{
-							Hosts: []string{"simple.example.com"},
-							Port: &istiov1alpha3.Port{
-								Name:     "https-simple",
-								Number:   8081,
-								Protocol: "HTTPS",
-							},
-							Tls: &istiov1alpha3.ServerTLSSettings{
-								Mode: istiov1alpha3.ServerTLSSettings_SIMPLE,
-							},
+					Servers: []*istiov1alpha3.Server{{
+						Hosts: []string{"mutual.example.com"},
+						Port: &istiov1alpha3.Port{
+							Name:     "https-mutual",
+							Number:   8443,
+							Protocol: "HTTPS",
 						},
-					},
+						Tls: &istiov1alpha3.ServerTLSSettings{
+							Mode: istiov1alpha3.ServerTLSSettings_MUTUAL,
+						},
+					}, {
+						Hosts: []string{"simple.example.com"},
+						Port: &istiov1alpha3.Port{
+							Name:     "https-simple",
+							Number:   8081,
+							Protocol: "HTTPS",
+						},
+						Tls: &istiov1alpha3.ServerTLSSettings{
+							Mode: istiov1alpha3.ServerTLSSettings_SIMPLE,
+						},
+					}},
 					Selector: map[string]string{
 						"gwt": "istio",
 					},
@@ -1340,20 +1337,17 @@ func TestListProbeTargets(t *testing.T) {
 				Name:      "whatever",
 			},
 			Spec: v1alpha1.IngressSpec{
-				Rules: []v1alpha1.IngressRule{
-					{
-						 Hosts: []string{
-							  "mutual.example.com",
-						 },
-						 Visibility: v1alpha1.IngressVisibilityExternalIP,
-					 },
-					{
-						Hosts: []string{
-							"simple.example.com",
-						},
-						Visibility: v1alpha1.IngressVisibilityExternalIP,
+				Rules: []v1alpha1.IngressRule{{
+					Hosts: []string{
+						"mutual.example.com",
 					},
-				},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+				}, {
+					Hosts: []string{
+						"simple.example.com",
+					},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+				}},
 			},
 		},
 		results: []status.ProbeTarget{{
