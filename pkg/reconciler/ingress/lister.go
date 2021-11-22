@@ -149,9 +149,6 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) (
 		switch server.Port.Protocol {
 		case "HTTP", "HTTP2":
 			if server.Tls != nil && server.Tls.HttpsRedirect {
-				for _, host := range server.Hosts {
-					excluded.Insert(host)
-				}
 				// ignoring HTTPS redirects.
 				continue
 			}
