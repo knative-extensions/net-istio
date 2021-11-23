@@ -16,3 +16,5 @@ require (
 	knative.dev/networking v0.0.0-20211119210323-bab26a807fa3
 	knative.dev/pkg v0.0.0-20211120133512-d016976f2567
 )
+
+replace knative.dev/networking => github.com/dprotaso/networking v0.0.0-20211123035620-befe8f903d80
