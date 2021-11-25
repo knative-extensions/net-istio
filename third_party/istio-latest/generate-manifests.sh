@@ -16,6 +16,4 @@
 
 source "$(dirname $0)/../library.sh"
 
-generate "1.11.4" "$(dirname $0)" \
-      --set values.pilot.env.PILOT_ENABLE_STATUS=true \
-      --set values.global.istiod.enableAnalysis=true \
+generate "1.12.0" "$(dirname $0)"
