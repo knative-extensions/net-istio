@@ -65,7 +65,7 @@ function build_release() {
   done
 
   # Build Istio YAML
-  ISTIO_YAML="$(dirname $0)/../third_party/istio-stable/istio-ci-no-mesh/istio.yaml"
+  ISTIO_YAML="$(dirname $0)/../third_party/istio-latest/istio-ci-no-mesh/istio.yaml"
   ISTIO_YAML="$(realpath $ISTIO_YAML)"
   all_yamls+=(${ISTIO_YAML})
 
