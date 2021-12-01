@@ -17,8 +17,8 @@
 # This script includes common functions for testing setup and teardown.
 source $(dirname $0)/../vendor/knative.dev/hack/e2e-tests.sh
 
-# Default to Istio 'stable' version.
-ISTIO_VERSION="stable"
+# Default to Istio 'latest' version.
+ISTIO_VERSION="latest"
 
 # Parse our custom flags.
 function parse_flags() {

@@ -29,7 +29,6 @@ jobs:
         - ./test/e2e
 
         istio-version:
-        - stable
         - latest
 
         # Map between K8s and KinD versions.

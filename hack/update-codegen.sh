@@ -66,7 +66,6 @@ group "Update istio generated manifests"
 # ${REPO_ROOT_DIR}/third_party/istio-head/generate_manifests.sh
 
 
-# Update stable and latest cause the istioctl version seems to generate
+# Update latest cause the istioctl version seems to generate
 # reproducible yaml. So let's check for unexpected diffs
-${REPO_ROOT_DIR}/third_party/istio-stable/generate-manifests.sh
 ${REPO_ROOT_DIR}/third_party/istio-latest/generate-manifests.sh
