@@ -16,6 +16,4 @@
 
 source "$(dirname $0)/../library.sh"
 
-generate HEAD "$(dirname $0)" \
-      --set values.pilot.env.PILOT_ENABLE_STATUS=true \
-      --set values.global.istiod.enableAnalysis=true \
+generate HEAD "$(dirname $0)"
