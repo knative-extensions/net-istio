@@ -3,14 +3,8 @@ module knative.dev/net-istio
 go 1.16
 
 require (
-	github.com/go-openapi/jsonpointer v0.19.5 // indirect
-	github.com/go-openapi/jsonreference v0.19.5 // indirect
-	github.com/go-openapi/spec v0.19.6 // indirect
-	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/go-cmp v0.5.6
-	github.com/imdario/mergo v0.3.9 // indirect
-	github.com/mailru/easyjson v0.7.7 // indirect
 	go.uber.org/zap v1.19.1
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	istio.io/api v0.0.0-20210713195055-3a340e4f154e
