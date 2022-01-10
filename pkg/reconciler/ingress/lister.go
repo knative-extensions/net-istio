@@ -26,11 +26,14 @@ import (
 	"go.uber.org/zap"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
+	"knative.dev/net-istio/pkg/reconciler/ingress/config"
+	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
 	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/ingress"
@@ -60,6 +63,11 @@ type gatewayPodTargetLister struct {
 
 func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1alpha1.Ingress) ([]status.ProbeTarget, error) {
 	results := []status.ProbeTarget{}
+
+	if config.FromContext(ctx).Network.AutoTLS {
+		return l.listProbeTargets(ctx, ing)
+	}
+
 	hostsByGateway := ingress.HostsPerVisibility(ing, qualifiedGatewayNamesFromContext(ctx))
 	gatewayNames := make([]string, 0, len(hostsByGateway))
 	for gatewayName := range hostsByGateway {
@@ -97,6 +105,105 @@ func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1al
 		}
 	}
 	return results, nil
+}
+
+func (l *gatewayPodTargetLister) listProbeTargets(ctx context.Context, ing *v1alpha1.Ingress) ([]status.ProbeTarget, error) {
+	services, err := resources.GetGatewayServices(ctx, l.serviceLister)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get endpoints: %w", err)
+	}
+
+	// We can assume that we get only one gateway service. See: https://github.com/knative-sandbox/net-istio/issues/718
+	service := services[0]
+
+	eps, err := l.endpointsLister.Endpoints(service.Namespace).Get(service.Name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get endpoints: %w", err)
+	}
+
+	httpPortName, err := network.NameForPortNumber(service, 80)
+	if err != nil {
+		return nil, fmt.Errorf("failed to lookup port in %s/%s: %w", service.Namespace, service.Name, err)
+	}
+	httpsPortName, err := network.NameForPortNumber(service, 443)
+	if err != nil {
+		return nil, fmt.Errorf("failed to lookup port in %s/%s: %w", service.Namespace, service.Name, err)
+	}
+
+	var readyIPs []string
+	portNameToNumber := map[int]string{}
+	for _, sub := range eps.Subsets {
+		for _, address := range sub.Addresses {
+			readyIPs = append(readyIPs, address.IP)
+		}
+		if portNameToNumber[resources.GatewayHTTPPort], err = portNumber(sub, httpPortName); err != nil {
+			return nil, err
+		}
+		if portNameToNumber[resources.GatewayHTTPSPort], err = portNumber(sub, httpsPortName); err != nil {
+			return nil, err
+		}
+	}
+	if len(readyIPs) == 0 {
+		return nil, fmt.Errorf("no gateway pods available")
+	}
+	return l.getIngressUrls(ing, readyIPs, portNameToNumber)
+}
+
+func portNumber(sub corev1.EndpointSubset, portName string) (string, error) {
+	port, err := network.PortNumberForName(sub, portName)
+	if err != nil {
+		return "", fmt.Errorf("failed to lookup port name %q in endpoints subsets: %w",
+			portName, err)
+	}
+	return strconv.Itoa(int(port)), nil
+}
+
+func (l *gatewayPodTargetLister) getIngressUrls(ing *v1alpha1.Ingress, gatewayIps []string, portNameToNumber map[int]string) ([]status.ProbeTarget, error) {
+	ips := sets.NewString(gatewayIps...)
+
+	targets := make([]status.ProbeTarget, 0, len(ing.Spec.Rules))
+	for _, rule := range ing.Spec.Rules {
+		var target status.ProbeTarget
+
+		domains := rule.Hosts
+		scheme := "http"
+
+		if rule.Visibility == v1alpha1.IngressVisibilityExternalIP {
+			target = status.ProbeTarget{
+				PodIPs: ips,
+			}
+			if len(ing.Spec.TLS) != 0 {
+				target.PodPort = portNameToNumber[resources.GatewayHTTPSPort]
+				target.URLs = domainsToURL(domains, "https")
+			} else {
+				target.PodPort = portNameToNumber[resources.GatewayHTTPPort]
+				target.URLs = domainsToURL(domains, scheme)
+			}
+		} else {
+			target = status.ProbeTarget{
+				PodIPs:  ips,
+				PodPort: strconv.Itoa(8081), // TODO: Do we need to verify if users change the local gateway port?
+				URLs:    domainsToURL(domains, scheme),
+			}
+		}
+
+		targets = append(targets, target)
+
+	}
+	return targets, nil
+}
+
+func domainsToURL(domains []string, scheme string) []*url.URL {
+	urls := make([]*url.URL, 0, len(domains))
+	for _, domain := range domains {
+		url := &url.URL{
+			Scheme: scheme,
+			Host:   domain,
+			Path:   "/",
+		}
+		urls = append(urls, url)
+	}
+	return urls
 }
 
 func (l *gatewayPodTargetLister) getGateway(name string) (*v1alpha3.Gateway, error) {

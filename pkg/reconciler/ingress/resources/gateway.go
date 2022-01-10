@@ -42,6 +42,7 @@ import (
 // GatewayHTTPPort is the HTTP port the gateways listen on.
 const (
 	GatewayHTTPPort       = 80
+	GatewayHTTPSPort      = 443
 	dns1123LabelMaxLength = 63 // Public for testing only.
 	dns1123LabelFmt       = "[a-zA-Z0-9](?:[-a-zA-Z0-9]*[a-zA-Z0-9])?"
 )
@@ -109,7 +110,7 @@ func MakeIngressTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressT
 	if len(ingressTLS) == 0 {
 		return []*v1alpha3.Gateway{}, nil
 	}
-	gatewayServices, err := getGatewayServices(ctx, svcLister)
+	gatewayServices, err := GetGatewayServices(ctx, svcLister)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +127,7 @@ func MakeIngressTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressT
 
 // MakeIngressGateways creates Gateways with given Servers for a given Ingress.
 func MakeIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, servers []*istiov1alpha3.Server, svcLister corev1listers.ServiceLister) ([]*v1alpha3.Gateway, error) {
-	gatewayServices, err := getGatewayServices(ctx, svcLister)
+	gatewayServices, err := GetGatewayServices(ctx, svcLister)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +148,7 @@ func MakeWildcardTLSGateways(ctx context.Context, originWildcardSecrets map[stri
 	if len(originWildcardSecrets) == 0 {
 		return []*v1alpha3.Gateway{}, nil
 	}
-	gatewayServices, err := getGatewayServices(ctx, svcLister)
+	gatewayServices, err := GetGatewayServices(ctx, svcLister)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +181,7 @@ func makeWildcardTLSGateways(originWildcardSecrets map[string]*corev1.Secret,
 			Hosts: hosts,
 			Port: &istiov1alpha3.Port{
 				Name:     "https",
-				Number:   443,
+				Number:   GatewayHTTPSPort,
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1alpha3.ServerTLSSettings{
@@ -259,7 +260,7 @@ func makeIngressGateway(ing *v1alpha1.Ingress, selector map[string]string, serve
 	}
 }
 
-func getGatewayServices(ctx context.Context, svcLister corev1listers.ServiceLister) ([]*corev1.Service, error) {
+func GetGatewayServices(ctx context.Context, svcLister corev1listers.ServiceLister) ([]*corev1.Service, error) {
 	ingressSvcMetas, err := GetIngressGatewaySvcNameNamespaces(ctx)
 	if err != nil {
 		return nil, err
@@ -307,7 +308,7 @@ func MakeTLSServers(ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, gat
 			Hosts: tls.Hosts,
 			Port: &istiov1alpha3.Port{
 				Name:     fmt.Sprintf(portNamePrefix(ing.GetNamespace(), ing.GetName())+":%d", i),
-				Number:   443,
+				Number:   GatewayHTTPSPort,
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1alpha3.ServerTLSSettings{
