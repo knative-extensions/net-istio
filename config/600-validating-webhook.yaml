@@ -34,6 +34,5 @@ webhooks:
   sideEffects: None
   name: config.webhook.istio.networking.internal.knative.dev
   namespaceSelector:
-    matchExpressions:
-    - key: serving.knative.dev/release
-      operator: Exists
+    matchLabels:
+      app.kubernetes.io/name: knative-serving
