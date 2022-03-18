@@ -21,8 +21,6 @@ metadata:
     app.kubernetes.io/component: net-istio
     app.kubernetes.io/name: knative-serving
     app.kubernetes.io/version: devel
-    serving.knative.dev/release: devel
-
 data:
   _example: |
     ################################
