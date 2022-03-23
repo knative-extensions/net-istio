@@ -18,7 +18,8 @@ metadata:
   name: chaosduck
   namespace: knative-serving
   labels:
-    serving.knative.dev/release: devel
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: devel
 
 ---
 kind: Role
@@ -27,7 +28,8 @@ metadata:
   name: chaosduck
   namespace: knative-serving
   labels:
-    serving.knative.dev/release: devel
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: devel
 rules:
   - apiGroups: [""]
     resources: ["pods"]
@@ -43,7 +45,8 @@ metadata:
   name: chaosduck
   namespace: knative-serving
   labels:
-    serving.knative.dev/release: devel
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: devel
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -60,7 +63,8 @@ metadata:
   name: chaosduck
   namespace: knative-serving
   labels:
-    serving.knative.dev/release: devel
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/version: devel
 spec:
   selector:
     matchLabels:
