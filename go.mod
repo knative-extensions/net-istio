@@ -9,10 +9,10 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	istio.io/api v0.0.0-20210713195055-3a340e4f154e
 	istio.io/client-go v1.10.3
-	k8s.io/api v0.22.5
-	k8s.io/apimachinery v0.22.5
-	k8s.io/client-go v0.22.5
-	knative.dev/hack v0.0.0-20220224013837-e1785985d364
-	knative.dev/networking v0.0.0-20220302134042-e8b2eb995165
-	knative.dev/pkg v0.0.0-20220310195447-38af013b30ff
+	k8s.io/api v0.23.5
+	k8s.io/apimachinery v0.23.5
+	k8s.io/client-go v0.23.5
+	knative.dev/hack v0.0.0-20220328133751-f06773764ce3
+	knative.dev/networking v0.0.0-20220323170318-55757e9c20d6
+	knative.dev/pkg v0.0.0-20220325200448-1f7514acd0c2
 )
