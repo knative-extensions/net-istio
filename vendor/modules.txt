@@ -807,7 +807,7 @@ k8s.io/utils/trace
 # knative.dev/hack v0.0.0-20220328133751-f06773764ce3
 ## explicit
 knative.dev/hack
-# knative.dev/networking v0.0.0-20220323170318-55757e9c20d6
+# knative.dev/networking v0.0.0-20220323170318-55757e9c20d6 => /home/knakayam/.go/src/knative.dev/networking
 ## explicit
 knative.dev/networking/config
 knative.dev/networking/pkg
@@ -939,3 +939,4 @@ sigs.k8s.io/structured-merge-diff/v4/typed
 sigs.k8s.io/structured-merge-diff/v4/value
 # sigs.k8s.io/yaml v1.3.0
 sigs.k8s.io/yaml
+# knative.dev/networking => /home/knakayam/.go/src/knative.dev/networking

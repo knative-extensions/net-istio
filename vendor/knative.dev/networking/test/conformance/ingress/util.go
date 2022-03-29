@@ -679,6 +679,8 @@ func createExternalNameService(ctx context.Context, t *testing.T, clients *test.
 			ExternalName:    gatewayDomain,
 			SessionAffinity: corev1.ServiceAffinityNone,
 			Ports: []corev1.ServicePort{{
+				// TODO:
+				// Name:       networking.ServicePortNameHTTP1,
 				Name:       networking.ServicePortNameH2C,
 				Port:       int32(80),
 				TargetPort: intstr.FromInt(80),
