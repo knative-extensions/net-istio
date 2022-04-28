@@ -42,6 +42,8 @@ The following steps show how you can bump the `istio-latest` manifest:
 
 ### Bump istio-head manifests
 
+> **TODO**: Currently `istio-head` needs to be updated manually. The update process should be automated and systematic - See [issues/913](https://github.com/knative-sandbox/net-istio/issues/913).
+
 The following steps show how you can bump the `istio-head` manifest:
 
 #### 1. Uncomment the script for istio-head
