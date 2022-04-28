@@ -5,15 +5,15 @@ This repository is testing two versions of [Istio](https://istio.io/) - `isito-h
 - [`istio-head`](third_party/istio-head/) downloads the nightly Istio build for test.
 - [`istio-latest`](third_party/istio-latest/) downloads the latest Istio release for test.
 
-The download scripts is hosted under [`third_party`](third_party) directory.
+The download scripts are hosted under [`third_party`](third_party) directory.
 
 ## Bump Istio manifests
 
-Currently the manifest files of Istio under the [`third_party`](third_party) directory must be updated manually when Istio released the latest version.
+Currently the manifest files of Istio under the [`third_party`](third_party) directory must be updated manually when Istio releases the latest version.
 
 Before bumping Istio version, you must install these tools:
 
-- [`yq (v4)`](https://github.com/mikefarah/yq): For tweak manifest files.
+- [`yq (v4)`](https://github.com/mikefarah/yq): For updating manifest files.
 
 ### Bump istio-latest manifests
 
@@ -30,7 +30,7 @@ The following steps show how you can bump the `istio-latest` manifest:
 
 #### 2. Run `hack/update-codegen.sh`
 
-  The script updates manifest automatically so you just kick it:
+  The script updates the manifest automatically so you just kick it:
 
   ```sh
   ./hack/update-codegen.sh
@@ -38,7 +38,7 @@ The following steps show how you can bump the `istio-latest` manifest:
 
 #### 3. Send the PR
 
-  Once the manifest was updated, please send the PR against net-istio repository. The CI starts using the updated manifest and detect any issue if exists.
+  Once the manifest is updated, please send the PR against net-istio repository. The CI starts using the updated manifest and detects any issue if exists.
 
 ### Bump istio-head manifests
 
@@ -47,7 +47,7 @@ The following steps show how you can bump the `istio-head` manifest:
 #### 1. Uncomment the script for istio-head
 
   The istio-head manifest script is commented out in `hack/update-codegen.sh` to avoid frequent update.
-  You can edit `hack/update-codegen.sh` and uncommnet the script as:
+  You can edit `hack/update-codegen.sh` and uncomment the script as:
 
   ```sh
   ${REPO_ROOT_DIR}/third_party/istio-head/generate-manifests.sh
@@ -55,7 +55,7 @@ The following steps show how you can bump the `istio-head` manifest:
 
 #### 2. Run `hack/update-codegen.sh`
 
-  The script updates manifest automatically so you just kick it:
+  The script updates the manifest automatically so you just kick it:
 
   ```sh
   ./hack/update-codegen.sh
@@ -71,4 +71,4 @@ The following steps show how you can bump the `istio-head` manifest:
 
 #### 4. Send the PR
 
-  Once the manifest was updated, please send the PR against net-istio repository. The CI starts using the updated manifest and detect any issue if exists.
+  Once the manifest was updated, please send the PR against net-istio repository. The CI starts using the updated manifest and detects any issue if exists.
