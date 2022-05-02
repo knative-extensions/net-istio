@@ -222,22 +222,6 @@ func TestGatewayConfiguration(t *testing.T) {
 				"local-gateway.custom-namespace.invalid": "_invalid",
 			},
 		},
-	}, {
-		name:    "local gateway configuration with mesh",
-		wantErr: false,
-		wantIstio: &Istio{
-			IngressGateways: defaultIngressGateways(),
-			LocalGateways:   []Gateway{},
-		},
-		config: &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: system.Namespace(),
-				Name:      IstioConfigName,
-			},
-			Data: map[string]string{
-				"local-gateway.mesh": "mesh",
-			},
-		},
 	}}
 
 	for _, tt := range gatewayConfigTests {
