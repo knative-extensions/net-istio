@@ -148,7 +148,6 @@ func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
 	if len(localGateways) == 0 {
 		localGateways = defaultLocalGateways()
 	}
-	localGateways = removeMeshGateway(localGateways)
 
 	var statusEnabled bool
 	if err := cm.Parse(configMap.Data,
@@ -162,14 +161,4 @@ func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
 		LocalGateways:              localGateways,
 		EnableVirtualServiceStatus: statusEnabled,
 	}, nil
-}
-
-func removeMeshGateway(gateways []Gateway) []Gateway {
-	gws := []Gateway{}
-	for _, g := range gateways {
-		if g.Name != "mesh" {
-			gws = append(gws, g)
-		}
-	}
-	return gws
 }
