@@ -24,6 +24,10 @@ import (
 	"testing"
 	"time"
 
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/google/go-cmp/cmp"
+	"golang.org/x/sync/errgroup"
+
 	// Inject our fakes
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
 	fakeistioclient "knative.dev/net-istio/pkg/client/istio/injection/client/fake"
@@ -39,11 +43,10 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/filtered/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
-
-	proto "github.com/gogo/protobuf/proto"
-	"github.com/google/go-cmp/cmp"
-	"golang.org/x/sync/errgroup"
+	filteredfactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
+	_ "knative.dev/pkg/client/injection/kube/informers/factory/filtered/fake"
 
 	istiov1alpha1 "istio.io/api/meta/v1alpha1"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
@@ -1573,7 +1576,10 @@ func newTestSetup(t *testing.T, configs ...*corev1.ConfigMap) (
 	*controller.Impl,
 	*configmap.ManualWatcher) {
 
-	ctx, cancel, informers := SetupFakeContextWithCancel(t)
+	ctx, cancel, informers := SetupFakeContextWithCancel(t, func(ctx context.Context) context.Context {
+		ctx = filteredfactory.WithSelectors(ctx, "")
+		return ctx
+	})
 	configMapWatcher := &configmap.ManualWatcher{Namespace: system.Namespace()}
 
 	controller := newControllerWithOptions(ctx,

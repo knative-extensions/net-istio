@@ -18,8 +18,13 @@ package ingress
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"os"
 
 	"go.uber.org/zap"
+	"k8s.io/apimachinery/pkg/labels"
+	v1 "k8s.io/client-go/informers/core/v1"
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
 	gatewayinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/gateway"
 	virtualserviceinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice"
@@ -33,10 +38,11 @@ import (
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	endpointsinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
-	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
+	secretfilteredinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/filtered"
 	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/injection/filtering"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/logging/logkey"
 	"knative.dev/pkg/reconciler"
@@ -81,7 +87,7 @@ func newControllerWithOptions(
 	logger := logging.FromContext(ctx)
 	virtualServiceInformer := virtualserviceinformer.Get(ctx)
 	gatewayInformer := gatewayinformer.Get(ctx)
-	secretInformer := secretinformer.Get(ctx)
+	secretInformer := getSecretInformer(ctx)
 	serviceInformer := serviceinformer.Get(ctx)
 	ingressInformer := ingressinformer.Get(ctx)
 
@@ -178,4 +184,17 @@ func combineFunc(functions ...func(interface{})) func(interface{}) {
 			f(obj)
 		}
 	}
+}
+
+func getSecretInformer(ctx context.Context) v1.SecretInformer {
+	if labelsStr := os.Getenv(filtering.InformerLabelSelectorsFilterEnv); labelsStr != "" {
+		labelsSet, err := labels.ConvertSelectorToLabelsMap(labelsStr)
+		if err != nil {
+			log.Fatal("Error converting label selector string: ", err)
+		}
+		if val, ok := labelsSet[filtering.KnativeUsedbyKey]; ok && val == filtering.KnativeUsedByValue {
+			return secretfilteredinformer.Get(ctx, fmt.Sprintf("%s=%s", filtering.KnativeUsedbyKey, filtering.KnativeUsedByValue))
+		}
+	}
+	return secretfilteredinformer.Get(ctx, "")
 }

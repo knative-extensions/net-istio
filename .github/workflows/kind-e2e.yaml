@@ -49,6 +49,7 @@ jobs:
       # Use a semi-random cluster suffix, but somewhat predictable
       # so reruns don't just give us a completely new value.
       CLUSTER_SUFFIX: c${{ github.run_id }}.local
+      INFORMER_LABEL_SELECTORS_FILTER: knative.dev/used-by=true
 
     steps:
     - name: Set up Go 1.17.x

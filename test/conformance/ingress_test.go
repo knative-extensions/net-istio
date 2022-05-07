@@ -20,15 +20,18 @@ limitations under the License.
 package conformance
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
 	"knative.dev/networking/test/conformance/ingress"
+	"knative.dev/pkg/injection/filtering"
 )
 
 const iterations = 12
 
 func TestIngressConformance(t *testing.T) {
+	t.Setenv(filtering.InformerLabelSelectorsFilterEnv, fmt.Sprintf("%s=%s", filtering.KnativeUsedbyKey, filtering.KnativeUsedByValue))
 	for i := 0; i < iterations; i++ {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			t.Parallel()

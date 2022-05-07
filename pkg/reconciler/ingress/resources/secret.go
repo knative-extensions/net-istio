@@ -28,6 +28,7 @@ import (
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	"knative.dev/pkg/injection/filtering"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/tracker"
 )
@@ -86,7 +87,7 @@ func MakeWildcardSecrets(ctx context.Context, originWildcardCerts map[string]*co
 				// as the origin namespace
 				continue
 			}
-			secrets = append(secrets, makeSecret(secret, targetWildcardSecretName(secret.Name, secret.Namespace), meta.Namespace, map[string]string{}))
+			secrets = append(secrets, makeSecret(secret, targetWildcardSecretName(secret.Name, secret.Namespace), meta.Namespace, filtering.AddKnativeUsedByLabels(map[string]string{})))
 		}
 	}
 	return secrets, nil
@@ -110,10 +111,11 @@ func makeSecret(originSecret *corev1.Secret, name, namespace string, labels map[
 
 // MakeTargetSecretLabels returns the labels used in target secret.
 func MakeTargetSecretLabels(originSecretName, originSecretNamespace string) map[string]string {
-	return map[string]string{
+	secretLabels := map[string]string{
 		networking.OriginSecretNameLabelKey:      originSecretName,
 		networking.OriginSecretNamespaceLabelKey: originSecretNamespace,
 	}
+	return filtering.AddKnativeUsedByLabels(secretLabels)
 }
 
 // targetSecret returns the name of the Secret that is copied from the origin Secret.

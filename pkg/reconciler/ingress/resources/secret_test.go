@@ -30,6 +30,7 @@ import (
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	"knative.dev/pkg/injection/filtering"
 	. "knative.dev/pkg/logging/testing"
 )
 
@@ -170,16 +171,26 @@ func TestMakeSecrets(t *testing.T) {
 	}}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			originSecrets := map[string]*corev1.Secret{
-				fmt.Sprintf("%s/%s", c.originSecret.Namespace, c.originSecret.Name): c.originSecret,
+			steps := func(addLabels bool) {
+				if addLabels {
+					t.Setenv(filtering.InformerLabelSelectorsFilterEnv, fmt.Sprintf("%s=%s", filtering.KnativeUsedbyKey, filtering.KnativeUsedByValue))
+					for _, s := range c.expected {
+						s.Labels[filtering.KnativeUsedbyKey] = filtering.KnativeUsedByValue
+					}
+				}
+				originSecrets := map[string]*corev1.Secret{
+					fmt.Sprintf("%s/%s", c.originSecret.Namespace, c.originSecret.Name): c.originSecret,
+				}
+				secrets, err := MakeSecrets(ctx, originSecrets, &ci)
+				if (err != nil) != c.wantErr {
+					t.Fatalf("Test: %q; MakeSecrets() error = %v, WantErr %v", c.name, err, c.wantErr)
+				}
+				if diff := cmp.Diff(c.expected, secrets); diff != "" {
+					t.Error("Unexpected secrets (-want, +got):", diff)
+				}
 			}
-			secrets, err := MakeSecrets(ctx, originSecrets, &ci)
-			if (err != nil) != c.wantErr {
-				t.Fatalf("Test: %q; MakeSecrets() error = %v, WantErr %v", c.name, err, c.wantErr)
-			}
-			if diff := cmp.Diff(c.expected, secrets); diff != "" {
-				t.Error("Unexpected secrets (-want, +got):", diff)
-			}
+			steps(false)
+			steps(true)
 		})
 	}
 }
@@ -239,16 +250,26 @@ func TestMakeWildcardSecrets(t *testing.T) {
 	}}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			originSecrets := map[string]*corev1.Secret{
-				fmt.Sprintf("%s/%s", c.originSecret.Namespace, c.originSecret.Name): c.originSecret,
+			steps := func(addLabels bool) {
+				if addLabels {
+					t.Setenv(filtering.InformerLabelSelectorsFilterEnv, fmt.Sprintf("%s=%s", filtering.KnativeUsedbyKey, filtering.KnativeUsedByValue))
+					for _, s := range c.expected {
+						s.Labels[filtering.KnativeUsedbyKey] = filtering.KnativeUsedByValue
+					}
+				}
+				originSecrets := map[string]*corev1.Secret{
+					fmt.Sprintf("%s/%s", c.originSecret.Namespace, c.originSecret.Name): c.originSecret,
+				}
+				secrets, err := MakeWildcardSecrets(ctx, originSecrets)
+				if (err != nil) != c.wantErr {
+					t.Fatalf("Test: %q; MakeWildcardSecrets() error = %v, WantErr %v", c.name, err, c.wantErr)
+				}
+				if diff := cmp.Diff(c.expected, secrets); diff != "" {
+					t.Error("Unexpected secrets (-want, +got):", diff)
+				}
 			}
-			secrets, err := MakeWildcardSecrets(ctx, originSecrets)
-			if (err != nil) != c.wantErr {
-				t.Fatalf("Test: %q; MakeWildcardSecrets() error = %v, WantErr %v", c.name, err, c.wantErr)
-			}
-			if diff := cmp.Diff(c.expected, secrets); diff != "" {
-				t.Error("Unexpected secrets (-want, +got):", diff)
-			}
+			steps(false)
+			steps(true)
 		})
 	}
 }
