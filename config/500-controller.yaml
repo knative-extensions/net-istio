@@ -64,8 +64,6 @@ spec:
           value: config-logging
         - name: CONFIG_OBSERVABILITY_NAME
           value: config-observability
-        - name: INFORMER_LABEL_SELECTORS_FILTER
-          value: knative.dev/used-by=true
 
         # TODO(https://github.com/knative/pkg/pull/953): Remove stackdriver specific config
         - name: METRICS_DOMAIN

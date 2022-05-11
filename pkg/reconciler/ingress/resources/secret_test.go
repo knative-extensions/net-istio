@@ -28,9 +28,9 @@ import (
 	kubeinformers "k8s.io/client-go/informers"
 	fakek8s "k8s.io/client-go/kubernetes/fake"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
+	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
-	"knative.dev/pkg/injection/filtering"
 	. "knative.dev/pkg/logging/testing"
 )
 
@@ -171,26 +171,23 @@ func TestMakeSecrets(t *testing.T) {
 	}}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			steps := func(addLabels bool) {
-				if addLabels {
-					t.Setenv(filtering.InformerLabelSelectorsFilterEnv, fmt.Sprintf("%s=%s", filtering.KnativeUsedbyKey, filtering.KnativeUsedByValue))
-					for _, s := range c.expected {
-						s.Labels[filtering.KnativeUsedbyKey] = filtering.KnativeUsedByValue
-					}
-				}
-				originSecrets := map[string]*corev1.Secret{
-					fmt.Sprintf("%s/%s", c.originSecret.Namespace, c.originSecret.Name): c.originSecret,
-				}
-				secrets, err := MakeSecrets(ctx, originSecrets, &ci)
-				if (err != nil) != c.wantErr {
-					t.Fatalf("Test: %q; MakeSecrets() error = %v, WantErr %v", c.name, err, c.wantErr)
-				}
-				if diff := cmp.Diff(c.expected, secrets); diff != "" {
-					t.Error("Unexpected secrets (-want, +got):", diff)
-				}
+			if c.originSecret.Labels == nil {
+				c.originSecret.Labels = map[string]string{}
+				c.originSecret.Labels[network.SecretInformerLabelKey] = c.originSecret.Name
 			}
-			steps(false)
-			steps(true)
+			for _, s := range c.expected {
+				s.Labels[network.SecretInformerLabelKey] = c.originSecret.Name
+			}
+			originSecrets := map[string]*corev1.Secret{
+				fmt.Sprintf("%s/%s", c.originSecret.Namespace, c.originSecret.Name): c.originSecret,
+			}
+			secrets, err := MakeSecrets(ctx, originSecrets, &ci)
+			if (err != nil) != c.wantErr {
+				t.Fatalf("Test: %q; MakeSecrets() error = %v, WantErr %v", c.name, err, c.wantErr)
+			}
+			if diff := cmp.Diff(c.expected, secrets); diff != "" {
+				t.Error("Unexpected secrets (-want, +got):", diff)
+			}
 		})
 	}
 }
@@ -250,26 +247,23 @@ func TestMakeWildcardSecrets(t *testing.T) {
 	}}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			steps := func(addLabels bool) {
-				if addLabels {
-					t.Setenv(filtering.InformerLabelSelectorsFilterEnv, fmt.Sprintf("%s=%s", filtering.KnativeUsedbyKey, filtering.KnativeUsedByValue))
-					for _, s := range c.expected {
-						s.Labels[filtering.KnativeUsedbyKey] = filtering.KnativeUsedByValue
-					}
-				}
-				originSecrets := map[string]*corev1.Secret{
-					fmt.Sprintf("%s/%s", c.originSecret.Namespace, c.originSecret.Name): c.originSecret,
-				}
-				secrets, err := MakeWildcardSecrets(ctx, originSecrets)
-				if (err != nil) != c.wantErr {
-					t.Fatalf("Test: %q; MakeWildcardSecrets() error = %v, WantErr %v", c.name, err, c.wantErr)
-				}
-				if diff := cmp.Diff(c.expected, secrets); diff != "" {
-					t.Error("Unexpected secrets (-want, +got):", diff)
-				}
+			if c.originSecret.Labels == nil {
+				c.originSecret.Labels = map[string]string{}
 			}
-			steps(false)
-			steps(true)
+			c.originSecret.Labels[network.SecretInformerLabelKey] = c.originSecret.Name
+			for _, s := range c.expected {
+				s.Labels[network.SecretInformerLabelKey] = c.originSecret.Name
+			}
+			originSecrets := map[string]*corev1.Secret{
+				fmt.Sprintf("%s/%s", c.originSecret.Namespace, c.originSecret.Name): c.originSecret,
+			}
+			secrets, err := MakeWildcardSecrets(ctx, originSecrets)
+			if (err != nil) != c.wantErr {
+				t.Fatalf("Test: %q; MakeWildcardSecrets() error = %v, WantErr %v", c.name, err, c.wantErr)
+			}
+			if diff := cmp.Diff(c.expected, secrets); diff != "" {
+				t.Error("Unexpected secrets (-want, +got):", diff)
+			}
 		})
 	}
 }

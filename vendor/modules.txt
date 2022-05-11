@@ -889,7 +889,6 @@ knative.dev/pkg/injection
 knative.dev/pkg/injection/clients/dynamicclient
 knative.dev/pkg/injection/clients/namespacedkube/informers/core/v1/secret
 knative.dev/pkg/injection/clients/namespacedkube/informers/factory
-knative.dev/pkg/injection/filtering
 knative.dev/pkg/injection/sharedmain
 knative.dev/pkg/kflag
 knative.dev/pkg/kmap
