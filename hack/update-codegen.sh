@@ -63,7 +63,7 @@ group "Update istio generated manifests"
 
 # We don't update HEAD since it changes regularly and we don't
 # want our presubmit checks to fail because a diff occurred
-# ${REPO_ROOT_DIR}/third_party/istio-head/generate_manifests.sh
+# ${REPO_ROOT_DIR}/third_party/istio-head/generate-manifests.sh
 
 
 # Update latest cause the istioctl version seems to generate
