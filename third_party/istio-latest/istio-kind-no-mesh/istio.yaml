@@ -6919,7 +6919,7 @@ data:
         "sts": {
           "servicePort": 0
         },
-        "tag": "1.13.2",
+        "tag": "1.13.3",
         "tracer": {
           "datadog": {
             "address": "$(HOST_IP):8126"
@@ -8101,7 +8101,7 @@ spec:
               value: "true"
             - name: ISTIO_META_CLUSTER_ID
               value: Kubernetes
-          image: docker.io/istio/proxyv2:1.13.2
+          image: docker.io/istio/proxyv2:1.13.3
           name: istio-proxy
           ports:
             - containerPort: 15021
@@ -8239,7 +8239,7 @@ spec:
         fsGroup: 1337
       containers:
         - name: discovery
-          image: docker.io/istio/pilot:1.13.2
+          image: docker.io/istio/pilot:1.13.3
           args:
             - discovery
             - --monitoringAddr=:15014
