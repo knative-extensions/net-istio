@@ -30,10 +30,6 @@ jobs:
         istio-version:
         - latest
 
-        enable-informer-filtering:
-        - true
-        - false
-
         # Map between K8s and KinD versions.
         # This is attempting to make it a bit clearer what's being tested.
         # See: https://github.com/kubernetes-sigs/kind/releases
@@ -130,9 +126,6 @@ jobs:
 
         # Deploy Istio
         ./third_party/istio-${{ matrix.istio-version }}/install-istio.sh istio-kind-no-mesh
-
-        # If should use informer filtering then set env var accordingly
-        sed -i "s/value: \"false\"/value: \"${{ enable-informer-filtering }}\"/" config/500-controller.yaml
 
         # Build and Publish our containers to the docker daemon (including test assets)
         ko resolve --platform=linux/amd64 -f test/config/ -f config/ | kubectl apply -f -
