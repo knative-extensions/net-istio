@@ -19,6 +19,9 @@ package ingress
 import (
 	"context"
 
+	v1 "k8s.io/client-go/informers/core/v1"
+	"knative.dev/net-istio/pkg"
+
 	"go.uber.org/zap"
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
 	gatewayinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/gateway"
@@ -81,7 +84,7 @@ func newControllerWithOptions(
 	logger := logging.FromContext(ctx)
 	virtualServiceInformer := virtualserviceinformer.Get(ctx)
 	gatewayInformer := gatewayinformer.Get(ctx)
-	secretInformer := secretfilteredinformer.Get(ctx, network.SecretInformerLabelKey)
+	secretInformer := getSecretInformer(ctx)
 	serviceInformer := serviceinformer.Get(ctx)
 	ingressInformer := ingressinformer.Get(ctx)
 
@@ -178,4 +181,11 @@ func combineFunc(functions ...func(interface{})) func(interface{}) {
 			f(obj)
 		}
 	}
+}
+
+func getSecretInformer(ctx context.Context) v1.SecretInformer {
+	if pkg.ShouldFilterByCertificateUID() {
+		return secretfilteredinformer.Get(ctx, networking.CertifcateUIDLabelKey)
+	}
+	return secretfilteredinformer.Get(ctx, "") // Allow all
 }

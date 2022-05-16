@@ -18,10 +18,9 @@ package main
 
 import (
 	"istio.io/api/networking/v1beta1"
+	"knative.dev/net-istio/pkg"
 	"knative.dev/net-istio/pkg/reconciler/ingress"
 	"knative.dev/net-istio/pkg/reconciler/serverlessservice"
-	network "knative.dev/networking/pkg"
-	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 	"knative.dev/pkg/signals"
 
 	// This defines the shared main for injected controllers.
@@ -34,6 +33,5 @@ func main() {
 	v1beta1.VirtualServiceUnmarshaler.AllowUnknownFields = true
 	v1beta1.GatewayUnmarshaler.AllowUnknownFields = true
 
-	ctx := filteredFactory.WithSelectors(signals.NewContext(), network.SecretInformerLabelKey)
-	sharedmain.MainWithContext(ctx, "net-istio-controller", ingress.NewController, serverlessservice.NewController)
+	sharedmain.MainWithContext(pkg.GetContextWithFilteringLabelSelector(signals.NewContext()), "net-istio-controller", ingress.NewController, serverlessservice.NewController)
 }
