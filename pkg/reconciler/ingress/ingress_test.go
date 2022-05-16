@@ -19,7 +19,6 @@ package ingress
 import (
 	"context"
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 	"testing"
@@ -46,7 +45,6 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/filtered/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
-	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 	_ "knative.dev/pkg/client/injection/kube/informers/factory/filtered/fake"
 
 	istiov1alpha1 "istio.io/api/meta/v1alpha1"
@@ -1585,12 +1583,7 @@ func newTestSetup(t *testing.T, configs ...*corev1.ConfigMap) (
 	*controller.Impl,
 	*configmap.ManualWatcher) {
 
-	ctx, cancel, informers := SetupFakeContextWithCancel(t, func(ctx context.Context) context.Context {
-		if os.Getenv(pkgnetistio.EnableSecretInformerFilteringByCertUIDEnv) != "" {
-			return filteredFactory.WithSelectors(ctx, networking.CertificateUIDLabelKey)
-		}
-		return filteredFactory.WithSelectors(ctx, "")
-	})
+	ctx, cancel, informers := SetupFakeContextWithCancel(t, pkgnetistio.GetContextWithFilteringLabelSelector)
 	configMapWatcher := &configmap.ManualWatcher{Namespace: system.Namespace()}
 
 	controller := newControllerWithOptions(ctx,

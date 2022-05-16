@@ -38,6 +38,7 @@ func ShouldFilterByCertificateUID() bool {
 	return false
 }
 
+// GetContextWithFilteringLabelSelector returns the passed context with the proper label key selector added to it.
 func GetContextWithFilteringLabelSelector(ctx context.Context) context.Context {
 	if ShouldFilterByCertificateUID() {
 		return filteredFactory.WithSelectors(ctx, networking.CertificateUIDLabelKey)
