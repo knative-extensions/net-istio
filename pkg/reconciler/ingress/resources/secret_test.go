@@ -187,10 +187,10 @@ func TestMakeSecrets(t *testing.T) {
 			t.Setenv(pkg.EnableSecretInformerFilteringByCertUIDEnv, "true")
 			if c.originSecret.Labels == nil {
 				c.originSecret.Labels = map[string]string{}
-				c.originSecret.Labels[networking.CertifcateUIDLabelKey] = "123e4567-e89b-12d3-a456-426614174000"
+				c.originSecret.Labels[networking.CertificateUIDLabelKey] = "123e4567-e89b-12d3-a456-426614174000"
 			}
 			for _, s := range c.expected {
-				s.Labels[networking.CertifcateUIDLabelKey] = "123e4567-e89b-12d3-a456-426614174000"
+				s.Labels[networking.CertificateUIDLabelKey] = "123e4567-e89b-12d3-a456-426614174000"
 			}
 			testSecrets()
 		})
@@ -268,10 +268,10 @@ func TestMakeWildcardSecrets(t *testing.T) {
 			t.Setenv(pkg.EnableSecretInformerFilteringByCertUIDEnv, "true")
 			if c.originSecret.Labels == nil {
 				c.originSecret.Labels = map[string]string{}
-				c.originSecret.Labels[networking.CertifcateUIDLabelKey] = "823a4562-e89b-22d3-e456-226614174000"
+				c.originSecret.Labels[networking.CertificateUIDLabelKey] = "823a4562-e89b-22d3-e456-226614174000"
 			}
 			for _, s := range c.expected {
-				s.Labels[networking.CertifcateUIDLabelKey] = "823a4562-e89b-22d3-e456-226614174000"
+				s.Labels[networking.CertificateUIDLabelKey] = "823a4562-e89b-22d3-e456-226614174000"
 			}
 			testSecrets()
 		})

@@ -970,7 +970,7 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			ingressWithTLS("reconciling-ingress", ingressTLSWithSecretNamespace("knative-serving")),
 			// The namespace (`knative-serving`) of the origin secret is different
 			// from the namespace (`istio-system`) of Istio gateway service.
-			addLabelsToSecret(originSecret("knative-serving", "secret0"), map[string]string{networking.CertifcateUIDLabelKey: "my-certificate"}),
+			addLabelsToSecret(originSecret("knative-serving", "secret0"), map[string]string{networking.CertificateUIDLabelKey: "my-certificate"}),
 			ingressService,
 		},
 		WantCreates: []runtime.Object{
@@ -986,7 +986,7 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 
 			// The secret copy under istio-system.
 			targetSecret("istio-system", targetSecretName, map[string]string{
-				networking.CertifcateUIDLabelKey:         "my-certificate",
+				networking.CertificateUIDLabelKey:        "my-certificate",
 				networking.OriginSecretNameLabelKey:      "secret0",
 				networking.OriginSecretNamespaceLabelKey: "knative-serving",
 			}),
@@ -1587,7 +1587,7 @@ func newTestSetup(t *testing.T, configs ...*corev1.ConfigMap) (
 
 	ctx, cancel, informers := SetupFakeContextWithCancel(t, func(ctx context.Context) context.Context {
 		if os.Getenv(pkgnetistio.EnableSecretInformerFilteringByCertUIDEnv) != "" {
-			return filteredFactory.WithSelectors(ctx, networking.CertifcateUIDLabelKey)
+			return filteredFactory.WithSelectors(ctx, networking.CertificateUIDLabelKey)
 		}
 		return filteredFactory.WithSelectors(ctx, "")
 	})

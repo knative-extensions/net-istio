@@ -99,7 +99,7 @@ func targetWildcardSecretName(originSecretName, originSecretNamespace string) st
 
 func makeSecret(originSecret *corev1.Secret, name, namespace string, labels map[string]string) *corev1.Secret {
 	if pkg.ShouldFilterByCertificateUID() {
-		labels[networking.CertifcateUIDLabelKey] = originSecret.Labels[networking.CertifcateUIDLabelKey] // propagate label for informer use
+		labels[networking.CertificateUIDLabelKey] = originSecret.Labels[networking.CertificateUIDLabelKey] // propagate label for informer use
 	}
 
 	return &corev1.Secret{

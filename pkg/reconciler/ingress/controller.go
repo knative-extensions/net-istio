@@ -185,7 +185,7 @@ func combineFunc(functions ...func(interface{})) func(interface{}) {
 
 func getSecretInformer(ctx context.Context) v1.SecretInformer {
 	if pkg.ShouldFilterByCertificateUID() {
-		return secretfilteredinformer.Get(ctx, networking.CertifcateUIDLabelKey)
+		return secretfilteredinformer.Get(ctx, networking.CertificateUIDLabelKey)
 	}
 	return secretfilteredinformer.Get(ctx, "") // Allow all
 }

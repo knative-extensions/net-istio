@@ -40,7 +40,7 @@ func ShouldFilterByCertificateUID() bool {
 
 func GetContextWithFilteringLabelSelector(ctx context.Context) context.Context {
 	if ShouldFilterByCertificateUID() {
-		return filteredFactory.WithSelectors(ctx, networking.CertifcateUIDLabelKey)
+		return filteredFactory.WithSelectors(ctx, networking.CertificateUIDLabelKey)
 	}
 	return filteredFactory.WithSelectors(ctx, "") // Allow all
 }
