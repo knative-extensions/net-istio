@@ -26,7 +26,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
-	"knative.dev/net-istio/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/kmeta"
@@ -98,9 +97,7 @@ func targetWildcardSecretName(originSecretName, originSecretNamespace string) st
 }
 
 func makeSecret(originSecret *corev1.Secret, name, namespace string, labels map[string]string) *corev1.Secret {
-	if pkg.ShouldFilterByCertificateUID() {
-		labels[networking.CertificateUIDLabelKey] = originSecret.Labels[networking.CertificateUIDLabelKey] // propagate label for informer use
-	}
+	labels[networking.CertificateUIDLabelKey] = originSecret.Labels[networking.CertificateUIDLabelKey] // propagate label for informer use
 
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{

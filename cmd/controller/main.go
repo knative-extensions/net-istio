@@ -18,7 +18,7 @@ package main
 
 import (
 	"istio.io/api/networking/v1beta1"
-	"knative.dev/net-istio/pkg"
+	"knative.dev/net-istio/pkg/reconciler/informerfiltering"
 	"knative.dev/net-istio/pkg/reconciler/ingress"
 	"knative.dev/net-istio/pkg/reconciler/serverlessservice"
 	"knative.dev/pkg/signals"
@@ -33,5 +33,6 @@ func main() {
 	v1beta1.VirtualServiceUnmarshaler.AllowUnknownFields = true
 	v1beta1.GatewayUnmarshaler.AllowUnknownFields = true
 
-	sharedmain.MainWithContext(pkg.GetContextWithFilteringLabelSelector(signals.NewContext()), "net-istio-controller", ingress.NewController, serverlessservice.NewController)
+	ctx := informerfiltering.GetContextWithFilteringLabelSelector(signals.NewContext())
+	sharedmain.MainWithContext(ctx, "net-istio-controller", ingress.NewController, serverlessservice.NewController)
 }

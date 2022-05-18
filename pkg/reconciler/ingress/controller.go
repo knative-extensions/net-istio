@@ -19,10 +19,10 @@ package ingress
 import (
 	"context"
 
-	v1 "k8s.io/client-go/informers/core/v1"
-	"knative.dev/net-istio/pkg"
+	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 
 	"go.uber.org/zap"
+	v1 "k8s.io/client-go/informers/core/v1"
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
 	gatewayinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/gateway"
 	virtualserviceinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice"
@@ -184,8 +184,6 @@ func combineFunc(functions ...func(interface{})) func(interface{}) {
 }
 
 func getSecretInformer(ctx context.Context) v1.SecretInformer {
-	if pkg.ShouldFilterByCertificateUID() {
-		return secretfilteredinformer.Get(ctx, networking.CertificateUIDLabelKey)
-	}
-	return secretfilteredinformer.Get(ctx, "") // Allow all
+	untyped := ctx.Value(filteredFactory.LabelKey{}) // This should always be not nil and have exactly one selector
+	return secretfilteredinformer.Get(ctx, untyped.([]string)[0])
 }
