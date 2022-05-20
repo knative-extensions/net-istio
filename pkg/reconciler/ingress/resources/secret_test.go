@@ -27,7 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubeinformers "k8s.io/client-go/informers"
 	fakek8s "k8s.io/client-go/kubernetes/fake"
-	"knative.dev/net-istio/pkg/reconciler/informerfiltering"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
@@ -160,8 +159,9 @@ func TestMakeSecrets(t *testing.T) {
 				// the ns of Istio gateway service.
 				Namespace: "istio-system",
 				Labels: map[string]string{
-					networking.OriginSecretNameLabelKey:      "test-secret",
-					networking.OriginSecretNamespaceLabelKey: "knative-serving",
+					"networking.internal.knative.dev/certificate-uid": "",
+					networking.OriginSecretNameLabelKey:               "test-secret",
+					networking.OriginSecretNamespaceLabelKey:          "knative-serving",
 				},
 			},
 			Data: map[string][]byte{
@@ -171,14 +171,6 @@ func TestMakeSecrets(t *testing.T) {
 	}}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			t.Setenv(informerfiltering.EnableSecretInformerFilteringByCertUIDEnv, "true")
-			if c.originSecret.Labels == nil {
-				c.originSecret.Labels = map[string]string{}
-				c.originSecret.Labels[networking.CertificateUIDLabelKey] = "123e4567-e89b-12d3-a456-426614174000"
-			}
-			for _, s := range c.expected {
-				s.Labels[networking.CertificateUIDLabelKey] = "123e4567-e89b-12d3-a456-426614174000"
-			}
 			originSecrets := map[string]*corev1.Secret{
 				fmt.Sprintf("%s/%s", c.originSecret.Namespace, c.originSecret.Name): c.originSecret,
 			}
@@ -188,15 +180,6 @@ func TestMakeSecrets(t *testing.T) {
 			}
 			if diff := cmp.Diff(c.expected, secrets); diff != "" {
 				t.Error("Unexpected secrets (-want, +got):", diff)
-			}
-
-			t.Setenv(informerfiltering.EnableSecretInformerFilteringByCertUIDEnv, "true")
-			if c.originSecret.Labels == nil {
-				c.originSecret.Labels = map[string]string{}
-				c.originSecret.Labels[networking.CertificateUIDLabelKey] = "123e4567-e89b-12d3-a456-426614174000"
-			}
-			for _, s := range c.expected {
-				s.Labels[networking.CertificateUIDLabelKey] = "123e4567-e89b-12d3-a456-426614174000"
 			}
 		})
 	}
@@ -248,7 +231,7 @@ func TestMakeWildcardSecrets(t *testing.T) {
 				// Expected secret should be in istio-system which is
 				// the ns of Istio gateway service.
 				Namespace: "istio-system",
-				Labels:    map[string]string{},
+				Labels:    map[string]string{"networking.internal.knative.dev/certificate-uid": ""},
 			},
 			Data: map[string][]byte{
 				"test-data": []byte("abcd"),
@@ -257,14 +240,6 @@ func TestMakeWildcardSecrets(t *testing.T) {
 	}}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			t.Setenv(informerfiltering.EnableSecretInformerFilteringByCertUIDEnv, "true")
-			if c.originSecret.Labels == nil {
-				c.originSecret.Labels = map[string]string{}
-				c.originSecret.Labels[networking.CertificateUIDLabelKey] = "823a4562-e89b-22d3-e456-226614174000"
-			}
-			for _, s := range c.expected {
-				s.Labels[networking.CertificateUIDLabelKey] = "823a4562-e89b-22d3-e456-226614174000"
-			}
 			originSecrets := map[string]*corev1.Secret{
 				fmt.Sprintf("%s/%s", c.originSecret.Namespace, c.originSecret.Name): c.originSecret,
 			}
@@ -275,7 +250,6 @@ func TestMakeWildcardSecrets(t *testing.T) {
 			if diff := cmp.Diff(c.expected, secrets); diff != "" {
 				t.Error("Unexpected secrets (-want, +got):", diff)
 			}
-
 		})
 	}
 }

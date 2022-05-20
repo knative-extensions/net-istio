@@ -19,8 +19,6 @@ package ingress
 import (
 	"context"
 
-	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
-
 	"go.uber.org/zap"
 	v1 "k8s.io/client-go/informers/core/v1"
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
@@ -38,6 +36,7 @@ import (
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretfilteredinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/filtered"
 	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
+	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
