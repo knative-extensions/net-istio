@@ -97,6 +97,8 @@ func targetWildcardSecretName(originSecretName, originSecretNamespace string) st
 }
 
 func makeSecret(originSecret *corev1.Secret, name, namespace string, labels map[string]string) *corev1.Secret {
+	labels[networking.CertificateUIDLabelKey] = originSecret.Labels[networking.CertificateUIDLabelKey] // propagate label for informer use
+
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,

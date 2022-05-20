@@ -38,8 +38,10 @@ import (
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
-	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/filtered/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
+	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
+	_ "knative.dev/pkg/client/injection/kube/informers/factory/filtered/fake"
 
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
@@ -981,8 +983,9 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 
 			// The secret copy under istio-system.
 			targetSecret("istio-system", targetSecretName, map[string]string{
-				networking.OriginSecretNameLabelKey:      "secret0",
-				networking.OriginSecretNamespaceLabelKey: "knative-serving",
+				"networking.internal.knative.dev/certificate-uid": "",
+				networking.OriginSecretNameLabelKey:               "secret0",
+				networking.OriginSecretNamespaceLabelKey:          "knative-serving",
 			}),
 		},
 		WantPatches: []clientgotesting.PatchActionImpl{
@@ -1573,7 +1576,9 @@ func newTestSetup(t *testing.T, configs ...*corev1.ConfigMap) (
 	*controller.Impl,
 	*configmap.ManualWatcher) {
 
-	ctx, cancel, informers := SetupFakeContextWithCancel(t)
+	ctx, cancel, informers := SetupFakeContextWithCancel(t, func(ctx context.Context) context.Context {
+		return filteredFactory.WithSelectors(ctx, networking.CertificateUIDLabelKey)
+	})
 	configMapWatcher := &configmap.ManualWatcher{Namespace: system.Namespace()}
 
 	controller := newControllerWithOptions(ctx,

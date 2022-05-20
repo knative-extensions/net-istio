@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"go.uber.org/zap"
+	v1 "k8s.io/client-go/informers/core/v1"
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
 	gatewayinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/gateway"
 	virtualserviceinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice"
@@ -33,8 +34,9 @@ import (
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	endpointsinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
-	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
+	secretfilteredinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/filtered"
 	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
+	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -81,7 +83,7 @@ func newControllerWithOptions(
 	logger := logging.FromContext(ctx)
 	virtualServiceInformer := virtualserviceinformer.Get(ctx)
 	gatewayInformer := gatewayinformer.Get(ctx)
-	secretInformer := secretinformer.Get(ctx)
+	secretInformer := getSecretInformer(ctx)
 	serviceInformer := serviceinformer.Get(ctx)
 	ingressInformer := ingressinformer.Get(ctx)
 
@@ -178,4 +180,9 @@ func combineFunc(functions ...func(interface{})) func(interface{}) {
 			f(obj)
 		}
 	}
+}
+
+func getSecretInformer(ctx context.Context) v1.SecretInformer {
+	untyped := ctx.Value(filteredFactory.LabelKey{}) // This should always be not nil and have exactly one selector
+	return secretfilteredinformer.Get(ctx, untyped.([]string)[0])
 }
