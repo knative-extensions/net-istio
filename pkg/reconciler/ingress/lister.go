@@ -31,9 +31,9 @@ import (
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
-	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/ingress"
+	"knative.dev/networking/pkg/k8s"
 	"knative.dev/networking/pkg/status"
 )
 
@@ -151,7 +151,7 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) (
 			continue
 		}
 
-		portName, err := network.NameForPortNumber(service, int32(server.Port.Number))
+		portName, err := k8s.NameForPortNumber(service, int32(server.Port.Number))
 		if err != nil {
 			l.logger.Infof("Skipping Server %q because Service %s/%s doesn't contain a port %d", server.Port.Name, service.Namespace, service.Name, server.Port.Number)
 			continue
@@ -168,7 +168,7 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1alpha3.Gateway) (
 			// We can't simply translate from the Service.Spec because Service.Spec.Target.Port
 			// could be either a name or a number.  In the Endpoints spec, all ports are provided
 			// as numbers.
-			portNumber, err := network.PortNumberForName(sub, portName)
+			portNumber, err := k8s.PortNumberForName(sub, portName)
 			if err != nil {
 				l.logger.Infof("Skipping Subset %v because it doesn't contain a port name %q", sub.Addresses, portName)
 				continue

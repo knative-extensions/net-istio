@@ -31,9 +31,9 @@ import (
 	clientgotesting "k8s.io/client-go/testing"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/serverlessservice/resources"
-	network "knative.dev/networking/pkg"
 	netv1alpha1 "knative.dev/networking/pkg/apis/networking/v1alpha1"
 	sksreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/serverlessservice"
+	netconfig "knative.dev/networking/pkg/config"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -196,7 +196,7 @@ func TestReconcile(t *testing.T) {
 				ConfigStore: &testConfigStore{
 					config: &config.Config{
 						Istio: &config.Istio{},
-						Network: &network.Config{
+						Network: &netconfig.Config{
 							EnableMeshPodAddressability: true,
 						},
 					},

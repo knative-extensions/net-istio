@@ -33,9 +33,9 @@ import (
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
-	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	netconfig "knative.dev/networking/pkg/config"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	fakeserviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
 	"knative.dev/pkg/kmeta"
@@ -666,8 +666,8 @@ func TestMakeWildcardGateways(t *testing.T) {
 					ServiceURL: fmt.Sprintf("%s.%s.svc.cluster.local", tc.gatewayService.Name, tc.gatewayService.Namespace),
 				}},
 			},
-			Network: &network.Config{
-				HTTPProtocol: network.HTTPEnabled,
+			Network: &netconfig.Config{
+				HTTPProtocol: netconfig.HTTPEnabled,
 			},
 		})
 		t.Run(tc.name, func(t *testing.T) {
@@ -769,8 +769,8 @@ func TestMakeIngressGateways(t *testing.T) {
 					ServiceURL: fmt.Sprintf("%s.%s.svc.cluster.local", defaultGatewayService.Name, defaultGatewayService.Namespace),
 				}},
 			},
-			Network: &network.Config{
-				HTTPProtocol: network.HTTPEnabled,
+			Network: &netconfig.Config{
+				HTTPProtocol: netconfig.HTTPEnabled,
 			},
 		})
 		t.Run(c.name, func(t *testing.T) {
@@ -942,8 +942,8 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 					ServiceURL: fmt.Sprintf("%s.%s.svc.cluster.local", c.gatewayService.Name, c.gatewayService.Namespace),
 				}},
 			},
-			Network: &network.Config{
-				HTTPProtocol: network.HTTPEnabled,
+			Network: &netconfig.Config{
+				HTTPProtocol: netconfig.HTTPEnabled,
 			},
 		})
 		t.Run(c.name, func(t *testing.T) {

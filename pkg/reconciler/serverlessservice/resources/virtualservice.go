@@ -21,8 +21,8 @@ import (
 
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
-	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	"knative.dev/networking/pkg/http/header"
 	"knative.dev/pkg/kmeta"
 	pkgnetwork "knative.dev/pkg/network"
 )
@@ -45,7 +45,7 @@ func MakeVirtualService(sks *v1alpha1.ServerlessService) *v1alpha3.VirtualServic
 			Http: []*istiov1alpha3.HTTPRoute{{
 				Match: []*istiov1alpha3.HTTPMatchRequest{{
 					Headers: map[string]*istiov1alpha3.StringMatch{
-						network.PassthroughLoadbalancingHeaderName: {
+						header.PassthroughLoadbalancingKey: {
 							MatchType: &istiov1alpha3.StringMatch_Exact{
 								Exact: "true",
 							},

@@ -25,11 +25,11 @@ import (
 	gatewayinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/gateway"
 	virtualserviceinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
-	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	ingressinformer "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress"
 	ingressreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
+	netconfig "knative.dev/networking/pkg/config"
 	"knative.dev/networking/pkg/status"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	endpointsinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
@@ -95,12 +95,12 @@ func newControllerWithOptions(
 		secretLister:         secretInformer.Lister(),
 		svcLister:            serviceInformer.Lister(),
 	}
-	myFilterFunc := reconciler.AnnotationFilterFunc(networking.IngressClassAnnotationKey, network.IstioIngressClassName, true)
+	myFilterFunc := reconciler.AnnotationFilterFunc(networking.IngressClassAnnotationKey, netconfig.IstioIngressClassName, true)
 
-	impl := ingressreconciler.NewImpl(ctx, c, network.IstioIngressClassName, func(impl *controller.Impl) controller.Options {
+	impl := ingressreconciler.NewImpl(ctx, c, netconfig.IstioIngressClassName, func(impl *controller.Impl) controller.Options {
 		configsToResync := []interface{}{
 			&config.Istio{},
-			&network.Config{},
+			&netconfig.Config{},
 		}
 		resyncIngressesOnConfigChange := configmap.TypeFilter(configsToResync...)(func(string, interface{}) {
 			impl.FilteredGlobalResync(myFilterFunc, ingressInformer.Informer())

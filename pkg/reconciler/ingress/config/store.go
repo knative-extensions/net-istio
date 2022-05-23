@@ -20,6 +20,7 @@ import (
 	"context"
 
 	network "knative.dev/networking/pkg"
+	"knative.dev/networking/pkg/config"
 	"knative.dev/pkg/configmap"
 )
 
@@ -29,7 +30,7 @@ type cfgKey struct{}
 // +k8s:deepcopy-gen=false
 type Config struct {
 	Istio   *Istio
-	Network *network.Config
+	Network *config.Config
 }
 
 // FromContext fetch config from context.
@@ -63,8 +64,8 @@ func NewStore(logger configmap.Logger, onAfterStore ...func(name string, value i
 			"ingress",
 			logger,
 			configmap.Constructors{
-				IstioConfigName:    NewIstioFromConfigMap,
-				network.ConfigName: network.NewConfigFromConfigMap,
+				IstioConfigName:      NewIstioFromConfigMap,
+				config.ConfigMapName: network.NewConfigFromConfigMap,
 			},
 			onAfterStore...,
 		),
@@ -82,6 +83,6 @@ func (s *Store) ToContext(ctx context.Context) context.Context {
 func (s *Store) Load() *Config {
 	return &Config{
 		Istio:   s.UntypedLoad(IstioConfigName).(*Istio).DeepCopy(),
-		Network: s.UntypedLoad(network.ConfigName).(*network.Config).DeepCopy(),
+		Network: s.UntypedLoad(config.ConfigMapName).(*config.Config).DeepCopy(),
 	}
 }

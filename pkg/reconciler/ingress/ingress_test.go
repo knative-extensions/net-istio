@@ -63,10 +63,10 @@ import (
 
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
-	network "knative.dev/networking/pkg"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	ingressreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/ingress"
+	netconfig "knative.dev/networking/pkg/config"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/configmap"
@@ -670,7 +670,7 @@ func TestReconcile(t *testing.T) {
 		}
 
 		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakenetworkingclient.Get(ctx),
-			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, network.IstioIngressClassName, controller.Options{
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, netconfig.IstioIngressClassName, controller.Options{
 				ConfigStore: &testConfigStore{
 					config: ReconcilerTestConfig(),
 				}})
@@ -1205,7 +1205,7 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 		}
 
 		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakenetworkingclient.Get(ctx),
-			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, network.IstioIngressClassName, controller.Options{
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, netconfig.IstioIngressClassName, controller.Options{
 				ConfigStore: &testConfigStore{
 					// Enable reconciling gateway.
 					config: &config.Config{
@@ -1216,8 +1216,8 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 								ServiceURL: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system"),
 							}},
 						},
-						Network: &network.Config{
-							HTTPProtocol: network.HTTPDisabled,
+						Network: &netconfig.Config{
+							HTTPProtocol: netconfig.HTTPDisabled,
 							AutoTLS:      true,
 						},
 					},
@@ -1303,7 +1303,7 @@ func TestReconcile_DisableStatus(t *testing.T) {
 		config.Istio.EnableVirtualServiceStatus = false
 
 		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakenetworkingclient.Get(ctx),
-			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, network.IstioIngressClassName, controller.Options{
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, netconfig.IstioIngressClassName, controller.Options{
 				ConfigStore: &testConfigStore{
 					config: ReconcilerTestConfig(),
 				}})
@@ -1455,7 +1455,7 @@ func ReconcilerTestConfig() *config.Config {
 			}},
 			EnableVirtualServiceStatus: true,
 		},
-		Network: &network.Config{
+		Network: &netconfig.Config{
 			AutoTLS: false,
 		},
 	}
@@ -1476,7 +1476,7 @@ func ingressWithStatus(name string, status v1alpha1.IngressStatus) *v1alpha1.Ing
 				resources.RouteLabelKey:          "test-route",
 				resources.RouteNamespaceLabelKey: testNS,
 			},
-			Annotations:     map[string]string{networking.IngressClassAnnotationKey: network.IstioIngressClassName},
+			Annotations:     map[string]string{networking.IngressClassAnnotationKey: netconfig.IstioIngressClassName},
 			ResourceVersion: "v1",
 		},
 		Spec: v1alpha1.IngressSpec{
@@ -1599,7 +1599,7 @@ func newTestSetup(t *testing.T, configs ...*corev1.ConfigMap) (
 		Data: originGateways,
 	}, {
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      network.ConfigName,
+			Name:      netconfig.ConfigMapName,
 			Namespace: system.Namespace(),
 		},
 		Data: map[string]string{
@@ -1816,7 +1816,7 @@ func TestGlobalResyncOnUpdateNetwork(t *testing.T) {
 	// Test changes in autoTLS of config-network ConfigMap. Ingress should get updated appropriately.
 	networkConfig := corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      network.ConfigName,
+			Name:      netconfig.ConfigMapName,
 			Namespace: system.Namespace(),
 		},
 		Data: map[string]string{

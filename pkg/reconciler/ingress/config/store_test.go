@@ -24,6 +24,7 @@ import (
 	logtesting "knative.dev/pkg/logging/testing"
 
 	network "knative.dev/networking/pkg"
+	netconfig "knative.dev/networking/pkg/config"
 	. "knative.dev/pkg/configmap/testing"
 )
 
@@ -31,7 +32,7 @@ func TestStoreLoadWithContext(t *testing.T) {
 	store := NewStore(logtesting.TestLogger(t))
 
 	istioConfig := ConfigMapFromTestFile(t, IstioConfigName)
-	networkConfig := ConfigMapFromTestFile(t, network.ConfigName)
+	networkConfig := ConfigMapFromTestFile(t, netconfig.ConfigMapName)
 	store.OnConfigChanged(istioConfig)
 	store.OnConfigChanged(networkConfig)
 	config := FromContext(store.ToContext(context.Background()))
@@ -51,19 +52,19 @@ func TestStoreImmutableConfig(t *testing.T) {
 	store := NewStore(logtesting.TestLogger(t))
 
 	store.OnConfigChanged(ConfigMapFromTestFile(t, IstioConfigName))
-	store.OnConfigChanged(ConfigMapFromTestFile(t, network.ConfigName))
+	store.OnConfigChanged(ConfigMapFromTestFile(t, netconfig.ConfigMapName))
 
 	config := store.Load()
 
 	config.Istio.IngressGateways = []Gateway{{Name: "mutated", ServiceURL: "mutated"}}
-	config.Network.HTTPProtocol = network.HTTPRedirected
+	config.Network.HTTPProtocol = netconfig.HTTPRedirected
 
 	newConfig := store.Load()
 
 	if newConfig.Istio.IngressGateways[0].Name == "mutated" {
 		t.Error("Istio config is not immutable")
 	}
-	if newConfig.Network.HTTPProtocol == network.HTTPRedirected {
+	if newConfig.Network.HTTPProtocol == netconfig.HTTPRedirected {
 		t.Error("Network config is not immuable")
 	}
 }
