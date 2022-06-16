@@ -403,6 +403,15 @@ rules:
       - update
       - patch
   - apiGroups:
+      - gateway.networking.k8s.io
+    resources:
+      - gatewayclasses
+    verbs:
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
       - ""
     resources:
       - secrets
@@ -627,6 +636,15 @@ rules:
       - '*'
     verbs:
       - update
+  - apiGroups:
+      - gateway.networking.k8s.io
+    resources:
+      - gatewayclasses
+    verbs:
+      - create
+      - update
+      - patch
+      - delete
   - apiGroups:
       - ""
     resources:
@@ -1309,10 +1327,15 @@ spec:
                                 type: object
                               simple:
                                 enum:
-                                  - ROUND_ROBIN
+                                  - UNSPECIFIED
                                   - LEAST_CONN
                                   - RANDOM
                                   - PASSTHROUGH
+                                  - ROUND_ROBIN
+                                  - LEAST_REQUEST
+                                type: string
+                              warmupDurationSecs:
+                                description: Represents the warmup duration of Service.
                                 type: string
                             type: object
                           outlierDetection:
@@ -1530,10 +1553,15 @@ spec:
                                       type: object
                                     simple:
                                       enum:
-                                        - ROUND_ROBIN
+                                        - UNSPECIFIED
                                         - LEAST_CONN
                                         - RANDOM
                                         - PASSTHROUGH
+                                        - ROUND_ROBIN
+                                        - LEAST_REQUEST
+                                      type: string
+                                    warmupDurationSecs:
+                                      description: Represents the warmup duration of Service.
                                       type: string
                                   type: object
                                 outlierDetection:
@@ -1636,6 +1664,18 @@ spec:
                                 items:
                                   type: string
                                 type: array
+                            type: object
+                          tunnel:
+                            properties:
+                              protocol:
+                                description: Specifies which protocol to use for tunneling the downstream connection.
+                                type: string
+                              targetHost:
+                                description: Specifies a host to which the downstream connection is tunneled.
+                                type: string
+                              targetPort:
+                                description: Specifies a port to which the downstream connection is tunneled.
+                                type: integer
                             type: object
                         type: object
                     type: object
@@ -1821,10 +1861,15 @@ spec:
                           type: object
                         simple:
                           enum:
-                            - ROUND_ROBIN
+                            - UNSPECIFIED
                             - LEAST_CONN
                             - RANDOM
                             - PASSTHROUGH
+                            - ROUND_ROBIN
+                            - LEAST_REQUEST
+                          type: string
+                        warmupDurationSecs:
+                          description: Represents the warmup duration of Service.
                           type: string
                       type: object
                     outlierDetection:
@@ -2042,10 +2087,15 @@ spec:
                                 type: object
                               simple:
                                 enum:
-                                  - ROUND_ROBIN
+                                  - UNSPECIFIED
                                   - LEAST_CONN
                                   - RANDOM
                                   - PASSTHROUGH
+                                  - ROUND_ROBIN
+                                  - LEAST_REQUEST
+                                type: string
+                              warmupDurationSecs:
+                                description: Represents the warmup duration of Service.
                                 type: string
                             type: object
                           outlierDetection:
@@ -2148,6 +2198,25 @@ spec:
                           items:
                             type: string
                           type: array
+                      type: object
+                    tunnel:
+                      properties:
+                        protocol:
+                          description: Specifies which protocol to use for tunneling the downstream connection.
+                          type: string
+                        targetHost:
+                          description: Specifies a host to which the downstream connection is tunneled.
+                          type: string
+                        targetPort:
+                          description: Specifies a port to which the downstream connection is tunneled.
+                          type: integer
+                      type: object
+                  type: object
+                workloadSelector:
+                  properties:
+                    matchLabels:
+                      additionalProperties:
+                        type: string
                       type: object
                   type: object
               type: object
@@ -2375,10 +2444,15 @@ spec:
                                 type: object
                               simple:
                                 enum:
-                                  - ROUND_ROBIN
+                                  - UNSPECIFIED
                                   - LEAST_CONN
                                   - RANDOM
                                   - PASSTHROUGH
+                                  - ROUND_ROBIN
+                                  - LEAST_REQUEST
+                                type: string
+                              warmupDurationSecs:
+                                description: Represents the warmup duration of Service.
                                 type: string
                             type: object
                           outlierDetection:
@@ -2596,10 +2670,15 @@ spec:
                                       type: object
                                     simple:
                                       enum:
-                                        - ROUND_ROBIN
+                                        - UNSPECIFIED
                                         - LEAST_CONN
                                         - RANDOM
                                         - PASSTHROUGH
+                                        - ROUND_ROBIN
+                                        - LEAST_REQUEST
+                                      type: string
+                                    warmupDurationSecs:
+                                      description: Represents the warmup duration of Service.
                                       type: string
                                   type: object
                                 outlierDetection:
@@ -2702,6 +2781,18 @@ spec:
                                 items:
                                   type: string
                                 type: array
+                            type: object
+                          tunnel:
+                            properties:
+                              protocol:
+                                description: Specifies which protocol to use for tunneling the downstream connection.
+                                type: string
+                              targetHost:
+                                description: Specifies a host to which the downstream connection is tunneled.
+                                type: string
+                              targetPort:
+                                description: Specifies a port to which the downstream connection is tunneled.
+                                type: integer
                             type: object
                         type: object
                     type: object
@@ -2887,10 +2978,15 @@ spec:
                           type: object
                         simple:
                           enum:
-                            - ROUND_ROBIN
+                            - UNSPECIFIED
                             - LEAST_CONN
                             - RANDOM
                             - PASSTHROUGH
+                            - ROUND_ROBIN
+                            - LEAST_REQUEST
+                          type: string
+                        warmupDurationSecs:
+                          description: Represents the warmup duration of Service.
                           type: string
                       type: object
                     outlierDetection:
@@ -3108,10 +3204,15 @@ spec:
                                 type: object
                               simple:
                                 enum:
-                                  - ROUND_ROBIN
+                                  - UNSPECIFIED
                                   - LEAST_CONN
                                   - RANDOM
                                   - PASSTHROUGH
+                                  - ROUND_ROBIN
+                                  - LEAST_REQUEST
+                                type: string
+                              warmupDurationSecs:
+                                description: Represents the warmup duration of Service.
                                 type: string
                             type: object
                           outlierDetection:
@@ -3214,6 +3315,25 @@ spec:
                           items:
                             type: string
                           type: array
+                      type: object
+                    tunnel:
+                      properties:
+                        protocol:
+                          description: Specifies which protocol to use for tunneling the downstream connection.
+                          type: string
+                        targetHost:
+                          description: Specifies a host to which the downstream connection is tunneled.
+                          type: string
+                        targetPort:
+                          description: Specifies a port to which the downstream connection is tunneled.
+                          type: integer
+                      type: object
+                  type: object
+                workloadSelector:
+                  properties:
+                    matchLabels:
+                      additionalProperties:
+                        type: string
                       type: object
                   type: object
               type: object
@@ -4676,6 +4796,16 @@ spec:
                             description: CEL expression for selecting when requests/connections should be logged.
                             type: string
                         type: object
+                      match:
+                        description: Allows tailoring of logging behavior to specific conditions.
+                        properties:
+                          mode:
+                            enum:
+                              - CLIENT_AND_SERVER
+                              - CLIENT
+                              - SERVER
+                            type: string
+                        type: object
                       providers:
                         description: Optional.
                         items:
@@ -4732,7 +4862,6 @@ spec:
                                     - GRPC_RESPONSE_MESSAGES
                                   type: string
                                 mode:
-                                  description: 'Controls which mode of metrics generation is selected: CLIENT and/or SERVER.'
                                   enum:
                                     - CLIENT_AND_SERVER
                                     - CLIENT
@@ -4808,7 +4937,6 @@ spec:
                                   type: string
                               type: object
                             header:
-                              description: RequestHeader adds the value of an header from the request to each span.
                               properties:
                                 defaultValue:
                                   description: Optional.
@@ -4831,6 +4959,16 @@ spec:
                         description: Controls span reporting.
                         nullable: true
                         type: boolean
+                      match:
+                        description: Allows tailoring of behavior to specific conditions.
+                        properties:
+                          mode:
+                            enum:
+                              - CLIENT_AND_SERVER
+                              - CLIENT
+                              - SERVER
+                            type: string
+                        type: object
                       providers:
                         description: Optional.
                         items:
@@ -6354,6 +6492,26 @@ spec:
                   type: string
                 verificationKey:
                   type: string
+                vmConfig:
+                  description: Configuration for a Wasm VM.
+                  properties:
+                    env:
+                      description: Specifies environment variables to be injected to this VM.
+                      items:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            description: Value for the environment variable.
+                            type: string
+                          valueFrom:
+                            enum:
+                              - INLINE
+                              - HOST
+                            type: string
+                        type: object
+                      type: array
+                  type: object
               type: object
             status:
               type: object
@@ -6825,6 +6983,7 @@ data:
   values: |-
     {
       "global": {
+        "autoscalingv2API": true,
         "caAddress": "",
         "caName": "",
         "configCluster": false,
@@ -6919,7 +7078,7 @@ data:
         "sts": {
           "servicePort": 0
         },
-        "tag": "1.13.4",
+        "tag": "1.14.1",
         "tracer": {
           "datadog": {
             "address": "$(HOST_IP):8126"
@@ -6950,10 +7109,6 @@ data:
         "enableNamespacesByDefault": false,
         "injectedAnnotations": {},
         "neverInjectSelector": [],
-        "objectSelector": {
-          "autoInject": true,
-          "enabled": true
-        },
         "rewriteAppHTTPProbe": true,
         "templates": {}
       }
@@ -7004,10 +7159,14 @@ data:
             service.istio.io/canonical-name: {{ index .ObjectMeta.Labels `service.istio.io/canonical-name` | default (index .ObjectMeta.Labels `app.kubernetes.io/name`) | default (index .ObjectMeta.Labels `app`) | default .DeploymentMeta.Name  | quote }}
             service.istio.io/canonical-revision: {{ index .ObjectMeta.Labels `service.istio.io/canonical-revision` | default (index .ObjectMeta.Labels `app.kubernetes.io/version`) | default (index .ObjectMeta.Labels `version`) | default "latest"  | quote }}
           annotations: {
-            {{- if eq (len $containers) 1 }}
+            {{- if ge (len $containers) 1 }}
+            {{- if not (isset .ObjectMeta.Annotations `kubectl.kubernetes.io/default-logs-container`) }}
             kubectl.kubernetes.io/default-logs-container: "{{ index $containers 0 }}",
+            {{- end }}
+            {{- if not (isset .ObjectMeta.Annotations `kubectl.kubernetes.io/default-container`) }}
             kubectl.kubernetes.io/default-container: "{{ index $containers 0 }}",
-            {{ end }}
+            {{- end }}
+            {{- end }}
         {{- if .Values.istio_cni.enabled }}
             {{- if not .Values.istio_cni.chained }}
             k8s.v1.cni.cncf.io/networks: '{{ appendMultusNetwork (index .ObjectMeta.Annotations `k8s.v1.cni.cncf.io/networks`) `istio-cni` }}',
@@ -7328,10 +7487,15 @@ data:
             resources:
           {{ template "resources" . }}
             volumeMounts:
+            - name: workload-socket
+              mountPath: /var/run/secrets/workload-spiffe-uds
             {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
             - name: gke-workload-certificate
               mountPath: /var/run/secrets/workload-spiffe-credentials
               readOnly: true
+            {{- else }}
+            - name: workload-certs
+              mountPath: /var/run/secrets/workload-spiffe-credentials
             {{- end }}
             {{- if eq .Values.global.pilotCertProvider "istiod" }}
             - mountPath: /var/run/secrets/istio
@@ -7370,10 +7534,15 @@ data:
               {{ end }}
               {{- end }}
           volumes:
+          - emptyDir:
+            name: workload-socket
           {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
           - name: gke-workload-certificate
             csi:
               driver: workloadcertificates.security.cloud.google.com
+          {{- else }}
+          - emptyDir:
+            name: workload-certs
           {{- end }}
           {{- if (isset .ObjectMeta.Annotations `sidecar.istio.io/bootstrapOverride`) }}
           - name: custom-bootstrap-volume
@@ -7576,10 +7745,15 @@ data:
               timeoutSeconds: 3
               failureThreshold: {{ .Values.global.proxy.readinessFailureThreshold }}
             volumeMounts:
+            - name: workload-socket
+              mountPath: /var/run/secrets/workload-spiffe-uds
             {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
             - name: gke-workload-certificate
               mountPath: /var/run/secrets/workload-spiffe-credentials
               readOnly: true
+            {{- else }}
+            - name: workload-certs
+              mountPath: /var/run/secrets/workload-spiffe-credentials
             {{- end }}
             {{- if eq .Values.global.pilotCertProvider "istiod" }}
             - mountPath: /var/run/secrets/istio
@@ -7603,10 +7777,15 @@ data:
             - name: istio-podinfo
               mountPath: /etc/istio/pod
           volumes:
+          - emptyDir: {}
+            name: workload-socket
           {{- if eq .Values.global.caName "GkeWorkloadCertificate" }}
           - name: gke-workload-certificate
             csi:
               driver: workloadcertificates.security.cloud.google.com
+          {{- else}}
+          - emptyDir: {}
+            name: workload-certs
           {{- end }}
           # SDS channel between istioagent and Envoy
           - emptyDir:
@@ -7903,6 +8082,10 @@ data:
             {{- end }}
           {{- end }}
             volumeMounts:
+            - name: workload-socket
+              mountPath: /var/run/secrets/workload-spiffe-uds
+            - name: workload-certs
+              mountPath: /var/run/secrets/workload-spiffe-credentials
             {{- if eq .Values.global.pilotCertProvider "istiod" }}
             - mountPath: /var/run/secrets/istio
               name: istiod-ca-cert
@@ -7925,6 +8108,10 @@ data:
             {{ end }}
             {{- end }}
           volumes:
+          - emptyDir: {}
+            name: workload-socket
+          - emptyDir: {}
+            name: workload-certs
           # UDS channel between istioagent and gRPC client for XDS/SDS
           - emptyDir:
               medium: Memory
@@ -8101,7 +8288,7 @@ spec:
               value: "true"
             - name: ISTIO_META_CLUSTER_ID
               value: Kubernetes
-          image: docker.io/istio/proxyv2:1.13.4
+          image: docker.io/istio/proxyv2:1.14.1
           name: istio-proxy
           ports:
             - containerPort: 15021
@@ -8138,6 +8325,10 @@ spec:
             privileged: false
             readOnlyRootFilesystem: true
           volumeMounts:
+            - mountPath: /var/run/secrets/workload-spiffe-uds
+              name: workload-socket
+            - mountPath: /var/run/secrets/workload-spiffe-credentials
+              name: workload-certs
             - mountPath: /etc/istio/proxy
               name: istio-envoy
             - mountPath: /etc/istio/config
@@ -8164,6 +8355,10 @@ spec:
         runAsUser: 1337
       serviceAccountName: istio-ingressgateway-service-account
       volumes:
+        - emptyDir: {}
+          name: workload-socket
+        - emptyDir: {}
+          name: workload-certs
         - configMap:
             name: istio-ca-root-cert
           name: istiod-ca-cert
@@ -8239,7 +8434,7 @@ spec:
         fsGroup: 1337
       containers:
         - name: discovery
-          image: docker.io/istio/pilot:1.13.4
+          image: docker.io/istio/pilot:1.14.1
           args:
             - discovery
             - --monitoringAddr=:15014
@@ -8406,7 +8601,7 @@ spec:
     app: istiod
     istio: pilot
 ---
-apiVersion: autoscaling/v2beta1
+apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
   labels:
@@ -8422,7 +8617,9 @@ spec:
   metrics:
     - resource:
         name: cpu
-        targetAverageUtilization: 60
+        target:
+          averageUtilization: 60
+          type: Utilization
       type: Resource
   minReplicas: 1
   scaleTargetRef:
@@ -8486,7 +8683,6 @@ webhooks:
         namespace: istio-system
         path: /inject
         port: 443
-      caBundle: ""
     sideEffects: None
     rules:
       - operations:
@@ -8522,7 +8718,6 @@ webhooks:
         namespace: istio-system
         path: /inject
         port: 443
-      caBundle: ""
     sideEffects: None
     rules:
       - operations:
@@ -8560,7 +8755,6 @@ webhooks:
         namespace: istio-system
         path: /inject
         port: 443
-      caBundle: ""
     sideEffects: None
     rules:
       - operations:
@@ -8594,7 +8788,6 @@ webhooks:
         namespace: istio-system
         path: /inject
         port: 443
-      caBundle: ""
     sideEffects: None
     rules:
       - operations:
@@ -8640,7 +8833,6 @@ webhooks:
         name: istiod
         namespace: istio-system
         path: /validate
-      caBundle: ""
     rules:
       - operations:
           - CREATE
@@ -8674,6 +8866,7 @@ metadata:
   labels:
     istio.io/rev: default
 spec:
+  priority: -1
   configPatches:
     - applyTo: HTTP_FILTER
       match:
@@ -8796,6 +8989,7 @@ metadata:
   labels:
     istio.io/rev: default
 spec:
+  priority: -1
   configPatches:
     - applyTo: HTTP_FILTER
       match:
@@ -8918,6 +9112,7 @@ metadata:
   labels:
     istio.io/rev: default
 spec:
+  priority: -1
   configPatches:
     - applyTo: HTTP_FILTER
       match:
@@ -9035,11 +9230,258 @@ spec:
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
+  name: stats-filter-1.14
+  namespace: istio-system
+  labels:
+    istio.io/rev: default
+spec:
+  priority: -1
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_OUTBOUND
+        proxy:
+          proxyVersion: ^1\.14.*
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+              subFilter:
+                name: envoy.filters.http.router
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: istio.stats
+          typed_config:
+            '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+            value:
+              config:
+                root_id: stats_outbound
+                configuration:
+                  '@type': type.googleapis.com/google.protobuf.StringValue
+                  value: |
+                    {
+                      "debug": "false",
+                      "stat_prefix": "istio"
+                    }
+                vm_config:
+                  vm_id: stats_outbound
+                  runtime: envoy.wasm.runtime.null
+                  code:
+                    local:
+                      inline_string: envoy.wasm.stats
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        proxy:
+          proxyVersion: ^1\.14.*
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+              subFilter:
+                name: envoy.filters.http.router
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: istio.stats
+          typed_config:
+            '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+            value:
+              config:
+                root_id: stats_inbound
+                configuration:
+                  '@type': type.googleapis.com/google.protobuf.StringValue
+                  value: |
+                    {
+                      "debug": "false",
+                      "stat_prefix": "istio",
+                      "disable_host_header_fallback": true,
+                      "metrics": [
+                        {
+                          "dimensions": {
+                            "destination_cluster": "node.metadata['CLUSTER_ID']",
+                            "source_cluster": "downstream_peer.cluster_id"
+                          }
+                        }
+                      ]
+                    }
+                vm_config:
+                  vm_id: stats_inbound
+                  runtime: envoy.wasm.runtime.null
+                  code:
+                    local:
+                      inline_string: envoy.wasm.stats
+    - applyTo: HTTP_FILTER
+      match:
+        context: GATEWAY
+        proxy:
+          proxyVersion: ^1\.14.*
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+              subFilter:
+                name: envoy.filters.http.router
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: istio.stats
+          typed_config:
+            '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+            value:
+              config:
+                root_id: stats_outbound
+                configuration:
+                  '@type': type.googleapis.com/google.protobuf.StringValue
+                  value: |
+                    {
+                      "debug": "false",
+                      "stat_prefix": "istio",
+                      "disable_host_header_fallback": true
+                    }
+                vm_config:
+                  vm_id: stats_outbound
+                  runtime: envoy.wasm.runtime.null
+                  code:
+                    local:
+                      inline_string: envoy.wasm.stats
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: stats-filter-1.15
+  namespace: istio-system
+  labels:
+    istio.io/rev: default
+spec:
+  priority: -1
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_OUTBOUND
+        proxy:
+          proxyVersion: ^1\.15.*
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+              subFilter:
+                name: envoy.filters.http.router
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: istio.stats
+          typed_config:
+            '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+            value:
+              config:
+                root_id: stats_outbound
+                configuration:
+                  '@type': type.googleapis.com/google.protobuf.StringValue
+                  value: |
+                    {
+                      "debug": "false",
+                      "stat_prefix": "istio"
+                    }
+                vm_config:
+                  vm_id: stats_outbound
+                  runtime: envoy.wasm.runtime.null
+                  code:
+                    local:
+                      inline_string: envoy.wasm.stats
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        proxy:
+          proxyVersion: ^1\.15.*
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+              subFilter:
+                name: envoy.filters.http.router
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: istio.stats
+          typed_config:
+            '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+            value:
+              config:
+                root_id: stats_inbound
+                configuration:
+                  '@type': type.googleapis.com/google.protobuf.StringValue
+                  value: |
+                    {
+                      "debug": "false",
+                      "stat_prefix": "istio",
+                      "disable_host_header_fallback": true,
+                      "metrics": [
+                        {
+                          "dimensions": {
+                            "destination_cluster": "node.metadata['CLUSTER_ID']",
+                            "source_cluster": "downstream_peer.cluster_id"
+                          }
+                        }
+                      ]
+                    }
+                vm_config:
+                  vm_id: stats_inbound
+                  runtime: envoy.wasm.runtime.null
+                  code:
+                    local:
+                      inline_string: envoy.wasm.stats
+    - applyTo: HTTP_FILTER
+      match:
+        context: GATEWAY
+        proxy:
+          proxyVersion: ^1\.15.*
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+              subFilter:
+                name: envoy.filters.http.router
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: istio.stats
+          typed_config:
+            '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+            value:
+              config:
+                root_id: stats_outbound
+                configuration:
+                  '@type': type.googleapis.com/google.protobuf.StringValue
+                  value: |
+                    {
+                      "debug": "false",
+                      "stat_prefix": "istio",
+                      "disable_host_header_fallback": true
+                    }
+                vm_config:
+                  vm_id: stats_outbound
+                  runtime: envoy.wasm.runtime.null
+                  code:
+                    local:
+                      inline_string: envoy.wasm.stats
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
   name: tcp-stats-filter-1.11
   namespace: istio-system
   labels:
     istio.io/rev: default
 spec:
+  priority: -1
   configPatches:
     - applyTo: NETWORK_FILTER
       match:
@@ -9154,6 +9596,7 @@ metadata:
   labels:
     istio.io/rev: default
 spec:
+  priority: -1
   configPatches:
     - applyTo: NETWORK_FILTER
       match:
@@ -9268,6 +9711,7 @@ metadata:
   labels:
     istio.io/rev: default
 spec:
+  priority: -1
   configPatches:
     - applyTo: NETWORK_FILTER
       match:
@@ -9346,6 +9790,236 @@ spec:
         context: GATEWAY
         proxy:
           proxyVersion: ^1\.13.*
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.tcp_proxy
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: istio.stats
+          typed_config:
+            '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.network.wasm.v3.Wasm
+            value:
+              config:
+                root_id: stats_outbound
+                configuration:
+                  '@type': type.googleapis.com/google.protobuf.StringValue
+                  value: |
+                    {
+                      "debug": "false",
+                      "stat_prefix": "istio"
+                    }
+                vm_config:
+                  vm_id: tcp_stats_outbound
+                  runtime: envoy.wasm.runtime.null
+                  code:
+                    local:
+                      inline_string: envoy.wasm.stats
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: tcp-stats-filter-1.14
+  namespace: istio-system
+  labels:
+    istio.io/rev: default
+spec:
+  priority: -1
+  configPatches:
+    - applyTo: NETWORK_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        proxy:
+          proxyVersion: ^1\.14.*
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.tcp_proxy
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: istio.stats
+          typed_config:
+            '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.network.wasm.v3.Wasm
+            value:
+              config:
+                root_id: stats_inbound
+                configuration:
+                  '@type': type.googleapis.com/google.protobuf.StringValue
+                  value: |
+                    {
+                      "debug": "false",
+                      "stat_prefix": "istio",
+                      "metrics": [
+                        {
+                          "dimensions": {
+                            "destination_cluster": "node.metadata['CLUSTER_ID']",
+                            "source_cluster": "downstream_peer.cluster_id"
+                          }
+                        }
+                      ]
+                    }
+                vm_config:
+                  vm_id: tcp_stats_inbound
+                  runtime: envoy.wasm.runtime.null
+                  code:
+                    local:
+                      inline_string: envoy.wasm.stats
+    - applyTo: NETWORK_FILTER
+      match:
+        context: SIDECAR_OUTBOUND
+        proxy:
+          proxyVersion: ^1\.14.*
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.tcp_proxy
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: istio.stats
+          typed_config:
+            '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.network.wasm.v3.Wasm
+            value:
+              config:
+                root_id: stats_outbound
+                configuration:
+                  '@type': type.googleapis.com/google.protobuf.StringValue
+                  value: |
+                    {
+                      "debug": "false",
+                      "stat_prefix": "istio"
+                    }
+                vm_config:
+                  vm_id: tcp_stats_outbound
+                  runtime: envoy.wasm.runtime.null
+                  code:
+                    local:
+                      inline_string: envoy.wasm.stats
+    - applyTo: NETWORK_FILTER
+      match:
+        context: GATEWAY
+        proxy:
+          proxyVersion: ^1\.14.*
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.tcp_proxy
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: istio.stats
+          typed_config:
+            '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.network.wasm.v3.Wasm
+            value:
+              config:
+                root_id: stats_outbound
+                configuration:
+                  '@type': type.googleapis.com/google.protobuf.StringValue
+                  value: |
+                    {
+                      "debug": "false",
+                      "stat_prefix": "istio"
+                    }
+                vm_config:
+                  vm_id: tcp_stats_outbound
+                  runtime: envoy.wasm.runtime.null
+                  code:
+                    local:
+                      inline_string: envoy.wasm.stats
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: tcp-stats-filter-1.15
+  namespace: istio-system
+  labels:
+    istio.io/rev: default
+spec:
+  priority: -1
+  configPatches:
+    - applyTo: NETWORK_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        proxy:
+          proxyVersion: ^1\.15.*
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.tcp_proxy
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: istio.stats
+          typed_config:
+            '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.network.wasm.v3.Wasm
+            value:
+              config:
+                root_id: stats_inbound
+                configuration:
+                  '@type': type.googleapis.com/google.protobuf.StringValue
+                  value: |
+                    {
+                      "debug": "false",
+                      "stat_prefix": "istio",
+                      "metrics": [
+                        {
+                          "dimensions": {
+                            "destination_cluster": "node.metadata['CLUSTER_ID']",
+                            "source_cluster": "downstream_peer.cluster_id"
+                          }
+                        }
+                      ]
+                    }
+                vm_config:
+                  vm_id: tcp_stats_inbound
+                  runtime: envoy.wasm.runtime.null
+                  code:
+                    local:
+                      inline_string: envoy.wasm.stats
+    - applyTo: NETWORK_FILTER
+      match:
+        context: SIDECAR_OUTBOUND
+        proxy:
+          proxyVersion: ^1\.15.*
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.tcp_proxy
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: istio.stats
+          typed_config:
+            '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.network.wasm.v3.Wasm
+            value:
+              config:
+                root_id: stats_outbound
+                configuration:
+                  '@type': type.googleapis.com/google.protobuf.StringValue
+                  value: |
+                    {
+                      "debug": "false",
+                      "stat_prefix": "istio"
+                    }
+                vm_config:
+                  vm_id: tcp_stats_outbound
+                  runtime: envoy.wasm.runtime.null
+                  code:
+                    local:
+                      inline_string: envoy.wasm.stats
+    - applyTo: NETWORK_FILTER
+      match:
+        context: GATEWAY
+        proxy:
+          proxyVersion: ^1\.15.*
         listener:
           filterChain:
             filter:
