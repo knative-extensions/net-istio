@@ -10,12 +10,12 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	istio.io/api v0.0.0-20210713195055-3a340e4f154e
 	istio.io/client-go v1.10.3
-	k8s.io/api v0.23.5
-	k8s.io/apimachinery v0.23.5
-	k8s.io/client-go v0.23.5
-	knative.dev/hack v0.0.0-20220524153203-12d3e2a7addc
-	knative.dev/networking v0.0.0-20220524205304-22d1b933cf73
-	knative.dev/pkg v0.0.0-20220524202603-19adf798efb8
+	k8s.io/api v0.23.8
+	k8s.io/apimachinery v0.23.8
+	k8s.io/client-go v0.23.8
+	knative.dev/hack v0.0.0-20220701014203-65c463ac8c98
+	knative.dev/networking v0.0.0-20220705142707-f087178076e4
+	knative.dev/pkg v0.0.0-20220705130606-e60d250dc637
 )
 
 require (
@@ -85,10 +85,10 @@ require (
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	istio.io/gogo-genproto v0.0.0-20210113155706-4daf5697332f // indirect
-	k8s.io/apiextensions-apiserver v0.23.4 // indirect
-	k8s.io/code-generator v0.23.5 // indirect
+	k8s.io/apiextensions-apiserver v0.23.8 // indirect
+	k8s.io/code-generator v0.23.8 // indirect
 	k8s.io/gengo v0.0.0-20220307231824-4627b89bbf1b // indirect
 	k8s.io/klog/v2 v2.60.1-0.20220317184644-43cc75f9ae89 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
