@@ -558,9 +558,6 @@ function go_run() {
   if [[ "$package" != *@* ]]; then
     abort 'Package for "go_run" needs to have @version'
   fi
-  if [[ "$package" == *@latest ]] && [[ "$package" != knative.dev* ]]; then
-    warning 'Using @latest version for external dependencies is unsafe. Use numbered version!'
-  fi
   shift 1
   GORUN_PATH="${GORUN_PATH:-$(go env GOPATH)}"
   # Some CI environments may have non-writable GOPATH

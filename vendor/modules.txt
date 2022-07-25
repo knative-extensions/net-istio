@@ -881,7 +881,7 @@ k8s.io/utils/lru
 k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/hack v0.0.0-20220725143223-92c7e36069eb
+# knative.dev/hack v0.0.0-20220725145124-782bbaabb8a1
 ## explicit; go 1.17
 knative.dev/hack
 # knative.dev/networking v0.0.0-20220705142707-f087178076e4
