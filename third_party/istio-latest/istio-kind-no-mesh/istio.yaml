@@ -7078,7 +7078,7 @@ data:
         "sts": {
           "servicePort": 0
         },
-        "tag": "1.14.1",
+        "tag": "1.14.3",
         "tracer": {
           "datadog": {
             "address": "$(HOST_IP):8126"
@@ -8192,45 +8192,8 @@ spec:
     spec:
       affinity:
         nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - preference:
-                matchExpressions:
-                  - key: kubernetes.io/arch
-                    operator: In
-                    values:
-                      - amd64
-              weight: 2
-            - preference:
-                matchExpressions:
-                  - key: kubernetes.io/arch
-                    operator: In
-                    values:
-                      - arm64
-              weight: 2
-            - preference:
-                matchExpressions:
-                  - key: kubernetes.io/arch
-                    operator: In
-                    values:
-                      - ppc64le
-              weight: 2
-            - preference:
-                matchExpressions:
-                  - key: kubernetes.io/arch
-                    operator: In
-                    values:
-                      - s390x
-              weight: 2
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: kubernetes.io/arch
-                    operator: In
-                    values:
-                      - amd64
-                      - arm64
-                      - ppc64le
-                      - s390x
+          preferredDuringSchedulingIgnoredDuringExecution: null
+          requiredDuringSchedulingIgnoredDuringExecution: null
       containers:
         - args:
             - proxy
@@ -8288,7 +8251,7 @@ spec:
               value: "true"
             - name: ISTIO_META_CLUSTER_ID
               value: Kubernetes
-          image: docker.io/istio/proxyv2:1.14.1
+          image: docker.io/istio/proxyv2:1.14.3
           name: istio-proxy
           ports:
             - containerPort: 15021
@@ -8434,7 +8397,7 @@ spec:
         fsGroup: 1337
       containers:
         - name: discovery
-          image: docker.io/istio/pilot:1.14.1
+          image: docker.io/istio/pilot:1.14.3
           args:
             - discovery
             - --monitoringAddr=:15014
