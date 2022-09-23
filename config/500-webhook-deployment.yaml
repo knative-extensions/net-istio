@@ -70,7 +70,13 @@ spec:
           value: net-istio-webhook
 
         securityContext:
+          runAsNonRoot: true
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
 
         ports:
         - name: metrics
