@@ -151,6 +151,9 @@ EOF
 
     # Remove documents with no content
     run_yq eval --inplace 'select(. != null)' "${target_dir}/istio.yaml"
+
+    # Workaround until the fix for https://github.com/istio/istio/issues/41220 is released.
+    sed -i "s/policy\/v1beta1/policy\/v1/" "${target_dir}/istio.yaml"
   done
 }
 
