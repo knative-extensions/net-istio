@@ -22,10 +22,7 @@ jobs:
         k8s-version:
         - v1.23.12
         - v1.24.6
-        # istioctl manifest generates incompatible manifests with 1.25.
-        # See: https://github.com/istio/istio/issues/41220
-        # We need to wait for https://github.com/istio/istio/commit/c5e79d2cc4c303f274dc1f5df004ca7d6c4ff7ee.
-        # - v1.25.2
+        - v1.25.2
 
         test-suite:
         - ./test/conformance
@@ -46,9 +43,9 @@ jobs:
           kind-version: v0.16.0
           kind-image-sha: sha256:97e8d00bc37a7598a0b32d1fabd155a96355c49fa0d4d4790aab0f161bf31be1
 
-            # - k8s-version: v1.25.2
-            #  kind-version: v0.16.0
-            #  kind-image-sha: sha256:9be91e9e9cdf116809841fc77ebdb8845443c4c72fe5218f3ae9eb57fdb4bace
+        - k8s-version: v1.25.2
+          kind-version: v0.16.0
+          kind-image-sha: sha256:9be91e9e9cdf116809841fc77ebdb8845443c4c72fe5218f3ae9eb57fdb4bace
 
     env:
       GOPATH: ${{ github.workspace }}
