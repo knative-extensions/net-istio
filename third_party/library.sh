@@ -85,8 +85,14 @@ function cleanup_istio() {
 
 function add_crd_label() {
   local lib_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  run_go_tool github.com/vmware-tanzu/carvel-ytt/cmd/ytt \
-    ytt -f - -f "${lib_path}/label-crd-overlay.ytt.yaml"
+  go_run github.com/vmware-tanzu/carvel-ytt/cmd/ytt@v0.43.0 \
+    -f - -f "${lib_path}/label-crd-overlay.ytt.yaml"
+}
+
+function upgrade_resource_versions() {
+  local lib_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  go_run github.com/vmware-tanzu/carvel-ytt/cmd/ytt@v0.43.0 \
+    -f - -f "${lib_path}/upgrade-resource-versions.ytt.yaml"
 }
 
 function generate_manifests() {
@@ -115,7 +121,7 @@ metadata:
 ---
 EOF
 
-    ${ISTIO_DIR}/bin/istioctl manifest generate -f "$file"  "$@" | add_crd_label >> "${tmpfile}"
+    ${ISTIO_DIR}/bin/istioctl manifest generate -f "$file"  "$@" | add_crd_label | upgrade_resource_versions >> "${tmpfile}"
 
     for kind in "${APPLY_ORDER[@]}"; do
       run_yq eval "select(.kind == \"${kind}\")" "${tmpfile}" >> "${target_dir}/istio.yaml"
@@ -151,9 +157,6 @@ EOF
 
     # Remove documents with no content
     run_yq eval --inplace 'select(. != null)' "${target_dir}/istio.yaml"
-
-    # Workaround until the fix for https://github.com/istio/istio/issues/41220 is released.
-    sed -i "s/policy\/v1beta1/policy\/v1/" "${target_dir}/istio.yaml"
   done
 }
 
@@ -169,7 +172,7 @@ function generate() {
 }
 
 function run_yq() {
-  GO111MODULE=on run_go_tool github.com/mikefarah/yq/v4 yq "$@"
+  go_run github.com/mikefarah/yq/v4@v4.28.1 "$@"
 }
 
 function install_yaml() {

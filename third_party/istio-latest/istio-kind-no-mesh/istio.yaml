@@ -7157,7 +7157,7 @@ data:
         "sts": {
           "servicePort": 0
         },
-        "tag": "1.15.0",
+        "tag": "1.15.2",
         "tracer": {
           "datadog": {
             "address": "$(HOST_IP):8126"
@@ -8418,7 +8418,7 @@ spec:
               value: "true"
             - name: ISTIO_META_CLUSTER_ID
               value: Kubernetes
-          image: docker.io/istio/proxyv2:1.15.0
+          image: docker.io/istio/proxyv2:1.15.2
           name: istio-proxy
           ports:
             - containerPort: 15021
@@ -8568,7 +8568,7 @@ spec:
         fsGroup: 1337
       containers:
         - name: discovery
-          image: docker.io/istio/pilot:1.15.0
+          image: docker.io/istio/pilot:1.15.2
           args:
             - discovery
             - --monitoringAddr=:15014
@@ -8735,31 +8735,31 @@ spec:
     app: istiod
     istio: pilot
 ---
-apiVersion: autoscaling/v2beta2
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  labels:
-    app: istiod
-    install.operator.istio.io/owning-resource: unknown
-    istio.io/rev: default
-    operator.istio.io/component: Pilot
-    release: istio
   name: istiod
   namespace: istio-system
+  labels:
+    app: istiod
+    release: istio
+    istio.io/rev: default
+    install.operator.istio.io/owning-resource: unknown
+    operator.istio.io/component: Pilot
 spec:
   maxReplicas: 3
-  metrics:
-    - resource:
-        name: cpu
-        target:
-          averageUtilization: 60
-          type: Utilization
-      type: Resource
   minReplicas: 1
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: istiod
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
