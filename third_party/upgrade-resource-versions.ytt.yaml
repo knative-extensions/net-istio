@@ -1,0 +1,9 @@
+#@ load("@ytt:overlay", "overlay")
+
+#@overlay/match by=overlay.subset({"kind":"HorizontalPodAutoscaler"}), expects="0+"
+---
+apiVersion: autoscaling/v2
+
+#@overlay/match by=overlay.subset({"kind":"PodDisruptionBudget"}), expects="0+"
+---
+apiVersion: policy/v1
