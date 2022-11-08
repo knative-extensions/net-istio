@@ -90,9 +90,10 @@ const (
 )
 
 // ingressfinalizer is the name that we put into the resource finalizer list, e.g.
-//  metadata:
-//    finalizers:
-//    - ingresses.networking.internal.knative.dev
+//
+//	metadata:
+//	  finalizers:
+//	  - ingresses.networking.internal.knative.dev
 var (
 	ingressResource  = v1alpha1.Resource("ingresses")
 	ingressFinalizer = ingressResource.String()
