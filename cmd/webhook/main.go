@@ -81,7 +81,7 @@ func main() {
 	ctx := webhook.WithOptions(signals.NewContext(), webhook.Options{
 		ServiceName: "net-istio-webhook",
 		SecretName:  "net-istio-webhook-certs",
-		Port:        8443,
+		Port:        webhook.PortFromEnv(8443),
 	})
 
 	sharedmain.WebhookMainWithContext(
