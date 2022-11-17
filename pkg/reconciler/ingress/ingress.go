@@ -22,6 +22,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.uber.org/zap"
 
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
@@ -46,7 +48,6 @@ import (
 	"knative.dev/pkg/logging"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/equality"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -297,9 +298,14 @@ func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desire
 		}
 	} else if err != nil {
 		return err
-	} else if !equality.Semantic.DeepEqual(existing.Spec, desired.Spec) {
+	} else if !cmp.Equal(existing.Spec.DeepCopy(), desired.Spec.DeepCopy(), cmpopts.IgnoreUnexported(
+		istiov1alpha3.Gateway{},
+		istiov1alpha3.Server{},
+		istiov1alpha3.Port{},
+		istiov1alpha3.ServerTLSSettings{},
+	)) {
 		copy := existing.DeepCopy()
-		copy.Spec = desired.Spec
+		copy.Spec = *desired.Spec.DeepCopy()
 		if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(desired.Namespace).Update(ctx, copy, metav1.UpdateOptions{}); err != nil {
 			return err
 		}
@@ -416,7 +422,7 @@ func (r *Reconciler) reconcileIngressServers(ctx context.Context, ing *v1alpha1.
 }
 
 func (r *Reconciler) reconcileGateway(ctx context.Context, ing *v1alpha1.Ingress, gateway *v1alpha3.Gateway, existing []*istiov1alpha3.Server, desired []*istiov1alpha3.Server) error {
-	if equality.Semantic.DeepEqual(existing, desired) {
+	if cmp.Equal(existing, desired, cmpopts.IgnoreUnexported(istiov1alpha3.Server{}, istiov1alpha3.Port{})) {
 		return nil
 	}
 
@@ -565,7 +571,7 @@ func (r *Reconciler) isVirtualServiceReady(ctx context.Context, vs *v1alpha3.Vir
 		return false, false, fmt.Errorf("failed to get VirtualService %q: %w", vs.Name, err)
 	}
 
-	logger.Debugf("VirtualService %s, status: %#v", vs.Name, currentState.Status)
+	logger.Debugf("VirtualService %s, status: %#v", vs.Name, &currentState.Status)
 
 	if currentState.Generation != currentState.Status.ObservedGeneration {
 		if currentState.Status.ObservedGeneration == 0 &&

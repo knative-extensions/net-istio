@@ -20,10 +20,15 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+
 	// Inject our fakes
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
 	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
 
+	istiov1alpha1 "istio.io/api/meta/v1alpha1"
+	v1alpha3 "istio.io/api/networking/v1alpha3"
 	istiov1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,6 +46,30 @@ import (
 	. "knative.dev/net-istio/pkg/reconciler/testing"
 	. "knative.dev/pkg/reconciler/testing"
 )
+
+var defaultCmpOpts = []cmp.Option{
+	cmpopts.IgnoreUnexported(
+		v1alpha3.VirtualService{},
+		v1alpha3.HTTPRoute{},
+		v1alpha3.HTTPRouteDestination{},
+		v1alpha3.HTTPMatchRequest{},
+		v1alpha3.Destination{},
+		v1alpha3.StringMatch{},
+		v1alpha3.PortSelector{},
+		v1alpha3.HTTPRetry{},
+		v1alpha3.Headers{},
+		v1alpha3.Headers_HeaderOperations{},
+	),
+	cmpopts.IgnoreUnexported(
+		v1alpha3.DestinationRule{},
+		v1alpha3.Subset{},
+		v1alpha3.TrafficPolicy{},
+		v1alpha3.LoadBalancerSettings{},
+	),
+	cmpopts.IgnoreUnexported(
+		istiov1alpha1.IstioStatus{},
+	),
+}
 
 func sks(name string) *netv1alpha1.ServerlessService {
 	sks := &netv1alpha1.ServerlessService{
@@ -82,6 +111,7 @@ func TestReconcile(t *testing.T) {
 			vs("test"),
 			dr("test"),
 		},
+		CmpOpts: defaultCmpOpts,
 	}, {
 		Name: "create both",
 		Key:  "testing/test",
@@ -96,6 +126,7 @@ func TestReconcile(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "test-foo"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created DestinationRule %q", "test-foo"),
 		},
+		CmpOpts: defaultCmpOpts,
 	}, {
 		Name: "create only VirtualService",
 		Key:  "testing/test",
@@ -109,6 +140,7 @@ func TestReconcile(t *testing.T) {
 		WantEvents: []string{
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "test-foo"),
 		},
+		CmpOpts: defaultCmpOpts,
 	}, {
 		Name: "create only DestinationRule",
 		Key:  "testing/test",
@@ -122,6 +154,7 @@ func TestReconcile(t *testing.T) {
 		WantEvents: []string{
 			Eventf(corev1.EventTypeNormal, "Created", "Created DestinationRule %q", "test-foo"),
 		},
+		CmpOpts: defaultCmpOpts,
 	}, {
 		Name: "fix both",
 		Key:  "testing/test",
@@ -147,6 +180,7 @@ func TestReconcile(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "Updated", "Updated VirtualService %s", "testing/test-foo"),
 			Eventf(corev1.EventTypeNormal, "Updated", "Updated DestinationRule %s", "testing/test-foo"),
 		},
+		CmpOpts: defaultCmpOpts,
 	}, {
 		Name:    "failure for VirtualService",
 		Key:     "testing/test",
@@ -165,6 +199,7 @@ func TestReconcile(t *testing.T) {
 			Eventf(corev1.EventTypeWarning, "CreationFailed", "Failed to create VirtualService %s: inducing failure for create virtualservices", "testing/test-foo"),
 			Eventf(corev1.EventTypeWarning, "InternalError", "failed to reconcile VirtualService: failed to create VirtualService: inducing failure for create virtualservices"),
 		},
+		CmpOpts: defaultCmpOpts,
 	}, {
 		Name:    "failure for DestinationRule",
 		Key:     "testing/test",
@@ -183,6 +218,7 @@ func TestReconcile(t *testing.T) {
 			Eventf(corev1.EventTypeWarning, "CreationFailed", "Failed to create DestinationRule %s: inducing failure for create destinationrules", "testing/test-foo"),
 			Eventf(corev1.EventTypeWarning, "InternalError", "failed to reconcile DestinationRule: failed to create DestinationRule: inducing failure for create destinationrules"),
 		},
+		CmpOpts: defaultCmpOpts,
 	}}
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		r := &reconciler{
