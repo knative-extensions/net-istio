@@ -4,24 +4,18 @@ go 1.18
 
 require (
 	github.com/gogo/protobuf v1.3.2
-	github.com/google/go-cmp v0.5.8
-	github.com/hashicorp/golang-lru v0.5.4
-	go.uber.org/zap v1.19.1
-	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
+	github.com/google/go-cmp v0.5.9
+	github.com/hashicorp/golang-lru v0.6.0
+	go.uber.org/zap v1.23.0
+	golang.org/x/sync v0.1.0
 	istio.io/api v0.0.0-20210713195055-3a340e4f154e
 	istio.io/client-go v1.10.3
 	k8s.io/api v0.25.4
 	k8s.io/apimachinery v0.25.4
 	k8s.io/client-go v0.25.4
-<<<<<<< HEAD
 	knative.dev/hack v0.0.0-20221117013839-2e610ce611f8
 	knative.dev/networking v0.0.0-20221117015040-9b791e24e63a
 	knative.dev/pkg v0.0.0-20221117013641-f5c1a03ab4f1
-=======
-	knative.dev/hack v0.0.0-20221101141106-4b6bd86dae9d
-	knative.dev/networking v0.0.0-20221102120008-7d976144000c
-	knative.dev/pkg v0.0.0-20221101143811-8fa1a3f55bf5
->>>>>>> ce8fd1bb (bump to k8s.io 0.25.4)
 )
 
 require (
@@ -30,6 +24,7 @@ require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
+	github.com/benbjohnson/clock v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/blendle/zapdriver v1.3.1 // indirect
