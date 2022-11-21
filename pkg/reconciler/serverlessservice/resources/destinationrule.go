@@ -51,7 +51,7 @@ func MakeDestinationRule(sks *v1alpha1.ServerlessService) *v1alpha3.DestinationR
 				TrafficPolicy: &istiov1alpha3.TrafficPolicy{
 					LoadBalancer: &istiov1alpha3.LoadBalancerSettings{
 						LbPolicy: &istiov1alpha3.LoadBalancerSettings_Simple{
-							Simple: istiov1alpha3.LoadBalancerSettings_LEAST_CONN,
+							Simple: istiov1alpha3.LoadBalancerSettings_LEAST_REQUEST,
 						},
 					},
 				},

@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -59,6 +60,18 @@ var (
 			HTTP: defaultIngressRuleValue,
 		}}},
 	}
+	defaultVSCmpOpts = cmpopts.IgnoreUnexported(
+		istiov1alpha3.HTTPRoute{},
+		istiov1alpha3.HTTPMatchRequest{},
+		istiov1alpha3.StringMatch{},
+		istiov1alpha3.HTTPRouteDestination{},
+		istiov1alpha3.Destination{},
+		istiov1alpha3.PortSelector{},
+		istiov1alpha3.Headers{},
+		istiov1alpha3.Headers_HeaderOperations{},
+		istiov1alpha3.HTTPRetry{},
+		istiov1alpha3.HTTPRewrite{},
+	)
 )
 
 func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
@@ -442,7 +455,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 	}}
 
 	routes := MakeMeshVirtualService(context.Background(), ci, defaultGateways).Spec.Http
-	if diff := cmp.Diff(expected, routes); diff != "" {
+	if diff := cmp.Diff(expected, routes, defaultVSCmpOpts); diff != "" {
 		t.Error("Unexpected routes (-want +got):", diff)
 	}
 }
@@ -584,7 +597,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 	}}
 
 	routes := MakeIngressVirtualService(context.Background(), ci, makeGatewayMap([]string{"gateway.public"}, []string{"gateway.private"})).Spec.Http
-	if diff := cmp.Diff(expected, routes); diff != "" {
+	if diff := cmp.Diff(expected, routes, defaultVSCmpOpts); diff != "" {
 		t.Error("Unexpected routes (-want +got):", diff)
 	}
 }
@@ -628,7 +641,7 @@ func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 			Weight: 100,
 		}},
 	}
-	if diff := cmp.Diff(expected, route); diff != "" {
+	if diff := cmp.Diff(expected, route, defaultVSCmpOpts); diff != "" {
 		t.Error("Unexpected route  (-want +got):", diff)
 	}
 }
@@ -686,7 +699,7 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 			Weight: 100,
 		}},
 	}
-	if diff := cmp.Diff(expected, route); diff != "" {
+	if diff := cmp.Diff(expected, route, defaultVSCmpOpts); diff != "" {
 		t.Error("Unexpected route  (-want +got):", diff)
 	}
 }
@@ -721,7 +734,7 @@ func TestMakeVirtualServiceRoute_Internal(t *testing.T) {
 			Weight: 100,
 		}},
 	}
-	if diff := cmp.Diff(expected, route); diff != "" {
+	if diff := cmp.Diff(expected, route, defaultVSCmpOpts); diff != "" {
 		t.Error("Unexpected route  (-want +got):", diff)
 	}
 }
@@ -768,7 +781,7 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 			Weight: 10,
 		}},
 	}
-	if diff := cmp.Diff(expected, route); diff != "" {
+	if diff := cmp.Diff(expected, route, defaultVSCmpOpts); diff != "" {
 		t.Error("Unexpected route  (-want +got):", diff)
 	}
 }
