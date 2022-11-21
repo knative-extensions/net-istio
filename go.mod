@@ -8,8 +8,8 @@ require (
 	github.com/hashicorp/golang-lru v0.6.0
 	go.uber.org/zap v1.23.0
 	golang.org/x/sync v0.1.0
-	istio.io/api v0.0.0-20220304033655-c6e3d0f0d646
-	istio.io/client-go v1.13.2
+	istio.io/api v0.0.0-20220817194812-9ed7a41198c8
+	istio.io/client-go v1.13.9
 	k8s.io/api v0.25.4
 	k8s.io/apimachinery v0.25.4
 	k8s.io/client-go v0.25.4
