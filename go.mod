@@ -4,10 +4,10 @@ go 1.18
 
 require (
 	github.com/gogo/protobuf v1.3.2
-	github.com/google/go-cmp v0.5.8
-	github.com/hashicorp/golang-lru v0.5.4
-	go.uber.org/zap v1.19.1
-	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
+	github.com/google/go-cmp v0.5.9
+	github.com/hashicorp/golang-lru v0.6.0
+	go.uber.org/zap v1.23.0
+	golang.org/x/sync v0.1.0
 	istio.io/api v0.0.0-20210713195055-3a340e4f154e
 	istio.io/client-go v1.10.3
 	k8s.io/api v0.25.4
@@ -24,6 +24,7 @@ require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
+	github.com/benbjohnson/clock v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/blendle/zapdriver v1.3.1 // indirect
