@@ -159,7 +159,7 @@ jobs:
         IPS=( $(kubectl get nodes -lkubernetes.io/hostname!=kind-control-plane -ojsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}') )
 
         # Run the tests tagged as e2e on the KinD cluster.
-        go test -race -count=1 -short -timeout=20m -tags=e2e ${{ matrix.test-suite }} \
+        go test -v -run TestIngressConformance/0/host-rewrite -race -count=1 -short -timeout=20m -tags=e2e ${{ matrix.test-suite }} \
            --enable-alpha --enable-beta \
            --ingressendpoint="${IPS[0]}" \
            --ingressClass=istio.ingress.networking.knative.dev \
