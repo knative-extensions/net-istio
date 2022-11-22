@@ -331,21 +331,55 @@
 //   # The second patch instructs to apply the above Wasm filter to the listener/http connection manager.
 //   - applyTo: HTTP_FILTER
 //     match:
-//       context: SIDECAR_INBOUND
+//       listener:
+//         filterChain:
+//           filter:
+//             name: envoy.filters.network.http_connection_manager
+//             subFilter:
+//               name: envoy.filters.http.router
 //     patch:
-//       operation: ADD
-//       filterClass: AUTHZ # This filter will run *after* the Istio authz filter.
+//       operation: INSERT_BEFORE
 //       value:
 //         name: my-wasm-extension # This must match the name above
 //         config_discovery:
 //           config_source:
-//             api_config_source:
-//               api_type: GRPC
-//               transport_api_version: V3
-//               grpc_services:
-//               - envoy_grpc:
-//                   cluster_name: xds-grpc
-//           type_urls: ["envoy.extensions.filters.http.wasm.v3.Wasm"]
+//             ads: {}
+//           type_urls: ["type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm"]
+// ```
+//
+// The following example adds a Wasm service extension for all proxies using a locally available Wasm file.
+// The singleton Wasm extension is used to maintain a shared state between workers executing Wasm filters.
+// For example, a local rate limit extension would rely on a singleton to limit requests across all workers.
+// As another example, an authorization Wasm extension can use a singleton to maintain a database of accounts.
+//
+// ```yaml
+// apiVersion: networking.istio.io/v1alpha3
+// kind: EnvoyFilter
+// metadata:
+//   name: wasm-service
+//   namespace: myns
+// spec:
+//   configPatches:
+//   - applyTo: BOOTSTRAP
+//     patch:
+//       operation: MERGE
+//       value:
+//         bootstrap_extensions:
+//         - name: envoy.bootstrap.wasm
+//           typed_config:
+//             "@type": type.googleapis.com/envoy.extensions.wasm.v3.WasmService
+//             singleton: true
+//             config:
+//               name: my_plugin
+//               configuration:
+//                 "@type": type.googleapis.com/google.protobuf.StringValue
+//                 value: |
+//                   {}
+//               vm_config:
+//                 runtime: "envoy.wasm.runtime.v8"
+//                 code:
+//                   local:
+//                     filename: "/etc/envoy_filter_http_wasm_example.wasm"
 // ```
 
 package v1alpha3

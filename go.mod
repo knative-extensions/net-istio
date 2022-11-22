@@ -8,8 +8,8 @@ require (
 	github.com/hashicorp/golang-lru v0.6.0
 	go.uber.org/zap v1.23.0
 	golang.org/x/sync v0.1.0
-	istio.io/api v0.0.0-20210713195055-3a340e4f154e
-	istio.io/client-go v1.10.3
+	istio.io/api v0.0.0-20220817194812-9ed7a41198c8
+	istio.io/client-go v1.13.9
 	k8s.io/api v0.25.4
 	k8s.io/apimachinery v0.25.4
 	k8s.io/client-go v0.25.4
@@ -87,7 +87,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	istio.io/gogo-genproto v0.0.0-20210113155706-4daf5697332f // indirect
+	istio.io/gogo-genproto v0.0.0-20211208193508-5ab4acc9eb1e // indirect
 	k8s.io/apiextensions-apiserver v0.25.4 // indirect
 	k8s.io/code-generator v0.25.4 // indirect
 	k8s.io/gengo v0.0.0-20221011193443-fad74ee6edd9 // indirect
