@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/testing/protocmp"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -104,7 +105,7 @@ func TestReconcileDestinationRule_Create(t *testing.T) {
 	h := NewHooks()
 	h.OnCreate(&istio.Fake, "destinationrules", func(obj runtime.Object) HookResult {
 		got := obj.(*v1alpha3.DestinationRule)
-		if diff := cmp.Diff(got, desiredDR); diff != "" {
+		if diff := cmp.Diff(got, desiredDR, protocmp.Transform()); diff != "" {
 			t.Log("Unexpected DestinationRule (-want, +got):", diff)
 			return HookIncomplete
 		}
@@ -144,7 +145,7 @@ func TestReconcileDestinationRule_Update(t *testing.T) {
 	h := NewHooks()
 	h.OnUpdate(&istio.Fake, "destinationrules", func(obj runtime.Object) HookResult {
 		got := obj.(*v1alpha3.DestinationRule)
-		if diff := cmp.Diff(got, desiredDR); diff != "" {
+		if diff := cmp.Diff(got, desiredDR, protocmp.Transform()); diff != "" {
 			t.Log("Unexpected DestinationRule (-want, +got):", diff)
 			return HookIncomplete
 		}

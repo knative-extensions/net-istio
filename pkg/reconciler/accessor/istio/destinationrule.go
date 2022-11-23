@@ -20,9 +20,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/testing/protocmp"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/equality"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
@@ -39,9 +40,9 @@ type DestinationRuleAccessor interface {
 }
 
 func destionationRuleIsDifferent(current, desired *v1alpha3.DestinationRule) bool {
-	return !equality.Semantic.DeepEqual(current.Spec, desired.Spec) ||
-		!equality.Semantic.DeepEqual(current.Labels, desired.Labels) ||
-		!equality.Semantic.DeepEqual(current.Annotations, desired.Annotations)
+	return !cmp.Equal(&current.Spec, &desired.Spec, protocmp.Transform()) ||
+		!cmp.Equal(current.Labels, desired.Labels) ||
+		!cmp.Equal(current.Annotations, desired.Annotations)
 }
 
 // ReconcileDestinationRule reconciles DestinationRule to the desired status.
@@ -73,7 +74,7 @@ func ReconcileDestinationRule(ctx context.Context, owner kmeta.Accessor, desired
 	} else if destionationRuleIsDifferent(dr, desired) {
 		// Don't modify the informers copy
 		existing := dr.DeepCopy()
-		existing.Spec = desired.Spec
+		existing.Spec = *desired.Spec.DeepCopy()
 		existing.Labels = desired.Labels
 		existing.Annotations = desired.Annotations
 		dr, err = drAccessor.GetIstioClient().NetworkingV1alpha3().DestinationRules(ns).Update(ctx, existing, metav1.UpdateOptions{})

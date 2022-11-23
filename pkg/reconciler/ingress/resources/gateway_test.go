@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/testing/protocmp"
 	"knative.dev/pkg/tracker"
 
 	corev1 "k8s.io/api/core/v1"
@@ -173,6 +174,8 @@ var defaultGatewayService = corev1.Service{
 	},
 }
 
+var defaultGatewayCmpOpts = protocmp.Transform()
+
 func TestGetServers(t *testing.T) {
 	servers := GetServers(&gateway, &ingressResource)
 	expected := []*istiov1alpha3.Server{{
@@ -189,15 +192,15 @@ func TestGetServers(t *testing.T) {
 		},
 	}}
 
-	if diff := cmp.Diff(expected, servers); diff != "" {
+	if diff := cmp.Diff(expected, servers, protocmp.Transform()); diff != "" {
 		t.Error("Unexpected servers (-want +got):", diff)
 	}
 }
 
 func TestGetHTTPServer(t *testing.T) {
-	newGateway := gateway
+	newGateway := gateway.DeepCopy()
 	newGateway.Spec.Servers = append(newGateway.Spec.Servers, &httpServer)
-	server := GetHTTPServer(&newGateway)
+	server := GetHTTPServer(newGateway)
 	expected := &istiov1alpha3.Server{
 		Hosts: []string{"*"},
 		Port: &istiov1alpha3.Port{
@@ -206,7 +209,7 @@ func TestGetHTTPServer(t *testing.T) {
 			Protocol: "HTTP",
 		},
 	}
-	if diff := cmp.Diff(expected, server); diff != "" {
+	if diff := cmp.Diff(expected, server, defaultGatewayCmpOpts); diff != "" {
 		t.Error("Unexpected server (-want +got):", diff)
 	}
 }
@@ -292,7 +295,7 @@ func TestMakeTLSServers(t *testing.T) {
 			if (err != nil) != c.wantErr {
 				t.Fatalf("Test: %s; MakeServers error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
-			if diff := cmp.Diff(c.expected, servers); diff != "" {
+			if diff := cmp.Diff(c.expected, servers, defaultGatewayCmpOpts); diff != "" {
 				t.Error("Unexpected servers (-want, +got):", diff)
 			}
 		})
@@ -337,7 +340,7 @@ func TestMakeHTTPServer(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			got := MakeHTTPServer(c.httpOption, []string{"*"})
-			if diff := cmp.Diff(c.expected, got); diff != "" {
+			if diff := cmp.Diff(c.expected, got, defaultGatewayCmpOpts); diff != "" {
 				t.Error("Unexpected HTTP Server (-want, +got):", diff)
 			}
 		})
@@ -349,8 +352,8 @@ func TestUpdateGateway(t *testing.T) {
 		name            string
 		existingServers []*istiov1alpha3.Server
 		newServers      []*istiov1alpha3.Server
-		original        v1alpha3.Gateway
-		expected        v1alpha3.Gateway
+		original        *v1alpha3.Gateway
+		expected        *v1alpha3.Gateway
 	}{{
 		name: "Update Gateway servers.",
 		existingServers: []*istiov1alpha3.Server{{
@@ -379,8 +382,8 @@ func TestUpdateGateway(t *testing.T) {
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 			},
 		}},
-		original: gateway,
-		expected: v1alpha3.Gateway{
+		original: gateway.DeepCopy(),
+		expected: &v1alpha3.Gateway{
 			Spec: istiov1alpha3.Gateway{
 				Servers: []*istiov1alpha3.Server{{
 					// The host name was updated to the one in "newServers".
@@ -426,8 +429,8 @@ func TestUpdateGateway(t *testing.T) {
 			},
 		}},
 		newServers: []*istiov1alpha3.Server{},
-		original:   gateway,
-		expected: v1alpha3.Gateway{
+		original:   gateway.DeepCopy(),
+		expected: &v1alpha3.Gateway{
 			Spec: istiov1alpha3.Gateway{
 				// Only one server is left. The other one is deleted.
 				Servers: []*istiov1alpha3.Server{{
@@ -475,8 +478,8 @@ func TestUpdateGateway(t *testing.T) {
 			},
 		}},
 		newServers: []*istiov1alpha3.Server{},
-		original:   gateway,
-		expected:   gatewayWithPlaceholderServer,
+		original:   gateway.DeepCopy(),
+		expected:   gatewayWithPlaceholderServer.DeepCopy(),
 	}, {
 		name:            "Add servers to the gateway with only placeholder server",
 		existingServers: []*istiov1alpha3.Server{},
@@ -493,9 +496,9 @@ func TestUpdateGateway(t *testing.T) {
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 			},
 		}},
-		original: gatewayWithPlaceholderServer,
+		original: gatewayWithPlaceholderServer.DeepCopy(),
 		// The placeholder server should be deleted.
-		expected: v1alpha3.Gateway{
+		expected: &v1alpha3.Gateway{
 			Spec: istiov1alpha3.Gateway{
 				Servers: []*istiov1alpha3.Server{{
 					Hosts: []string{"host1.example.com"},
@@ -528,8 +531,8 @@ func TestUpdateGateway(t *testing.T) {
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 			},
 		}},
-		original: gatewayWithModifiedWildcardTLSServer,
-		expected: v1alpha3.Gateway{
+		original: gatewayWithModifiedWildcardTLSServer.DeepCopy(),
+		expected: &v1alpha3.Gateway{
 			Spec: istiov1alpha3.Gateway{
 				Servers: []*istiov1alpha3.Server{
 					{
@@ -553,8 +556,8 @@ func TestUpdateGateway(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			g := UpdateGateway(&c.original, c.newServers, c.existingServers)
-			if diff := cmp.Diff(&c.expected, g); diff != "" {
+			g := UpdateGateway(c.original, c.newServers, c.existingServers)
+			if diff := cmp.Diff(c.expected, g, defaultGatewayCmpOpts); diff != "" {
 				t.Error("Unexpected gateway (-want, +got):", diff)
 			}
 		})
@@ -675,7 +678,7 @@ func TestMakeWildcardGateways(t *testing.T) {
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("Test: %s; MakeWildcardGateways error = %v, WantErr %v", tc.name, err, tc.wantErr)
 			}
-			if diff := cmp.Diff(tc.want, got); diff != "" {
+			if diff := cmp.Diff(tc.want, got, defaultGatewayCmpOpts); diff != "" {
 				t.Error("Unexpected Gateways (-want, +got):", diff)
 			}
 		})
@@ -778,7 +781,7 @@ func TestMakeIngressGateways(t *testing.T) {
 			if (err != nil) != c.wantErr {
 				t.Fatalf("Test: %s; MakeIngressTLSGateways error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
-			if diff := cmp.Diff(c.want, got); diff != "" {
+			if diff := cmp.Diff(c.want, got, defaultGatewayCmpOpts); diff != "" {
 				t.Error("Unexpected Gateways (-want, +got):", diff)
 			}
 		})
@@ -951,7 +954,7 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 			if (err != nil) != c.wantErr {
 				t.Fatalf("Test: %s; MakeIngressTLSGateways error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
-			if diff := cmp.Diff(c.want, got); diff != "" {
+			if diff := cmp.Diff(c.want, got, defaultGatewayCmpOpts); diff != "" {
 				t.Error("Unexpected Gateways (-want, +got):", diff)
 			}
 		})

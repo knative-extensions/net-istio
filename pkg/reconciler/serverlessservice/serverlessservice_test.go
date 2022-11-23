@@ -20,6 +20,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/testing/protocmp"
+
 	// Inject our fakes
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
 	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
@@ -41,6 +44,8 @@ import (
 	. "knative.dev/net-istio/pkg/reconciler/testing"
 	. "knative.dev/pkg/reconciler/testing"
 )
+
+var defaultCmpOpts = []cmp.Option{protocmp.Transform()}
 
 func sks(name string) *netv1alpha1.ServerlessService {
 	sks := &netv1alpha1.ServerlessService{
@@ -82,6 +87,7 @@ func TestReconcile(t *testing.T) {
 			vs("test"),
 			dr("test"),
 		},
+		CmpOpts: defaultCmpOpts,
 	}, {
 		Name: "create both",
 		Key:  "testing/test",
@@ -96,6 +102,7 @@ func TestReconcile(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "test-foo"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created DestinationRule %q", "test-foo"),
 		},
+		CmpOpts: defaultCmpOpts,
 	}, {
 		Name: "create only VirtualService",
 		Key:  "testing/test",
@@ -109,6 +116,7 @@ func TestReconcile(t *testing.T) {
 		WantEvents: []string{
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "test-foo"),
 		},
+		CmpOpts: defaultCmpOpts,
 	}, {
 		Name: "create only DestinationRule",
 		Key:  "testing/test",
@@ -122,6 +130,7 @@ func TestReconcile(t *testing.T) {
 		WantEvents: []string{
 			Eventf(corev1.EventTypeNormal, "Created", "Created DestinationRule %q", "test-foo"),
 		},
+		CmpOpts: defaultCmpOpts,
 	}, {
 		Name: "fix both",
 		Key:  "testing/test",
@@ -147,6 +156,7 @@ func TestReconcile(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "Updated", "Updated VirtualService %s", "testing/test-foo"),
 			Eventf(corev1.EventTypeNormal, "Updated", "Updated DestinationRule %s", "testing/test-foo"),
 		},
+		CmpOpts: defaultCmpOpts,
 	}, {
 		Name:    "failure for VirtualService",
 		Key:     "testing/test",
@@ -165,6 +175,7 @@ func TestReconcile(t *testing.T) {
 			Eventf(corev1.EventTypeWarning, "CreationFailed", "Failed to create VirtualService %s: inducing failure for create virtualservices", "testing/test-foo"),
 			Eventf(corev1.EventTypeWarning, "InternalError", "failed to reconcile VirtualService: failed to create VirtualService: inducing failure for create virtualservices"),
 		},
+		CmpOpts: defaultCmpOpts,
 	}, {
 		Name:    "failure for DestinationRule",
 		Key:     "testing/test",
@@ -183,6 +194,7 @@ func TestReconcile(t *testing.T) {
 			Eventf(corev1.EventTypeWarning, "CreationFailed", "Failed to create DestinationRule %s: inducing failure for create destinationrules", "testing/test-foo"),
 			Eventf(corev1.EventTypeWarning, "InternalError", "failed to reconcile DestinationRule: failed to create DestinationRule: inducing failure for create destinationrules"),
 		},
+		CmpOpts: defaultCmpOpts,
 	}}
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		r := &reconciler{

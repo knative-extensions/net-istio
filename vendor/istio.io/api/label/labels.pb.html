@@ -34,6 +34,19 @@ Istio supports to control its behavior.
 			
 		
 			
+				
+					<tr>
+				
+					<td><code>networking.istio.io/gatewayPort</code></td>
+				
+					<td>Alpha</td>
+				
+					<td>[Service]</td>
+					<td>IstioGatewayPortLabel overrides the default 15443 value to use for a multi-network gateway's port</td>
+				</tr>
+			
+		
+			
 		
 			
 		
@@ -64,6 +77,19 @@ Istio supports to control its behavior.
 				
 					<td>[Pod]</td>
 					<td>The name of a revision within a canonical service that the workload belongs to</td>
+				</tr>
+			
+		
+			
+				
+					<tr>
+				
+					<td><code>sidecar.istio.io/inject</code></td>
+				
+					<td>Beta</td>
+				
+					<td>[Pod]</td>
+					<td>Specifies whether or not an Envoy sidecar should be automatically injected into the workload.</td>
 				</tr>
 			
 		

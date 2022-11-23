@@ -43,9 +43,10 @@ import (
 	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 	_ "knative.dev/pkg/client/injection/kube/informers/factory/filtered/fake"
 
-	proto "github.com/gogo/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/testing/protocmp"
 
 	istiov1alpha1 "istio.io/api/meta/v1alpha1"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
@@ -252,6 +253,8 @@ var (
 	}
 
 	deletionTime = metav1.NewTime(time.Unix(1e9, 0))
+
+	defaultCmpOptsList = []cmp.Option{protocmp.Transform()}
 )
 
 func TestReconcile(t *testing.T) {
@@ -341,7 +344,8 @@ func TestReconcile(t *testing.T) {
 		WantPatches: []clientgotesting.PatchActionImpl{
 			patchAddFinalizerAction("reconcile-failed", "ingresses.networking.internal.knative.dev"),
 		},
-		Key: "test-ns/reconcile-failed",
+		Key:     "test-ns/reconcile-failed",
+		CmpOpts: defaultCmpOptsList,
 	}, {
 		Name: "reconcile VirtualService to match desired one",
 		Objects: []runtime.Object{
@@ -428,6 +432,7 @@ func TestReconcile(t *testing.T) {
 		},
 		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(1)},
 		Key:            "test-ns/reconcile-virtualservice",
+		CmpOpts:        defaultCmpOptsList,
 	}, {
 		Name: "if ingress is already ready, we shouldn't call statusManager.IsReady",
 		Key:  "test-ns/ingress-ready",
@@ -439,6 +444,7 @@ func TestReconcile(t *testing.T) {
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
 		},
 		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(0)},
+		CmpOpts:        defaultCmpOptsList,
 	}, {
 		Name: "virtualService status ready should make ingress ready without probing",
 		Key:  "test-ns/ingress-virtualservice-ready",
@@ -462,7 +468,7 @@ func TestReconcile(t *testing.T) {
 				[]string{"ingresses.networking.internal.knative.dev"}),
 			meshVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-ready")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
-				istiov1alpha1.IstioStatus{
+				&istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
 						{
 							Type:   "Reconciled",
@@ -472,7 +478,7 @@ func TestReconcile(t *testing.T) {
 				}, 1, 1),
 			ingressVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-ready")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
-				istiov1alpha1.IstioStatus{
+				&istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
 						{
 							Type:   "Reconciled",
@@ -500,6 +506,7 @@ func TestReconcile(t *testing.T) {
 			},
 				[]string{"ingresses.networking.internal.knative.dev"})}},
 		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(0)},
+		CmpOpts:        defaultCmpOptsList,
 	}, {
 		Name: "virtualService status not ready should still avoid probing",
 		Key:  "test-ns/ingress-virtualservice-notready",
@@ -527,7 +534,7 @@ func TestReconcile(t *testing.T) {
 				[]string{"ingresses.networking.internal.knative.dev"}),
 			meshVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-notready")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
-				istiov1alpha1.IstioStatus{
+				&istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
 						{
 							Type:   "Reconciled",
@@ -537,7 +544,7 @@ func TestReconcile(t *testing.T) {
 				}, 1, 1),
 			ingressVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-notready")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
-				istiov1alpha1.IstioStatus{
+				&istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
 						{
 							Type:   "Reconciled",
@@ -547,6 +554,7 @@ func TestReconcile(t *testing.T) {
 				}, 1, 1),
 		},
 		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(0)},
+		CmpOpts:        defaultCmpOptsList,
 	}, {
 		Name: "virtualService stale status should be the same as not ready",
 		Key:  "test-ns/ingress-virtualservice-stale",
@@ -574,7 +582,7 @@ func TestReconcile(t *testing.T) {
 				[]string{"ingresses.networking.internal.knative.dev"}),
 			meshVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-stale")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
-				istiov1alpha1.IstioStatus{
+				&istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
 						{
 							Type:   "Reconciled",
@@ -584,7 +592,7 @@ func TestReconcile(t *testing.T) {
 				}, 2, 2),
 			ingressVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-stale")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
-				istiov1alpha1.IstioStatus{
+				&istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
 						{
 							Type:   "Reconciled",
@@ -594,6 +602,7 @@ func TestReconcile(t *testing.T) {
 				}, 2, 1),
 		},
 		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(0)},
+		CmpOpts:        defaultCmpOptsList,
 	}, {
 		Name: "virtualService status 0 should revert to probers",
 		Key:  "test-ns/ingress-virtualservice-nostatus",
@@ -621,7 +630,7 @@ func TestReconcile(t *testing.T) {
 				[]string{"ingresses.networking.internal.knative.dev"}),
 			meshVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-nostatus")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
-				istiov1alpha1.IstioStatus{
+				&istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
 						{
 							Type:   "Reconciled",
@@ -631,7 +640,7 @@ func TestReconcile(t *testing.T) {
 				}, 1, 0),
 			ingressVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-virtualservice-nostatus")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
-				istiov1alpha1.IstioStatus{
+				&istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
 						{
 							Type:   "Reconciled",
@@ -659,6 +668,7 @@ func TestReconcile(t *testing.T) {
 			},
 				[]string{"ingresses.networking.internal.knative.dev"})}},
 		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(1)},
+		CmpOpts:        defaultCmpOptsList,
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
@@ -736,7 +746,8 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
 		},
-		Key: "test-ns/reconciling-ingress",
+		Key:     "test-ns/reconciling-ingress",
+		CmpOpts: defaultCmpOptsList,
 	}, {
 		Name:                    "Update Ingress Gateway to match Ingress",
 		SkipNamespaceValidation: true,
@@ -803,7 +814,8 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
 		},
-		Key: "test-ns/reconciling-ingress",
+		Key:     "test-ns/reconciling-ingress",
+		CmpOpts: defaultCmpOptsList,
 	}, {
 		Name:                    "new Ingress using wildcard certificate",
 		SkipNamespaceValidation: true,
@@ -865,7 +877,8 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
 		},
-		Key: "test-ns/reconciling-ingress",
+		Key:     "test-ns/reconciling-ingress",
+		CmpOpts: defaultCmpOptsList,
 	}, {
 		Name: "No preinstalled Ingress service",
 		Objects: []runtime.Object{
@@ -928,7 +941,8 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "Updated", "Updated Gateway %s/%s", system.Namespace(), config.KnativeIngressGateway),
 			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
 		},
-		Key: "test-ns/reconciling-ingress",
+		Key:     "test-ns/reconciling-ingress",
+		CmpOpts: defaultCmpOptsList,
 	}, {
 		Name:                    "delete ingress with leftover secrets",
 		SkipNamespaceValidation: true,
@@ -960,7 +974,8 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "Updated", "Updated Gateway %s/%s", system.Namespace(), config.KnativeIngressGateway),
 			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
 		},
-		Key: "test-ns/reconciling-ingress",
+		Key:     "test-ns/reconciling-ingress",
+		CmpOpts: defaultCmpOptsList,
 	}, {
 		Name:                    "TLS Secret is not in the namespace of Istio gateway service",
 		SkipNamespaceValidation: true,
@@ -1030,7 +1045,8 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
 		},
-		Key: "test-ns/reconciling-ingress",
+		Key:     "test-ns/reconciling-ingress",
+		CmpOpts: defaultCmpOptsList,
 	}, {
 		Name:                    "Reconcile Target secret",
 		SkipNamespaceValidation: true,
@@ -1127,7 +1143,8 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
 		},
-		Key: "test-ns/reconciling-ingress",
+		Key:     "test-ns/reconciling-ingress",
+		CmpOpts: defaultCmpOptsList,
 	}, {
 		Name:                    "Reconcile with autoTLS but cluster local visibilty, mesh only",
 		SkipNamespaceValidation: true,
@@ -1177,7 +1194,8 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 		WantPatches: []clientgotesting.PatchActionImpl{
 			patchAddFinalizerAction("reconciling-ingress", ingressFinalizer),
 		},
-		Key: "test-ns/reconciling-ingress",
+		Key:     "test-ns/reconciling-ingress",
+		CmpOpts: defaultCmpOptsList,
 	}}
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 
@@ -1251,7 +1269,7 @@ func TestReconcile_DisableStatus(t *testing.T) {
 				[]string{"ingresses.networking.internal.knative.dev"}),
 			meshVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-vs-status-disabled")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
-				istiov1alpha1.IstioStatus{
+				&istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
 						{
 							Type:   "Reconciled",
@@ -1261,7 +1279,7 @@ func TestReconcile_DisableStatus(t *testing.T) {
 				}, 1, 1),
 			ingressVirtualServiceWithStatus(context.Background(), insertProbe(ing("ingress-vs-status-disabled")),
 				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil),
-				istiov1alpha1.IstioStatus{
+				&istiov1alpha1.IstioStatus{
 					Conditions: []*istiov1alpha1.IstioCondition{
 						{
 							Type:   "Reconciled",
@@ -1289,6 +1307,7 @@ func TestReconcile_DisableStatus(t *testing.T) {
 			},
 				[]string{"ingresses.networking.internal.knative.dev"})}},
 		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(0)},
+		CmpOpts:        defaultCmpOptsList,
 	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
@@ -1552,18 +1571,18 @@ func ingressWithTLSAndStatusClusterLocal(name string, tls []v1alpha1.IngressTLS,
 	return ci
 }
 
-func meshVirtualServiceWithStatus(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, status istiov1alpha1.IstioStatus, generation int64, observedGeneration int64) *v1alpha3.VirtualService {
+func meshVirtualServiceWithStatus(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, status *istiov1alpha1.IstioStatus, generation int64, observedGeneration int64) *v1alpha3.VirtualService {
 	vs := resources.MakeMeshVirtualService(ctx, ing, gateways)
-	vs.Status = status
+	vs.Status = *status.DeepCopy()
 	vs.ObjectMeta.Generation = generation
 	vs.Status.ObservedGeneration = observedGeneration
 
 	return vs
 }
 
-func ingressVirtualServiceWithStatus(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, status istiov1alpha1.IstioStatus, generation int64, observedGeneration int64) *v1alpha3.VirtualService {
+func ingressVirtualServiceWithStatus(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, status *istiov1alpha1.IstioStatus, generation int64, observedGeneration int64) *v1alpha3.VirtualService {
 	vs := resources.MakeIngressVirtualService(ctx, ing, gateways)
-	vs.Status = status
+	vs.Status = *status.DeepCopy()
 	vs.ObjectMeta.Generation = generation
 	vs.Status.ObservedGeneration = observedGeneration
 
@@ -1734,7 +1753,7 @@ func TestGlobalResyncOnUpdateNetwork(t *testing.T) {
 		expectedGateway := gateway(perIngressGatewayName, testNS,
 			[]*istiov1alpha3.Server{ingressTLSServer, ingressHTTPServer}, withOwnerRef(ingressWithTLS("reconciling-ingress", ingressTLS)),
 			withLabels(gwLabels), withSelector(selector))
-		if diff := cmp.Diff(createdGateway, expectedGateway); diff != "" {
+		if diff := cmp.Diff(createdGateway, expectedGateway, protocmp.Transform()); diff != "" {
 			t.Log("Unexpected Gateway (-want, +got):", diff)
 			return HookIncomplete
 		}

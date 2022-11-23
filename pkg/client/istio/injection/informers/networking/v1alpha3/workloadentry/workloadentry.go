@@ -104,7 +104,7 @@ func (w *wrapper) List(selector labels.Selector) (ret []*apisnetworkingv1alpha3.
 		return nil, err
 	}
 	for idx := range lo.Items {
-		ret = append(ret, &lo.Items[idx])
+		ret = append(ret, lo.Items[idx])
 	}
 	return ret, nil
 }

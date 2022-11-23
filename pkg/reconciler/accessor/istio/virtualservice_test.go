@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/testing/protocmp"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
@@ -109,7 +110,7 @@ func TestReconcileVirtualService_Create(t *testing.T) {
 	h := NewHooks()
 	h.OnCreate(&istioClient.Fake, "virtualservices", func(obj runtime.Object) HookResult {
 		got := obj.(*v1alpha3.VirtualService)
-		if diff := cmp.Diff(got, desired); diff != "" {
+		if diff := cmp.Diff(got, desired, protocmp.Transform()); diff != "" {
 			t.Log("Unexpected VirtualService (-want, +got):", diff)
 			return HookIncomplete
 		}
@@ -143,7 +144,7 @@ func TestReconcileVirtualService_Update(t *testing.T) {
 	h := NewHooks()
 	h.OnUpdate(&istioClient.Fake, "virtualservices", func(obj runtime.Object) HookResult {
 		got := obj.(*v1alpha3.VirtualService)
-		if diff := cmp.Diff(got, desired); diff != "" {
+		if diff := cmp.Diff(got, desired, protocmp.Transform()); diff != "" {
 			t.Log("Unexpected VirtualService (-want, +got):", diff)
 			return HookIncomplete
 		}
