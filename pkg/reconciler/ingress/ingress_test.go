@@ -44,9 +44,9 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/factory/filtered/fake"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/testing/protocmp"
 
 	istiov1alpha1 "istio.io/api/meta/v1alpha1"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
@@ -254,27 +254,7 @@ var (
 
 	deletionTime = metav1.NewTime(time.Unix(1e9, 0))
 
-	defaultCmpOpt = cmpopts.IgnoreUnexported(
-		istiov1alpha3.VirtualService{},
-		istiov1alpha3.HTTPRoute{},
-		istiov1alpha3.HTTPRouteDestination{},
-		istiov1alpha3.HTTPMatchRequest{},
-		istiov1alpha3.Destination{},
-		istiov1alpha3.StringMatch{},
-		istiov1alpha3.PortSelector{},
-		istiov1alpha3.HTTPRetry{},
-		istiov1alpha3.Headers{},
-		istiov1alpha3.Headers_HeaderOperations{},
-		istiov1alpha3.Gateway{},
-		istiov1alpha3.Server{},
-		istiov1alpha3.Port{},
-		istiov1alpha3.ServerTLSSettings{},
-		istiov1alpha1.IstioStatus{},
-		istiov1alpha1.IstioCondition{},
-	)
-	defaultCmpOptsList = []cmp.Option{
-		defaultCmpOpt,
-	}
+	defaultCmpOptsList = []cmp.Option{protocmp.Transform()}
 )
 
 func TestReconcile(t *testing.T) {
@@ -1773,7 +1753,7 @@ func TestGlobalResyncOnUpdateNetwork(t *testing.T) {
 		expectedGateway := gateway(perIngressGatewayName, testNS,
 			[]*istiov1alpha3.Server{ingressTLSServer, ingressHTTPServer}, withOwnerRef(ingressWithTLS("reconciling-ingress", ingressTLS)),
 			withLabels(gwLabels), withSelector(selector))
-		if diff := cmp.Diff(createdGateway, expectedGateway, defaultCmpOpt); diff != "" {
+		if diff := cmp.Diff(createdGateway, expectedGateway, protocmp.Transform()); diff != "" {
 			t.Log("Unexpected Gateway (-want, +got):", diff)
 			return HookIncomplete
 		}

@@ -25,7 +25,7 @@ import (
 	"strings"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/testing/protocmp"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
@@ -413,5 +413,5 @@ func UpdateGateway(gateway *v1alpha3.Gateway, want []*istiov1alpha3.Server, exis
 }
 
 func isPlaceHolderServer(server *istiov1alpha3.Server) bool {
-	return cmp.Equal(server, &placeholderServer, cmpopts.IgnoreUnexported(istiov1alpha3.Server{}, istiov1alpha3.Port{}))
+	return cmp.Equal(server, &placeholderServer, protocmp.Transform())
 }

@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/testing/protocmp"
 	"knative.dev/pkg/tracker"
 
 	corev1 "k8s.io/api/core/v1"
@@ -31,7 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 
-	istiov1alpha1 "istio.io/api/meta/v1alpha1"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
@@ -175,13 +174,7 @@ var defaultGatewayService = corev1.Service{
 	},
 }
 
-var defaultGatewayCmpOpts = cmpopts.IgnoreUnexported(
-	istiov1alpha3.Server{},
-	istiov1alpha3.Port{},
-	istiov1alpha3.ServerTLSSettings{},
-	istiov1alpha3.Gateway{},
-	istiov1alpha1.IstioStatus{},
-)
+var defaultGatewayCmpOpts = protocmp.Transform()
 
 func TestGetServers(t *testing.T) {
 	servers := GetServers(&gateway, &ingressResource)
@@ -199,7 +192,7 @@ func TestGetServers(t *testing.T) {
 		},
 	}}
 
-	if diff := cmp.Diff(expected, servers, defaultGatewayCmpOpts); diff != "" {
+	if diff := cmp.Diff(expected, servers, protocmp.Transform()); diff != "" {
 		t.Error("Unexpected servers (-want +got):", diff)
 	}
 }

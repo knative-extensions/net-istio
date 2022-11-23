@@ -21,14 +21,12 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/testing/protocmp"
 
 	// Inject our fakes
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
 	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
 
-	istiov1alpha1 "istio.io/api/meta/v1alpha1"
-	v1alpha3 "istio.io/api/networking/v1alpha3"
 	istiov1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,29 +45,7 @@ import (
 	. "knative.dev/pkg/reconciler/testing"
 )
 
-var defaultCmpOpts = []cmp.Option{
-	cmpopts.IgnoreUnexported(
-		v1alpha3.VirtualService{},
-		v1alpha3.HTTPRoute{},
-		v1alpha3.HTTPRouteDestination{},
-		v1alpha3.HTTPMatchRequest{},
-		v1alpha3.Destination{},
-		v1alpha3.StringMatch{},
-		v1alpha3.PortSelector{},
-		v1alpha3.HTTPRetry{},
-		v1alpha3.Headers{},
-		v1alpha3.Headers_HeaderOperations{},
-	),
-	cmpopts.IgnoreUnexported(
-		v1alpha3.DestinationRule{},
-		v1alpha3.Subset{},
-		v1alpha3.TrafficPolicy{},
-		v1alpha3.LoadBalancerSettings{},
-	),
-	cmpopts.IgnoreUnexported(
-		istiov1alpha1.IstioStatus{},
-	),
-}
+var defaultCmpOpts = []cmp.Option{protocmp.Transform()}
 
 func sks(name string) *netv1alpha1.ServerlessService {
 	sks := &netv1alpha1.ServerlessService{

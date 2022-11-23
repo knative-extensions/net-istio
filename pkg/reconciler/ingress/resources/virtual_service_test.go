@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/testing/protocmp"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -60,18 +60,7 @@ var (
 			HTTP: defaultIngressRuleValue,
 		}}},
 	}
-	defaultVSCmpOpts = cmpopts.IgnoreUnexported(
-		istiov1alpha3.HTTPRoute{},
-		istiov1alpha3.HTTPMatchRequest{},
-		istiov1alpha3.StringMatch{},
-		istiov1alpha3.HTTPRouteDestination{},
-		istiov1alpha3.Destination{},
-		istiov1alpha3.PortSelector{},
-		istiov1alpha3.Headers{},
-		istiov1alpha3.Headers_HeaderOperations{},
-		istiov1alpha3.HTTPRetry{},
-		istiov1alpha3.HTTPRewrite{},
-	)
+	defaultVSCmpOpts = protocmp.Transform()
 )
 
 func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {

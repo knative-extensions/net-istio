@@ -23,8 +23,8 @@ import (
 	"strings"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/testing/protocmp"
 
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -298,12 +298,7 @@ func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desire
 		}
 	} else if err != nil {
 		return err
-	} else if !cmp.Equal(existing.Spec.DeepCopy(), desired.Spec.DeepCopy(), cmpopts.IgnoreUnexported(
-		istiov1alpha3.Gateway{},
-		istiov1alpha3.Server{},
-		istiov1alpha3.Port{},
-		istiov1alpha3.ServerTLSSettings{},
-	)) {
+	} else if !cmp.Equal(existing.Spec.DeepCopy(), desired.Spec.DeepCopy(), protocmp.Transform()) {
 		copy := existing.DeepCopy()
 		copy.Spec = *desired.Spec.DeepCopy()
 		if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(desired.Namespace).Update(ctx, copy, metav1.UpdateOptions{}); err != nil {
@@ -422,7 +417,7 @@ func (r *Reconciler) reconcileIngressServers(ctx context.Context, ing *v1alpha1.
 }
 
 func (r *Reconciler) reconcileGateway(ctx context.Context, ing *v1alpha1.Ingress, gateway *v1alpha3.Gateway, existing []*istiov1alpha3.Server, desired []*istiov1alpha3.Server) error {
-	if cmp.Equal(existing, desired, cmpopts.IgnoreUnexported(istiov1alpha3.Server{}, istiov1alpha3.Port{})) {
+	if cmp.Equal(existing, desired, protocmp.Transform()) {
 		return nil
 	}
 

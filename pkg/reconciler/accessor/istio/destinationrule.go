@@ -21,8 +21,7 @@ import (
 	"fmt"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
-	istiov1alpha3 "istio.io/api/networking/v1alpha3"
+	"google.golang.org/protobuf/testing/protocmp"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
@@ -41,12 +40,7 @@ type DestinationRuleAccessor interface {
 }
 
 func destionationRuleIsDifferent(current, desired *v1alpha3.DestinationRule) bool {
-	return !cmp.Equal(&current.Spec, &desired.Spec, cmpopts.IgnoreUnexported(
-		istiov1alpha3.DestinationRule{},
-		istiov1alpha3.Subset{},
-		istiov1alpha3.TrafficPolicy{},
-		istiov1alpha3.LoadBalancerSettings{},
-	)) ||
+	return !cmp.Equal(&current.Spec, &desired.Spec, protocmp.Transform()) ||
 		!cmp.Equal(current.Labels, desired.Labels) ||
 		!cmp.Equal(current.Annotations, desired.Annotations)
 }

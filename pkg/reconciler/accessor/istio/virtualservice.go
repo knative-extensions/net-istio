@@ -21,8 +21,7 @@ import (
 	"fmt"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
-	istiov1alpha3 "istio.io/api/networking/v1alpha3"
+	"google.golang.org/protobuf/testing/protocmp"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
 
@@ -42,18 +41,7 @@ type VirtualServiceAccessor interface {
 }
 
 func hasDesiredDiff(current, desired *v1alpha3.VirtualService) bool {
-	return !cmp.Equal(current.Spec.DeepCopy(), desired.Spec.DeepCopy(), cmpopts.IgnoreUnexported(
-		istiov1alpha3.VirtualService{},
-		istiov1alpha3.HTTPRoute{},
-		istiov1alpha3.HTTPRouteDestination{},
-		istiov1alpha3.HTTPMatchRequest{},
-		istiov1alpha3.Destination{},
-		istiov1alpha3.StringMatch{},
-		istiov1alpha3.PortSelector{},
-		istiov1alpha3.HTTPRetry{},
-		istiov1alpha3.Headers{},
-		istiov1alpha3.Headers_HeaderOperations{},
-	)) ||
+	return !cmp.Equal(current.Spec.DeepCopy(), desired.Spec.DeepCopy(), protocmp.Transform()) ||
 		!cmp.Equal(current.Labels, desired.Labels) ||
 		!cmp.Equal(current.Annotations, desired.Annotations)
 }
