@@ -189,6 +189,8 @@ func makeWildcardTLSGateways(originWildcardSecrets map[string]*corev1.Secret,
 				ServerCertificate: corev1.TLSCertKey,
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 				CredentialName:    credentialName,
+				// TODO: Drop this when all supported Istio version uses TLS v1.2 by default.
+				MinProtocolVersion: istiov1alpha3.ServerTLSSettings_TLSV1_2,
 			},
 		}}
 		gvk := schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
@@ -316,6 +318,8 @@ func MakeTLSServers(ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, gat
 				ServerCertificate: corev1.TLSCertKey,
 				PrivateKey:        corev1.TLSPrivateKeyKey,
 				CredentialName:    credentialName,
+				// TODO: Drop this when all supported Istio version uses TLS v1.2 by default.
+				MinProtocolVersion: istiov1alpha3.ServerTLSSettings_TLSV1_2,
 			},
 		}
 	}

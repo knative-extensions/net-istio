@@ -126,10 +126,11 @@ var (
 			Protocol: "HTTPS",
 		},
 		Tls: &istiov1alpha3.ServerTLSSettings{
-			Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
-			ServerCertificate: corev1.TLSCertKey,
-			PrivateKey:        corev1.TLSPrivateKeyKey,
-			CredentialName:    "secret0",
+			Mode:               istiov1alpha3.ServerTLSSettings_SIMPLE,
+			ServerCertificate:  corev1.TLSCertKey,
+			PrivateKey:         corev1.TLSPrivateKeyKey,
+			CredentialName:     "secret0",
+			MinProtocolVersion: istiov1alpha3.ServerTLSSettings_TLSV1_2,
 		},
 	}
 	originGateways = map[string]string{
@@ -200,10 +201,11 @@ var (
 			Protocol: "HTTPS",
 		},
 		Tls: &istiov1alpha3.ServerTLSSettings{
-			Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
-			ServerCertificate: "tls.crt",
-			PrivateKey:        "tls.key",
-			CredentialName:    "secret0",
+			Mode:               istiov1alpha3.ServerTLSSettings_SIMPLE,
+			ServerCertificate:  "tls.crt",
+			PrivateKey:         "tls.key",
+			CredentialName:     "secret0",
+			MinProtocolVersion: istiov1alpha3.ServerTLSSettings_TLSV1_2,
 		},
 	}
 
@@ -237,10 +239,11 @@ var (
 			Protocol: "HTTPS",
 		},
 		Tls: &istiov1alpha3.ServerTLSSettings{
-			Mode:              istiov1alpha3.ServerTLSSettings_SIMPLE,
-			ServerCertificate: "tls.crt",
-			PrivateKey:        "tls.key",
-			CredentialName:    "other-secret",
+			Mode:               istiov1alpha3.ServerTLSSettings_SIMPLE,
+			ServerCertificate:  "tls.crt",
+			PrivateKey:         "tls.key",
+			CredentialName:     "other-secret",
+			MinProtocolVersion: istiov1alpha3.ServerTLSSettings_TLSV1_2,
 		},
 	}
 	irrelevantServer1 = &istiov1alpha3.Server{
