@@ -521,6 +521,7 @@ func isIngressPublic(ing *v1alpha1.Ingress) bool {
 
 // areVirtualServicesReady checks if *all* the provided virtual services have a status, and if so if it's ready.
 // The return values are (hasStatus, ready), where:
+//
 //	hasStatus indicates whether all the virtualServices have a status field
 //	ready indicates whether they all have been reconciled and are able to receive requests
 func (r *Reconciler) areVirtualServicesReady(ctx context.Context, vses []*v1alpha3.VirtualService) (hasStatus, ready bool) {
@@ -547,6 +548,7 @@ func (r *Reconciler) areVirtualServicesReady(ctx context.Context, vses []*v1alph
 
 // isVirtualServiceReady checks if a virtual service has a status, and if so if it's ready.
 // The return values are (hasStatus, ready, err), where:
+//
 //	hasStatus indicates whether the virtualService has a status field
 //	ready indicates whether it's been reconciled and able to receive requests
 //	err indicates an error occurred while looking up the status.
