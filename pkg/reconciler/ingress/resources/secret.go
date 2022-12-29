@@ -21,6 +21,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"hash/adler32"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -65,7 +66,7 @@ func MakeSecrets(ctx context.Context, originSecrets map[string]*corev1.Secret, a
 				continue
 			}
 			secrets = append(secrets, makeSecret(originSecret, targetSecret(originSecret, accessor), meta.Namespace,
-				MakeTargetSecretLabels(originSecret.Name, originSecret.Namespace)))
+				MakeTargetSecretLabels(originSecret.Name, originSecret.Namespace), MakeTargetSecretAnnotations(originSecret.Name)))
 		}
 	}
 	return secrets, nil
@@ -86,7 +87,7 @@ func MakeWildcardSecrets(ctx context.Context, originWildcardCerts map[string]*co
 				// as the origin namespace
 				continue
 			}
-			secrets = append(secrets, makeSecret(secret, targetWildcardSecretName(secret.Name, secret.Namespace), meta.Namespace, map[string]string{}))
+			secrets = append(secrets, makeSecret(secret, targetWildcardSecretName(secret.Name, secret.Namespace), meta.Namespace, map[string]string{}, nil))
 		}
 	}
 	return secrets, nil
@@ -96,14 +97,15 @@ func targetWildcardSecretName(originSecretName, originSecretNamespace string) st
 	return originSecretNamespace + "--" + originSecretName + "-wildcard"
 }
 
-func makeSecret(originSecret *corev1.Secret, name, namespace string, labels map[string]string) *corev1.Secret {
+func makeSecret(originSecret *corev1.Secret, name, namespace string, labels, annotations map[string]string) *corev1.Secret {
 	labels[networking.CertificateUIDLabelKey] = originSecret.Labels[networking.CertificateUIDLabelKey] // propagate label for informer use
 
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			Labels:    labels,
+			Name:        name,
+			Namespace:   namespace,
+			Labels:      labels,
+			Annotations: annotations,
 		},
 		Data: originSecret.Data,
 		Type: originSecret.Type,
@@ -112,10 +114,48 @@ func makeSecret(originSecret *corev1.Secret, name, namespace string, labels map[
 
 // MakeTargetSecretLabels returns the labels used in target secret.
 func MakeTargetSecretLabels(originSecretName, originSecretNamespace string) map[string]string {
-	return map[string]string{
-		networking.OriginSecretNameLabelKey:      originSecretName,
+	labels := map[string]string{
 		networking.OriginSecretNamespaceLabelKey: originSecretNamespace,
 	}
+
+	// the name of a secret is allowed to be longer than 63 characters while a label value is not
+	if len(originSecretName) <= dns1123LabelMaxLength {
+		labels[networking.OriginSecretNameLabelKey] = originSecretName
+	} else {
+		suffix := fmt.Sprint(adler32.Checksum([]byte(originSecretName)))
+
+		maxPrefixLength := dns1123LabelMaxLength - len(suffix) - 1
+		prefix := originSecretName[0:maxPrefixLength]
+
+		labels[networking.OriginSecretNameLabelKey] = fmt.Sprintf("%s-%s", prefix, suffix)
+	}
+
+	return labels
+}
+
+// MakeTargetSecretAnnotations returns the annotations used in target secret.
+func MakeTargetSecretAnnotations(originSecretName string) map[string]string {
+	if len(originSecretName) > dns1123LabelMaxLength {
+		return map[string]string{
+			networking.OriginSecretNameLabelKey: originSecretName,
+		}
+	}
+
+	return nil
+}
+
+// ExtractOriginSecretRef extracts the origin secret from a certificate
+func ExtractOriginSecretRef(secret *corev1.Secret) tracker.Reference {
+	originSecretNamespace := secret.Labels[networking.OriginSecretNamespaceLabelKey]
+
+	// the name of a secret is allowed to be longer than 63 characters while a label value is not
+	// the label value therefore might contain a hash and we find the name in an annotation
+	originSecretName := secret.Labels[networking.OriginSecretNameLabelKey]
+	if secret.Annotations != nil && secret.Annotations[networking.OriginSecretNameLabelKey] != "" {
+		originSecretName = secret.Annotations[networking.OriginSecretNameLabelKey]
+	}
+
+	return SecretRef(originSecretNamespace, originSecretName)
 }
 
 // targetSecret returns the name of the Secret that is copied from the origin Secret.
