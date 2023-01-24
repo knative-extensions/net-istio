@@ -285,7 +285,16 @@ func GatewayName(accessor kmeta.Accessor, gatewaySvc *corev1.Service) string {
 	if !isDNS1123Label(prefix) {
 		prefix = fmt.Sprint(adler32.Checksum([]byte(prefix)))
 	}
+
 	gatewayServiceKey := fmt.Sprintf("%s/%s", gatewaySvc.Namespace, gatewaySvc.Name)
+	gatewayServiceKeyChecksum := fmt.Sprint(adler32.Checksum([]byte(gatewayServiceKey)))
+
+	// Ensure that the overall gateway name still is a DNS1123 label
+	maxPrefixLength := dns1123LabelMaxLength - len(gatewayServiceKeyChecksum) - 1
+	if len(prefix) > maxPrefixLength {
+		prefix = prefix[0:maxPrefixLength]
+	}
+
 	return fmt.Sprint(prefix+"-", adler32.Checksum([]byte(gatewayServiceKey)))
 }
 

@@ -1003,3 +1003,24 @@ func TestGatewayName(t *testing.T) {
 		t.Errorf("Unexpected gateway name. want %q, got %q", want, got)
 	}
 }
+
+func TestGatewayNameLongIngressName(t *testing.T) {
+	svc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "gateway",
+			Namespace: "istio-system",
+		},
+	}
+	ingress := &v1alpha1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "areallyverylongdomainnamethatexcd8923dee789a086a0ac46d3046cbec7",
+			Namespace: "default",
+		},
+	}
+
+	want := fmt.Sprintf("areallyverylongdomainnamethatexcd8923dee789a086a0ac4-%d", adler32.Checksum([]byte("istio-system/gateway")))
+	got := GatewayName(ingress, svc)
+	if got != want {
+		t.Errorf("Unexpected gateway name. want %q, got %q", want, got)
+	}
+}
