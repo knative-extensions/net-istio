@@ -261,9 +261,7 @@ func (r *Reconciler) reconcileCertSecrets(ctx context.Context, ing *v1alpha1.Ing
 		// We track the origin and desired secrets so that desired secrets could be synced accordingly when the origin TLS certificate
 		// secret is refreshed.
 		r.tracker.TrackReference(resources.SecretRef(certSecret.Namespace, certSecret.Name), ing)
-		r.tracker.TrackReference(resources.SecretRef(
-			certSecret.Labels[networking.OriginSecretNamespaceLabelKey],
-			certSecret.Labels[networking.OriginSecretNameLabelKey]), ing)
+		r.tracker.TrackReference(resources.ExtractOriginSecretRef(certSecret), ing)
 		if _, err := coreaccessor.ReconcileSecret(ctx, nil, certSecret, r); err != nil {
 			return err
 		}
