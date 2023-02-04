@@ -20,8 +20,6 @@ set -o pipefail
 
 source $(dirname $0)/../vendor/knative.dev/hack/codegen-library.sh
 
-# If we run with -mod=vendor here, then generate-groups.sh looks for vendor files in the wrong place.
-export GOFLAGS=-mod=
 # hack's codegen shell library overrides GOBIN
 # we need it on the path so run_go_tool works
 export PATH="${PATH}:${GOBIN}"
@@ -56,17 +54,8 @@ ${GOPATH}/bin/deepcopy-gen \
   -i knative.dev/net-istio/pkg/defaults
 
 group "Update deps post-codegen"
-
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT_DIR}/hack/update-deps.sh
 
 group "Update istio generated manifests"
-
-# We don't update HEAD since it changes regularly and we don't
-# want our presubmit checks to fail because a diff occurred
-# ${REPO_ROOT_DIR}/third_party/istio-head/generate-manifests.sh
-
-
-# Update latest cause the istioctl version seems to generate
-# reproducible yaml. So let's check for unexpected diffs
 ${REPO_ROOT_DIR}/third_party/istio-latest/generate-manifests.sh
