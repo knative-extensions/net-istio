@@ -263,7 +263,11 @@ func TestMakeWildcardSecrets(t *testing.T) {
 				// Expected secret should be in istio-system which is
 				// the ns of Istio gateway service.
 				Namespace: "istio-system",
-				Labels:    map[string]string{"networking.internal.knative.dev/certificate-uid": ""},
+				Labels: map[string]string{
+					"networking.internal.knative.dev/certificate-uid": "",
+					networking.OriginSecretNameLabelKey:               "test-secret",
+					networking.OriginSecretNamespaceLabelKey:          "knative-serving",
+				},
 			},
 			Data: map[string][]byte{
 				"test-data": []byte("abcd"),

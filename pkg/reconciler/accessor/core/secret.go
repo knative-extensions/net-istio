@@ -59,10 +59,11 @@ func ReconcileSecret(ctx context.Context, owner kmeta.Accessor, desired *corev1.
 		return nil, kaccessor.NewAccessorError(
 			fmt.Errorf("owner: %s with Type %T does not own Secret: %s", owner.GetName(), owner, secret.Name),
 			kaccessor.NotOwnResource)
-	} else if !equality.Semantic.DeepEqual(secret.Data, desired.Data) {
+	} else if !equality.Semantic.DeepEqual(secret.Data, desired.Data) || !equality.Semantic.DeepEqual(secret.Labels, desired.Labels) {
 		// Don't modify the informers copy
 		copy := secret.DeepCopy()
 		copy.Data = desired.Data
+		copy.Labels = desired.Labels
 		secret, err = accessor.GetKubeClient().CoreV1().Secrets(copy.Namespace).Update(ctx, copy, metav1.UpdateOptions{})
 		if err != nil {
 			recorder.Eventf(owner, corev1.EventTypeWarning, "UpdateFailed", "Failed to update Secret %s/%s: %v", desired.Namespace, desired.Name, err)

@@ -1097,8 +1097,9 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 					Name:      targetSecretName,
 					Namespace: "istio-system",
 					Labels: map[string]string{
-						networking.OriginSecretNameLabelKey:      "secret0",
-						networking.OriginSecretNamespaceLabelKey: "knative-serving",
+						"networking.internal.knative.dev/certificate-uid": "",
+						networking.OriginSecretNameLabelKey:               "secret0",
+						networking.OriginSecretNamespaceLabelKey:          "knative-serving",
 					},
 				},
 				// The data is expected to be updated to the right one.
