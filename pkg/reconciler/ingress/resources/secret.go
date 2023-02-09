@@ -87,7 +87,7 @@ func MakeWildcardSecrets(ctx context.Context, originWildcardCerts map[string]*co
 				// as the origin namespace
 				continue
 			}
-			secrets = append(secrets, makeSecret(secret, targetWildcardSecretName(secret.Name, secret.Namespace), meta.Namespace, map[string]string{}, nil))
+			secrets = append(secrets, makeSecret(secret, targetWildcardSecretName(secret.Name, secret.Namespace), meta.Namespace, MakeTargetSecretLabels(secret.Name, secret.Namespace), MakeTargetSecretAnnotations(secret.Name)))
 		}
 	}
 	return secrets, nil
