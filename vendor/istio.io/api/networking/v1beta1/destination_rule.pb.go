@@ -884,6 +884,9 @@ type LoadBalancerSettings struct {
 	// remains in warmup mode starting from its creation time for the duration of this window and
 	// Istio progressively increases amount of traffic for that endpoint instead of sending proportional amount of traffic.
 	// This should be enabled for services that require warm up time to serve full production load with reasonable latency.
+	// Please note that this is most effective when few new endpoints come up like scale event in Kubernetes. When all the
+	// endpoints are relatively new like new deployment, this is not very effective as all endpoints end up getting same
+	// amount of requests.
 	// Currently this is only supported for ROUND_ROBIN and LEAST_REQUEST load balancers.
 	WarmupDurationSecs *duration.Duration `protobuf:"bytes,4,opt,name=warmup_duration_secs,json=warmupDurationSecs,proto3" json:"warmup_duration_secs,omitempty"`
 }
@@ -1501,7 +1504,7 @@ type ClientTLSSettings struct {
 	// If specified, this list overrides the value of subject_alt_names
 	// from the ServiceEntry. If unspecified, automatic validation of upstream
 	// presented certificate for new upstream connections will be done based on the
-	// downstream HTTP host/authority header, provided `VERIFY_CERT_AT_CLIENT`
+	// downstream HTTP host/authority header, provided `VERIFY_CERTIFICATE_AT_CLIENT`
 	// and `ENABLE_AUTO_SNI` environmental variables are set to `true`.
 	SubjectAltNames []string `protobuf:"bytes,5,rep,name=subject_alt_names,json=subjectAltNames,proto3" json:"subject_alt_names,omitempty"`
 	// SNI string to present to the server during TLS handshake.
