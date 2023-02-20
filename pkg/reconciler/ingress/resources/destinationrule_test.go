@@ -1,0 +1,93 @@
+/*
+Copyright 2023 The Knative Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package resources
+
+import (
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/testing/protocmp"
+	istiov1alpha3 "istio.io/api/networking/v1alpha3"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	"knative.dev/pkg/kmeta"
+)
+
+var (
+	host = "myservice-private.svc.cluster.local"
+	ing  = &v1alpha1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-ingress",
+			Namespace: "my-namespace",
+		},
+	}
+)
+
+func TestMakeInternalEncryptionDestinationRuleHttp1(t *testing.T) {
+	dr := MakeInternalEncryptionDestinationRule(host, ing, false)
+	expected := &v1alpha3.DestinationRule{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            host,
+			Namespace:       ing.Namespace,
+			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
+		},
+		Spec: istiov1alpha3.DestinationRule{
+			Host: host,
+			TrafficPolicy: &istiov1alpha3.TrafficPolicy{
+				Tls: &istiov1alpha3.ClientTLSSettings{
+					Mode:            istiov1alpha3.ClientTLSSettings_SIMPLE,
+					CredentialName:  knativeServingCertsSecret,
+					SubjectAltNames: []string{knativeFakeDnsName},
+				},
+			},
+		},
+	}
+
+	if diff := cmp.Diff(expected, dr, protocmp.Transform()); diff != "" {
+		t.Error("Unexpected DestinationRule (-want +got):", diff)
+	}
+}
+
+func TestMakeInternalEncryptionDestinationRuleHttp2(t *testing.T) {
+	dr := MakeInternalEncryptionDestinationRule(host, ing, true)
+	expected := &v1alpha3.DestinationRule{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            host,
+			Namespace:       ing.Namespace,
+			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
+		},
+		Spec: istiov1alpha3.DestinationRule{
+			Host: host,
+			TrafficPolicy: &istiov1alpha3.TrafficPolicy{
+				Tls: &istiov1alpha3.ClientTLSSettings{
+					Mode:            istiov1alpha3.ClientTLSSettings_SIMPLE,
+					CredentialName:  knativeServingCertsSecret,
+					SubjectAltNames: []string{knativeFakeDnsName},
+				},
+				ConnectionPool: &istiov1alpha3.ConnectionPoolSettings{
+					Http: &istiov1alpha3.ConnectionPoolSettings_HTTPSettings{
+						H2UpgradePolicy: istiov1alpha3.ConnectionPoolSettings_HTTPSettings_UPGRADE},
+				},
+			},
+		},
+	}
+
+	if diff := cmp.Diff(expected, dr, protocmp.Transform()); diff != "" {
+		t.Error("Unexpected DestinationRule (-want +got):", diff)
+	}
+}
