@@ -2,7 +2,7 @@ module knative.dev/net-istio
 
 // This comment was added so CI would trigger a point release with a
 // newer version of Go
-// Fixes: https://groups.google.com/g/golang-announce/c/L_3rmdT0BMU
+// See: https://github.com/knative/serving/issues/13747
 go 1.18
 
 require (
