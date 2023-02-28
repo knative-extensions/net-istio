@@ -1,5 +1,7 @@
 module knative.dev/net-istio
 
+// Triggering rebuild
+// see: https://github.com/knative/serving/issues/13747
 go 1.18
 
 require (
