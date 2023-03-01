@@ -798,6 +798,12 @@ rules:
       - list
       - update
       - delete
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -7157,7 +7163,7 @@ data:
         "sts": {
           "servicePort": 0
         },
-        "tag": "1.15.2",
+        "tag": "1.15.6",
         "tracer": {
           "datadog": {
             "address": "$(HOST_IP):8126"
@@ -8418,7 +8424,7 @@ spec:
               value: "true"
             - name: ISTIO_META_CLUSTER_ID
               value: Kubernetes
-          image: docker.io/istio/proxyv2:1.15.2
+          image: docker.io/istio/proxyv2:1.15.6
           name: istio-proxy
           ports:
             - containerPort: 15021
@@ -8568,7 +8574,7 @@ spec:
         fsGroup: 1337
       containers:
         - name: discovery
-          image: docker.io/istio/pilot:1.15.2
+          image: docker.io/istio/pilot:1.15.6
           args:
             - discovery
             - --monitoringAddr=:15014
