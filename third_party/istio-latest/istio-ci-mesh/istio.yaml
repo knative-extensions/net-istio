@@ -6881,9 +6881,11 @@ spec:
                   description: Credentials to use for OCI image pulling.
                   type: string
                 match:
+                  description: Specifies the criteria to determine which traffic is passed to WasmPlugin.
                   items:
                     properties:
                       mode:
+                        description: Criteria for selecting traffic by their direction.
                         enum:
                           - UNDEFINED
                           - CLIENT
@@ -6891,6 +6893,7 @@ spec:
                           - CLIENT_AND_SERVER
                         type: string
                       ports:
+                        description: Criteria for selecting traffic by their destination port.
                         items:
                           properties:
                             number:
@@ -7518,7 +7521,7 @@ data:
         "sts": {
           "servicePort": 0
         },
-        "tag": "1.16.0",
+        "tag": "1.16.3",
         "tracer": {
           "datadog": {
             "address": "$(HOST_IP):8126"
@@ -7956,6 +7959,10 @@ data:
             - mountPath: /var/run/secrets/istio
               name: istiod-ca-cert
             {{- end }}
+            {{- if eq .Values.global.pilotCertProvider "kubernetes" }}
+            - mountPath: /var/run/secrets/istio/kubernetes
+              name: kube-ca-cert
+            {{- end }}
             - mountPath: /var/lib/istio/data
               name: istio-data
             {{ if (isset .ObjectMeta.Annotations `sidecar.istio.io/bootstrapOverride`) }}
@@ -8034,6 +8041,11 @@ data:
           - name: istiod-ca-cert
             configMap:
               name: istio-ca-root-cert
+          {{- end }}
+          {{- if eq .Values.global.pilotCertProvider "kubernetes" }}
+          - name: kube-ca-cert
+            configMap:
+              name: kube-root-ca.crt
           {{- end }}
           {{- if .Values.global.mountMtlsCerts }}
           # Use the key and cert mounted to /etc/certs/ for the in-cluster mTLS communications.
@@ -8783,7 +8795,7 @@ spec:
               value: "true"
             - name: ISTIO_META_CLUSTER_ID
               value: Kubernetes
-          image: docker.io/istio/proxyv2:1.16.0
+          image: docker.io/istio/proxyv2:1.16.3
           name: istio-proxy
           ports:
             - containerPort: 15021
@@ -8933,7 +8945,7 @@ spec:
         fsGroup: 1337
       containers:
         - name: discovery
-          image: docker.io/istio/pilot:1.16.0
+          image: docker.io/istio/pilot:1.16.3
           args:
             - discovery
             - --monitoringAddr=:15014
