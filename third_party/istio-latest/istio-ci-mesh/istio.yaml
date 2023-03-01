@@ -7691,6 +7691,7 @@ metadata:
 data:
   meshNetworks: 'networks: {}'
   mesh: |-
+    accessLogFile: /dev/stdout
     defaultConfig:
       discoveryAddress: istiod.istio-system.svc:15012
       proxyMetadata: {}
