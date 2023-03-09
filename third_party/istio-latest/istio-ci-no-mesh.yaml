@@ -26,6 +26,7 @@ spec:
         autoscaleEnabled: false
 
   meshConfig:
+    accessLogFile: /dev/stdout
     defaultConfig:
       terminationDrainDuration: "20s"
 

@@ -7691,6 +7691,7 @@ metadata:
 data:
   meshNetworks: 'networks: {}'
   mesh: |-
+    accessLogFile: /dev/stdout
     defaultConfig:
       discoveryAddress: istiod.istio-system.svc:15012
       proxyMetadata: {}
@@ -7812,7 +7813,7 @@ data:
         "sts": {
           "servicePort": 0
         },
-        "tag": "1.17.0",
+        "tag": "1.17.1",
         "tracer": {
           "datadog": {
             "address": "$(HOST_IP):8126"
@@ -9102,7 +9103,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: docker.io/istio/proxyv2:1.17.0
+          image: docker.io/istio/proxyv2:1.17.1
           name: istio-proxy
           ports:
             - containerPort: 15021
@@ -9252,7 +9253,7 @@ spec:
         fsGroup: 1337
       containers:
         - name: discovery
-          image: docker.io/istio/pilot:1.17.0
+          image: docker.io/istio/pilot:1.17.1
           args:
             - discovery
             - --monitoringAddr=:15014
