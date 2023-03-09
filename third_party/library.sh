@@ -89,12 +89,6 @@ function add_crd_label() {
     -f - -f "${lib_path}/label-crd-overlay.ytt.yaml"
 }
 
-function upgrade_resource_versions() {
-  local lib_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  go_run github.com/vmware-tanzu/carvel-ytt/cmd/ytt@v0.43.0 \
-    -f - -f "${lib_path}/upgrade-resource-versions.ytt.yaml"
-}
-
 function generate_manifests() {
   local dir=$1
   shift
@@ -121,7 +115,7 @@ metadata:
 ---
 EOF
 
-    ${ISTIO_DIR}/bin/istioctl manifest generate -f "$file"  "$@" | add_crd_label | upgrade_resource_versions >> "${tmpfile}"
+    ${ISTIO_DIR}/bin/istioctl manifest generate -f "$file"  "$@" | add_crd_label >> "${tmpfile}"
 
     for kind in "${APPLY_ORDER[@]}"; do
       run_yq eval "select(.kind == \"${kind}\")" "${tmpfile}" >> "${target_dir}/istio.yaml"
