@@ -30,6 +30,8 @@ spec:
         type: NodePort
 
   meshConfig:
+    accessLogFile: /dev/stdout
+    accessLogEncoding: JSON
     defaultConfig:
       terminationDrainDuration: "20s"
 
