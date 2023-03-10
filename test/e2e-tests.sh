@@ -16,8 +16,6 @@
 
 source $(dirname $0)/e2e-common.sh
 
-export ENABLE_GKE_TELEMETRY=true
-
 # Script entry point.
 initialize $@  --skip-istio-addon
 
