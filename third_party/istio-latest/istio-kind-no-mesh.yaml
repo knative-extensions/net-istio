@@ -18,6 +18,7 @@ spec:
   values:
     global:
       proxy:
+        logLevel: debug
         clusterDomain: cluster.local
     pilot:
       autoscaleMin: 1

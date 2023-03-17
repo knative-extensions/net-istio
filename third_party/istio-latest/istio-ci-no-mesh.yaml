@@ -16,6 +16,9 @@ apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 spec:
   values:
+    global:
+      proxy:
+        logLevel: debug
     pilot:
       autoscaleMin: 3
       autoscaleMax: 10

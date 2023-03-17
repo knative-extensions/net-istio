@@ -18,6 +18,7 @@ spec:
   values:
     global:
       proxy:
+        logLevel: debug
         autoInject: enabled
     pilot:
       autoscaleMin: 3

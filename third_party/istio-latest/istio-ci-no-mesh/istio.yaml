@@ -7774,7 +7774,7 @@ data:
           "includeIPRanges": "*",
           "includeInboundPorts": "*",
           "includeOutboundPorts": "",
-          "logLevel": "warning",
+          "logLevel": "debug",
           "privileged": false,
           "readinessFailureThreshold": 30,
           "readinessInitialDelaySeconds": 1,
@@ -9049,7 +9049,7 @@ spec:
             - router
             - --domain
             - $(POD_NAMESPACE).svc.cluster.local
-            - --proxyLogLevel=warning
+            - --proxyLogLevel=debug
             - --proxyComponentLogLevel=misc:error
             - --log_output_level=default:info
           env:
