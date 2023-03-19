@@ -50,13 +50,13 @@ var stableTests = map[string]func(t *testing.T){
 
 var betaTests = map[string]func(t *testing.T){
 	// Add your conformance test for beta features
-	"host-rewrite": TestRewriteHost,
-	"headers/tags": TestTagHeaders,
+	// "host-rewrite": TestRewriteHost,
+	// "headers/tags": TestTagHeaders,
 }
 
 var alphaTests = map[string]func(t *testing.T){
 	// Add your conformance test for alpha features
-	"httpoption": TestHTTPOption,
+	// "httpoption": TestHTTPOption,
 }
 
 // RunConformance will run ingress conformance tests

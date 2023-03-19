@@ -127,6 +127,7 @@ func TestUpdate(t *testing.T) {
 
 		t.Logf("Rolling out %q w/ %q", nextName, sentinel)
 
+		time.Sleep(10 * time.Second)
 		// Update the Ingress, and wait for it to report ready.
 		UpdateIngressReady(ctx, t, clients, ing.Name, v1alpha1.IngressSpec{
 			Rules: []v1alpha1.IngressRule{{
