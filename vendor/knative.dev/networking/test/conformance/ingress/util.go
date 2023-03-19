@@ -1128,6 +1128,8 @@ func RuntimeRequestWithExpectations(ctx context.Context, t *testing.T, client *h
 		opt(req)
 	}
 
+	id := rand.Int()
+	req.Header.Set("id", strconv.Itoa(id))
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -1141,7 +1143,7 @@ func RuntimeRequestWithExpectations(ctx context.Context, t *testing.T, client *h
 
 	for _, e := range responseExpectations {
 		if err := e(resp); err != nil {
-			t.Error("Error meeting response expectations:", err)
+			t.Errorf("[%d] Error meeting response expectations: %v", id, err)
 			DumpResponse(ctx, t, resp)
 			return nil
 		}
@@ -1150,7 +1152,7 @@ func RuntimeRequestWithExpectations(ctx context.Context, t *testing.T, client *h
 	if resp.StatusCode == http.StatusOK {
 		b, err := io.ReadAll(resp.Body)
 		if err != nil {
-			t.Error("Unable to read response body:", err)
+			t.Errorf("[%d] Unable to read response body: %v", id, err)
 			DumpResponse(ctx, t, resp)
 			return nil
 		}
