@@ -30,14 +30,14 @@ import (
 
 // InitHandlers initializes all handlers.
 func InitHandlers(mux *http.ServeMux) {
-	mux.HandleFunc("/", withHeaders(withRequestLog(runtimeHandler)))
+	mux.HandleFunc("/", withHeaders(runtimeHandler))
 
-	h := probe.NewHandler(withRequestLog(withKubeletProbeHeaderCheck))
+	h := probe.NewHandler(http.HandlerFunc(withKubeletProbeHeaderCheck))
 	mux.HandleFunc(nethttp.HealthCheckPath, h.ServeHTTP)
 }
 
 // withRequestLog logs each request before handling it.
-func withRequestLog(next http.HandlerFunc) http.HandlerFunc {
+func WithRequestLog(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reqDump, err := httputil.DumpRequest(r, true)
 		if err != nil {
@@ -73,6 +73,6 @@ func withHeaders(next http.HandlerFunc) http.HandlerFunc {
 func writeJSON(w http.ResponseWriter, o interface{}) {
 	w.WriteHeader(http.StatusOK)
 	e := json.NewEncoder(w)
-	e.SetIndent("", "\t")
+	// e.SetIndent("", "\t")
 	e.Encode(o)
 }
