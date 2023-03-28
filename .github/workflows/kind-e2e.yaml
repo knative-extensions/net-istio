@@ -108,7 +108,7 @@ jobs:
     - name: Run e2e Tests
       run: |
         set -x
-
+        
         # Exclude the control-plane node, which doesn't seem to expose the nodeport service.
         IPS=( $(kubectl get nodes -lkubernetes.io/hostname!=kind-control-plane -ojsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}') )
 
@@ -118,6 +118,12 @@ jobs:
            --ingressendpoint="${IPS[0]}" \
            --ingressClass=istio.ingress.networking.knative.dev \
            --cluster-suffix=$CLUSTER_SUFFIX
+        
+        echo "# DEBUG"
+        env
+        kubectl get cm -A -o yaml
+        kubectl get king -A -o yaml
+        echo "# DEBUG"
 
     - name: Post failure notice to Slack
       uses: rtCamp/action-slack-notify@v2.1.0
