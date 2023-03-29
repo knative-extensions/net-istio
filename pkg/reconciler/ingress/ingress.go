@@ -191,8 +191,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 
 	if config.FromContext(ctx).Network.InternalEncryption {
 		logger.Info("Creating/Updating DestinationRules for internal-encryption")
-		err := r.reconcileDestinationRules(ctx, ing)
-		if err != nil {
+		if err := r.reconcileDestinationRules(ctx, ing); err != nil {
 			return err
 		}
 	}
@@ -359,7 +358,7 @@ func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1
 }
 
 func (r *Reconciler) reconcileDestinationRules(ctx context.Context, ing *v1alpha1.Ingress) error {
-	var drs = make(map[string]bool)
+	var drs = sets.String{}
 	for _, rule := range ing.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
 			// Currently DomainMappings point to the cluster local domain on the local gateway.
@@ -382,15 +381,15 @@ func (r *Reconciler) reconcileDestinationRules(ctx context.Context, ing *v1alpha
 					}
 				}
 
-				host := pkgnetwork.GetServiceHostname(split.ServiceName, split.ServiceNamespace)
+				hostname := pkgnetwork.GetServiceHostname(split.ServiceName, split.ServiceNamespace)
 
-				// skip duplicate entries, as we only need one DR per unique upstream host
-				if _, ok := drs[host]; !ok {
-					dr := resources.MakeInternalEncryptionDestinationRule(host, ing, http2)
+				// skip duplicate entries, as we only need one DR per unique upstream k8s service
+				if !drs.Has(hostname) {
+					dr := resources.MakeInternalEncryptionDestinationRule(hostname, ing, http2)
 					if _, err := istioaccessor.ReconcileDestinationRule(ctx, ing, dr, r); err != nil {
 						return fmt.Errorf("failed to reconcile DestinationRule: %w", err)
 					}
-					drs[host] = true
+					drs.Insert(hostname)
 				}
 			}
 		}
