@@ -93,3 +93,18 @@ Run the following command to install net-istio components
 ```shell
 ko apply -f config/
 ```
+
+### Internal Encryption (optional)
+
+If you want to work with `internal-encryption` enabled you can either:
+
+* Install `Knative Serving` to automatically generate the certificates. The CA will be injected in [700-istio-secret.yaml](./config/700-istio-secret.yaml).
+* Or use [./test/generate-upstream-cert.sh)](./test/generate-upstream-cert.sh) to manually generate the secrets.
+
+You can then enable `internal-encryption` in `config-network` like in [our test resources](./test/config/internal-encryption/config-network.yaml) 
+and specify the following environment variables before you run the e2e/conformance tests:
+
+```bash
+export UPSTREAM_TLS_CERT=server-certs
+export SERVER_NAME=data-plane.knative.dev
+```
