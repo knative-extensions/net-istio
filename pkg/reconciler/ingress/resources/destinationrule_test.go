@@ -24,6 +24,7 @@ import (
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/kmeta"
 )
@@ -34,6 +35,14 @@ var (
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "my-ingress",
 			Namespace: "my-namespace",
+			Annotations: map[string]string{
+				"my-annotation": "my-value",
+			},
+			Labels: map[string]string{
+				"my-label":             "my-value-ignored",
+				RouteLabelKey:          "my-route",
+				RouteNamespaceLabelKey: "my-route-namespace",
+			},
 		},
 	}
 )
@@ -45,6 +54,14 @@ func TestMakeInternalEncryptionDestinationRuleHttp1(t *testing.T) {
 			Name:            host,
 			Namespace:       ing.Namespace,
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
+			Annotations: map[string]string{
+				"my-annotation": "my-value",
+			},
+			Labels: map[string]string{
+				networking.IngressLabelKey: "my-ingress",
+				RouteLabelKey:              "my-route",
+				RouteNamespaceLabelKey:     "my-route-namespace",
+			},
 		},
 		Spec: istiov1alpha3.DestinationRule{
 			Host: host,
@@ -70,6 +87,14 @@ func TestMakeInternalEncryptionDestinationRuleHttp2(t *testing.T) {
 			Name:            host,
 			Namespace:       ing.Namespace,
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
+			Annotations: map[string]string{
+				"my-annotation": "my-value",
+			},
+			Labels: map[string]string{
+				networking.IngressLabelKey: "my-ingress",
+				RouteLabelKey:              "my-route",
+				RouteNamespaceLabelKey:     "my-route-namespace",
+			},
 		},
 		Spec: istiov1alpha3.DestinationRule{
 			Host: host,

@@ -32,6 +32,7 @@ func main() {
 	// resilient to clusters containing malformed resources.
 	v1beta1.VirtualServiceUnmarshaler.AllowUnknownFields = true
 	v1beta1.GatewayUnmarshaler.AllowUnknownFields = true
+	v1beta1.DestinationRuleUnmarshaler.AllowUnknownFields = true
 
 	ctx := informerfiltering.GetContextWithFilteringLabelSelector(signals.NewContext())
 	sharedmain.MainWithContext(ctx, "net-istio-controller", ingress.NewController, serverlessservice.NewController)

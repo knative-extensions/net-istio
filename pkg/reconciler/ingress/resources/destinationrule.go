@@ -20,7 +20,9 @@ import (
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	"knative.dev/pkg/kmap"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -40,6 +42,7 @@ func MakeInternalEncryptionDestinationRule(host string, ing *v1alpha1.Ingress, h
 			Name:            host,
 			Namespace:       ing.Namespace,
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
+			Annotations:     ing.GetAnnotations(),
 		},
 		Spec: istiov1alpha3.DestinationRule{
 			Host: host,
@@ -52,6 +55,12 @@ func MakeInternalEncryptionDestinationRule(host string, ing *v1alpha1.Ingress, h
 			},
 		},
 	}
+
+	// Populate the Ingress labels.
+	dr.Labels = kmap.Filter(ing.GetLabels(), func(k string) bool {
+		return k != RouteLabelKey && k != RouteNamespaceLabelKey
+	})
+	dr.Labels[networking.IngressLabelKey] = ing.Name
 
 	if http2 {
 		dr.Spec.TrafficPolicy.ConnectionPool = &istiov1alpha3.ConnectionPoolSettings{
