@@ -82,6 +82,23 @@ spec:
           seccompProfile:
             type: RuntimeDefault
 
+        readinessProbe:
+          periodSeconds: 1
+          httpGet:
+            scheme: HTTPS
+            port: 8443
+            httpHeaders:
+              - name: k-kubelet-probe
+                value: "webhook"
+        livenessProbe:
+          periodSeconds: 1
+          httpGet:
+            scheme: HTTPS
+            port: 8443
+            httpHeaders:
+              - name: k-kubelet-probe
+                value: "webhook"
+
         ports:
         - name: metrics
           containerPort: 9090

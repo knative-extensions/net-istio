@@ -85,7 +85,7 @@ func main() {
 	})
 
 	sharedmain.WebhookMainWithContext(
-		ctx, "net-istio-webhook",
+		sharedmain.WithHealthProbesDisabled(ctx), "net-istio-webhook",
 		certificates.NewController,
 		NewDefaultingAdmissionController,
 		NewConfigValidationController,
