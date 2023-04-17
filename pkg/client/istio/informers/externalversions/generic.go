@@ -21,7 +21,7 @@ package externalversions
 import (
 	"fmt"
 
-	v1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
+	v1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -52,23 +52,23 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=networking.istio.io, Version=v1alpha3
-	case v1alpha3.SchemeGroupVersion.WithResource("destinationrules"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha3().DestinationRules().Informer()}, nil
-	case v1alpha3.SchemeGroupVersion.WithResource("envoyfilters"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha3().EnvoyFilters().Informer()}, nil
-	case v1alpha3.SchemeGroupVersion.WithResource("gateways"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha3().Gateways().Informer()}, nil
-	case v1alpha3.SchemeGroupVersion.WithResource("serviceentries"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha3().ServiceEntries().Informer()}, nil
-	case v1alpha3.SchemeGroupVersion.WithResource("sidecars"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha3().Sidecars().Informer()}, nil
-	case v1alpha3.SchemeGroupVersion.WithResource("virtualservices"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha3().VirtualServices().Informer()}, nil
-	case v1alpha3.SchemeGroupVersion.WithResource("workloadentries"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha3().WorkloadEntries().Informer()}, nil
-	case v1alpha3.SchemeGroupVersion.WithResource("workloadgroups"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha3().WorkloadGroups().Informer()}, nil
+	// Group=networking.istio.io, Version=v1beta1
+	case v1beta1.SchemeGroupVersion.WithResource("destinationrules"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1beta1().DestinationRules().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("gateways"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1beta1().Gateways().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("proxyconfigs"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1beta1().ProxyConfigs().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("serviceentries"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1beta1().ServiceEntries().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("sidecars"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1beta1().Sidecars().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("virtualservices"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1beta1().VirtualServices().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("workloadentries"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1beta1().WorkloadEntries().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("workloadgroups"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1beta1().WorkloadGroups().Informer()}, nil
 
 	}
 
