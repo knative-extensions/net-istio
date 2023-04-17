@@ -26,10 +26,9 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
 
-	istiov1alpha3 "istio.io/api/networking/v1alpha3"
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
-
-	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
+	istiov1beta1 "istio.io/api/networking/v1beta1"
+	"istio.io/client-go/pkg/apis/networking/v1beta1"
+	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/tracker"
 
@@ -117,7 +116,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	gatewayNames[v1alpha1.IngressVisibilityClusterLocal] = qualifiedGatewayNamesFromContext(ctx)[v1alpha1.IngressVisibilityClusterLocal]
 	gatewayNames[v1alpha1.IngressVisibilityExternalIP] = sets.String{}
 
-	ingressGateways := []*v1alpha3.Gateway{}
+	ingressGateways := []*v1beta1.Gateway{}
 	if shouldReconcileTLS(ing) {
 		originSecrets, err := resources.GetSecrets(ing, r.secretLister)
 		if err != nil {
@@ -167,7 +166,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		httpServer := resources.MakeHTTPServer(ing.Spec.HTTPOption, getPublicHosts(ing))
 		if len(ingressGateways) == 0 {
 			var err error
-			if ingressGateways, err = resources.MakeIngressGateways(ctx, ing, []*istiov1alpha3.Server{httpServer}, r.svcLister); err != nil {
+			if ingressGateways, err = resources.MakeIngressGateways(ctx, ing, []*istiov1beta1.Server{httpServer}, r.svcLister); err != nil {
 				return err
 			}
 		} else {
@@ -269,7 +268,7 @@ func (r *Reconciler) reconcileCertSecrets(ctx context.Context, ing *v1alpha1.Ing
 	return nil
 }
 
-func (r *Reconciler) reconcileWildcardGateways(ctx context.Context, gateways []*v1alpha3.Gateway, ing *v1alpha1.Ingress) error {
+func (r *Reconciler) reconcileWildcardGateways(ctx context.Context, gateways []*v1beta1.Gateway, ing *v1alpha1.Ingress) error {
 	for _, gateway := range gateways {
 		r.tracker.TrackReference(resources.GatewayRef(gateway), ing)
 		if err := r.reconcileSystemGeneratedGateway(ctx, gateway); err != nil {
@@ -279,7 +278,7 @@ func (r *Reconciler) reconcileWildcardGateways(ctx context.Context, gateways []*
 	return nil
 }
 
-func (r *Reconciler) reconcileIngressGateways(ctx context.Context, gateways []*v1alpha3.Gateway) error {
+func (r *Reconciler) reconcileIngressGateways(ctx context.Context, gateways []*v1beta1.Gateway) error {
 	for _, gateway := range gateways {
 		if err := r.reconcileSystemGeneratedGateway(ctx, gateway); err != nil {
 			return err
@@ -288,10 +287,10 @@ func (r *Reconciler) reconcileIngressGateways(ctx context.Context, gateways []*v
 	return nil
 }
 
-func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desired *v1alpha3.Gateway) error {
+func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desired *v1beta1.Gateway) error {
 	existing, err := r.gatewayLister.Gateways(desired.Namespace).Get(desired.Name)
 	if apierrs.IsNotFound(err) {
-		if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(desired.Namespace).Create(ctx, desired, metav1.CreateOptions{}); err != nil {
+		if _, err := r.istioClientSet.NetworkingV1beta1().Gateways(desired.Namespace).Create(ctx, desired, metav1.CreateOptions{}); err != nil {
 			return err
 		}
 	} else if err != nil {
@@ -299,7 +298,7 @@ func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desire
 	} else if !cmp.Equal(existing.Spec.DeepCopy(), desired.Spec.DeepCopy(), protocmp.Transform()) {
 		deepCopy := existing.DeepCopy()
 		deepCopy.Spec = *desired.Spec.DeepCopy()
-		if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(desired.Namespace).Update(ctx, deepCopy, metav1.UpdateOptions{}); err != nil {
+		if _, err := r.istioClientSet.NetworkingV1beta1().Gateways(desired.Namespace).Update(ctx, deepCopy, metav1.UpdateOptions{}); err != nil {
 			return err
 		}
 	}
@@ -307,7 +306,7 @@ func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desire
 }
 
 func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1.Ingress,
-	desired []*v1alpha3.VirtualService) error {
+	desired []*v1beta1.VirtualService) error {
 	// First, create all needed VirtualServices.
 	kept := sets.NewString()
 	for _, d := range desired {
@@ -351,7 +350,7 @@ func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1
 				// We shouldn't remove resources not controlled by us.
 				continue
 			}
-			if err = r.istioClientSet.NetworkingV1alpha3().VirtualServices(ns).Delete(ctx, n, metav1.DeleteOptions{}); err != nil {
+			if err = r.istioClientSet.NetworkingV1beta1().VirtualServices(ns).Delete(ctx, n, metav1.DeleteOptions{}); err != nil {
 				return fmt.Errorf("failed to delete VirtualService: %w", err)
 			}
 		}
@@ -365,7 +364,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, ing *v1alpha1.Ingress) pk
 	logger.Info("Cleaning up Gateway Servers")
 	for _, gws := range [][]config.Gateway{istiocfg.IngressGateways, istiocfg.LocalGateways} {
 		for _, gw := range gws {
-			if err := r.reconcileIngressServers(ctx, ing, gw, []*istiov1alpha3.Server{}); err != nil {
+			if err := r.reconcileIngressServers(ctx, ing, gw, []*istiov1beta1.Server{}); err != nil {
 				return err
 			}
 		}
@@ -403,7 +402,7 @@ func (r *Reconciler) reconcileDeletion(ctx context.Context, ing *v1alpha1.Ingres
 	return errors.NewAggregate(errs)
 }
 
-func (r *Reconciler) reconcileIngressServers(ctx context.Context, ing *v1alpha1.Ingress, gw config.Gateway, desired []*istiov1alpha3.Server) error {
+func (r *Reconciler) reconcileIngressServers(ctx context.Context, ing *v1alpha1.Ingress, gw config.Gateway, desired []*istiov1beta1.Server) error {
 	gateway, err := r.gatewayLister.Gateways(gw.Namespace).Get(gw.Name)
 	if err != nil {
 		// Unlike VirtualService, a default gateway needs to be existent.
@@ -414,14 +413,14 @@ func (r *Reconciler) reconcileIngressServers(ctx context.Context, ing *v1alpha1.
 	return r.reconcileGateway(ctx, ing, gateway, existing, desired)
 }
 
-func (r *Reconciler) reconcileGateway(ctx context.Context, ing *v1alpha1.Ingress, gateway *v1alpha3.Gateway, existing []*istiov1alpha3.Server, desired []*istiov1alpha3.Server) error {
+func (r *Reconciler) reconcileGateway(ctx context.Context, ing *v1alpha1.Ingress, gateway *v1beta1.Gateway, existing []*istiov1beta1.Server, desired []*istiov1beta1.Server) error {
 	if cmp.Equal(existing, desired, protocmp.Transform()) {
 		return nil
 	}
 
 	deepCopy := gateway.DeepCopy()
 	deepCopy = resources.UpdateGateway(deepCopy, desired, existing)
-	if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(deepCopy.Namespace).Update(ctx, deepCopy, metav1.UpdateOptions{}); err != nil {
+	if _, err := r.istioClientSet.NetworkingV1beta1().Gateways(deepCopy.Namespace).Update(ctx, deepCopy, metav1.UpdateOptions{}); err != nil {
 		return fmt.Errorf("failed to update Gateway: %w", err)
 	}
 	controller.GetEventRecorder(ctx).Eventf(ing, corev1.EventTypeNormal,
@@ -523,7 +522,7 @@ func isIngressPublic(ing *v1alpha1.Ingress) bool {
 //
 //	hasStatus indicates whether all the virtualServices have a status field
 //	ready indicates whether they all have been reconciled and are able to receive requests
-func (r *Reconciler) areVirtualServicesReady(ctx context.Context, vses []*v1alpha3.VirtualService) (hasStatus, ready bool) {
+func (r *Reconciler) areVirtualServicesReady(ctx context.Context, vses []*v1beta1.VirtualService) (hasStatus, ready bool) {
 	logger := logging.FromContext(ctx)
 
 	for _, vs := range vses {
@@ -551,7 +550,7 @@ func (r *Reconciler) areVirtualServicesReady(ctx context.Context, vses []*v1alph
 //	hasStatus indicates whether the virtualService has a status field
 //	ready indicates whether it's been reconciled and able to receive requests
 //	err indicates an error occurred while looking up the status.
-func (r *Reconciler) isVirtualServiceReady(ctx context.Context, vs *v1alpha3.VirtualService) (hasStatus, ready bool, err error) {
+func (r *Reconciler) isVirtualServiceReady(ctx context.Context, vs *v1beta1.VirtualService) (hasStatus, ready bool, err error) {
 	logger := logging.FromContext(ctx)
 
 	if !config.FromContext(ctx).Istio.EnableVirtualServiceStatus {

@@ -19,8 +19,8 @@ package resources
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	istiov1alpha3 "istio.io/api/networking/v1alpha3"
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	istiov1beta1 "istio.io/api/networking/v1beta1"
+	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/http/header"
 	"knative.dev/pkg/kmeta"
@@ -29,38 +29,38 @@ import (
 
 // MakeVirtualService creates a placeholder virtual service to allow direct
 // pod addressability, even for mesh cases.
-func MakeVirtualService(sks *v1alpha1.ServerlessService) *v1alpha3.VirtualService {
+func MakeVirtualService(sks *v1alpha1.ServerlessService) *v1beta1.VirtualService {
 	ns := sks.Namespace
 	name := sks.Status.PrivateServiceName
 	host := pkgnetwork.GetServiceHostname(name, ns)
 
-	return &v1alpha3.VirtualService{
+	return &v1beta1.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            name,
 			Namespace:       sks.Namespace,
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(sks)},
 		},
-		Spec: istiov1alpha3.VirtualService{
+		Spec: istiov1beta1.VirtualService{
 			Hosts: []string{host},
-			Http: []*istiov1alpha3.HTTPRoute{{
-				Match: []*istiov1alpha3.HTTPMatchRequest{{
-					Headers: map[string]*istiov1alpha3.StringMatch{
+			Http: []*istiov1beta1.HTTPRoute{{
+				Match: []*istiov1beta1.HTTPMatchRequest{{
+					Headers: map[string]*istiov1beta1.StringMatch{
 						header.PassthroughLoadbalancingKey: {
-							MatchType: &istiov1alpha3.StringMatch_Exact{
+							MatchType: &istiov1beta1.StringMatch_Exact{
 								Exact: "true",
 							},
 						},
 					},
 				}},
-				Route: []*istiov1alpha3.HTTPRouteDestination{{
-					Destination: &istiov1alpha3.Destination{
+				Route: []*istiov1beta1.HTTPRouteDestination{{
+					Destination: &istiov1beta1.Destination{
 						Host:   host,
 						Subset: subsetDirect,
 					},
 				}},
 			}, {
-				Route: []*istiov1alpha3.HTTPRouteDestination{{
-					Destination: &istiov1alpha3.Destination{
+				Route: []*istiov1beta1.HTTPRouteDestination{{
+					Destination: &istiov1beta1.Destination{
 						Host:   host,
 						Subset: subsetNormal,
 					},

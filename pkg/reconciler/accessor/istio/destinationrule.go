@@ -22,12 +22,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
-	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
+	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
 	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
@@ -39,15 +39,15 @@ type DestinationRuleAccessor interface {
 	GetDestinationRuleLister() istiolisters.DestinationRuleLister
 }
 
-func destionationRuleIsDifferent(current, desired *v1alpha3.DestinationRule) bool {
+func destionationRuleIsDifferent(current, desired *v1beta1.DestinationRule) bool {
 	return !cmp.Equal(&current.Spec, &desired.Spec, protocmp.Transform()) ||
 		!cmp.Equal(current.Labels, desired.Labels) ||
 		!cmp.Equal(current.Annotations, desired.Annotations)
 }
 
 // ReconcileDestinationRule reconciles DestinationRule to the desired status.
-func ReconcileDestinationRule(ctx context.Context, owner kmeta.Accessor, desired *v1alpha3.DestinationRule,
-	drAccessor DestinationRuleAccessor) (*v1alpha3.DestinationRule, error) {
+func ReconcileDestinationRule(ctx context.Context, owner kmeta.Accessor, desired *v1beta1.DestinationRule,
+	drAccessor DestinationRuleAccessor) (*v1beta1.DestinationRule, error) {
 
 	recorder := controller.GetEventRecorder(ctx)
 	if recorder == nil {
@@ -57,7 +57,7 @@ func ReconcileDestinationRule(ctx context.Context, owner kmeta.Accessor, desired
 	name := desired.Name
 	dr, err := drAccessor.GetDestinationRuleLister().DestinationRules(ns).Get(name)
 	if apierrs.IsNotFound(err) {
-		dr, err = drAccessor.GetIstioClient().NetworkingV1alpha3().DestinationRules(ns).Create(ctx, desired, metav1.CreateOptions{})
+		dr, err = drAccessor.GetIstioClient().NetworkingV1beta1().DestinationRules(ns).Create(ctx, desired, metav1.CreateOptions{})
 		if err != nil {
 			recorder.Eventf(owner, corev1.EventTypeWarning, "CreationFailed",
 				"Failed to create DestinationRule %s/%s: %v", ns, name, err)
@@ -77,7 +77,7 @@ func ReconcileDestinationRule(ctx context.Context, owner kmeta.Accessor, desired
 		existing.Spec = *desired.Spec.DeepCopy()
 		existing.Labels = desired.Labels
 		existing.Annotations = desired.Annotations
-		dr, err = drAccessor.GetIstioClient().NetworkingV1alpha3().DestinationRules(ns).Update(ctx, existing, metav1.UpdateOptions{})
+		dr, err = drAccessor.GetIstioClient().NetworkingV1beta1().DestinationRules(ns).Update(ctx, existing, metav1.UpdateOptions{})
 		if err != nil {
 			return nil, fmt.Errorf("failed to update DestinationRule: %w", err)
 		}

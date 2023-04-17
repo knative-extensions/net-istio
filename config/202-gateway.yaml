@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # This is the shared Gateway for all Knative routes to use.
-apiVersion: networking.istio.io/v1alpha3
+apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
   name: knative-ingress-gateway

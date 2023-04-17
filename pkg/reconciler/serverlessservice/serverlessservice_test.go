@@ -27,7 +27,7 @@ import (
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
 	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
 
-	istiov1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
+	istiov1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -64,11 +64,11 @@ func sks(name string) *netv1alpha1.ServerlessService {
 	return sks
 }
 
-func vs(name string) *istiov1alpha3.VirtualService {
+func vs(name string) *istiov1beta1.VirtualService {
 	return resources.MakeVirtualService(sks(name))
 }
 
-func dr(name string) *istiov1alpha3.DestinationRule {
+func dr(name string) *istiov1beta1.DestinationRule {
 	return resources.MakeDestinationRule(sks(name))
 }
 
@@ -136,12 +136,12 @@ func TestReconcile(t *testing.T) {
 		Key:  "testing/test",
 		Objects: []runtime.Object{
 			sks("test"),
-			func() *istiov1alpha3.VirtualService {
+			func() *istiov1beta1.VirtualService {
 				virtualService := vs("test")
 				virtualService.Spec.Hosts = []string{"foo"}
 				return virtualService
 			}(),
-			func() *istiov1alpha3.DestinationRule {
+			func() *istiov1beta1.DestinationRule {
 				destinationRule := dr("test")
 				destinationRule.Spec.Host = "foo"
 				return destinationRule

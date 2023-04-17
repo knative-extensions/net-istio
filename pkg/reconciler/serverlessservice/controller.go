@@ -21,8 +21,8 @@ import (
 
 	"k8s.io/client-go/tools/cache"
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
-	destinationruleinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/destinationrule"
-	virtualserviceinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/virtualservice"
+	destinationruleinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/destinationrule"
+	virtualserviceinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/virtualservice"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	netv1alpha1 "knative.dev/networking/pkg/apis/networking/v1alpha1"
 	sksinformer "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/serverlessservice"

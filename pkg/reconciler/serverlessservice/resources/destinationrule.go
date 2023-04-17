@@ -19,8 +19,8 @@ package resources
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	istiov1alpha3 "istio.io/api/networking/v1alpha3"
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	istiov1beta1 "istio.io/api/networking/v1beta1"
+	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/pkg/kmeta"
 	pkgnetwork "knative.dev/pkg/network"
@@ -33,34 +33,34 @@ const (
 
 // MakeDestinationRule creates a DestinationRule that defines a "normal" and a "direct"
 // loadbalancer for the service in question, to allow for pod addressability, even in mesh.
-func MakeDestinationRule(sks *v1alpha1.ServerlessService) *v1alpha3.DestinationRule {
+func MakeDestinationRule(sks *v1alpha1.ServerlessService) *v1beta1.DestinationRule {
 	ns := sks.Namespace
 	name := sks.Status.PrivateServiceName
 	host := pkgnetwork.GetServiceHostname(name, ns)
 
-	return &v1alpha3.DestinationRule{
+	return &v1beta1.DestinationRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            name,
 			Namespace:       ns,
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(sks)},
 		},
-		Spec: istiov1alpha3.DestinationRule{
+		Spec: istiov1beta1.DestinationRule{
 			Host: host,
-			Subsets: []*istiov1alpha3.Subset{{
+			Subsets: []*istiov1beta1.Subset{{
 				Name: subsetNormal,
-				TrafficPolicy: &istiov1alpha3.TrafficPolicy{
-					LoadBalancer: &istiov1alpha3.LoadBalancerSettings{
-						LbPolicy: &istiov1alpha3.LoadBalancerSettings_Simple{
-							Simple: istiov1alpha3.LoadBalancerSettings_LEAST_REQUEST,
+				TrafficPolicy: &istiov1beta1.TrafficPolicy{
+					LoadBalancer: &istiov1beta1.LoadBalancerSettings{
+						LbPolicy: &istiov1beta1.LoadBalancerSettings_Simple{
+							Simple: istiov1beta1.LoadBalancerSettings_LEAST_REQUEST,
 						},
 					},
 				},
 			}, {
 				Name: subsetDirect,
-				TrafficPolicy: &istiov1alpha3.TrafficPolicy{
-					LoadBalancer: &istiov1alpha3.LoadBalancerSettings{
-						LbPolicy: &istiov1alpha3.LoadBalancerSettings_Simple{
-							Simple: istiov1alpha3.LoadBalancerSettings_PASSTHROUGH,
+				TrafficPolicy: &istiov1beta1.TrafficPolicy{
+					LoadBalancer: &istiov1beta1.LoadBalancerSettings{
+						LbPolicy: &istiov1beta1.LoadBalancerSettings_Simple{
+							Simple: istiov1beta1.LoadBalancerSettings_PASSTHROUGH,
 						},
 					},
 				},

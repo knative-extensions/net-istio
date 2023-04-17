@@ -21,7 +21,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
-	istiov1alpha3 "istio.io/api/networking/v1alpha3"
+	istiov1beta1 "istio.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -408,33 +408,33 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 			}},
 		},
 	}
-	expected := []*istiov1alpha3.HTTPRoute{{
-		Retries: &istiov1alpha3.HTTPRetry{},
-		Match: []*istiov1alpha3.HTTPMatchRequest{{
-			Uri: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: "/pets/"},
+	expected := []*istiov1beta1.HTTPRoute{{
+		Retries: &istiov1beta1.HTTPRetry{},
+		Match: []*istiov1beta1.HTTPMatchRequest{{
+			Uri: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: "/pets/"},
 			},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `test-route.test-ns`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `test-route.test-ns`},
 			},
 			Gateways: []string{"mesh"},
 		}},
-		Route: []*istiov1alpha3.HTTPRouteDestination{{
-			Destination: &istiov1alpha3.Destination{
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
 				Host: "v2-service.test-ns.svc.cluster.local",
-				Port: &istiov1alpha3.PortSelector{Number: 80},
+				Port: &istiov1beta1.PortSelector{Number: 80},
 			},
 			Weight: 100,
-			Headers: &istiov1alpha3.Headers{
-				Request: &istiov1alpha3.Headers_HeaderOperations{
+			Headers: &istiov1beta1.Headers{
+				Request: &istiov1beta1.Headers_HeaderOperations{
 					Set: map[string]string{
 						"ugh": "blah",
 					},
 				},
 			},
 		}},
-		Headers: &istiov1alpha3.Headers{
-			Request: &istiov1alpha3.Headers_HeaderOperations{
+		Headers: &istiov1beta1.Headers{
+			Request: &istiov1beta1.Headers_HeaderOperations{
 				Set: map[string]string{
 					"foo": "bar",
 				},
@@ -517,66 +517,66 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 		},
 	}
 
-	expected := []*istiov1alpha3.HTTPRoute{{
-		Retries: &istiov1alpha3.HTTPRetry{},
-		Match: []*istiov1alpha3.HTTPMatchRequest{{
-			Uri: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: "/pets/"},
+	expected := []*istiov1beta1.HTTPRoute{{
+		Retries: &istiov1beta1.HTTPRetry{},
+		Match: []*istiov1beta1.HTTPMatchRequest{{
+			Uri: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: "/pets/"},
 			},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `domain.com`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `domain.com`},
 			},
 			Gateways: []string{"gateway.public"},
 		}, {
-			Uri: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: "/pets/"},
+			Uri: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: "/pets/"},
 			},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `test-route.test-ns`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `test-route.test-ns`},
 			},
 			Gateways: []string{"gateway.public"},
 		}},
-		Route: []*istiov1alpha3.HTTPRouteDestination{{
-			Destination: &istiov1alpha3.Destination{
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
 				Host: "v2-service.test-ns.svc.cluster.local",
-				Port: &istiov1alpha3.PortSelector{Number: 80},
+				Port: &istiov1beta1.PortSelector{Number: 80},
 			},
 			Weight: 100,
-			Headers: &istiov1alpha3.Headers{
-				Request: &istiov1alpha3.Headers_HeaderOperations{
+			Headers: &istiov1beta1.Headers{
+				Request: &istiov1beta1.Headers_HeaderOperations{
 					Set: map[string]string{
 						"ugh": "blah",
 					},
 				},
 			},
 		}},
-		Headers: &istiov1alpha3.Headers{
-			Request: &istiov1alpha3.Headers_HeaderOperations{
+		Headers: &istiov1beta1.Headers{
+			Request: &istiov1beta1.Headers_HeaderOperations{
 				Set: map[string]string{
 					"foo": "bar",
 				},
 			},
 		},
 	}, {
-		Retries: &istiov1alpha3.HTTPRetry{},
-		Match: []*istiov1alpha3.HTTPMatchRequest{{
-			Uri: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: "/pets/"},
+		Retries: &istiov1beta1.HTTPRetry{},
+		Match: []*istiov1beta1.HTTPMatchRequest{{
+			Uri: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: "/pets/"},
 			},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `v1.domain.com`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `v1.domain.com`},
 			},
 			Gateways: []string{},
 		}},
-		Route: []*istiov1alpha3.HTTPRouteDestination{{
-			Destination: &istiov1alpha3.Destination{
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
 				Host: "v1-service.test-ns.svc.cluster.local",
-				Port: &istiov1alpha3.PortSelector{Number: 80},
+				Port: &istiov1beta1.PortSelector{Number: 80},
 			},
 			Weight: 100,
 		}},
-		Headers: &istiov1alpha3.Headers{
-			Request: &istiov1alpha3.Headers_HeaderOperations{
+		Headers: &istiov1beta1.Headers{
+			Request: &istiov1beta1.Headers_HeaderOperations{
 				Set: map[string]string{
 					"foo": "baz",
 				},
@@ -603,26 +603,26 @@ func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 		}},
 	}
 	route := makeVirtualServiceRoute(sets.NewString("a.vanity.url", "another.vanity.url"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
-	expected := &istiov1alpha3.HTTPRoute{
-		Retries: &istiov1alpha3.HTTPRetry{},
-		Match: []*istiov1alpha3.HTTPMatchRequest{{
+	expected := &istiov1beta1.HTTPRoute{
+		Retries: &istiov1beta1.HTTPRetry{},
+		Match: []*istiov1beta1.HTTPMatchRequest{{
 			Gateways: []string{"gateway-1"},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `a.vanity.url`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `a.vanity.url`},
 			},
 		}, {
 			Gateways: []string{"gateway-1"},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `another.vanity.url`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `another.vanity.url`},
 			},
 		}},
-		Rewrite: &istiov1alpha3.HTTPRewrite{
+		Rewrite: &istiov1beta1.HTTPRewrite{
 			Authority: "the.target.host",
 		},
-		Route: []*istiov1alpha3.HTTPRouteDestination{{
-			Destination: &istiov1alpha3.Destination{
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
 				Host: "the-svc.the-ns.svc.cluster.local",
-				Port: &istiov1alpha3.PortSelector{
+				Port: &istiov1beta1.PortSelector{
 					Number: 8080,
 				},
 			},
@@ -652,37 +652,37 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 		}},
 	}
 	route := makeVirtualServiceRoute(sets.NewString("a.com", "b.org"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
-	expected := &istiov1alpha3.HTTPRoute{
-		Retries: &istiov1alpha3.HTTPRetry{},
-		Match: []*istiov1alpha3.HTTPMatchRequest{{
+	expected := &istiov1beta1.HTTPRoute{
+		Retries: &istiov1beta1.HTTPRetry{},
+		Match: []*istiov1beta1.HTTPMatchRequest{{
 			Gateways: []string{"gateway-1"},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `a.com`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `a.com`},
 			},
-			Headers: map[string]*istiov1alpha3.StringMatch{
+			Headers: map[string]*istiov1beta1.StringMatch{
 				"my-header": {
-					MatchType: &istiov1alpha3.StringMatch_Exact{
+					MatchType: &istiov1beta1.StringMatch_Exact{
 						Exact: "my-header-value",
 					},
 				},
 			},
 		}, {
 			Gateways: []string{"gateway-1"},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `b.org`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `b.org`},
 			},
-			Headers: map[string]*istiov1alpha3.StringMatch{
+			Headers: map[string]*istiov1beta1.StringMatch{
 				"my-header": {
-					MatchType: &istiov1alpha3.StringMatch_Exact{
+					MatchType: &istiov1beta1.StringMatch_Exact{
 						Exact: "my-header-value",
 					},
 				},
 			},
 		}},
-		Route: []*istiov1alpha3.HTTPRouteDestination{{
-			Destination: &istiov1alpha3.Destination{
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
 				Host: "revision-service.test-ns.svc.cluster.local",
-				Port: &istiov1alpha3.PortSelector{Number: 80},
+				Port: &istiov1beta1.PortSelector{Number: 80},
 			},
 			Weight: 100,
 		}},
@@ -706,18 +706,18 @@ func TestMakeVirtualServiceRoute_Internal(t *testing.T) {
 	}
 	route := makeVirtualServiceRoute(sets.NewString("a.default", "a.default.svc", "a.default.svc.cluster.local"),
 		ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
-	expected := &istiov1alpha3.HTTPRoute{
-		Retries: &istiov1alpha3.HTTPRetry{},
-		Match: []*istiov1alpha3.HTTPMatchRequest{{
+	expected := &istiov1beta1.HTTPRoute{
+		Retries: &istiov1beta1.HTTPRetry{},
+		Match: []*istiov1beta1.HTTPMatchRequest{{
 			Gateways: []string{"gateway-1"},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `a.default`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `a.default`},
 			},
 		}},
-		Route: []*istiov1alpha3.HTTPRouteDestination{{
-			Destination: &istiov1alpha3.Destination{
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
 				Host: "revision-service.test-ns.svc.cluster.local",
-				Port: &istiov1alpha3.PortSelector{Number: 80},
+				Port: &istiov1beta1.PortSelector{Number: 80},
 			},
 			Weight: 100,
 		}},
@@ -747,24 +747,24 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 		}},
 	}
 	route := makeVirtualServiceRoute(sets.NewString("test.org"), ingressPath, makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
-	expected := &istiov1alpha3.HTTPRoute{
-		Retries: &istiov1alpha3.HTTPRetry{},
-		Match: []*istiov1alpha3.HTTPMatchRequest{{
+	expected := &istiov1beta1.HTTPRoute{
+		Retries: &istiov1beta1.HTTPRetry{},
+		Match: []*istiov1beta1.HTTPMatchRequest{{
 			Gateways: []string{"knative-testing/gateway-1"},
-			Authority: &istiov1alpha3.StringMatch{
-				MatchType: &istiov1alpha3.StringMatch_Prefix{Prefix: `test.org`},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: `test.org`},
 			},
 		}},
-		Route: []*istiov1alpha3.HTTPRouteDestination{{
-			Destination: &istiov1alpha3.Destination{
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
 				Host: "revision-service.test-ns.svc.cluster.local",
-				Port: &istiov1alpha3.PortSelector{Number: 80},
+				Port: &istiov1beta1.PortSelector{Number: 80},
 			},
 			Weight: 90,
 		}, {
-			Destination: &istiov1alpha3.Destination{
+			Destination: &istiov1beta1.Destination{
 				Host: "new-revision-service.test-ns.svc.cluster.local",
-				Port: &istiov1alpha3.PortSelector{Number: 81},
+				Port: &istiov1beta1.PortSelector{Number: 81},
 			},
 			Weight: 10,
 		}},

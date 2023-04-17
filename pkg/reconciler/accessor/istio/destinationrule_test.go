@@ -22,48 +22,48 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
-	istiov1alpha3 "istio.io/api/networking/v1alpha3"
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	istiov1beta1 "istio.io/api/networking/v1beta1"
+	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
 	fakeistioclient "knative.dev/net-istio/pkg/client/istio/injection/client/fake"
-	fakedrinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1alpha3/destinationrule/fake"
-	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
+	fakedrinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/destinationrule/fake"
+	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
 	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
 
 	. "knative.dev/pkg/reconciler/testing"
 )
 
 var (
-	originDR = &v1alpha3.DestinationRule{
+	originDR = &v1beta1.DestinationRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            "dr",
 			Namespace:       "default",
 			OwnerReferences: []metav1.OwnerReference{ownerRef},
 		},
-		Spec: istiov1alpha3.DestinationRule{
+		Spec: istiov1beta1.DestinationRule{
 			Host: "origin.example.com",
 		},
 	}
 
-	desiredDR = &v1alpha3.DestinationRule{
+	desiredDR = &v1beta1.DestinationRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            "dr",
 			Namespace:       "default",
 			OwnerReferences: []metav1.OwnerReference{ownerRef},
 		},
-		Spec: istiov1alpha3.DestinationRule{
+		Spec: istiov1beta1.DestinationRule{
 			Host: "desired.example.com",
 		},
 	}
 
-	notOwnedDR = &v1alpha3.DestinationRule{
+	notOwnedDR = &v1beta1.DestinationRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "dr",
 			Namespace: "default",
 		},
-		Spec: istiov1alpha3.DestinationRule{
+		Spec: istiov1beta1.DestinationRule{
 			Host: "origin.example.com",
 		},
 	}
@@ -104,7 +104,7 @@ func TestReconcileDestinationRule_Create(t *testing.T) {
 
 	h := NewHooks()
 	h.OnCreate(&istio.Fake, "destinationrules", func(obj runtime.Object) HookResult {
-		got := obj.(*v1alpha3.DestinationRule)
+		got := obj.(*v1beta1.DestinationRule)
 		if diff := cmp.Diff(got, desiredDR, protocmp.Transform()); diff != "" {
 			t.Log("Unexpected DestinationRule (-want, +got):", diff)
 			return HookIncomplete
@@ -139,12 +139,12 @@ func TestReconcileDestinationRule_Update(t *testing.T) {
 		drLister: drInformer.Lister(),
 	}
 
-	istio.NetworkingV1alpha3().DestinationRules(origin.Namespace).Create(ctx, originDR, metav1.CreateOptions{})
+	istio.NetworkingV1beta1().DestinationRules(origin.Namespace).Create(ctx, originDR, metav1.CreateOptions{})
 	drInformer.Informer().GetIndexer().Add(originDR)
 
 	h := NewHooks()
 	h.OnUpdate(&istio.Fake, "destinationrules", func(obj runtime.Object) HookResult {
-		got := obj.(*v1alpha3.DestinationRule)
+		got := obj.(*v1beta1.DestinationRule)
 		if diff := cmp.Diff(got, desiredDR, protocmp.Transform()); diff != "" {
 			t.Log("Unexpected DestinationRule (-want, +got):", diff)
 			return HookIncomplete
@@ -178,7 +178,7 @@ func TestReconcileDestinationRule_NotOwnedFailure(t *testing.T) {
 		drLister: drInformer.Lister(),
 	}
 
-	istio.NetworkingV1alpha3().DestinationRules(origin.Namespace).Create(ctx, notOwnedDR, metav1.CreateOptions{})
+	istio.NetworkingV1beta1().DestinationRules(origin.Namespace).Create(ctx, notOwnedDR, metav1.CreateOptions{})
 	drInformer.Informer().GetIndexer().Add(notOwnedDR)
 
 	_, err = ReconcileDestinationRule(ctx, ownerObj, desiredDR, accessor)
