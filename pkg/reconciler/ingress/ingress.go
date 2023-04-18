@@ -188,7 +188,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	}
 	gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(ingressGateways)...)
 
-	vses, err := resources.MakeVirtualServices(ctx, ing, gatewayNames)
+	vses, err := resources.MakeVirtualServices(ing, gatewayNames)
 	if err != nil {
 		return err
 	}
@@ -297,9 +297,9 @@ func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desire
 	} else if err != nil {
 		return err
 	} else if !cmp.Equal(existing.Spec.DeepCopy(), desired.Spec.DeepCopy(), protocmp.Transform()) {
-		copy := existing.DeepCopy()
-		copy.Spec = *desired.Spec.DeepCopy()
-		if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(desired.Namespace).Update(ctx, copy, metav1.UpdateOptions{}); err != nil {
+		deepCopy := existing.DeepCopy()
+		deepCopy.Spec = *desired.Spec.DeepCopy()
+		if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(desired.Namespace).Update(ctx, deepCopy, metav1.UpdateOptions{}); err != nil {
 			return err
 		}
 	}
@@ -419,9 +419,9 @@ func (r *Reconciler) reconcileGateway(ctx context.Context, ing *v1alpha1.Ingress
 		return nil
 	}
 
-	copy := gateway.DeepCopy()
-	copy = resources.UpdateGateway(copy, desired, existing)
-	if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(copy.Namespace).Update(ctx, copy, metav1.UpdateOptions{}); err != nil {
+	deepCopy := gateway.DeepCopy()
+	deepCopy = resources.UpdateGateway(deepCopy, desired, existing)
+	if _, err := r.istioClientSet.NetworkingV1alpha3().Gateways(deepCopy.Namespace).Update(ctx, deepCopy, metav1.UpdateOptions{}); err != nil {
 		return fmt.Errorf("failed to update Gateway: %w", err)
 	}
 	controller.GetEventRecorder(ctx).Eventf(ing, corev1.EventTypeNormal,

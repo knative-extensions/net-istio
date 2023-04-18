@@ -23,7 +23,6 @@ import (
 	// https://github.com/kubernetes/client-go/issues/242
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
-	"knative.dev/networking/test"
 	pkgTest "knative.dev/pkg/test"
 	"knative.dev/pkg/test/logstream"
 )
@@ -40,7 +39,7 @@ func Setup(t testing.TB) *Clients {
 		t.Fatal("couldn't get REST config:", err)
 	}
 
-	clients, err := NewClientsFromConfig(cfg, test.ServingNamespace)
+	clients, err := NewClientsFromConfig(cfg)
 	if err != nil {
 		t.Fatal("Couldn't initialize clients", "error", err.Error())
 	}
