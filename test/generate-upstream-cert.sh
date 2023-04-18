@@ -32,7 +32,7 @@ openssl req -out "${out_dir}"/tls.csr -newkey rsa:2048 -nodes -keyout "${out_dir
 openssl x509 -req -extfile <(printf "subjectAltName=DNS:%s" "$san") -days 365 -in "${out_dir}"/tls.csr -CA "${out_dir}"/root.crt -CAkey "${out_dir}"/root.key -CAcreateserial -out "${out_dir}"/tls.crt
 
 # Override certificate in istio-system namespace with the generated CA
-# Delete it first, otherwise istio reconciliation does not work propperly
+# Delete it first, otherwise istio reconciliation does not work properly
 kubectl delete -n ${ISTIO_NAMESPACE} secret knative-serving-certs
 kubectl create -n ${ISTIO_NAMESPACE} secret generic knative-serving-certs \
     --from-file=ca.crt="${out_dir}"/root.crt \
