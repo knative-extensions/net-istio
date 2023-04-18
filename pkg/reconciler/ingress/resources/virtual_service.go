@@ -17,7 +17,6 @@ limitations under the License.
 package resources
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -46,7 +45,7 @@ func VirtualServiceNamespace(ing *v1alpha1.Ingress) string {
 
 // MakeIngressVirtualService creates Istio VirtualService as network
 // programming for Istio Gateways other than 'mesh'.
-func MakeIngressVirtualService(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) *v1alpha3.VirtualService {
+func MakeIngressVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) *v1alpha3.VirtualService {
 	vs := &v1alpha3.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            names.IngressVirtualService(ing),
@@ -66,7 +65,7 @@ func MakeIngressVirtualService(ctx context.Context, ing *v1alpha1.Ingress, gatew
 }
 
 // MakeMeshVirtualService creates a mesh Virtual Service
-func MakeMeshVirtualService(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) *v1alpha3.VirtualService {
+func MakeMeshVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) *v1alpha3.VirtualService {
 	hosts := keepLocalHostnames(getHosts(ing))
 	// If cluster local gateway is configured, we need to expand hosts because of
 	// https://github.com/knative/serving/issues/6488#issuecomment-573513768.
@@ -97,14 +96,14 @@ func MakeMeshVirtualService(ctx context.Context, ing *v1alpha1.Ingress, gateways
 }
 
 // MakeVirtualServices creates a mesh VirtualService and a virtual service for each gateway
-func MakeVirtualServices(ctx context.Context, ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) ([]*v1alpha3.VirtualService, error) {
+func MakeVirtualServices(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) ([]*v1alpha3.VirtualService, error) {
 	// Insert probe header
 	ing = ing.DeepCopy()
 	if _, err := ingress.InsertProbe(ing); err != nil {
 		return nil, fmt.Errorf("failed to insert a probe into the Ingress: %w", err)
 	}
 	vss := []*v1alpha3.VirtualService{}
-	if meshVs := MakeMeshVirtualService(ctx, ing, gateways); meshVs != nil {
+	if meshVs := MakeMeshVirtualService(ing, gateways); meshVs != nil {
 		vss = append(vss, meshVs)
 	}
 	requiredGatewayCount := 0
@@ -117,7 +116,7 @@ func MakeVirtualServices(ctx context.Context, ing *v1alpha1.Ingress, gateways ma
 	}
 
 	if requiredGatewayCount > 0 {
-		vss = append(vss, MakeIngressVirtualService(ctx, ing, gateways))
+		vss = append(vss, MakeIngressVirtualService(ing, gateways))
 	}
 
 	return vss, nil

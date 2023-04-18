@@ -17,7 +17,6 @@ limitations under the License.
 package resources
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -196,7 +195,7 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 		}},
 	}} {
 		t.Run(tc.name, func(t *testing.T) {
-			vss, err := MakeVirtualServices(context.Background(), tc.ci, tc.gateways)
+			vss, err := MakeVirtualServices(tc.ci, tc.gateways)
 			if err != nil {
 				t.Fatal("MakeVirtualServices failed:", err)
 			}
@@ -317,7 +316,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectGateways(t *testing.T) {
 			}}},
 	}
 	expected := []string{"mesh"}
-	gateways := MakeMeshVirtualService(context.Background(), ci, defaultGateways).Spec.Gateways
+	gateways := MakeMeshVirtualService(ci, defaultGateways).Spec.Gateways
 	if diff := cmp.Diff(expected, gateways); diff != "" {
 		t.Error("Unexpected gateways (-want +got):", diff)
 	}
@@ -344,7 +343,7 @@ func TestMakeMeshVirtualServiceSpecCorrectHosts(t *testing.T) {
 		expectedHosts: sets.NewString("test-route.test-ns.svc.cluster.local"),
 	}} {
 		t.Run(tc.name, func(t *testing.T) {
-			vs := MakeMeshVirtualService(context.Background(), &defaultIngress, tc.gateways)
+			vs := MakeMeshVirtualService(&defaultIngress, tc.gateways)
 			vsHosts := sets.NewString(vs.Spec.Hosts...)
 			if !vsHosts.Equal(tc.expectedHosts) {
 				t.Errorf("Unexpected hosts want %v; got %v", tc.expectedHosts, vsHosts)
@@ -443,7 +442,7 @@ func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 		},
 	}}
 
-	routes := MakeMeshVirtualService(context.Background(), ci, defaultGateways).Spec.Http
+	routes := MakeMeshVirtualService(ci, defaultGateways).Spec.Http
 	if diff := cmp.Diff(expected, routes, defaultVSCmpOpts); diff != "" {
 		t.Error("Unexpected routes (-want +got):", diff)
 	}
@@ -456,7 +455,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectGateways(t *testing.T) {
 		ci.Spec.Rules[idx].Visibility = v1alpha1.IngressVisibilityExternalIP
 	}
 	expected := []string{"knative-testing/gateway-one", "knative-testing/gateway-two"}
-	gateways := MakeIngressVirtualService(context.Background(), ci, makeGatewayMap([]string{"knative-testing/gateway-one", "knative-testing/gateway-two"}, nil)).Spec.Gateways
+	gateways := MakeIngressVirtualService(ci, makeGatewayMap([]string{"knative-testing/gateway-one", "knative-testing/gateway-two"}, nil)).Spec.Gateways
 	if diff := cmp.Diff(expected, gateways); diff != "" {
 		t.Error("Unexpected gateways (-want +got):", diff)
 	}
@@ -585,7 +584,7 @@ func TestMakeIngressVirtualServiceSpec_CorrectRoutes(t *testing.T) {
 		},
 	}}
 
-	routes := MakeIngressVirtualService(context.Background(), ci, makeGatewayMap([]string{"gateway.public"}, []string{"gateway.private"})).Spec.Http
+	routes := MakeIngressVirtualService(ci, makeGatewayMap([]string{"gateway.public"}, []string{"gateway.private"})).Spec.Http
 	if diff := cmp.Diff(expected, routes, defaultVSCmpOpts); diff != "" {
 		t.Error("Unexpected routes (-want +got):", diff)
 	}

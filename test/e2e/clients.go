@@ -38,7 +38,7 @@ type Clients struct {
 
 // NewClientsFromConfig instantiates and returns several clientsets required for making request to the
 // Knative Serving cluster specified by the rest Config. Clients can make requests within namespace.
-func NewClientsFromConfig(cfg *rest.Config, namespace string) (*Clients, error) {
+func NewClientsFromConfig(cfg *rest.Config) (*Clients, error) {
 	// We poll, so set our limits high.
 	cfg.QPS = 100
 	cfg.Burst = 200

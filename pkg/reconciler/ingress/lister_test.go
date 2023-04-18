@@ -1549,7 +1549,7 @@ func (l *fakeGatewayLister) Gateways(namespace string) istiolisters.GatewayNames
 	}
 }
 
-func (l *fakeGatewayLister) List(selector labels.Selector) ([]*v1alpha3.Gateway, error) {
+func (l *fakeGatewayLister) List(_ labels.Selector) ([]*v1alpha3.Gateway, error) {
 	log.Panic("not implemented")
 	return nil, nil
 }
@@ -1559,7 +1559,7 @@ type fakeGatewayNamespaceLister struct {
 	fails    bool
 }
 
-func (l *fakeGatewayNamespaceLister) List(selector labels.Selector) ([]*v1alpha3.Gateway, error) {
+func (l *fakeGatewayNamespaceLister) List(_ labels.Selector) ([]*v1alpha3.Gateway, error) {
 	log.Panic("not implemented")
 	return nil, nil
 }
@@ -1583,12 +1583,12 @@ type fakeEndpointsLister struct {
 	fails       bool
 }
 
-func (l *fakeEndpointsLister) List(selector labels.Selector) ([]*v1.Endpoints, error) {
+func (l *fakeEndpointsLister) List(_ labels.Selector) ([]*v1.Endpoints, error) {
 	log.Panic("not implemented")
 	return nil, nil
 }
 
-func (l *fakeEndpointsLister) Endpoints(namespace string) corev1listers.EndpointsNamespaceLister {
+func (l *fakeEndpointsLister) Endpoints(_ string) corev1listers.EndpointsNamespaceLister {
 	return l
 }
 
@@ -1622,12 +1622,12 @@ func (l *fakeServiceLister) List(selector labels.Selector) ([]*v1.Service, error
 	return results, nil
 }
 
-func (l *fakeServiceLister) Services(namespace string) corev1listers.ServiceNamespaceLister {
+func (l *fakeServiceLister) Services(_ string) corev1listers.ServiceNamespaceLister {
 	log.Panic("not implemented")
 	return nil
 }
 
-func (l *fakeServiceLister) GetPodServices(pod *v1.Pod) ([]*v1.Service, error) {
+func (l *fakeServiceLister) GetPodServices(_ *v1.Pod) ([]*v1.Service, error) {
 	log.Panic("not implemented")
 	return nil, nil
 }

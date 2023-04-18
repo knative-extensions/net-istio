@@ -34,7 +34,7 @@ import (
 	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
 )
 
-func NewConfigValidationController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
+func NewConfigValidationController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
 	return configmaps.NewAdmissionController(ctx,
 
 		// Name of the resource webhook.
@@ -55,7 +55,7 @@ var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
 }
 
 // NewDefaultingAdmissionController adds default values to the watched types
-func NewDefaultingAdmissionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
+func NewDefaultingAdmissionController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
 	return defaulting.NewAdmissionController(ctx,
 
 		// Name of the resource webhook.

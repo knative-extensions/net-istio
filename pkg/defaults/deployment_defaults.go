@@ -57,7 +57,7 @@ var (
 )
 
 // SetDefaults implements apis.Defaultable
-func (r *IstioDeployment) SetDefaults(ctx context.Context) {
+func (r *IstioDeployment) SetDefaults(_ context.Context) {
 	if r.Labels == nil {
 		r.Labels = make(map[string]string)
 	}
@@ -97,6 +97,6 @@ func (r *IstioDeployment) servingName() string {
 }
 
 // Validate returns nil due to no need for validation
-func (r *IstioDeployment) Validate(ctx context.Context) *apis.FieldError {
+func (r *IstioDeployment) Validate(_ context.Context) *apis.FieldError {
 	return nil
 }
