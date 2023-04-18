@@ -29,7 +29,7 @@ openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -subj '/O=Example/CN
 openssl req -out "${out_dir}"/tls.csr -newkey rsa:2048 -nodes -keyout "${out_dir}"/tls.key -subj "/CN=Example/O=Example" -addext "subjectAltName = DNS:$san"
 
 # Create server certs
-openssl x509 -req -extfile <(printf "subjectAltName=DNS:$san") -days 365 -in "${out_dir}"/tls.csr -CA "${out_dir}"/root.crt -CAkey "${out_dir}"/root.key -CAcreateserial -out "${out_dir}"/tls.crt
+openssl x509 -req -extfile <(printf "subjectAltName=DNS:%s" "$san") -days 365 -in "${out_dir}"/tls.csr -CA "${out_dir}"/root.crt -CAkey "${out_dir}"/root.key -CAcreateserial -out "${out_dir}"/tls.crt
 
 # Override certificate in istio-system namespace with the generated CA
 # Delete it first, otherwise istio reconciliation does not work propperly
