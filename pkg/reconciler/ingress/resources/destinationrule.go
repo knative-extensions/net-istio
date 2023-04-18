@@ -17,8 +17,8 @@ limitations under the License.
 package resources
 
 import (
-	istiov1alpha3 "istio.io/api/networking/v1alpha3"
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	istiov1beta1 "istio.io/api/networking/v1beta1"
+	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
@@ -31,26 +31,26 @@ const (
 	knativeServingCertsSecret = "knative-serving-certs"
 
 	// has to match https://github.com/knative-sandbox/control-protocol/blob/main/pkg/certificates/constants.go#L21
-	knativeFakeDnsName = "data-plane.knative.dev"
+	knativeFakeDNSName = "data-plane.knative.dev"
 )
 
 // MakeInternalEncryptionDestinationRule creates a DestinationRule that enables upstream TLS
 // on for the specified host
-func MakeInternalEncryptionDestinationRule(host string, ing *v1alpha1.Ingress, http2 bool) *v1alpha3.DestinationRule {
-	dr := &v1alpha3.DestinationRule{
+func MakeInternalEncryptionDestinationRule(host string, ing *v1alpha1.Ingress, http2 bool) *v1beta1.DestinationRule {
+	dr := &v1beta1.DestinationRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            host,
 			Namespace:       ing.Namespace,
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 			Annotations:     ing.GetAnnotations(),
 		},
-		Spec: istiov1alpha3.DestinationRule{
+		Spec: istiov1beta1.DestinationRule{
 			Host: host,
-			TrafficPolicy: &istiov1alpha3.TrafficPolicy{
-				Tls: &istiov1alpha3.ClientTLSSettings{
-					Mode:            istiov1alpha3.ClientTLSSettings_SIMPLE,
+			TrafficPolicy: &istiov1beta1.TrafficPolicy{
+				Tls: &istiov1beta1.ClientTLSSettings{
+					Mode:            istiov1beta1.ClientTLSSettings_SIMPLE,
 					CredentialName:  knativeServingCertsSecret,
-					SubjectAltNames: []string{knativeFakeDnsName},
+					SubjectAltNames: []string{knativeFakeDNSName},
 				},
 			},
 		},
@@ -63,9 +63,9 @@ func MakeInternalEncryptionDestinationRule(host string, ing *v1alpha1.Ingress, h
 	dr.Labels[networking.IngressLabelKey] = ing.Name
 
 	if http2 {
-		dr.Spec.TrafficPolicy.ConnectionPool = &istiov1alpha3.ConnectionPoolSettings{
-			Http: &istiov1alpha3.ConnectionPoolSettings_HTTPSettings{
-				H2UpgradePolicy: istiov1alpha3.ConnectionPoolSettings_HTTPSettings_UPGRADE},
+		dr.Spec.TrafficPolicy.ConnectionPool = &istiov1beta1.ConnectionPoolSettings{
+			Http: &istiov1beta1.ConnectionPoolSettings_HTTPSettings{
+				H2UpgradePolicy: istiov1beta1.ConnectionPoolSettings_HTTPSettings_UPGRADE},
 		}
 	}
 
