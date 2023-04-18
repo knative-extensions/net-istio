@@ -427,12 +427,11 @@ gopkg.in/yaml.v3
 istio.io/api/analysis/v1alpha1
 istio.io/api/label
 istio.io/api/meta/v1alpha1
-istio.io/api/networking/v1alpha3
 istio.io/api/networking/v1beta1
 istio.io/api/type/v1beta1
 # istio.io/client-go v1.17.0
 ## explicit; go 1.18
-istio.io/client-go/pkg/apis/networking/v1alpha3
+istio.io/client-go/pkg/apis/networking/v1beta1
 # k8s.io/api v0.26.0 => k8s.io/api v0.25.6
 ## explicit; go 1.19
 k8s.io/api/admission/v1

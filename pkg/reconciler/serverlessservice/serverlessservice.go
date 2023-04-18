@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
-	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1alpha3"
+	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	sksreconciler "knative.dev/networking/pkg/client/injection/reconciler/networking/v1alpha1/serverlessservice"
 
