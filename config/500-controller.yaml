@@ -81,11 +81,28 @@ spec:
           seccompProfile:
             type: RuntimeDefault
 
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: probes
+            scheme: HTTP
+          periodSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: probes
+            scheme: HTTP
+          periodSeconds: 5
+          failureThreshold: 6
+
         ports:
         - name: metrics
           containerPort: 9090
         - name: profiling
           containerPort: 8008
+        - name: probes
+          containerPort: 8080
 
 # Unlike other controllers, this doesn't need a Service defined for metrics and
 # profiling because it opts out of the mesh (see annotation above).
