@@ -57,19 +57,6 @@ jobs:
       with:
         path: ./src/knative.dev/net-istio
 
-    - name: Install KinD
-      run: |
-        set -x
-
-        # Disable swap otherwise memory enforcement doesn't work
-        # See: https://kubernetes.slack.com/archives/CEKK1KTN2/p1600009955324200
-        sudo swapoff -a
-        sudo rm -f /swapfile
-
-        curl -Lo ./kind https://github.com/kubernetes-sigs/kind/releases/download/${{ matrix.kind-version }}/kind-$(uname)-amd64
-        chmod +x ./kind
-        sudo mv kind /usr/local/bin
-
     - name: Create KinD Cluster
       uses: chainguard-dev/actions/setup-kind@main
       id: kind
