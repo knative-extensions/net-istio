@@ -59,8 +59,9 @@ var (
 		},
 	}
 
-	wildcardCert, _    = GenerateCertificate("*.example.com", "wildcard", "")
-	nonWildcardCert, _ = GenerateCertificate("test.example.com", "nonWildcard", "")
+	wildcardCert, _    = GenerateCertificate([]string{"*.example.com"}, "wildcard", "")
+	wildcardCert2, _   = GenerateCertificate([]string{"example.com", "*.example.com"}, "wildcard", "")
+	nonWildcardCert, _ = GenerateCertificate([]string{"test.example.com"}, "nonWildcard", "")
 )
 
 func TestGetSecrets(t *testing.T) {
@@ -301,13 +302,15 @@ func TestCategorizeSecrets(t *testing.T) {
 		name: "work correctly",
 		secrets: map[string]*corev1.Secret{
 			"wildcard":    wildcardCert,
+			"wildcard2":   wildcardCert2,
 			"nonwildcard": nonWildcardCert,
 		},
 		wantNonWildcard: map[string]*corev1.Secret{
 			"nonwildcard": nonWildcardCert,
 		},
 		wantWildcard: map[string]*corev1.Secret{
-			"wildcard": wildcardCert,
+			"wildcard":  wildcardCert,
+			"wildcard2": wildcardCert2,
 		},
 	}, {
 		name: "invalid secret",

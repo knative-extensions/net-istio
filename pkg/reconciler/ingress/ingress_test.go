@@ -101,8 +101,8 @@ var (
 )
 
 var (
-	nonWildcardCert, _ = resources.GenerateCertificate("host-1.example.com", "secret0", "istio-system")
-	wildcardCert, _    = resources.GenerateCertificate("*.example.com", "secret0", "istio-system")
+	nonWildcardCert, _ = resources.GenerateCertificate([]string{"host-1.example.com"}, "secret0", "istio-system")
+	wildcardCert, _    = resources.GenerateCertificate([]string{"*.example.com"}, "secret0", "istio-system")
 	selector           = map[string]string{
 		"istio": "ingress",
 	}

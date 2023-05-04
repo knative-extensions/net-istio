@@ -56,7 +56,7 @@ var secret = corev1.Secret{
 
 var secretGVK = schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
 
-var wildcardSecret, _ = GenerateCertificate("*.example.com", "secret0", system.Namespace())
+var wildcardSecret, _ = GenerateCertificate([]string{"*.example.com"}, "secret0", system.Namespace())
 
 var wildcardSecrets = map[string]*corev1.Secret{
 	fmt.Sprintf("%s/secret0", system.Namespace()): wildcardSecret,
