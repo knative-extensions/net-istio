@@ -51,7 +51,7 @@ const (
 	RouteNamespaceLabelKey = ServingGroupName + "/routeNamespace"
 )
 
-func GenerateCertificate(host string, secretName string, namespace string) (*corev1.Secret, error) {
+func GenerateCertificate(hosts []string, secretName string, namespace string) (*corev1.Secret, error) {
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate private key: %w", err)
@@ -79,10 +79,12 @@ func GenerateCertificate(host string, secretName string, namespace string) (*cor
 		BasicConstraintsValid: true,
 	}
 
-	if ip := net.ParseIP(host); ip != nil {
-		template.IPAddresses = append(template.IPAddresses, ip)
-	} else {
-		template.DNSNames = append(template.DNSNames, host)
+	for _, host := range hosts {
+		if ip := net.ParseIP(host); ip != nil {
+			template.IPAddresses = append(template.IPAddresses, ip)
+		} else {
+			template.DNSNames = append(template.DNSNames, host)
+		}
 	}
 
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)

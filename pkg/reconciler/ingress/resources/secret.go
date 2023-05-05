@@ -203,7 +203,18 @@ func isWildcardSecret(secret *corev1.Secret) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return isWildcardHost(hosts[0])
+
+	for _, host := range hosts {
+		isWildcard, err := isWildcardHost(host)
+		if err != nil {
+			return false, err
+		}
+		if isWildcard {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func isWildcardHost(domain string) (bool, error) {
