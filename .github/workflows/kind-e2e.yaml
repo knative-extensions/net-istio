@@ -22,6 +22,7 @@ jobs:
         k8s-version:
         - v1.25.x
         - v1.26.x
+        - v1.27.x
 
         test-suite:
         - ./test/conformance
