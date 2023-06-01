@@ -29,8 +29,6 @@ spec:
       role: net-istio-webhook
   template:
     metadata:
-      annotations:
-        cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
       labels:
         app: net-istio-webhook
         role: net-istio-webhook
