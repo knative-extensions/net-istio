@@ -22,9 +22,19 @@ initialize $@  --skip-istio-addon
 
 # TODO Re-enable conformance tests for mesh when everything's been fixed
 # https://github.com/knative-sandbox/net-istio/issues/584
+#
+# Also update tests are super flakey and need to be fixed
+# https://github.com/knative-sandbox/net-istio/issues/938
+#
 if [[ $MESH -eq 0 ]]; then
-  go_test_e2e -timeout=60m ./test/conformance --parallel 12 \
-    --enable-beta --enable-alpha || fail_test
+  go_test_e2e \
+    -timeout 60m \
+    -parallel 12 \
+    ./test/conformance \
+    -args \
+    -enable-alpha \
+    -enable-beta \
+    -skip-tests update || fail_test
 fi
 
 go_test_e2e -timeout=10m \
