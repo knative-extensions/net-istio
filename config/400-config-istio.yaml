@@ -63,8 +63,3 @@ data:
     # will search for the local gateway in the serving system namespace
     # `knative-serving`
     local-gateway.knative-serving.knative-local-gateway: "knative-local-gateway.istio-system.svc.cluster.local"
-
-    # If true, knative will use the Istio VirtualService's status to determine
-    # endpoint readiness. Otherwise, probe as usual.
-    # NOTE: This feature is currently experimental and should not be used in production.
-    enable-virtualservice-status: "false"

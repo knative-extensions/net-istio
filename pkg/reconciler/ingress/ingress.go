@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
@@ -214,16 +213,6 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		// about the steady state.
 		logger.Debug("Kingress is ready, skipping probe.")
 		ready = true
-	} else if hasStatus, readyStatus := r.areVirtualServicesReady(ctx, vses); hasStatus {
-		// Check if our VirtualServices have a status property.
-		// If they do and we're ready, we can use that to determine readiness.
-
-		if p, ok := r.statusManager.(*status.Prober); ok {
-			// if possible, cancel probing in case we've started it
-			p.CancelIngressProbing(ing)
-		}
-
-		ready = readyStatus
 	} else {
 		readyStatus, err := r.statusManager.IsReady(ctx, ing)
 		if err != nil {
@@ -515,80 +504,4 @@ func isIngressPublic(ing *v1alpha1.Ingress) bool {
 		}
 	}
 	return false
-}
-
-// areVirtualServicesReady checks if *all* the provided virtual services have a status, and if so if it's ready.
-// The return values are (hasStatus, ready), where:
-//
-//	hasStatus indicates whether all the virtualServices have a status field
-//	ready indicates whether they all have been reconciled and are able to receive requests
-func (r *Reconciler) areVirtualServicesReady(ctx context.Context, vses []*v1beta1.VirtualService) (hasStatus, ready bool) {
-	logger := logging.FromContext(ctx)
-
-	for _, vs := range vses {
-		hasStatus, ready, err := r.isVirtualServiceReady(ctx, vs)
-		if err != nil {
-			// Log errors here, but don't return them.
-			// If an error occurred while checking VirtualService status, we'll just default to probing.
-			logger.Warnf("Error occurred while checking virtual service status: %v", err)
-			return false, false
-		}
-
-		if !hasStatus || !ready {
-			logger.Debugf("Virtual Service %q hasStatus=%v, ready=%v; skipping checks for others.", vs.Name, hasStatus, ready)
-			return hasStatus, ready
-		}
-	}
-
-	// If either `hasStatus` or `ready` was ever false we would have already returned.
-	return true, true
-}
-
-// isVirtualServiceReady checks if a virtual service has a status, and if so if it's ready.
-// The return values are (hasStatus, ready, err), where:
-//
-//	hasStatus indicates whether the virtualService has a status field
-//	ready indicates whether it's been reconciled and able to receive requests
-//	err indicates an error occurred while looking up the status.
-func (r *Reconciler) isVirtualServiceReady(ctx context.Context, vs *v1beta1.VirtualService) (hasStatus, ready bool, err error) {
-	logger := logging.FromContext(ctx)
-
-	if !config.FromContext(ctx).Istio.EnableVirtualServiceStatus {
-		logger.Debug("VirtualService status not enabled, not checking for its presence.")
-		return false, false, nil
-	}
-
-	currentState, err := r.virtualServiceLister.VirtualServices(vs.Namespace).Get(vs.Name)
-	if err != nil {
-		return false, false, fmt.Errorf("failed to get VirtualService %q: %w", vs.Name, err)
-	}
-
-	logger.Debugf("VirtualService %s, status: %#v", vs.Name, &currentState.Status)
-
-	if currentState.Generation != currentState.Status.ObservedGeneration {
-		if currentState.Status.ObservedGeneration == 0 &&
-			len(currentState.Status.Conditions) > 0 {
-			// If the VirtualService has a status but not an ObservedGeneration,
-			// this means the user is running a version of Istio where status existed but
-			// observedGeneration did not. We have no way of knowing if the status is
-			// current, so rely on probing instead.
-			logger.Debugf("VirtualService %s has status but no ObservedGeneration. Using probers instead.", vs.Name)
-			return false, false, nil
-		}
-
-		logger.Debugf("VirtualService %s status is stale; checking again...", vs.Name)
-		return true, false, nil
-	}
-
-	for _, cond := range currentState.Status.Conditions {
-		// Reconciled condition can be "true", "false", or "unknown".
-		if strings.EqualFold(cond.Type, virtualServiceConditionReconciled) {
-			return true, strings.EqualFold(cond.Status, "true"), nil
-		}
-	}
-
-	// VirtualService doesn't have status. Return that.
-	logger.Debugf("VirtualService %s doesn't have a status. Using probers instead.", vs.Name)
-	return false, false, nil
-
 }
