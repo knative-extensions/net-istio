@@ -23,7 +23,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
-	cm "knative.dev/pkg/configmap"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/system"
 )
@@ -50,9 +49,6 @@ const (
 
 	// IstioNamespace is the namespace containing Istio
 	IstioNamespace = "istio-system"
-
-	// EnableVSStatus is the config for enabling using Istio's Virtual Service status to determine its readiness
-	EnableVSStatus = "enable-virtualservice-status"
 )
 
 func defaultIngressGateways() []Gateway {
@@ -91,10 +87,6 @@ type Istio struct {
 
 	// LocalGateway specifies the gateway urls for public & private Ingress.
 	LocalGateways []Gateway
-
-	// EnableVirtualServiceStatus specifies whether we should look for a status field
-	// to determine istio VirtualService readiness.
-	EnableVirtualServiceStatus bool
 }
 
 func parseGateways(configMap *corev1.ConfigMap, prefix string) ([]Gateway, error) {
@@ -149,16 +141,8 @@ func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
 		localGateways = defaultLocalGateways()
 	}
 
-	var statusEnabled bool
-	if err := cm.Parse(configMap.Data,
-		cm.AsBool(EnableVSStatus, &statusEnabled),
-	); err != nil {
-		return nil, err
-	}
-
 	return &Istio{
-		IngressGateways:            gateways,
-		LocalGateways:              localGateways,
-		EnableVirtualServiceStatus: statusEnabled,
+		IngressGateways: gateways,
+		LocalGateways:   localGateways,
 	}, nil
 }
