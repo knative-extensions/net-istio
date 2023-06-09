@@ -2,14 +2,6 @@ module knative.dev/net-istio
 
 go 1.18
 
-replace (
-	k8s.io/api => k8s.io/api v0.25.6
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.25.6
-	k8s.io/apimachinery => k8s.io/apimachinery v0.25.6
-	k8s.io/client-go => k8s.io/client-go v0.25.6
-	k8s.io/code-generator => k8s.io/code-generator v0.25.6
-)
-
 require (
 	github.com/google/go-cmp v0.5.9
 	go.uber.org/zap v1.23.0
@@ -26,7 +18,6 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.98.0 // indirect
 	contrib.go.opencensus.io/exporter/ocagent v0.7.1-0.20200907061046-05415f1de66d // indirect
 	contrib.go.opencensus.io/exporter/prometheus v0.4.0 // indirect
 	github.com/benbjohnson/clock v1.1.0 // indirect
