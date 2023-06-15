@@ -31,6 +31,10 @@ jobs:
         istio-version:
         - latest
 
+        istio-profile:
+        - no-mesh
+        - ambient
+
     env:
       GOPATH: ${{ github.workspace }}
       KO_DOCKER_REPO: kind.local
@@ -71,15 +75,15 @@ jobs:
         set -o pipefail
 
         # Replace cluster.local with random suffix.
-        sed -ie "s/cluster\.local/${CLUSTER_SUFFIX}/g" third_party/istio-${{ matrix.istio-version }}/istio-kind-no-mesh/istio.yaml
+        sed -ie "s/cluster\.local/${CLUSTER_SUFFIX}/g" third_party/istio-${{ matrix.istio-version }}/istio-kind-${{ matrix.istio-profile }}/istio.yaml
 
         # Deploy Istio
-        ./third_party/istio-${{ matrix.istio-version }}/install-istio.sh istio-kind-no-mesh
+        ./third_party/istio-${{ matrix.istio-version }}/install-istio.sh istio-kind-${{ matrix.istio-profile }}
 
         # Build and Publish our containers to the docker daemon (including test assets)
         ko resolve --platform=linux/amd64 -f test/config/ -f config/ | kubectl apply -f -
 
-        CONFIG_ISTIO="./third_party/istio-${{ matrix.istio-version }}/istio-kind-no-mesh/config-istio.yaml"
+        CONFIG_ISTIO="./third_party/istio-${{ matrix.istio-version }}/istio-kind-${{ matrix.istio-profile }}/config-istio.yaml"
         if [[ -f "${CONFIG_ISTIO}" ]]; then
            kubectl apply -f "${CONFIG_ISTIO}"
         fi

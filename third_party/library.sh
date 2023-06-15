@@ -115,7 +115,16 @@ metadata:
 ---
 EOF
 
-    ${ISTIO_DIR}/bin/istioctl manifest generate -f "$file"  "$@" | add_crd_label >> "${tmpfile}"
+    if [[ "$file" == *"ambient"* ]] ; then
+      # The options are duplicated but necessary both istio.yaml and command option.
+      "${ISTIO_DIR}"/bin/istioctl manifest \
+           --set profile=ambient \
+	   --set components.ingressGateways[0].enabled=true \
+	   --set components.ingressGateways[0].name=istio-ingressgateway \
+	   generate -f "$file" "$@" | add_crd_label >>"${tmpfile}"
+    else
+      "${ISTIO_DIR}"/bin/istioctl manifest generate -f "$file" "$@" | add_crd_label >> "${tmpfile}"
+    fi
 
     for kind in "${APPLY_ORDER[@]}"; do
       run_yq eval "select(.kind == \"${kind}\")" "${tmpfile}" >> "${target_dir}/istio.yaml"
