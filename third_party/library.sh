@@ -49,7 +49,7 @@ function download_istio() {
 
   # Download and unpack Istio
 
-  if [ $1 = "HEAD" ]; then
+  if [ "$1" = "HEAD" ]; then
     ISTIO_VERSION=$(curl https://storage.googleapis.com/istio-build/dev/latest)
   else
     ISTIO_VERSION=$1
@@ -57,7 +57,7 @@ function download_istio() {
 
   ISTIO_TARBALL=istio-${ISTIO_VERSION}-${ARCH}.tar.gz
 
-  if [ $1 = "HEAD" ]; then
+  if [ "$1" = "HEAD" ]; then
     DOWNLOAD_URL=https://storage.googleapis.com/istio-build/dev/${ISTIO_VERSION}/${ISTIO_TARBALL}
   else
     DOWNLOAD_URL=https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/${ISTIO_TARBALL}
@@ -66,21 +66,21 @@ function download_istio() {
   SYSTEM_NAMESPACE="${SYSTEM_NAMESPACE:-"knative-serving"}"
 
   ISTIO_TMP=$(mktemp -d)
-  pushd $ISTIO_TMP
-  wget --no-check-certificate $DOWNLOAD_URL
+  pushd "$ISTIO_TMP"
+  wget --no-check-certificate "$DOWNLOAD_URL"
   if [ $? != 0 ]; then
     echo "Failed to download Istio release: $DOWNLOAD_URL"
     exit 1
   fi
-  tar xzf ${ISTIO_TARBALL}
+  tar xzf "${ISTIO_TARBALL}"
   ISTIO_DIR="${ISTIO_TMP}/istio-${ISTIO_VERSION}"
   echo "Istio was downloaded to ${ISTIO_DIR}"
-  popd
+  popd || exit
 }
 
 function cleanup_istio() {
   echo "Deleting $ISTIO_TMP"
-  rm -rf $ISTIO_TMP
+  rm -rf "$ISTIO_TMP"
 }
 
 function add_crd_label() {
@@ -94,13 +94,13 @@ function generate_manifests() {
   shift
 
   for file in $(find -L "$dir" -maxdepth 1 -name "istio-*.yaml"); do
-    local filename=$(basename $file)
+    local filename=$(basename "$file")
     local filename=${filename%%.*}
-    local target_dir="$(dirname $file)/${filename}"
+    local target_dir="$(dirname "$file")/${filename}"
 
     mkdir -p "$target_dir"
 
-    echo "Generating manifest from $(basename $(dirname $file))/$(basename $file)"
+    echo "Generating manifest from $(basename $(dirname "$file"))/$(basename "$file")"
     echo "  using istioctl flags $@"
 
     tmpfile=$(mktemp)
