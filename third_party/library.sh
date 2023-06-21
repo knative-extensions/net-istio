@@ -115,7 +115,7 @@ metadata:
 ---
 EOF
 
-    ${ISTIO_DIR}/bin/istioctl manifest generate -f "$file"  "$@" | add_crd_label >> "${tmpfile}"
+    "${ISTIO_DIR}"/bin/istioctl manifest generate -f "$file" "$@" | add_crd_label >> "${tmpfile}"
 
     for kind in "${APPLY_ORDER[@]}"; do
       run_yq eval "select(.kind == \"${kind}\")" "${tmpfile}" >> "${target_dir}/istio.yaml"
