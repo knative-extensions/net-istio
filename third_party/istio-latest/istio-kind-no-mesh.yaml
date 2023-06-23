@@ -27,7 +27,6 @@ spec:
     gateways:
       istio-ingressgateway:
         autoscaleEnabled: false
-        type: NodePort
 
   meshConfig:
     defaultConfig:
