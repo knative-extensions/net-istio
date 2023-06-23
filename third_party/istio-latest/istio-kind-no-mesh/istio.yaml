@@ -9920,7 +9920,7 @@ metadata:
     install.operator.istio.io/owning-resource: unknown
     operator.istio.io/component: IngressGateways
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: istio-ingressgateway
     istio: ingressgateway
