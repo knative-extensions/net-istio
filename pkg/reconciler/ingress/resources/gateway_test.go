@@ -29,6 +29,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 
 	istiov1beta1 "istio.io/api/networking/v1beta1"
@@ -681,7 +682,7 @@ func TestMakeWildcardGateways(t *testing.T) {
 			},
 		})
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := MakeWildcardTLSGateways(ctx, tc.wildcardSecrets, svcLister)
+			got, err := MakeWildcardTLSGateways(ctx, &ingressResource, tc.wildcardSecrets, svcLister)
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("Test: %s; MakeWildcardGateways error = %v, WantErr %v", tc.name, err, tc.wantErr)
 			}
@@ -1022,5 +1023,63 @@ func TestGatewayNameLongIngressName(t *testing.T) {
 	got := GatewayName(ingress, svc)
 	if got != want {
 		t.Errorf("Unexpected gateway name. want %q, got %q", want, got)
+	}
+}
+
+func TestGetGatewaysFromAnnotations(t *testing.T) {
+	cases := []struct {
+		name       string
+		ingress    *v1alpha1.Ingress
+		wantPublic sets.String
+		wantLocal  sets.String
+	}{
+		{
+			name: "Happy path",
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				PublicGatewayAnnotation: "ns1/gtw1",
+				LocalGatewaysAnnotation: "ns1/gtw2,ns2/gtw3",
+			}}},
+			wantPublic: sets.NewString("ns1/gtw1"),
+			wantLocal:  sets.NewString("ns1/gtw2", "ns2/gtw3"),
+		},
+		{
+			name: "Empty/No annotation",
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				PublicGatewayAnnotation: "",
+			}}},
+			wantPublic: sets.NewString(),
+			wantLocal:  sets.NewString(),
+		},
+		{
+			name: "Invalid annotation",
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				PublicGatewayAnnotation: "ns1.gtw1",
+			}}},
+			wantPublic: sets.NewString(),
+			wantLocal:  sets.NewString(),
+		},
+		{
+			name: "Annotation with spaces",
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				PublicGatewayAnnotation: "  ns1/gtw1 ",
+				LocalGatewaysAnnotation: "ns1/gtw2  ,  ns2/gtw3 ",
+			}}},
+			wantPublic: sets.NewString("ns1/gtw1"),
+			wantLocal:  sets.NewString("ns1/gtw2", "ns2/gtw3"),
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			gotPublic := GetGatewaysFromAnnotations(c.ingress, v1alpha1.IngressVisibilityExternalIP)
+			if diff := cmp.Diff(c.wantPublic, gotPublic); diff != "" {
+				t.Error("Unexpected public Gateways (-want, +got):", diff)
+			}
+
+			gotLocal := GetGatewaysFromAnnotations(c.ingress, v1alpha1.IngressVisibilityClusterLocal)
+			if diff := cmp.Diff(c.wantLocal, gotLocal); diff != "" {
+				t.Error("Unexpected local Gateways (-want, +got):", diff)
+			}
+		})
 	}
 }

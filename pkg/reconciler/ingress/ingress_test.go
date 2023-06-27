@@ -1791,3 +1791,81 @@ func proberCalledTimes(n int) func(*testing.T, *TableRow) {
 		}
 	}
 }
+
+func TestComputeDefaultGateways(t *testing.T) {
+	cases := []struct {
+		name    string
+		cfg     *config.Istio
+		ingress *v1alpha1.Ingress
+		want    map[v1alpha1.IngressVisibility]sets.String
+	}{
+		{
+			name: "All match",
+			cfg: &config.Istio{
+				IngressGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw1"},
+				},
+				LocalGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw2"},
+					{Namespace: "ns2", Name: "gtw3"},
+				},
+			},
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				resources.PublicGatewayAnnotation: "ns1/gtw1",
+				resources.LocalGatewaysAnnotation: "ns1/gtw2,ns2/gtw3",
+			}}},
+			want: map[v1alpha1.IngressVisibility]sets.String{
+				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("ns1/gtw1"),
+				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("ns1/gtw2", "ns2/gtw3"),
+			},
+		},
+		{
+			name: "Partial match",
+			cfg: &config.Istio{
+				IngressGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw1"},
+					{Namespace: "ns1", Name: "wontmatch"},
+					{Namespace: "wontmatch", Name: "gtw1"},
+				},
+				LocalGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw2"},
+				},
+			},
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				resources.PublicGatewayAnnotation: "ns1/gtw1",
+				resources.LocalGatewaysAnnotation: "ns1/gtw2,ns2/gtw3",
+			}}},
+			want: map[v1alpha1.IngressVisibility]sets.String{
+				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("ns1/gtw1"),
+				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("ns1/gtw2"),
+			},
+		},
+		{
+			name: "No annotation",
+			cfg: &config.Istio{
+				IngressGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw1"},
+				},
+				LocalGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw2"},
+				},
+			},
+			ingress: &v1alpha1.Ingress{},
+			want: map[v1alpha1.IngressVisibility]sets.String{
+				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("ns1/gtw1"),
+				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("ns1/gtw2"),
+			},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			ctx := config.ToContext(context.Background(), &config.Config{Istio: c.cfg})
+			got := computeDefaultGateways(ctx, c.ingress)
+
+			if diff := cmp.Diff(c.want, got); diff != "" {
+				t.Error("Unexpected Gateways (-want, +got):", diff)
+			}
+		})
+	}
+}
