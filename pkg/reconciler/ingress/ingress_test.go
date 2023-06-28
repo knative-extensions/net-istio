@@ -1793,11 +1793,16 @@ func proberCalledTimes(n int) func(*testing.T, *TableRow) {
 }
 
 func TestComputeDefaultGateways(t *testing.T) {
+	type Expectation struct {
+		Error  bool
+		Values map[v1alpha1.IngressVisibility]sets.String
+	}
+
 	cases := []struct {
 		name    string
 		cfg     *config.Istio
 		ingress *v1alpha1.Ingress
-		want    map[v1alpha1.IngressVisibility]sets.String
+		want    Expectation
 	}{
 		{
 			name: "All match",
@@ -1814,9 +1819,11 @@ func TestComputeDefaultGateways(t *testing.T) {
 				resources.PublicGatewayAnnotation: "ns1/gtw1",
 				resources.LocalGatewaysAnnotation: "ns1/gtw2,ns2/gtw3",
 			}}},
-			want: map[v1alpha1.IngressVisibility]sets.String{
-				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("ns1/gtw1"),
-				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("ns1/gtw2", "ns2/gtw3"),
+			want: Expectation{
+				Values: map[v1alpha1.IngressVisibility]sets.String{
+					v1alpha1.IngressVisibilityExternalIP:   sets.NewString("ns1/gtw1"),
+					v1alpha1.IngressVisibilityClusterLocal: sets.NewString("ns1/gtw2", "ns2/gtw3"),
+				},
 			},
 		},
 		{
@@ -1833,11 +1840,13 @@ func TestComputeDefaultGateways(t *testing.T) {
 			},
 			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
 				resources.PublicGatewayAnnotation: "ns1/gtw1",
-				resources.LocalGatewaysAnnotation: "ns1/gtw2,ns2/gtw3",
+				resources.LocalGatewaysAnnotation: "ns1/gtw2",
 			}}},
-			want: map[v1alpha1.IngressVisibility]sets.String{
-				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("ns1/gtw1"),
-				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("ns1/gtw2"),
+			want: Expectation{
+				Values: map[v1alpha1.IngressVisibility]sets.String{
+					v1alpha1.IngressVisibilityExternalIP:   sets.NewString("ns1/gtw1"),
+					v1alpha1.IngressVisibilityClusterLocal: sets.NewString("ns1/gtw2"),
+				},
 			},
 		},
 		{
@@ -1851,9 +1860,45 @@ func TestComputeDefaultGateways(t *testing.T) {
 				},
 			},
 			ingress: &v1alpha1.Ingress{},
-			want: map[v1alpha1.IngressVisibility]sets.String{
-				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("ns1/gtw1"),
-				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("ns1/gtw2"),
+			want: Expectation{
+				Values: map[v1alpha1.IngressVisibility]sets.String{
+					v1alpha1.IngressVisibilityExternalIP:   sets.NewString("ns1/gtw1"),
+					v1alpha1.IngressVisibilityClusterLocal: sets.NewString("ns1/gtw2"),
+				},
+			},
+		},
+		{
+			name: "Invalid values in annotation",
+			cfg: &config.Istio{
+				IngressGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw1"},
+				},
+				LocalGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw2"},
+				},
+			},
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				resources.PublicGatewayAnnotation: "ns1.gtw1",
+			}}},
+			want: Expectation{
+				Error: true,
+			},
+		},
+		{
+			name: "Unknown values in annotation",
+			cfg: &config.Istio{
+				IngressGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw1"},
+				},
+				LocalGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw2"},
+				},
+			},
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				resources.PublicGatewayAnnotation: "unknown/unknown",
+			}}},
+			want: Expectation{
+				Error: true,
 			},
 		},
 	}
@@ -1861,10 +1906,16 @@ func TestComputeDefaultGateways(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ctx := config.ToContext(context.Background(), &config.Config{Istio: c.cfg})
-			got := computeDefaultGateways(ctx, c.ingress)
+			got, err := computeDefaultGateways(ctx, c.ingress)
 
-			if diff := cmp.Diff(c.want, got); diff != "" {
-				t.Error("Unexpected Gateways (-want, +got):", diff)
+			if (err != nil) != c.want.Error {
+				t.Errorf("Expecting error: %v, got error: %v", c.want.Error, err)
+			}
+
+			if !c.want.Error {
+				if diff := cmp.Diff(c.want.Values, got); diff != "" {
+					t.Error("Unexpected Gateways (-want, +got):", diff)
+				}
 			}
 		})
 	}

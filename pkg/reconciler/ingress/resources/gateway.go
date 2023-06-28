@@ -18,6 +18,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"hash/adler32"
 	"regexp"
@@ -268,11 +269,14 @@ func makeIngressGateway(ing *v1alpha1.Ingress, selector map[string]string, serve
 }
 
 func getGatewayServices(ctx context.Context, ing *v1alpha1.Ingress, svcLister corev1listers.ServiceLister) ([]*corev1.Service, error) {
-	restrictedGateways := GetGatewaysFromAnnotations(ing, v1alpha1.IngressVisibilityExternalIP)
+	restrictedGateways, err := GetGatewaysFromAnnotations(ing, v1alpha1.IngressVisibilityExternalIP)
+	if err != nil {
+		return nil, err
+	}
 
-	filter := &restrictedGateways
-	if restrictedGateways.Len() == 0 {
-		filter = nil
+	filter := FilterOption{}
+	if restrictedGateways.Len() > 0 {
+		filter.QualifiedNames = &restrictedGateways
 	}
 
 	ingressSvcMetas, err := GetSelectedIngressGatewaySvcNameNamespaces(ctx, filter)
@@ -394,22 +398,39 @@ func GetNonWildcardIngressTLS(ingressTLS []v1alpha1.IngressTLS, nonWildcardSecre
 }
 
 // GetIngressGatewaySvcNameNamespaces gets the Istio ingress namespaces from ConfigMap.
-// TODO(nghia):  Remove this by parsing at config parsing time.
 func GetIngressGatewaySvcNameNamespaces(ctx context.Context) ([]metav1.ObjectMeta, error) {
-	return getSelectedIngressGatewaySvcNameNamespaces(ctx, nil)
+	return getSelectedIngressGatewaySvcNameNamespaces(ctx, FilterOption{})
+}
+
+type FilterOption struct {
+	QualifiedNames *sets.String
 }
 
 // GetSelectedIngressGatewaySvcNameNamespaces gets the Istio ingress namespaces from ConfigMap for gateways which qualified name is in the list.
-func GetSelectedIngressGatewaySvcNameNamespaces(ctx context.Context, qualifiedNames *sets.String) ([]metav1.ObjectMeta, error) {
-	return getSelectedIngressGatewaySvcNameNamespaces(ctx, qualifiedNames)
+func GetSelectedIngressGatewaySvcNameNamespaces(ctx context.Context, filter FilterOption) ([]metav1.ObjectMeta, error) {
+	return getSelectedIngressGatewaySvcNameNamespaces(ctx, filter)
 }
 
-func getSelectedIngressGatewaySvcNameNamespaces(ctx context.Context, qualifiedNames *sets.String) ([]metav1.ObjectMeta, error) {
+func getSelectedIngressGatewaySvcNameNamespaces(ctx context.Context, filter FilterOption) ([]metav1.ObjectMeta, error) {
 	cfg := config.FromContext(ctx).Istio
+
+	// If there is a filter, ensure all names are known in the config
+	if filter.QualifiedNames != nil {
+		knownNames := sets.NewString()
+		for _, ingressgateway := range cfg.IngressGateways {
+			knownNames.Insert(ingressgateway.QualifiedName())
+		}
+
+		unknownGateways := filter.QualifiedNames.Difference(knownNames)
+		if unknownGateways.Len() > 0 {
+			return nil, fmt.Errorf("following qualified name(s) aren't defined in the configuration: %v", unknownGateways.List())
+		}
+	}
+
 	nameNamespaces := make([]metav1.ObjectMeta, 0, len(cfg.IngressGateways))
 
 	for _, ingressgateway := range cfg.IngressGateways {
-		if qualifiedNames != nil && !qualifiedNames.Has(ingressgateway.QualifiedName()) {
+		if filter.QualifiedNames != nil && !filter.QualifiedNames.Has(ingressgateway.QualifiedName()) {
 			continue
 		}
 
@@ -424,6 +445,7 @@ func getSelectedIngressGatewaySvcNameNamespaces(ctx context.Context, qualifiedNa
 	return nameNamespaces, nil
 }
 
+// TODO(nghia):  Remove this by parsing at config parsing time.
 func parseIngressGatewayConfig(ingressgateway config.Gateway) (metav1.ObjectMeta, error) {
 	ret := metav1.ObjectMeta{}
 
@@ -471,10 +493,10 @@ func isPlaceHolderServer(server *istiov1beta1.Server) bool {
 	return cmp.Equal(server, &placeholderServer, protocmp.Transform())
 }
 
-// GetGatewaysFromAnnotations extracts Gateways from ingress annotations.
-func GetGatewaysFromAnnotations(ing *v1alpha1.Ingress, visibility v1alpha1.IngressVisibility) sets.String {
-	ret := sets.NewString()
+var errUnexpectedVisibility = errors.New("unexpected visibility value")
 
+// GetGatewaysFromAnnotations extracts Gateways from ingress annotations.
+func GetGatewaysFromAnnotations(ing *v1alpha1.Ingress, visibility v1alpha1.IngressVisibility) (sets.String, error) {
 	annotation := ""
 
 	switch visibility {
@@ -482,22 +504,26 @@ func GetGatewaysFromAnnotations(ing *v1alpha1.Ingress, visibility v1alpha1.Ingre
 		annotation = LocalGatewaysAnnotation
 	case v1alpha1.IngressVisibilityExternalIP:
 		annotation = PublicGatewayAnnotation
+	default:
+		return nil, fmt.Errorf("unexpected visibility value: %s", visibility)
 	}
+
+	ret := sets.NewString()
 
 	filters, ok := ing.ObjectMeta.Annotations[annotation]
 	if !ok {
-		return ret
+		return ret, nil
 	}
 
 	for _, gtw := range strings.Split(filters, ",") {
 		qualifiedName := strings.TrimSpace(gtw)
 
 		if !strings.Contains(qualifiedName, "/") {
-			continue
+			return nil, fmt.Errorf("values in %s should be qualified name ($namespace/$name), got: %s", annotation, qualifiedName)
 		}
 
 		ret.Insert(qualifiedName)
 	}
 
-	return ret
+	return ret, nil
 }
