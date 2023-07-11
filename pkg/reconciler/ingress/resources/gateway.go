@@ -18,7 +18,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"hash/adler32"
 	"regexp"
@@ -492,8 +491,6 @@ func UpdateGateway(gateway *v1beta1.Gateway, want []*istiov1beta1.Server, existi
 func isPlaceHolderServer(server *istiov1beta1.Server) bool {
 	return cmp.Equal(server, &placeholderServer, protocmp.Transform())
 }
-
-var errUnexpectedVisibility = errors.New("unexpected visibility value")
 
 // GetGatewaysFromAnnotations extracts Gateways from ingress annotations.
 func GetGatewaysFromAnnotations(ing *v1alpha1.Ingress, visibility v1alpha1.IngressVisibility) (sets.String, error) {
