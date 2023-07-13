@@ -45,7 +45,7 @@ func VirtualServiceNamespace(ing *v1alpha1.Ingress) string {
 
 // MakeIngressVirtualService creates Istio VirtualService as network
 // programming for Istio Gateways other than 'mesh'.
-func MakeIngressVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) *v1beta1.VirtualService {
+func MakeIngressVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.Set[string]) *v1beta1.VirtualService {
 	vs := &v1beta1.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            names.IngressVirtualService(ing),
@@ -53,7 +53,7 @@ func MakeIngressVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingr
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 			Annotations:     ing.GetAnnotations(),
 		},
-		Spec: *makeVirtualServiceSpec(ing, gateways, ingress.ExpandedHosts(getHosts(ing))),
+		Spec: *makeVirtualServiceSpec(ing, gateways, expandedHosts(getHosts(ing))),
 	}
 
 	// Populate the Ingress labels.
@@ -65,12 +65,12 @@ func MakeIngressVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingr
 }
 
 // MakeMeshVirtualService creates a mesh Virtual Service
-func MakeMeshVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) *v1beta1.VirtualService {
+func MakeMeshVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.Set[string]) *v1beta1.VirtualService {
 	hosts := keepLocalHostnames(getHosts(ing))
 	// If cluster local gateway is configured, we need to expand hosts because of
 	// https://github.com/knative/serving/issues/6488#issuecomment-573513768.
 	if len(gateways[v1alpha1.IngressVisibilityClusterLocal]) != 0 {
-		hosts = ingress.ExpandedHosts(hosts)
+		hosts = expandedHosts(hosts)
 	}
 	if len(hosts) == 0 {
 		return nil
@@ -82,9 +82,9 @@ func MakeMeshVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 			Annotations:     ing.GetAnnotations(),
 		},
-		Spec: *makeVirtualServiceSpec(ing, map[v1alpha1.IngressVisibility]sets.String{
-			v1alpha1.IngressVisibilityExternalIP:   sets.NewString("mesh"),
-			v1alpha1.IngressVisibilityClusterLocal: sets.NewString("mesh"),
+		Spec: *makeVirtualServiceSpec(ing, map[v1alpha1.IngressVisibility]sets.Set[string]{
+			v1alpha1.IngressVisibilityExternalIP:   sets.New("mesh"),
+			v1alpha1.IngressVisibilityClusterLocal: sets.New("mesh"),
 		}, hosts),
 	}
 	// Populate the Ingress labels.
@@ -96,7 +96,7 @@ func MakeMeshVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 }
 
 // MakeVirtualServices creates a mesh VirtualService and a virtual service for each gateway
-func MakeVirtualServices(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String) ([]*v1beta1.VirtualService, error) {
+func MakeVirtualServices(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.Set[string]) ([]*v1beta1.VirtualService, error) {
 	// Insert probe header
 	ing = ing.DeepCopy()
 	if _, err := ingress.InsertProbe(ing); err != nil {
@@ -122,16 +122,16 @@ func MakeVirtualServices(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVis
 	return vss, nil
 }
 
-func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, hosts sets.String) *istiov1beta1.VirtualService {
+func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.Set[string], hosts sets.Set[string]) *istiov1beta1.VirtualService {
 	spec := istiov1beta1.VirtualService{
-		Hosts: hosts.List(),
+		Hosts: sets.List(hosts),
 	}
 
-	gw := sets.String{}
+	gw := sets.New[string]()
 	for _, rule := range ing.Spec.Rules {
 		for i := range rule.HTTP.Paths {
 			p := rule.HTTP.Paths[i]
-			hosts := hosts.Intersection(sets.NewString(rule.Hosts...))
+			hosts := hosts.Intersection(sets.New(rule.Hosts...))
 			if hosts.Len() != 0 {
 				http := makeVirtualServiceRoute(hosts, &p, gateways, rule.Visibility)
 				// Add all the Gateways that exist inside the http.match section of
@@ -139,22 +139,22 @@ func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 				// This ensures that we are only using the Gateways that actually appear
 				// in VirtualService routes.
 				for _, m := range http.Match {
-					gw = gw.Union(sets.NewString(m.Gateways...))
+					gw = gw.Union(sets.New(m.Gateways...))
 				}
 				spec.Http = append(spec.Http, http)
 			}
 		}
 	}
-	spec.Gateways = gw.List()
+	spec.Gateways = sets.List(gw)
 	return &spec
 }
 
-func makeVirtualServiceRoute(hosts sets.String, http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.String, visibility v1alpha1.IngressVisibility) *istiov1beta1.HTTPRoute {
+func makeVirtualServiceRoute(hosts sets.Set[string], http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.Set[string], visibility v1alpha1.IngressVisibility) *istiov1beta1.HTTPRoute {
 	matches := []*istiov1beta1.HTTPMatchRequest{}
 	// Deduplicate hosts to avoid excessive matches, which cause a combinatorial expansion in Istio
 	distinctHosts := getDistinctHostPrefixes(hosts)
 
-	for _, host := range distinctHosts.List() {
+	for _, host := range sets.List(distinctHosts) {
 		matches = append(matches, makeMatch(host, http.Path, http.Headers, gateways[visibility]))
 	}
 
@@ -210,11 +210,11 @@ func makeVirtualServiceRoute(hosts sets.String, http *v1alpha1.HTTPIngressPath, 
 
 // getDistinctHostPrefixes deduplicate a set of prefix matches. For example, the set {a, aabb} can be
 // reduced to {a}, as a prefix match on {a} accepts all the same inputs as {a, aabb}.
-func getDistinctHostPrefixes(hosts sets.String) sets.String {
+func getDistinctHostPrefixes(hosts sets.Set[string]) sets.Set[string] {
 	// First we sort the list. This ensures that we always process the smallest elements (which match against
 	// the most patterns, as they are less specific) first.
-	all := hosts.List()
-	ns := sets.NewString()
+	all := sets.List(hosts)
+	ns := sets.New[string]()
 	for _, h := range all {
 		prefixExists := false
 		h = hostPrefix(h)
@@ -233,10 +233,10 @@ func getDistinctHostPrefixes(hosts sets.String) sets.String {
 	return ns
 }
 
-func keepLocalHostnames(hosts sets.String) sets.String {
+func keepLocalHostnames(hosts sets.Set[string]) sets.Set[string] {
 	localSvcSuffix := ".svc." + network.GetClusterDomainName()
-	retained := sets.NewString()
-	for _, h := range hosts.List() {
+	retained := sets.New[string]()
+	for _, h := range sets.List(hosts) {
 		if strings.HasSuffix(h, localSvcSuffix) {
 			retained.Insert(h)
 		}
@@ -244,9 +244,9 @@ func keepLocalHostnames(hosts sets.String) sets.String {
 	return retained
 }
 
-func makeMatch(host, path string, headers map[string]v1alpha1.HeaderMatch, gateways sets.String) *istiov1beta1.HTTPMatchRequest {
+func makeMatch(host, path string, headers map[string]v1alpha1.HeaderMatch, gateways sets.Set[string]) *istiov1beta1.HTTPMatchRequest {
 	match := &istiov1beta1.HTTPMatchRequest{
-		Gateways: gateways.List(),
+		Gateways: sets.List(gateways),
 		Authority: &istiov1beta1.StringMatch{
 			// Do not use Regex as Istio 1.4 or later has 100 bytes limitation.
 			MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: host},
@@ -283,8 +283,8 @@ func hostPrefix(host string) string {
 	return strings.TrimSuffix(host, localDomainSuffix)
 }
 
-func getHosts(ing *v1alpha1.Ingress) sets.String {
-	hosts := sets.NewString()
+func getHosts(ing *v1alpha1.Ingress) sets.Set[string] {
+	hosts := sets.New[string]()
 	for _, rule := range ing.Spec.Rules {
 		hosts.Insert(rule.Hosts...)
 	}
@@ -311,4 +311,13 @@ func getPublicIngressRules(i *v1alpha1.Ingress) []v1alpha1.IngressRule {
 	}
 
 	return result
+}
+
+// Keep me until ingress.ExpandedHosts uses sets.Set[string]
+func expandedHosts(hosts sets.Set[string]) sets.Set[string] {
+	tmp := sets.NewString(sets.List(hosts)...)
+
+	ret := ingress.ExpandedHosts(tmp)
+
+	return sets.New(ret.List()...)
 }
