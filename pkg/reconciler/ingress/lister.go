@@ -189,6 +189,7 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1beta1.Gateway) ([
 }
 
 // Remove me when ingress.HostsPerVisibility uses sets.Set[string]
+// nolint: staticcheck
 func convertVisibilityMap(input map[v1alpha1.IngressVisibility]sets.Set[string]) map[v1alpha1.IngressVisibility]sets.String {
 	return map[v1alpha1.IngressVisibility]sets.String{
 		v1alpha1.IngressVisibilityExternalIP:   sets.NewString(sets.List(input[v1alpha1.IngressVisibilityExternalIP])...),
