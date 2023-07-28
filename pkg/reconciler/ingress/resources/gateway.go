@@ -398,7 +398,7 @@ func GetIngressGatewaySvcNameNamespaces(ctx context.Context) ([]metav1.ObjectMet
 
 // UpdateGateway replaces the existing servers with the wanted servers.
 func UpdateGateway(gateway *v1beta1.Gateway, want []*istiov1beta1.Server, existing []*istiov1beta1.Server) *v1beta1.Gateway {
-	existingServers := sets.String{}
+	existingServers := sets.New[string]()
 	for i := range existing {
 		existingServers.Insert(existing[i].Port.Name)
 	}

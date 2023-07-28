@@ -60,7 +60,7 @@ type gatewayPodTargetLister struct {
 
 func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1alpha1.Ingress) ([]status.ProbeTarget, error) {
 	results := []status.ProbeTarget{}
-	hostsByGateway := ingress.HostsPerVisibility(ing, qualifiedGatewayNamesFromContext(ctx))
+	hostsByGateway := ingress.HostsPerVisibility(ing, convertVisibilityMap(qualifiedGatewayNamesFromContext(ctx)))
 	gatewayNames := make([]string, 0, len(hostsByGateway))
 	for gatewayName := range hostsByGateway {
 		gatewayNames = append(gatewayNames, gatewayName)
@@ -129,7 +129,7 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1beta1.Gateway) ([
 		return nil, fmt.Errorf("failed to get Endpoints: %w", err)
 	}
 
-	seen := sets.NewString()
+	seen := sets.New[string]()
 	targets := []status.ProbeTarget{}
 	for _, server := range gateway.Spec.Servers {
 		tURL := &url.URL{}
@@ -186,4 +186,13 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1beta1.Gateway) ([
 		}
 	}
 	return targets, nil
+}
+
+// Remove me when ingress.HostsPerVisibility uses sets.Set[string]
+// nolint: staticcheck
+func convertVisibilityMap(input map[v1alpha1.IngressVisibility]sets.Set[string]) map[v1alpha1.IngressVisibility]sets.String {
+	return map[v1alpha1.IngressVisibility]sets.String{
+		v1alpha1.IngressVisibilityExternalIP:   sets.NewString(sets.List(input[v1alpha1.IngressVisibilityExternalIP])...),
+		v1alpha1.IngressVisibilityClusterLocal: sets.NewString(sets.List(input[v1alpha1.IngressVisibilityClusterLocal])...),
+	}
 }

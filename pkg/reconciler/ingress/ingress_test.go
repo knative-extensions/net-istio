@@ -48,7 +48,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 
-	istiov1alpha1 "istio.io/api/meta/v1alpha1"
 	istiov1beta1 "istio.io/api/networking/v1beta1"
 	"istio.io/client-go/pkg/apis/networking/v1beta1"
 
@@ -140,11 +139,11 @@ var (
 		"gateway." + config.KnativeIngressGateway: newDomainInternal,
 		"gateway.knative-test-gateway":            originDomainInternal,
 	}
-	ingressGateway = map[v1alpha1.IngressVisibility]sets.String{
-		v1alpha1.IngressVisibilityExternalIP: sets.NewString(config.KnativeIngressGateway),
+	ingressGateway = map[v1alpha1.IngressVisibility]sets.Set[string]{
+		v1alpha1.IngressVisibilityExternalIP: sets.New(config.KnativeIngressGateway),
 	}
-	gateways = map[v1alpha1.IngressVisibility]sets.String{
-		v1alpha1.IngressVisibilityExternalIP: sets.NewString("knative-test-gateway", config.KnativeIngressGateway),
+	gateways = map[v1alpha1.IngressVisibility]sets.Set[string]{
+		v1alpha1.IngressVisibilityExternalIP: sets.New("knative-test-gateway", config.KnativeIngressGateway),
 	}
 	perIngressGatewayName = resources.GatewayName(ingressWithTLS("reconciling-ingress", ingressTLS), ingressService)
 )
@@ -1256,24 +1255,6 @@ func ingressWithTLSAndStatusClusterLocal(name string, tls []v1alpha1.IngressTLS,
 	return ci
 }
 
-func meshVirtualServiceWithStatus(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, status *istiov1alpha1.IstioStatus, generation int64, observedGeneration int64) *v1beta1.VirtualService {
-	vs := resources.MakeMeshVirtualService(ing, gateways)
-	vs.Status = *status.DeepCopy()
-	vs.ObjectMeta.Generation = generation
-	vs.Status.ObservedGeneration = observedGeneration
-
-	return vs
-}
-
-func ingressVirtualServiceWithStatus(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.String, status *istiov1alpha1.IstioStatus, generation int64, observedGeneration int64) *v1beta1.VirtualService {
-	vs := resources.MakeIngressVirtualService(ing, gateways)
-	vs.Status = *status.DeepCopy()
-	vs.ObjectMeta.Generation = generation
-	vs.Status.ObservedGeneration = observedGeneration
-
-	return vs
-}
-
 func newTestSetup(t *testing.T, configs ...*corev1.ConfigMap) (
 	context.Context,
 	context.CancelFunc,
@@ -1536,10 +1517,10 @@ func TestGlobalResyncOnUpdateNetwork(t *testing.T) {
 	}
 }
 
-func makeGatewayMap(publicGateways []string, privateGateways []string) map[v1alpha1.IngressVisibility]sets.String {
-	return map[v1alpha1.IngressVisibility]sets.String{
-		v1alpha1.IngressVisibilityExternalIP:   sets.NewString(publicGateways...),
-		v1alpha1.IngressVisibilityClusterLocal: sets.NewString(privateGateways...),
+func makeGatewayMap(publicGateways []string, privateGateways []string) map[v1alpha1.IngressVisibility]sets.Set[string] {
+	return map[v1alpha1.IngressVisibility]sets.Set[string]{
+		v1alpha1.IngressVisibilityExternalIP:   sets.New(publicGateways...),
+		v1alpha1.IngressVisibilityClusterLocal: sets.New(privateGateways...),
 	}
 }
 

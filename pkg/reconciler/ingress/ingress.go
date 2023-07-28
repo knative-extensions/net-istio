@@ -111,9 +111,9 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	ing.Status.InitializeConditions()
 	logger.Infof("Reconciling ingress: %#v", ing)
 
-	gatewayNames := map[v1alpha1.IngressVisibility]sets.String{}
+	gatewayNames := map[v1alpha1.IngressVisibility]sets.Set[string]{}
 	gatewayNames[v1alpha1.IngressVisibilityClusterLocal] = qualifiedGatewayNamesFromContext(ctx)[v1alpha1.IngressVisibilityClusterLocal]
-	gatewayNames[v1alpha1.IngressVisibilityExternalIP] = sets.String{}
+	gatewayNames[v1alpha1.IngressVisibilityExternalIP] = sets.New[string]()
 
 	ingressGateways := []*v1beta1.Gateway{}
 	if shouldReconcileTLS(ing) {
@@ -178,7 +178,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		// Otherwise, we fall back to the default global Gateways for HTTP behavior.
 		// We need this for the backward compatibility.
 		defaultGlobalHTTPGateways := qualifiedGatewayNamesFromContext(ctx)[v1alpha1.IngressVisibilityExternalIP]
-		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(defaultGlobalHTTPGateways.List()...)
+		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(sets.List(defaultGlobalHTTPGateways)...)
 	}
 
 	if err := r.reconcileIngressGateways(ctx, ingressGateways); err != nil {
@@ -235,13 +235,13 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 }
 
 func getPublicHosts(ing *v1alpha1.Ingress) []string {
-	hosts := sets.String{}
+	hosts := sets.New[string]()
 	for _, rule := range ing.Spec.Rules {
 		if rule.Visibility == v1alpha1.IngressVisibilityExternalIP {
 			hosts.Insert(rule.Hosts...)
 		}
 	}
-	return hosts.List()
+	return sets.List(hosts)
 }
 
 func (r *Reconciler) reconcileCertSecrets(ctx context.Context, ing *v1alpha1.Ingress, desiredSecrets []*corev1.Secret) error {
@@ -297,7 +297,7 @@ func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desire
 func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1.Ingress,
 	desired []*v1beta1.VirtualService) error {
 	// First, create all needed VirtualServices.
-	kept := sets.NewString()
+	kept := sets.New[string]()
 	for _, d := range desired {
 		if d.GetAnnotations()[networking.IngressClassAnnotationKey] != netconfig.IstioIngressClassName {
 			// We do not create resources that do not have istio ingress class annotation.
@@ -438,19 +438,19 @@ func (r *Reconciler) GetVirtualServiceLister() istiolisters.VirtualServiceLister
 }
 
 // qualifiedGatewayNamesFromContext get gateway names from context
-func qualifiedGatewayNamesFromContext(ctx context.Context) map[v1alpha1.IngressVisibility]sets.String {
+func qualifiedGatewayNamesFromContext(ctx context.Context) map[v1alpha1.IngressVisibility]sets.Set[string] {
 	ci := config.FromContext(ctx).Istio
-	publicGateways := make(sets.String, len(ci.IngressGateways))
+	publicGateways := sets.New[string]()
 	for _, gw := range ci.IngressGateways {
 		publicGateways.Insert(gw.QualifiedName())
 	}
 
-	privateGateways := make(sets.String, len(ci.LocalGateways))
+	privateGateways := sets.New[string]()
 	for _, gw := range ci.LocalGateways {
 		privateGateways.Insert(gw.QualifiedName())
 	}
 
-	return map[v1alpha1.IngressVisibility]sets.String{
+	return map[v1alpha1.IngressVisibility]sets.Set[string]{
 		v1alpha1.IngressVisibilityExternalIP:   publicGateways,
 		v1alpha1.IngressVisibilityClusterLocal: privateGateways,
 	}

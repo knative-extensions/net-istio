@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
-	"knative.dev/networking/pkg/ingress"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/system"
 	_ "knative.dev/pkg/system/testing"
@@ -65,7 +64,7 @@ var (
 func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 	for _, tc := range []struct {
 		name     string
-		gateways map[v1alpha1.IngressVisibility]sets.String
+		gateways map[v1alpha1.IngressVisibility]sets.Set[string]
 		ci       *v1alpha1.Ingress
 		expected []metav1.ObjectMeta
 	}{{
@@ -217,8 +216,8 @@ func TestMakeVirtualServicesSpec_CorrectGateways(t *testing.T) {
 	tests := []struct {
 		name             string
 		ingress          *v1alpha1.Ingress
-		gateways         map[v1alpha1.IngressVisibility]sets.String
-		expectedGateways sets.String
+		gateways         map[v1alpha1.IngressVisibility]sets.Set[string]
+		expectedGateways sets.Set[string]
 	}{
 		{
 			name: "local visibility",
@@ -233,11 +232,11 @@ func TestMakeVirtualServicesSpec_CorrectGateways(t *testing.T) {
 					},
 				},
 			},
-			gateways: map[v1alpha1.IngressVisibility]sets.String{
-				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("knative-local-gateway/knative-serving"),
-				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("knative-ingress-gateway/knative-serving"),
+			gateways: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityClusterLocal: sets.New("knative-local-gateway/knative-serving"),
+				v1alpha1.IngressVisibilityExternalIP:   sets.New("knative-ingress-gateway/knative-serving"),
 			},
-			expectedGateways: sets.NewString("knative-local-gateway/knative-serving"),
+			expectedGateways: sets.New("knative-local-gateway/knative-serving"),
 		},
 		{
 			name: "public visibility",
@@ -252,11 +251,11 @@ func TestMakeVirtualServicesSpec_CorrectGateways(t *testing.T) {
 					},
 				},
 			},
-			gateways: map[v1alpha1.IngressVisibility]sets.String{
-				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("knative-local-gateway/knative-serving"),
-				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("knative-ingress-gateway/knative-serving"),
+			gateways: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityClusterLocal: sets.New("knative-local-gateway/knative-serving"),
+				v1alpha1.IngressVisibilityExternalIP:   sets.New("knative-ingress-gateway/knative-serving"),
 			},
-			expectedGateways: sets.NewString("knative-ingress-gateway/knative-serving"),
+			expectedGateways: sets.New("knative-ingress-gateway/knative-serving"),
 		},
 		{
 			name: "local and public visibility",
@@ -276,21 +275,21 @@ func TestMakeVirtualServicesSpec_CorrectGateways(t *testing.T) {
 					},
 				},
 			},
-			gateways: map[v1alpha1.IngressVisibility]sets.String{
-				v1alpha1.IngressVisibilityClusterLocal: sets.NewString("knative-local-gateway/knative-serving"),
-				v1alpha1.IngressVisibilityExternalIP:   sets.NewString("knative-ingress-gateway/knative-serving"),
+			gateways: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityClusterLocal: sets.New("knative-local-gateway/knative-serving"),
+				v1alpha1.IngressVisibilityExternalIP:   sets.New("knative-ingress-gateway/knative-serving"),
 			},
-			expectedGateways: sets.NewString("knative-ingress-gateway/knative-serving",
+			expectedGateways: sets.New("knative-ingress-gateway/knative-serving",
 				"knative-local-gateway/knative-serving"),
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			vs := makeVirtualServiceSpec(tc.ingress, tc.gateways, ingress.ExpandedHosts(getHosts(tc.ingress)))
-			actualGateways := sets.NewString(vs.Gateways...)
+			vs := makeVirtualServiceSpec(tc.ingress, tc.gateways, expandedHosts(getHosts(tc.ingress)))
+			actualGateways := sets.New(vs.Gateways...)
 			if !actualGateways.Equal(tc.expectedGateways) {
-				t.Fatalf("Got gateways %v, expected %v", actualGateways.List(), tc.expectedGateways.List())
+				t.Fatalf("Got gateways %v, expected %v", sets.List(actualGateways), sets.List(tc.expectedGateways))
 			}
 		})
 	}
@@ -325,26 +324,26 @@ func TestMakeMeshVirtualServiceSpec_CorrectGateways(t *testing.T) {
 func TestMakeMeshVirtualServiceSpecCorrectHosts(t *testing.T) {
 	for _, tc := range []struct {
 		name          string
-		gateways      map[v1alpha1.IngressVisibility]sets.String
-		expectedHosts sets.String
+		gateways      map[v1alpha1.IngressVisibility]sets.Set[string]
+		expectedHosts sets.Set[string]
 	}{{
 		name: "with cluster local gateway: expanding hosts",
-		gateways: map[v1alpha1.IngressVisibility]sets.String{
-			v1alpha1.IngressVisibilityClusterLocal: sets.NewString("cluster-local"),
+		gateways: map[v1alpha1.IngressVisibility]sets.Set[string]{
+			v1alpha1.IngressVisibilityClusterLocal: sets.New("cluster-local"),
 		},
-		expectedHosts: sets.NewString(
+		expectedHosts: sets.New(
 			"test-route.test-ns.svc.cluster.local",
 			"test-route.test-ns.svc",
 			"test-route.test-ns",
 		),
 	}, {
 		name:          "with mesh: no exapnding hosts",
-		gateways:      map[v1alpha1.IngressVisibility]sets.String{},
-		expectedHosts: sets.NewString("test-route.test-ns.svc.cluster.local"),
+		gateways:      map[v1alpha1.IngressVisibility]sets.Set[string]{},
+		expectedHosts: sets.New("test-route.test-ns.svc.cluster.local"),
 	}} {
 		t.Run(tc.name, func(t *testing.T) {
 			vs := MakeMeshVirtualService(&defaultIngress, tc.gateways)
-			vsHosts := sets.NewString(vs.Spec.Hosts...)
+			vsHosts := sets.New(vs.Spec.Hosts...)
 			if !vsHosts.Equal(tc.expectedHosts) {
 				t.Errorf("Unexpected hosts want %v; got %v", tc.expectedHosts, vsHosts)
 			}
@@ -602,7 +601,7 @@ func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 			},
 		}},
 	}
-	route := makeVirtualServiceRoute(sets.NewString("a.vanity.url", "another.vanity.url"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	route := makeVirtualServiceRoute(sets.New("a.vanity.url", "another.vanity.url"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1beta1.HTTPRoute{
 		Retries: &istiov1beta1.HTTPRetry{},
 		Match: []*istiov1beta1.HTTPMatchRequest{{
@@ -651,7 +650,7 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 			Percent: 100,
 		}},
 	}
-	route := makeVirtualServiceRoute(sets.NewString("a.com", "b.org"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	route := makeVirtualServiceRoute(sets.New("a.com", "b.org"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1beta1.HTTPRoute{
 		Retries: &istiov1beta1.HTTPRetry{},
 		Match: []*istiov1beta1.HTTPMatchRequest{{
@@ -704,7 +703,7 @@ func TestMakeVirtualServiceRoute_Internal(t *testing.T) {
 			Percent: 100,
 		}},
 	}
-	route := makeVirtualServiceRoute(sets.NewString("a.default", "a.default.svc", "a.default.svc.cluster.local"),
+	route := makeVirtualServiceRoute(sets.New("a.default", "a.default.svc", "a.default.svc.cluster.local"),
 		ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1beta1.HTTPRoute{
 		Retries: &istiov1beta1.HTTPRetry{},
@@ -746,7 +745,7 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 			Percent: 10,
 		}},
 	}
-	route := makeVirtualServiceRoute(sets.NewString("test.org"), ingressPath, makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	route := makeVirtualServiceRoute(sets.New("test.org"), ingressPath, makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
 	expected := &istiov1beta1.HTTPRoute{
 		Retries: &istiov1beta1.HTTPRetry{},
 		Match: []*istiov1beta1.HTTPMatchRequest{{
@@ -785,30 +784,30 @@ func TestGetHosts_Duplicate(t *testing.T) {
 		},
 	}
 	hosts := getHosts(ci)
-	expected := sets.NewString("test-route1", "test-route2", "test-route3")
+	expected := sets.New("test-route1", "test-route2", "test-route3")
 	if diff := cmp.Diff(expected, hosts); diff != "" {
 		t.Error("Unexpected hosts  (-want +got):", diff)
 	}
 }
 
-func makeGatewayMap(publicGateways []string, privateGateways []string) map[v1alpha1.IngressVisibility]sets.String {
-	return map[v1alpha1.IngressVisibility]sets.String{
-		v1alpha1.IngressVisibilityExternalIP:   sets.NewString(publicGateways...),
-		v1alpha1.IngressVisibilityClusterLocal: sets.NewString(privateGateways...),
+func makeGatewayMap(publicGateways []string, privateGateways []string) map[v1alpha1.IngressVisibility]sets.Set[string] {
+	return map[v1alpha1.IngressVisibility]sets.Set[string]{
+		v1alpha1.IngressVisibilityExternalIP:   sets.New(publicGateways...),
+		v1alpha1.IngressVisibilityClusterLocal: sets.New(privateGateways...),
 	}
 }
 
 func TestGetDistinctHostPrefixes(t *testing.T) {
 	cases := []struct {
 		name string
-		in   sets.String
-		out  sets.String
+		in   sets.Set[string]
+		out  sets.Set[string]
 	}{
-		{"empty", sets.NewString(), sets.NewString()},
-		{"single element", sets.NewString("a"), sets.NewString("a")},
-		{"no overlap", sets.NewString("a", "b"), sets.NewString("a", "b")},
-		{"overlap", sets.NewString("a", "ab", "abc"), sets.NewString("a")},
-		{"multiple overlaps", sets.NewString("a", "ab", "abc", "xyz", "xy", "m"), sets.NewString("a", "xy", "m")},
+		{"empty", sets.New[string](), sets.New[string]()},
+		{"single element", sets.New("a"), sets.New("a")},
+		{"no overlap", sets.New("a", "b"), sets.New("a", "b")},
+		{"overlap", sets.New("a", "ab", "abc"), sets.New("a")},
+		{"multiple overlaps", sets.New("a", "ab", "abc", "xyz", "xy", "m"), sets.New("a", "xy", "m")},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
