@@ -82,8 +82,8 @@ istioctl install -y
 Run the following command to install Knative
 
 ```shell
-kubectl apply --filename https://storage.googleapis.com/knative-nightly/serving/latest/serving-crds.yaml
-kubectl apply --filename https://storage.googleapis.com/knative-nightly/serving/latest/serving-core.yaml
+kubectl apply -f https://github.com/knative/serving/releases/latest/download/serving-crds.yaml
+kubectl apply -f https://github.com/knative/serving/releases/latest/download/serving-core.yaml
 ```
 
 ### Install Knative net-istio

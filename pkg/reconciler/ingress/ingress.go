@@ -358,7 +358,7 @@ func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1
 }
 
 func (r *Reconciler) reconcileDestinationRules(ctx context.Context, ing *v1alpha1.Ingress) error {
-	var drs = sets.String{}
+	var drs = sets.New[string]()
 	for _, rule := range ing.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
 			// Currently DomainMappings point to the cluster local domain on the local gateway.

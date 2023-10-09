@@ -707,7 +707,7 @@ func TestReconcile_EnableSystemInternalTLS(t *testing.T) {
 	}))
 }
 
-func TestReconcile_EnableAutoTLS(t *testing.T) {
+func TestReconcile_ExternalDomainTLS(t *testing.T) {
 	table := TableTest{{
 		Name:                    "create Ingress Gateway to match newly created Ingress",
 		SkipNamespaceValidation: true,
@@ -1252,8 +1252,8 @@ func TestReconcile_EnableAutoTLS(t *testing.T) {
 							}},
 						},
 						Network: &netconfig.Config{
-							HTTPProtocol: netconfig.HTTPDisabled,
-							AutoTLS:      true,
+							HTTPProtocol:      netconfig.HTTPDisabled,
+							ExternalDomainTLS: true,
 						},
 					},
 				},
@@ -1406,7 +1406,7 @@ func ReconcilerTestConfig() *config.Config {
 			}},
 		},
 		Network: &netconfig.Config{
-			AutoTLS: false,
+			ExternalDomainTLS: false,
 		},
 	}
 }
