@@ -31,6 +31,10 @@ jobs:
         istio-version:
         - latest
 
+        system-internal-tls:
+          - disabled
+          - enabled
+
         istio-profile:
         - no-mesh
         - ambient
@@ -90,6 +94,21 @@ jobs:
 
         echo "GATEWAY_NAMESPACE_OVERRIDE=istio-system" >> $GITHUB_ENV
 
+    - name: Generate certificates and enable system-internal-tls
+      if: matrix.system-internal-tls == 'enabled'
+      run: |
+        set -o pipefail
+        
+        echo ">> Deploy certificate for upstream traffic"
+        ./test/generate-upstream-cert.sh
+        
+        echo ">> Setting environment variables for upstream tls"
+        echo "UPSTREAM_TLS_CERT=serving-certs" >> $GITHUB_ENV
+        echo "SERVER_NAME=kn-user-serving-tests" >> $GITHUB_ENV
+        
+        echo ">> Enabling system-internal-tls in config-network"
+        ko resolve -f test/config/system-internal-tls | kubectl apply -f - 
+
     - name: Upload Test Images
       run: |
         # Build and Publish our test images to the docker daemon.
@@ -118,12 +137,6 @@ jobs:
            --ingressendpoint="${IPS[0]}" \
            --ingressClass=istio.ingress.networking.knative.dev \
            --cluster-suffix=$CLUSTER_SUFFIX
-        
-        echo "# DEBUG"
-        env
-        kubectl get cm -A -o yaml
-        kubectl get king -A -o yaml
-        echo "# DEBUG"
 
     - name: Post failure notice to Slack
       uses: rtCamp/action-slack-notify@v2.1.0

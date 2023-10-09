@@ -189,8 +189,8 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	}
 	gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(ingressGateways)...)
 
-	if config.FromContext(ctx).Network.InternalEncryption {
-		logger.Info("Creating/Updating DestinationRules for internal-encryption")
+	if config.FromContext(ctx).Network.SystemInternalTLSEnabled() {
+		logger.Info("Creating/Updating DestinationRules for system-internal-tls")
 		if err := r.reconcileDestinationRules(ctx, ing); err != nil {
 			return err
 		}

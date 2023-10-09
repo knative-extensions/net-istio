@@ -22,16 +22,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	"knative.dev/networking/pkg/certificates"
 	"knative.dev/pkg/kmap"
 	"knative.dev/pkg/kmeta"
 )
 
 const (
 	// has to match config/700-istio-secret.yaml
-	knativeServingCertsSecret = "knative-serving-certs"
-
-	// has to match https://github.com/knative-sandbox/control-protocol/blob/main/pkg/certificates/constants.go#L21
-	knativeFakeDNSName = "data-plane.knative.dev"
+	knativeServingCertsSecret = "routing-serving-certs"
 )
 
 // MakeInternalEncryptionDestinationRule creates a DestinationRule that enables upstream TLS
@@ -48,9 +46,14 @@ func MakeInternalEncryptionDestinationRule(host string, ing *v1alpha1.Ingress, h
 			Host: host,
 			TrafficPolicy: &istiov1beta1.TrafficPolicy{
 				Tls: &istiov1beta1.ClientTLSSettings{
-					Mode:            istiov1beta1.ClientTLSSettings_SIMPLE,
-					CredentialName:  knativeServingCertsSecret,
-					SubjectAltNames: []string{knativeFakeDNSName},
+					Mode:           istiov1beta1.ClientTLSSettings_SIMPLE,
+					CredentialName: knativeServingCertsSecret,
+					SubjectAltNames: []string{
+						// SAN used by Activator
+						certificates.DataPlaneRoutingSAN,
+						// SAN used by Queue-Proxy in target namespace
+						certificates.DataPlaneUserSAN(ing.Namespace),
+					},
 				},
 			},
 		},

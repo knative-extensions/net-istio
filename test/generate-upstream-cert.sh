@@ -17,7 +17,8 @@
 ISTIO_NAMESPACE=istio-system
 TEST_NAMESPACE=serving-tests
 out_dir="$(mktemp -d /tmp/certs-XXX)"
-san="data-plane.knative.dev"
+activatorSAN="kn-routing"
+serviceSAN="kn-user-$TEST_NAMESPACE"
 
 kubectl create ns $TEST_NAMESPACE
 kubectl create ns $ISTIO_NAMESPACE
@@ -25,21 +26,23 @@ kubectl create ns $ISTIO_NAMESPACE
 # Generate Root key and cert.
 openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -subj '/O=Example/CN=Example' -keyout "${out_dir}"/root.key -out "${out_dir}"/root.crt
 
-# Create server key
-openssl req -out "${out_dir}"/tls.csr -newkey rsa:2048 -nodes -keyout "${out_dir}"/tls.key -subj "/CN=Example/O=Example" -addext "subjectAltName = DNS:$san"
+# Create activator key + cert
+openssl req -out "${out_dir}"/activator-tls.csr -newkey rsa:2048 -nodes -keyout "${out_dir}"/activator-tls.key -subj "/CN=Example/O=Example" -addext "subjectAltName = DNS:$activatorSAN"
+openssl x509 -req -extfile <(printf "subjectAltName=DNS:$activatorSAN") -days 365 -in "${out_dir}"/activator-tls.csr -CA "${out_dir}"/root.crt -CAkey "${out_dir}"/root.key -CAcreateserial -out "${out_dir}"/activator-tls.crt
 
-# Create server certs
-openssl x509 -req -extfile <(printf "subjectAltName=DNS:%s" "$san") -days 365 -in "${out_dir}"/tls.csr -CA "${out_dir}"/root.crt -CAkey "${out_dir}"/root.key -CAcreateserial -out "${out_dir}"/tls.crt
+# Create test service key + cert
+openssl req -out "${out_dir}"/service-tls.csr -newkey rsa:2048 -nodes -keyout "${out_dir}"/service-tls.key -subj "/CN=Example/O=Example" -addext "subjectAltName = DNS:$serviceSAN"
+openssl x509 -req -extfile <(printf "subjectAltName=DNS:$serviceSAN") -days 365 -in "${out_dir}"/service-tls.csr -CA "${out_dir}"/root.crt -CAkey "${out_dir}"/root.key -CAcreateserial -out "${out_dir}"/service-tls.crt
 
 # Override certificate in istio-system namespace with the generated CA
 # Delete it first, otherwise istio reconciliation does not work properly
-kubectl delete -n ${ISTIO_NAMESPACE} secret knative-serving-certs
-kubectl create -n ${ISTIO_NAMESPACE} secret generic knative-serving-certs \
+kubectl delete -n ${ISTIO_NAMESPACE} secret routing-serving-certs
+kubectl create -n ${ISTIO_NAMESPACE} secret generic routing-serving-certs \
     --from-file=ca.crt="${out_dir}"/root.crt \
     --dry-run=client -o yaml |  \
     sed  '/^metadata:/a\ \ labels: {"networking.internal.knative.dev/certificate-uid":"test-id"}' | kubectl apply -f -
 
-# Create secrets in test namespace for test-containers to host https
-kubectl create -n ${TEST_NAMESPACE} secret tls server-certs \
-    --key="${out_dir}"/tls.key \
-    --cert="${out_dir}"/tls.crt --dry-run=client -o yaml | kubectl apply -f -
+# Create test service secret for system-internal-tls
+kubectl create -n ${TEST_NAMESPACE} secret tls serving-certs \
+    --key="${out_dir}"/service-tls.key \
+    --cert="${out_dir}"/service-tls.crt --dry-run=client -o yaml | kubectl apply -f -

@@ -18,4 +18,4 @@ metadata:
   name: config-network
   namespace: knative-serving
 data:
-  internal-encryption: "true"
+  system-internal-tls: "enabled"
