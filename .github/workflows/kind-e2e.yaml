@@ -31,9 +31,9 @@ jobs:
         istio-version:
         - latest
 
-        system-internal-tls:
+        encryption:
           - disabled
-          - enabled
+          - system-internal-tls
 
         istio-profile:
         - no-mesh
@@ -95,7 +95,7 @@ jobs:
         echo "GATEWAY_NAMESPACE_OVERRIDE=istio-system" >> $GITHUB_ENV
 
     - name: Generate certificates and enable system-internal-tls
-      if: matrix.system-internal-tls == 'enabled'
+      if: matrix.encryption == 'system-internal-tls' && matrix.istio-profile == 'no-mesh'
       run: |
         set -o pipefail
         
