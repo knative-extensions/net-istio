@@ -27,6 +27,7 @@ import (
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/certificates"
+	"knative.dev/networking/pkg/config"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -69,7 +70,7 @@ func TestMakeInternalEncryptionDestinationRuleHttp1(t *testing.T) {
 			TrafficPolicy: &istiov1beta1.TrafficPolicy{
 				Tls: &istiov1beta1.ClientTLSSettings{
 					Mode:            istiov1beta1.ClientTLSSettings_SIMPLE,
-					CredentialName:  knativeServingCertsSecret,
+					CredentialName:  config.ServingRoutingCertName,
 					SubjectAltNames: []string{certificates.DataPlaneRoutingSAN, certificates.DataPlaneUserSAN(ing.Namespace)},
 				},
 			},
@@ -102,7 +103,7 @@ func TestMakeInternalEncryptionDestinationRuleHttp2(t *testing.T) {
 			TrafficPolicy: &istiov1beta1.TrafficPolicy{
 				Tls: &istiov1beta1.ClientTLSSettings{
 					Mode:            istiov1beta1.ClientTLSSettings_SIMPLE,
-					CredentialName:  knativeServingCertsSecret,
+					CredentialName:  config.ServingRoutingCertName,
 					SubjectAltNames: []string{certificates.DataPlaneRoutingSAN, certificates.DataPlaneUserSAN(ing.Namespace)},
 				},
 				ConnectionPool: &istiov1beta1.ConnectionPoolSettings{

@@ -23,13 +23,9 @@ import (
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/certificates"
+	"knative.dev/networking/pkg/config"
 	"knative.dev/pkg/kmap"
 	"knative.dev/pkg/kmeta"
-)
-
-const (
-	// has to match config/700-istio-secret.yaml
-	knativeServingCertsSecret = "routing-serving-certs"
 )
 
 // MakeInternalEncryptionDestinationRule creates a DestinationRule that enables upstream TLS
@@ -47,7 +43,7 @@ func MakeInternalEncryptionDestinationRule(host string, ing *v1alpha1.Ingress, h
 			TrafficPolicy: &istiov1beta1.TrafficPolicy{
 				Tls: &istiov1beta1.ClientTLSSettings{
 					Mode:           istiov1beta1.ClientTLSSettings_SIMPLE,
-					CredentialName: knativeServingCertsSecret,
+					CredentialName: config.ServingRoutingCertName,
 					SubjectAltNames: []string{
 						// SAN used by Activator
 						certificates.DataPlaneRoutingSAN,
