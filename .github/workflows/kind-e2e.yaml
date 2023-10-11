@@ -107,7 +107,7 @@ jobs:
         echo "SERVER_NAME=kn-user-serving-tests" >> $GITHUB_ENV
         
         echo ">> Enabling system-internal-tls in config-network"
-        ko resolve -f test/config/system-internal-tls | kubectl apply -f - 
+        kubectl apply -f test/config/system-internal-tls
 
     - name: Upload Test Images
       run: |
