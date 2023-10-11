@@ -21,15 +21,8 @@ package filtered
 import (
 	context "context"
 
-	apisnetworkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	cache "k8s.io/client-go/tools/cache"
-	versioned "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
 	v1beta1 "knative.dev/net-istio/pkg/client/istio/informers/externalversions/networking/v1beta1"
-	client "knative.dev/net-istio/pkg/client/istio/injection/client"
 	filtered "knative.dev/net-istio/pkg/client/istio/injection/informers/factory/filtered"
-	networkingv1beta1 "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
 	controller "knative.dev/pkg/controller"
 	injection "knative.dev/pkg/injection"
 	logging "knative.dev/pkg/logging"
@@ -37,7 +30,6 @@ import (
 
 func init() {
 	injection.Default.RegisterFilteredInformers(withInformer)
-	injection.Dynamic.RegisterDynamicInformer(withDynamicInformer)
 }
 
 // Key is used for associating the Informer inside the context.Context.
@@ -62,20 +54,6 @@ func withInformer(ctx context.Context) (context.Context, []controller.Informer) 
 	return ctx, infs
 }
 
-func withDynamicInformer(ctx context.Context) context.Context {
-	untyped := ctx.Value(filtered.LabelKey{})
-	if untyped == nil {
-		logging.FromContext(ctx).Panic(
-			"Unable to fetch labelkey from context.")
-	}
-	labelSelectors := untyped.([]string)
-	for _, selector := range labelSelectors {
-		inf := &wrapper{client: client.Get(ctx), selector: selector}
-		ctx = context.WithValue(ctx, Key{Selector: selector}, inf)
-	}
-	return ctx
-}
-
 // Get extracts the typed informer from the context.
 func Get(ctx context.Context, selector string) v1beta1.VirtualServiceInformer {
 	untyped := ctx.Value(Key{Selector: selector})
@@ -84,53 +62,4 @@ func Get(ctx context.Context, selector string) v1beta1.VirtualServiceInformer {
 			"Unable to fetch knative.dev/net-istio/pkg/client/istio/informers/externalversions/networking/v1beta1.VirtualServiceInformer with selector %s from context.", selector)
 	}
 	return untyped.(v1beta1.VirtualServiceInformer)
-}
-
-type wrapper struct {
-	client versioned.Interface
-
-	namespace string
-
-	selector string
-}
-
-var _ v1beta1.VirtualServiceInformer = (*wrapper)(nil)
-var _ networkingv1beta1.VirtualServiceLister = (*wrapper)(nil)
-
-func (w *wrapper) Informer() cache.SharedIndexInformer {
-	return cache.NewSharedIndexInformer(nil, &apisnetworkingv1beta1.VirtualService{}, 0, nil)
-}
-
-func (w *wrapper) Lister() networkingv1beta1.VirtualServiceLister {
-	return w
-}
-
-func (w *wrapper) VirtualServices(namespace string) networkingv1beta1.VirtualServiceNamespaceLister {
-	return &wrapper{client: w.client, namespace: namespace, selector: w.selector}
-}
-
-func (w *wrapper) List(selector labels.Selector) (ret []*apisnetworkingv1beta1.VirtualService, err error) {
-	reqs, err := labels.ParseToRequirements(w.selector)
-	if err != nil {
-		return nil, err
-	}
-	selector = selector.Add(reqs...)
-	lo, err := w.client.NetworkingV1beta1().VirtualServices(w.namespace).List(context.TODO(), v1.ListOptions{
-		LabelSelector: selector.String(),
-		// TODO(mattmoor): Incorporate resourceVersion bounds based on staleness criteria.
-	})
-	if err != nil {
-		return nil, err
-	}
-	for idx := range lo.Items {
-		ret = append(ret, lo.Items[idx])
-	}
-	return ret, nil
-}
-
-func (w *wrapper) Get(name string) (*apisnetworkingv1beta1.VirtualService, error) {
-	// TODO(mattmoor): Check that the fetched object matches the selector.
-	return w.client.NetworkingV1beta1().VirtualServices(w.namespace).Get(context.TODO(), name, v1.GetOptions{
-		// TODO(mattmoor): Incorporate resourceVersion bounds based on staleness criteria.
-	})
 }
