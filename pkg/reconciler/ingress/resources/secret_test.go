@@ -280,7 +280,7 @@ func TestMakeWildcardSecrets(t *testing.T) {
 			originSecrets := map[string]*corev1.Secret{
 				fmt.Sprintf("%s/%s", c.originSecret.Namespace, c.originSecret.Name): c.originSecret,
 			}
-			secrets, err := MakeWildcardSecrets(ctx, originSecrets)
+			secrets, err := MakeWildcardSecrets(ctx, originSecrets, &ci)
 			if (err != nil) != c.wantErr {
 				t.Fatalf("Test: %q; MakeWildcardSecrets() error = %v, WantErr %v", c.name, err, c.wantErr)
 			}

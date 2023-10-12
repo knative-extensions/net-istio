@@ -114,10 +114,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	ing.Status.InitializeConditions()
 	logger.Infof("Reconciling ingress: %#v", ing)
 
-	defaultGateways, err := computeDefaultGateways(ctx, ing)
-	if err != nil {
-		return fmt.Errorf("failed to compute default gateways: %w", err)
-	}
+	defaultGateways := resources.QualifiedGatewayNamesFromContext(ctx, ing)
 
 	gatewayNames := map[v1alpha1.IngressVisibility]sets.Set[string]{}
 	gatewayNames[v1alpha1.IngressVisibilityClusterLocal] = defaultGateways[v1alpha1.IngressVisibilityClusterLocal]
@@ -137,7 +134,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		if err != nil {
 			return err
 		}
-		targetWildcardSecrets, err := resources.MakeWildcardSecrets(ctx, wildcardSecrets)
+		targetWildcardSecrets, err := resources.MakeWildcardSecrets(ctx, wildcardSecrets, ing)
 		if err != nil {
 			return err
 		}
@@ -236,8 +233,8 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	}
 
 	if ready {
-		publicLbs := getLBStatus(publicGatewayServiceURLFromContext(ctx))
-		privateLbs := getLBStatus(privateGatewayServiceURLFromContext(ctx))
+		publicLbs := getLBStatus(resources.PublicGatewayServiceURLFromContext(ctx, ing))
+		privateLbs := getLBStatus(resources.PrivateGatewayServiceURLFromContext(ctx, ing))
 		ing.Status.MarkLoadBalancerReady(publicLbs, privateLbs)
 	} else {
 		ing.Status.MarkLoadBalancerNotReady()
@@ -424,7 +421,7 @@ func (r *Reconciler) reconcileDeletion(ctx context.Context, ing *v1alpha1.Ingres
 
 	errs := []error{}
 	for _, tls := range ing.Spec.TLS {
-		nameNamespaces, err := resources.GetIngressGatewaySvcNameNamespaces(ctx)
+		nameNamespaces, err := resources.GetIngressGatewaySvcNameNamespaces(ctx, ing)
 		if err != nil {
 			errs = append(errs, err)
 			continue
@@ -496,41 +493,6 @@ func (r *Reconciler) GetDestinationRuleLister() istiolisters.DestinationRuleList
 	return r.destinationRuleLister
 }
 
-// qualifiedGatewayNamesFromContext get gateway names from context
-func qualifiedGatewayNamesFromContext(ctx context.Context) map[v1alpha1.IngressVisibility]sets.Set[string] {
-	ci := config.FromContext(ctx).Istio
-	publicGateways := sets.New[string]()
-	for _, gw := range ci.IngressGateways {
-		publicGateways.Insert(gw.QualifiedName())
-	}
-
-	privateGateways := sets.New[string]()
-	for _, gw := range ci.LocalGateways {
-		privateGateways.Insert(gw.QualifiedName())
-	}
-
-	return map[v1alpha1.IngressVisibility]sets.Set[string]{
-		v1alpha1.IngressVisibilityExternalIP:   publicGateways,
-		v1alpha1.IngressVisibilityClusterLocal: privateGateways,
-	}
-}
-
-func publicGatewayServiceURLFromContext(ctx context.Context) string {
-	cfg := config.FromContext(ctx).Istio
-	if len(cfg.IngressGateways) > 0 {
-		return cfg.IngressGateways[0].ServiceURL
-	}
-	return ""
-}
-
-func privateGatewayServiceURLFromContext(ctx context.Context) string {
-	cfg := config.FromContext(ctx).Istio
-	if len(cfg.LocalGateways) > 0 {
-		return cfg.LocalGateways[0].ServiceURL
-	}
-	return ""
-}
-
 // getLBStatus gets the LB Status.
 func getLBStatus(gatewayServiceURL string) []v1alpha1.LoadBalancerIngressStatus {
 	// The Ingress isn't load-balanced by any particular
@@ -563,28 +525,4 @@ func isIngressPublic(ing *v1alpha1.Ingress) bool {
 		}
 	}
 	return false
-}
-
-func computeDefaultGateways(ctx context.Context, ing *v1alpha1.Ingress) (map[v1alpha1.IngressVisibility]sets.String, error) {
-	ret := qualifiedGatewayNamesFromContext(ctx) // gateways from config
-
-	for _, visibility := range []v1alpha1.IngressVisibility{v1alpha1.IngressVisibilityClusterLocal, v1alpha1.IngressVisibilityExternalIP} {
-		gateways, err := resources.GetGatewaysFromAnnotations(ing, visibility)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get %s gateways from annotation: %w", visibility, err)
-		}
-
-		// Ensure all gateways are known in the configuration
-		unknownGateways := gateways.Difference(ret[visibility])
-		if unknownGateways.Len() > 0 {
-			return nil, fmt.Errorf("following qualified name(s) aren't defined in the configuration (%s): %v", visibility, unknownGateways.List())
-		}
-
-		// If ingress specifies gateways, restrict to them
-		if gateways.Len() > 0 {
-			ret[visibility] = gateways
-		}
-	}
-
-	return ret, nil
 }

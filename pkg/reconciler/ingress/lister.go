@@ -31,6 +31,7 @@ import (
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
+	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/ingress"
 	"knative.dev/networking/pkg/k8s"
@@ -60,7 +61,7 @@ type gatewayPodTargetLister struct {
 
 func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1alpha1.Ingress) ([]status.ProbeTarget, error) {
 	results := []status.ProbeTarget{}
-	hostsByGateway := ingress.HostsPerVisibility(ing, convertVisibilityMap(qualifiedGatewayNamesFromContext(ctx)))
+	hostsByGateway := ingress.HostsPerVisibility(ing, convertVisibilityMap(resources.QualifiedGatewayNamesFromContext(ctx, ing)))
 	gatewayNames := make([]string, 0, len(hostsByGateway))
 	for gatewayName := range hostsByGateway {
 		gatewayNames = append(gatewayNames, gatewayName)

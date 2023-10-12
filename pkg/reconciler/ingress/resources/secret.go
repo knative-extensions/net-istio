@@ -52,8 +52,8 @@ func GetSecrets(ing *v1alpha1.Ingress, secretLister corev1listers.SecretLister) 
 }
 
 // MakeSecrets makes copies of the origin Secrets under the namespace of Istio gateway service.
-func MakeSecrets(ctx context.Context, originSecrets map[string]*corev1.Secret, accessor kmeta.OwnerRefableAccessor) ([]*corev1.Secret, error) {
-	nameNamespaces, err := GetIngressGatewaySvcNameNamespaces(ctx)
+func MakeSecrets(ctx context.Context, originSecrets map[string]*corev1.Secret, ing *v1alpha1.Ingress) ([]*corev1.Secret, error) {
+	nameNamespaces, err := GetIngressGatewaySvcNameNamespaces(ctx, ing)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func MakeSecrets(ctx context.Context, originSecrets map[string]*corev1.Secret, a
 				// as the origin namespace
 				continue
 			}
-			secrets = append(secrets, makeSecret(originSecret, targetSecret(originSecret, accessor), meta.Namespace,
+			secrets = append(secrets, makeSecret(originSecret, targetSecret(originSecret, ing), meta.Namespace,
 				MakeTargetSecretLabels(originSecret.Name, originSecret.Namespace), MakeTargetSecretAnnotations(originSecret.Name)))
 		}
 	}
@@ -74,8 +74,8 @@ func MakeSecrets(ctx context.Context, originSecrets map[string]*corev1.Secret, a
 
 // MakeWildcardSecrets copies wildcard certificates from origin namespace to the namespace of gateway servicess so they could
 // consumed by Istio ingress.
-func MakeWildcardSecrets(ctx context.Context, originWildcardCerts map[string]*corev1.Secret) ([]*corev1.Secret, error) {
-	nameNamespaces, err := GetIngressGatewaySvcNameNamespaces(ctx)
+func MakeWildcardSecrets(ctx context.Context, originWildcardCerts map[string]*corev1.Secret, ing *v1alpha1.Ingress) ([]*corev1.Secret, error) {
+	nameNamespaces, err := GetIngressGatewaySvcNameNamespaces(ctx, ing)
 	if err != nil {
 		return nil, err
 	}

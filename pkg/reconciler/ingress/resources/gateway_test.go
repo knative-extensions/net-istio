@@ -162,7 +162,7 @@ var ingressResourceWithPublicGatewayAnnotation = v1alpha1.Ingress{
 		Name:      "ingress",
 		Namespace: "test-ns",
 		Annotations: map[string]string{
-			PublicGatewayAnnotation: "knative-serving/gateway1",
+			ExpositionAnnotation: "my-exposition",
 		},
 	},
 	Spec: ingressSpec,
@@ -794,9 +794,10 @@ func TestMakeIngressGateways(t *testing.T) {
 		Istio: &config.Istio{
 			IngressGateways: []config.Gateway{
 				{
-					Namespace:  "knative-serving",
-					Name:       "gateway1",
-					ServiceURL: "gateway1.aNamespace.svc.cluster.local",
+					Namespace:   "knative-serving",
+					Name:        "gateway1",
+					ServiceURL:  "gateway1.aNamespace.svc.cluster.local",
+					Expositions: sets.New[string]("my-exposition"),
 				},
 				{
 					Namespace:  "knative-serving",
@@ -846,11 +847,11 @@ func TestMakeIngressGateways(t *testing.T) {
 			"istio": "ingressgateway1",
 		}, &modifiedDefaultTLSServer)},
 	}, {
-		name:    "Unknown gateway",
+		name:    "No gateway matched",
 		ia:      &ingressResourceWithPublicGatewayAnnotation,
-		conf:    configDefaultGateway, // default config doesn't have the agteways defined in ingressResourceWithPublicGatewayAnnotation
+		conf:    configDefaultGateway, // default config doesn't have the gateways defined in ingressResourceWithPublicGatewayAnnotation
 		servers: []*istiov1beta1.Server{&httpServer},
-		wantErr: true,
+		want:    []*v1beta1.Gateway{},
 	}}
 	for _, c := range cases {
 		ctx, cancel, _ := rtesting.SetupFakeContextWithCancel(t)
@@ -1099,93 +1100,75 @@ func TestGatewayNameLongIngressName(t *testing.T) {
 	}
 }
 
-func TestGetGatewaysFromAnnotations(t *testing.T) {
-	type Expectation struct {
-		Error  bool
-		Values sets.String
-	}
-
+func TestGetExpositionFromAnnotation(t *testing.T) {
 	cases := []struct {
-		name          string
-		ingress       *v1alpha1.Ingress
-		wantForPublic Expectation
-		wantForLocal  Expectation
+		name    string
+		ingress *v1alpha1.Ingress
+		want    sets.Set[string]
 	}{
 		{
-			name: "Happy path",
+			name: "Happy path - single value",
 			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
-				PublicGatewayAnnotation: "ns1/gtw1",
-				LocalGatewaysAnnotation: "ns1/gtw2,ns2/gtw3",
+				ExpositionAnnotation: "expo",
 			}}},
-			wantForPublic: Expectation{Values: sets.NewString("ns1/gtw1")},
-			wantForLocal:  Expectation{Values: sets.NewString("ns1/gtw2", "ns2/gtw3")},
+			want: sets.New[string]("expo"),
 		},
 		{
-			name:          "No annotation",
-			ingress:       &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}},
-			wantForPublic: Expectation{Values: sets.NewString()},
-			wantForLocal:  Expectation{Values: sets.NewString()},
+			name: "Happy path - multiple values",
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				ExpositionAnnotation: "expo1,expo2",
+			}}},
+			want: sets.New[string]("expo1", "expo2"),
 		},
 		{
-			name: "Invalid annotation",
-			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
-				PublicGatewayAnnotation: "ns1.gtw1",
-				LocalGatewaysAnnotation: "ns1/gtw2,ns2.gtw3",
-			}}},
-			wantForPublic: Expectation{Error: true},
-			wantForLocal:  Expectation{Error: true},
+			name:    "No annotation",
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}}},
+			want:    sets.New[string](),
 		},
 		{
 			name: "Annotation with spaces",
 			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
-				PublicGatewayAnnotation: "  ns1/gtw1 ",
-				LocalGatewaysAnnotation: "ns1/gtw2  ,  ns2/gtw3 ",
+				ExpositionAnnotation: "  expo ",
 			}}},
-			wantForPublic: Expectation{Values: sets.NewString("ns1/gtw1")},
-			wantForLocal:  Expectation{Values: sets.NewString("ns1/gtw2", "ns2/gtw3")},
+			want: sets.New[string]("expo"),
+		},
+		{
+			name: "Multiple annotation with spaces",
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				ExpositionAnnotation: "expo1  ,  expo2 ",
+			}}},
+			want: sets.New[string]("expo1", "expo2"),
+		},
+		{
+			name: "Empty value",
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				ExpositionAnnotation: "",
+			}}},
+			want: sets.New[string](),
+		},
+		{
+			name: "Only comma",
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				ExpositionAnnotation: ",",
+			}}},
+			want: sets.New[string](),
+		},
+		{
+			name: "Empty values in list",
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				ExpositionAnnotation: ",,expo,",
+			}}},
+			want: sets.New[string]("expo"),
 		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			gotPublic, err := GetGatewaysFromAnnotations(c.ingress, v1alpha1.IngressVisibilityExternalIP)
-			if (err != nil) != c.wantForPublic.Error {
-				t.Errorf("Expecting error for public: %v, got error: %v", c.wantForPublic.Error, err)
-			}
-
-			if !c.wantForPublic.Error {
-				if diff := cmp.Diff(c.wantForPublic.Values, gotPublic); diff != "" {
-					t.Error("Unexpected public Gateways (-want, +got):", diff)
-				}
-			}
-
-			gotLocal, err := GetGatewaysFromAnnotations(c.ingress, v1alpha1.IngressVisibilityClusterLocal)
-			if (err != nil) != c.wantForLocal.Error {
-				t.Errorf("Expecting error for local: %v, got error: %v", c.wantForLocal.Error, err)
-			}
-
-			if !c.wantForLocal.Error {
-				if diff := cmp.Diff(c.wantForLocal.Values, gotLocal); diff != "" {
-					t.Error("Unexpected local Gateways (-want, +got):", diff)
-				}
+			got := getExpositionFromAnnotation(c.ingress)
+			if diff := cmp.Diff(c.want, got); diff != "" {
+				t.Error("Unexpected Expositions (-want, +got):", diff)
 			}
 		})
-	}
-}
-
-func TestGetGatewaysFromAnnotationsInvalidVisibility(t *testing.T) {
-	ingress := &v1alpha1.Ingress{
-		ObjectMeta: metav1.ObjectMeta{
-			Annotations: map[string]string{
-				PublicGatewayAnnotation: "ns1/gtw1",
-				LocalGatewaysAnnotation: "ns1/gtw2,ns2/gtw3",
-			},
-		},
-	}
-
-	_, err := GetGatewaysFromAnnotations(ingress, v1alpha1.IngressVisibility("doesn't exist"))
-	if err == nil {
-		t.Errorf("Expecting error for invalid ingress visibiliy")
 	}
 }
 
@@ -1234,6 +1217,120 @@ func TestParseIngressGatewayConfig(t *testing.T) {
 					t.Error("Unexpected meta (-want, +got):", diff)
 				}
 			}
+		})
+	}
+}
+
+func TestQualifiedGatewayNamesFromContext(t *testing.T) {
+	cases := []struct {
+		name    string
+		cfg     *config.Istio
+		ingress *v1alpha1.Ingress
+		want    map[v1alpha1.IngressVisibility]sets.Set[string]
+	}{
+		{
+			name: "All match",
+			cfg: &config.Istio{
+				IngressGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw1", Expositions: sets.New[string]("expo")},
+				},
+				LocalGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw2", Expositions: sets.New[string]("expo")},
+					{Namespace: "ns2", Name: "gtw3", Expositions: sets.New[string]("expo")},
+				},
+			},
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				ExpositionAnnotation: "expo",
+			}}},
+			want: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityExternalIP:   sets.New[string]("ns1/gtw1"),
+				v1alpha1.IngressVisibilityClusterLocal: sets.New[string]("ns1/gtw2", "ns2/gtw3"),
+			},
+		},
+		{
+			name: "Different expo",
+			cfg: &config.Istio{
+				IngressGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw1", Expositions: sets.New[string]("expo1")},
+				},
+				LocalGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw2", Expositions: sets.New[string]("expo2")},
+					{Namespace: "ns2", Name: "gtw3", Expositions: sets.New[string]("expo3")},
+				},
+			},
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				ExpositionAnnotation: "expo1,expo3",
+			}}},
+			want: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityExternalIP:   sets.New[string]("ns1/gtw1"),
+				v1alpha1.IngressVisibilityClusterLocal: sets.New[string]("ns2/gtw3"),
+			},
+		},
+		{
+			name: "Partial match",
+			cfg: &config.Istio{
+				IngressGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw1", Expositions: sets.New[string]("expo")},
+					{Namespace: "wontmatch", Name: "wontmatch1", Expositions: sets.New[string]("another-expo")},
+					{Namespace: "wontmatch", Name: "wontmatch2"},
+				},
+				LocalGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw2", Expositions: sets.New[string]("expo")},
+				},
+			},
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				ExpositionAnnotation: "expo",
+			}}},
+			want: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityExternalIP:   sets.New[string]("ns1/gtw1"),
+				v1alpha1.IngressVisibilityClusterLocal: sets.New[string]("ns1/gtw2"),
+			},
+		},
+		{
+			name: "Unknown exposition",
+			cfg: &config.Istio{
+				IngressGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw1", Expositions: sets.New[string]("expo1")},
+				},
+				LocalGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw2", Expositions: sets.New[string]("expo2")},
+				},
+			},
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+				ExpositionAnnotation: "unknown-value",
+			}}},
+			want: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityExternalIP:   sets.New[string](),
+				v1alpha1.IngressVisibilityClusterLocal: sets.New[string](),
+			},
+		},
+		{
+			name: "No annotation",
+			cfg: &config.Istio{
+				IngressGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw1"},
+				},
+				LocalGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw2"},
+				},
+			},
+			ingress: &v1alpha1.Ingress{},
+			want: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityExternalIP:   sets.New[string]("ns1/gtw1"),
+				v1alpha1.IngressVisibilityClusterLocal: sets.New[string]("ns1/gtw2"),
+			},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			ctx := config.ToContext(context.Background(), &config.Config{Istio: c.cfg})
+
+			got := QualifiedGatewayNamesFromContext(ctx, c.ingress)
+			if diff := cmp.Diff(c.want, got); diff != "" {
+				t.Error("Unexpected Gateways (-want, +got):", diff)
+			}
+
 		})
 	}
 }

@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/system"
@@ -37,6 +38,9 @@ const (
 
 	// localGatewayKeyPrefix is the prefix of all keys to configure Istio gateways for public & private Ingresses.
 	localGatewayKeyPrefix = "local-gateway."
+
+	// expositionKeyPrefix is the prefix of all keys to filter on Istio gateways.
+	expositionKeyPrefix = "exposition."
 
 	// KnativeIngressGateway is the name of the ingress gateway
 	KnativeIngressGateway = "knative-ingress-gateway"
@@ -69,9 +73,10 @@ func defaultLocalGateways() []Gateway {
 
 // Gateway specifies the name of the Gateway and the K8s Service backing it.
 type Gateway struct {
-	Namespace  string
-	Name       string
-	ServiceURL string
+	Namespace   string
+	Name        string
+	ServiceURL  string
+	Expositions sets.Set[string]
 }
 
 // QualifiedName returns gateway name in '{namespace}/{name}' format.
@@ -103,6 +108,9 @@ func parseGateways(configMap *corev1.ConfigMap, prefix string) ([]Gateway, error
 		gatewayNames = append(gatewayNames, gatewayName)
 		urls[gatewayName] = serviceURL
 	}
+
+	expositions := parseExposition(configMap)
+
 	sort.Strings(gatewayNames)
 	gateways := make([]Gateway, len(gatewayNames))
 	for i, gatewayName := range gatewayNames {
@@ -120,8 +128,43 @@ func parseGateways(configMap *corev1.ConfigMap, prefix string) ([]Gateway, error
 			Name:       name,
 			ServiceURL: urls[gatewayName],
 		}
+
+		if expositionKeys, ok := expositions[fmt.Sprintf("%s.%s", namespace, name)]; ok {
+			gateways[i].Expositions = expositionKeys
+		}
 	}
 	return gateways, nil
+}
+
+func parseExposition(configMap *corev1.ConfigMap) map[string]sets.Set[string] {
+	ret := make(map[string]sets.Set[string])
+
+	for k, v := range configMap.Data {
+		if !strings.HasPrefix(k, expositionKeyPrefix) || k == expositionKeyPrefix {
+			continue
+		}
+
+		gatewayName, expositionKeys := k[len(expositionKeyPrefix):], v
+
+		if !strings.Contains(gatewayName, ".") {
+			gatewayName = fmt.Sprintf("%s.%s", system.Namespace(), gatewayName)
+		}
+
+		expositions := strings.Split(expositionKeys, ",")
+		for _, expo := range expositions {
+			toAdd := strings.TrimSpace(expo)
+			if len(toAdd) == 0 {
+				continue
+			}
+			if _, ok := ret[gatewayName]; !ok {
+				ret[gatewayName] = sets.New[string]()
+			}
+
+			ret[gatewayName] = ret[gatewayName].Insert(toAdd)
+		}
+	}
+
+	return ret
 }
 
 // NewIstioFromConfigMap creates an Istio config from the supplied ConfigMap

@@ -22,6 +22,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/pkg/system"
 
 	. "knative.dev/pkg/configmap/testing"
@@ -220,6 +221,164 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 			Data: map[string]string{
 				"local-gateway.custom-namespace.invalid": "_invalid",
+			},
+		},
+	}, {
+		name:    "local gateway configuration in custom namespace with valid url with exposition",
+		wantErr: false,
+		wantIstio: &Istio{
+			IngressGateways: defaultIngressGateways(),
+			LocalGateways: []Gateway{
+				{
+					Namespace:  "custom-namespace-0",
+					Name:       "custom-local-gateway-0",
+					ServiceURL: "istio-ingressbackroad.istio-system.svc.cluster.local",
+				},
+				{
+					Namespace:   "custom-namespace-1",
+					Name:        "custom-local-gateway-1",
+					ServiceURL:  "istio-ingressbackroad.istio-system.svc.cluster.local",
+					Expositions: sets.New[string]("some-value-1"),
+				},
+				{
+					Namespace:   "custom-namespace-2",
+					Name:        "custom-local-gateway-2",
+					ServiceURL:  "istio-ingressbackroad.istio-system.svc.cluster.local",
+					Expositions: sets.New[string]("some-value-2a", "some-value-2b"),
+				}},
+		},
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"local-gateway.custom-namespace-0.custom-local-gateway-0": "istio-ingressbackroad.istio-system.svc.cluster.local",
+				"local-gateway.custom-namespace-1.custom-local-gateway-1": "istio-ingressbackroad.istio-system.svc.cluster.local",
+				"local-gateway.custom-namespace-2.custom-local-gateway-2": "istio-ingressbackroad.istio-system.svc.cluster.local",
+				"exposition.custom-namespace-1.custom-local-gateway-1":    "some-value-1",
+				"exposition.custom-namespace-2.custom-local-gateway-2":    "some-value-2a,some-value-2b",
+			},
+		},
+	}, {
+		name:    "gateway configuration defined with/without namespace with exposition defined with/without namespace",
+		wantErr: false,
+		wantIstio: &Istio{
+			IngressGateways: []Gateway{
+				{
+					Namespace:   "knative-testing",
+					Name:        "custom-gateway-wo-wi",
+					ServiceURL:  "istio-ingressfreeway.istio-system.svc.cluster.local",
+					Expositions: sets.New[string]("some-value-wo-wi"),
+				},
+				{
+					Namespace:   "knative-testing",
+					Name:        "custom-gateway-wo-wo",
+					ServiceURL:  "istio-ingressfreeway.istio-system.svc.cluster.local",
+					Expositions: sets.New[string]("some-value-wo-wo"),
+				},
+				{
+					Namespace:   "knative-testing",
+					Name:        "custom-gateway-wi-wi",
+					ServiceURL:  "istio-ingressfreeway.istio-system.svc.cluster.local",
+					Expositions: sets.New[string]("some-value-wi-wi"),
+				},
+				{
+					Namespace:   "knative-testing",
+					Name:        "custom-gateway-wi-wo",
+					ServiceURL:  "istio-ingressfreeway.istio-system.svc.cluster.local",
+					Expositions: sets.New[string]("some-value-wi-wo"),
+				}},
+			LocalGateways: defaultLocalGateways(),
+		},
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"gateway.custom-gateway-wo-wo":                    "istio-ingressfreeway.istio-system.svc.cluster.local",
+				"gateway.custom-gateway-wo-wi":                    "istio-ingressfreeway.istio-system.svc.cluster.local",
+				"gateway.knative-testing.custom-gateway-wi-wo":    "istio-ingressfreeway.istio-system.svc.cluster.local",
+				"gateway.knative-testing.custom-gateway-wi-wi":    "istio-ingressfreeway.istio-system.svc.cluster.local",
+				"exposition.custom-gateway-wo-wo":                 "some-value-wo-wo",
+				"exposition.knative-testing.custom-gateway-wo-wi": "some-value-wo-wi",
+				"exposition.custom-gateway-wi-wo":                 "some-value-wi-wo",
+				"exposition.knative-testing.custom-gateway-wi-wi": "some-value-wi-wi",
+			},
+		},
+	}, {
+		name:    "Same exposition defined for local and non-local gateways",
+		wantErr: false,
+		wantIstio: &Istio{
+			IngressGateways: []Gateway{
+				{
+					Namespace:  "knative-testing",
+					Name:       "custom-gateway-no-exposition",
+					ServiceURL: "istio-ingress1.istio-system.svc.cluster.local",
+				},
+				{
+					Namespace:   "knative-testing",
+					Name:        "custom-gateway-with-exposition",
+					ServiceURL:  "istio-ingress2.istio-system.svc.cluster.local",
+					Expositions: sets.New[string]("some-value"),
+				},
+			},
+			LocalGateways: []Gateway{
+				{
+					Namespace:  "knative-testing",
+					Name:       "custom-gateway-no-exposition",
+					ServiceURL: "istio-ingress1.istio-system.svc.cluster.local",
+				},
+				{
+					Namespace:   "knative-testing",
+					Name:        "custom-gateway-with-exposition",
+					ServiceURL:  "istio-ingress2.istio-system.svc.cluster.local",
+					Expositions: sets.New[string]("some-value"),
+				},
+			},
+		},
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"gateway.custom-gateway-no-exposition":         "istio-ingress1.istio-system.svc.cluster.local",
+				"gateway.custom-gateway-with-exposition":       "istio-ingress2.istio-system.svc.cluster.local",
+				"local-gateway.custom-gateway-no-exposition":   "istio-ingress1.istio-system.svc.cluster.local",
+				"local-gateway.custom-gateway-with-exposition": "istio-ingress2.istio-system.svc.cluster.local",
+				"exposition.custom-gateway-with-exposition":    "some-value",
+			},
+		},
+	}, {
+		name:    "Exposition defined but referencing no known gateways",
+		wantErr: false,
+		wantIstio: &Istio{
+			IngressGateways: []Gateway{
+				{
+					Namespace:  "knative-testing",
+					Name:       "custom-gateway",
+					ServiceURL: "istio-ingress.istio-system.svc.cluster.local",
+				},
+			},
+			LocalGateways: []Gateway{
+				{
+					Namespace:  "knative-testing",
+					Name:       "custom-local-gateway",
+					ServiceURL: "istio-ingress.istio-system.svc.cluster.local",
+				},
+			},
+		},
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"gateway.custom-gateway":             "istio-ingress.istio-system.svc.cluster.local",
+				"local-gateway.custom-local-gateway": "istio-ingress.istio-system.svc.cluster.local",
+				"exposition.unknown-value":           "some-value",
 			},
 		},
 	}}

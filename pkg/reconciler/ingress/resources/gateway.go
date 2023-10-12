@@ -46,10 +46,9 @@ const (
 	dns1123LabelMaxLength = 63 // Public for testing only.
 	dns1123LabelFmt       = "[a-zA-Z0-9](?:[-a-zA-Z0-9]*[a-zA-Z0-9])?"
 
-	// Ingress annotation to select gateways
+	// Ingress annotation to select gateways thru exposition flag
 	// public for testing purposes
-	PublicGatewayAnnotation = "serving.knative.dev/istio-gateways"
-	LocalGatewaysAnnotation = "serving.knative.dev/istio-local-gateways"
+	ExpositionAnnotation = "serving.knative.dev/istio-exposition"
 )
 
 var httpServerPortName = "http-server"
@@ -268,17 +267,7 @@ func makeIngressGateway(ing *v1alpha1.Ingress, selector map[string]string, serve
 }
 
 func getGatewayServices(ctx context.Context, ing *v1alpha1.Ingress, svcLister corev1listers.ServiceLister) ([]*corev1.Service, error) {
-	restrictedGateways, err := GetGatewaysFromAnnotations(ing, v1alpha1.IngressVisibilityExternalIP)
-	if err != nil {
-		return nil, err
-	}
-
-	filter := FilterOption{}
-	if restrictedGateways.Len() > 0 {
-		filter.QualifiedNames = &restrictedGateways
-	}
-
-	ingressSvcMetas, err := GetSelectedIngressGatewaySvcNameNamespaces(ctx, filter)
+	ingressSvcMetas, err := GetIngressGatewaySvcNameNamespaces(ctx, ing)
 	if err != nil {
 		return nil, err
 	}
@@ -396,43 +385,17 @@ func GetNonWildcardIngressTLS(ingressTLS []v1alpha1.IngressTLS, nonWildcardSecre
 	return result
 }
 
-// GetIngressGatewaySvcNameNamespaces gets the Istio ingress namespaces from ConfigMap.
-func GetIngressGatewaySvcNameNamespaces(ctx context.Context) ([]metav1.ObjectMeta, error) {
-	return getSelectedIngressGatewaySvcNameNamespaces(ctx, FilterOption{})
-}
+// GetIngressGatewaySvcNameNamespaces gets the Istio ingress namespaces from ConfigMap for gateways which should expose the service.
+func GetIngressGatewaySvcNameNamespaces(ctx context.Context, ing *v1alpha1.Ingress) ([]metav1.ObjectMeta, error) {
+	nameNamespaces := make([]metav1.ObjectMeta, 0)
 
-type FilterOption struct {
-	QualifiedNames *sets.String
-}
-
-// GetSelectedIngressGatewaySvcNameNamespaces gets the Istio ingress namespaces from ConfigMap for gateways which qualified name is in the list.
-func GetSelectedIngressGatewaySvcNameNamespaces(ctx context.Context, filter FilterOption) ([]metav1.ObjectMeta, error) {
-	return getSelectedIngressGatewaySvcNameNamespaces(ctx, filter)
-}
-
-func getSelectedIngressGatewaySvcNameNamespaces(ctx context.Context, filter FilterOption) ([]metav1.ObjectMeta, error) {
-	cfg := config.FromContext(ctx).Istio
-
-	// If there is a filter, ensure all names are known in the config
-	if filter.QualifiedNames != nil {
-		knownNames := sets.NewString()
-		for _, ingressgateway := range cfg.IngressGateways {
-			knownNames.Insert(ingressgateway.QualifiedName())
-		}
-
-		unknownGateways := filter.QualifiedNames.Difference(knownNames)
-		if unknownGateways.Len() > 0 {
-			return nil, fmt.Errorf("following qualified name(s) aren't defined in the configuration: %v", unknownGateways.List())
-		}
+	serviceGateways := gatewaysFromContext(ctx, ing)
+	servicePublicGateways, ok := serviceGateways[v1alpha1.IngressVisibilityExternalIP]
+	if !ok {
+		return nameNamespaces, nil
 	}
 
-	nameNamespaces := make([]metav1.ObjectMeta, 0, len(cfg.IngressGateways))
-
-	for _, ingressgateway := range cfg.IngressGateways {
-		if filter.QualifiedNames != nil && !filter.QualifiedNames.Has(ingressgateway.QualifiedName()) {
-			continue
-		}
-
+	for _, ingressgateway := range servicePublicGateways {
 		meta, err := parseIngressGatewayConfig(ingressgateway)
 		if err != nil {
 			return nil, err
@@ -492,35 +455,92 @@ func isPlaceHolderServer(server *istiov1beta1.Server) bool {
 	return cmp.Equal(server, &placeholderServer, protocmp.Transform())
 }
 
-// GetGatewaysFromAnnotations extracts Gateways from ingress annotations.
-func GetGatewaysFromAnnotations(ing *v1alpha1.Ingress, visibility v1alpha1.IngressVisibility) (sets.String, error) {
-	annotation := ""
+// QualifiedGatewayNamesFromContext get gateway names from context.
+func QualifiedGatewayNamesFromContext(ctx context.Context, ing *v1alpha1.Ingress) map[v1alpha1.IngressVisibility]sets.Set[string] {
+	ret := make(map[v1alpha1.IngressVisibility]sets.Set[string])
 
-	switch visibility {
-	case v1alpha1.IngressVisibilityClusterLocal:
-		annotation = LocalGatewaysAnnotation
-	case v1alpha1.IngressVisibilityExternalIP:
-		annotation = PublicGatewayAnnotation
-	default:
-		return nil, fmt.Errorf("unexpected visibility value: %s", visibility)
+	gateways := gatewaysFromContext(ctx, ing)
+
+	for _, visibility := range []v1alpha1.IngressVisibility{v1alpha1.IngressVisibilityClusterLocal, v1alpha1.IngressVisibilityExternalIP} {
+		ret[visibility] = sets.New[string]()
+
+		for _, gtw := range gateways[visibility] {
+			ret[visibility] = ret[visibility].Insert(gtw.QualifiedName())
+		}
 	}
 
-	ret := sets.NewString()
+	return ret
+}
 
-	filters, ok := ing.ObjectMeta.Annotations[annotation]
+// getExpositionFromAnnotation extracts exposition values from ingress annotations.
+func getExpositionFromAnnotation(ing *v1alpha1.Ingress) sets.Set[string] {
+	ret := sets.New[string]()
+
+	filters, ok := ing.ObjectMeta.Annotations[ExpositionAnnotation]
 	if !ok {
-		return ret, nil
+		return ret
 	}
 
-	for _, gtw := range strings.Split(filters, ",") {
-		qualifiedName := strings.TrimSpace(gtw)
-
-		if !strings.Contains(qualifiedName, "/") {
-			return nil, fmt.Errorf("values in %s should be qualified name ($namespace/$name), got: %s", annotation, qualifiedName)
+	for _, expo := range strings.Split(filters, ",") {
+		toAdd := strings.TrimSpace(expo)
+		if len(toAdd) == 0 {
+			continue
 		}
 
-		ret.Insert(qualifiedName)
+		ret = ret.Insert(toAdd)
 	}
 
-	return ret, nil
+	return ret
+}
+
+// gatewaysFromContext get gateways relevant to this ingress from context.
+func gatewaysFromContext(ctx context.Context, ing *v1alpha1.Ingress) map[v1alpha1.IngressVisibility][]config.Gateway {
+	ret := make(map[v1alpha1.IngressVisibility][]config.Gateway)
+
+	expositions := getExpositionFromAnnotation(ing)
+
+	istioConfig := config.FromContext(ctx).Istio
+
+	ret[v1alpha1.IngressVisibilityExternalIP] = filterGatewayFromList(istioConfig.IngressGateways, expositions)
+	ret[v1alpha1.IngressVisibilityClusterLocal] = filterGatewayFromList(istioConfig.LocalGateways, expositions)
+
+	return ret
+}
+
+func filterGatewayFromList(gateways []config.Gateway, exposition sets.Set[string]) []config.Gateway {
+	ret := make([]config.Gateway, 0, len(gateways))
+
+	for i := range gateways {
+		gtw := gateways[i]
+
+		if exposition.Len() > 0 {
+			matchedExpositions := gtw.Expositions.Intersection(exposition)
+			if matchedExpositions.Len() == 0 {
+				continue
+			}
+		}
+
+		ret = append(ret, gtw)
+	}
+
+	return ret
+}
+
+func PublicGatewayServiceURLFromContext(ctx context.Context, ing *v1alpha1.Ingress) string {
+	return getGatewayServiceURLFromContext(ctx, ing, v1alpha1.IngressVisibilityExternalIP)
+}
+
+func PrivateGatewayServiceURLFromContext(ctx context.Context, ing *v1alpha1.Ingress) string {
+	return getGatewayServiceURLFromContext(ctx, ing, v1alpha1.IngressVisibilityClusterLocal)
+}
+
+func getGatewayServiceURLFromContext(ctx context.Context, ing *v1alpha1.Ingress, visibility v1alpha1.IngressVisibility) string {
+	allGateways := gatewaysFromContext(ctx, ing)
+
+	gateways, ok := allGateways[visibility]
+	if ok && len(gateways) > 0 {
+		return gateways[0].ServiceURL
+	}
+
+	return ""
 }

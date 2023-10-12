@@ -29,6 +29,7 @@ import (
 	istiov1beta1 "istio.io/api/networking/v1beta1"
 	v1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
+	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/status"
 
@@ -1490,6 +1491,121 @@ func TestListProbeTargets(t *testing.T) {
 			PodPort: "80",
 			Port:    "80",
 			URLs:    []*url.URL{{Scheme: "http", Host: "foo.bar.com:80"}},
+		}},
+	}, {
+		name: "one gateway matched",
+		ingressGateways: []config.Gateway{
+			{
+				Name:      "gateway-not-matching",
+				Namespace: "default",
+			},
+			{
+				Name:        "gateway-matching",
+				Namespace:   "default",
+				Expositions: sets.New[string]("my-exposition"),
+			}},
+		gatewayLister: &fakeGatewayLister{
+			gateways: []*v1beta1.Gateway{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "gateway-not-matching",
+				},
+				Spec: istiov1beta1.Gateway{
+					Servers: []*istiov1beta1.Server{{
+						Hosts: []string{"*"},
+						Port: &istiov1beta1.Port{
+							Name:     "http",
+							Number:   8888,
+							Protocol: "HTTP",
+						},
+					}},
+					Selector: map[string]string{
+						"gwt": "istio-not-matching",
+					},
+				},
+			},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "default",
+						Name:      "gateway-matching",
+					},
+					Spec: istiov1beta1.Gateway{
+						Servers: []*istiov1beta1.Server{{
+							Hosts: []string{"*"},
+							Port: &istiov1beta1.Port{
+								Name:     "http",
+								Number:   8080,
+								Protocol: "HTTP",
+							},
+						}},
+						Selector: map[string]string{
+							"gwt": "istio",
+						},
+					},
+				}},
+		},
+		endpointsLister: &fakeEndpointsLister{
+			endpointses: []*v1.Endpoints{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "gateway-matching",
+				},
+				Subsets: []v1.EndpointSubset{{
+					Ports: []v1.EndpointPort{{
+						Name: "bogus",
+						Port: 8081,
+					}, {
+						Name: "real",
+						Port: 8080,
+					}},
+					Addresses: []v1.EndpointAddress{{
+						IP: "1.1.1.1",
+					}},
+				}},
+			}},
+		},
+		serviceLister: &fakeServiceLister{
+			services: []*v1.Service{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "gateway-matching",
+					Labels: map[string]string{
+						"gwt": "istio",
+					},
+				},
+				Spec: v1.ServiceSpec{
+					Ports: []v1.ServicePort{{
+						Name: "bogus",
+						Port: 8081,
+					}, {
+						Name: "real",
+						Port: 8080,
+					}},
+				},
+			}},
+		},
+		ingress: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "default",
+				Name:      "whatever",
+				Annotations: map[string]string{
+					resources.ExpositionAnnotation: "my-exposition",
+				},
+			},
+			Spec: v1alpha1.IngressSpec{
+				Rules: []v1alpha1.IngressRule{{
+					Hosts: []string{
+						"foo.bar.com",
+					},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+				}},
+			},
+		},
+		results: []status.ProbeTarget{{
+			PodIPs:  sets.NewString("1.1.1.1"),
+			PodPort: "8080",
+			Port:    "8080",
+			URLs:    []*url.URL{{Scheme: "http", Host: "foo.bar.com:8080"}},
 		}},
 	}}
 
