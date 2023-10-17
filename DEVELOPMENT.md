@@ -82,8 +82,8 @@ istioctl install -y
 Run the following command to install Knative
 
 ```shell
-kubectl apply --filename https://storage.googleapis.com/knative-nightly/serving/latest/serving-crds.yaml
-kubectl apply --filename https://storage.googleapis.com/knative-nightly/serving/latest/serving-core.yaml
+kubectl apply -f https://github.com/knative/serving/releases/latest/download/serving-crds.yaml
+kubectl apply -f https://github.com/knative/serving/releases/latest/download/serving-core.yaml
 ```
 
 ### Install Knative net-istio
@@ -92,4 +92,19 @@ Run the following command to install net-istio components
 
 ```shell
 ko apply -f config/
+```
+
+### System Internal TLS (optional)
+
+If you want to work with `system-internal-tls` enabled you can either:
+
+* Install `Knative Serving` to automatically generate the certificates. The CA will be injected in [700-istio-secret.yaml](./config/700-istio-secret.yaml).
+* Or use [./test/generate-upstream-cert.sh)](./test/generate-upstream-cert.sh) to manually generate the secrets.
+
+You can then enable `system-internal-tls` in `config-network` like in [our test resources](./test/config/system-internal-tls/config-network.yaml)
+and specify the following environment variables before you run the e2e/conformance tests:
+
+```bash
+export UPSTREAM_TLS_CERT=serving-certs
+export SERVER_NAME=kn-user-serving-tests
 ```

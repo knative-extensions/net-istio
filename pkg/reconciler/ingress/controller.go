@@ -22,6 +22,7 @@ import (
 	"go.uber.org/zap"
 	v1 "k8s.io/client-go/informers/core/v1"
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
+	destinationruleinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/destinationrule"
 	gatewayinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/gateway"
 	virtualserviceinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/virtualservice"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
@@ -82,18 +83,20 @@ func newControllerWithOptions(
 	ctx = AnnotateLoggerWithName(ctx, controllerAgentName)
 	logger := logging.FromContext(ctx)
 	virtualServiceInformer := virtualserviceinformer.Get(ctx)
+	destinationRuleInformer := destinationruleinformer.Get(ctx)
 	gatewayInformer := gatewayinformer.Get(ctx)
 	secretInformer := getSecretInformer(ctx)
 	serviceInformer := serviceinformer.Get(ctx)
 	ingressInformer := ingressinformer.Get(ctx)
 
 	c := &Reconciler{
-		kubeclient:           kubeclient.Get(ctx),
-		istioClientSet:       istioclient.Get(ctx),
-		virtualServiceLister: virtualServiceInformer.Lister(),
-		gatewayLister:        gatewayInformer.Lister(),
-		secretLister:         secretInformer.Lister(),
-		svcLister:            serviceInformer.Lister(),
+		kubeclient:            kubeclient.Get(ctx),
+		istioClientSet:        istioclient.Get(ctx),
+		virtualServiceLister:  virtualServiceInformer.Lister(),
+		destinationRuleLister: destinationRuleInformer.Lister(),
+		gatewayLister:         gatewayInformer.Lister(),
+		secretLister:          secretInformer.Lister(),
+		svcLister:             serviceInformer.Lister(),
 	}
 	myFilterFunc := reconciler.AnnotationFilterFunc(networking.IngressClassAnnotationKey, netconfig.IstioIngressClassName, true)
 
@@ -119,6 +122,11 @@ func newControllerWithOptions(
 	})
 
 	virtualServiceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterController(&v1alpha1.Ingress{}),
+		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
+	})
+
+	destinationRuleInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterController(&v1alpha1.Ingress{}),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})

@@ -31,6 +31,10 @@ jobs:
         istio-version:
         - latest
 
+        encryption:
+          - disabled
+          - system-internal-tls
+
         istio-profile:
         - no-mesh
         - ambient
@@ -90,6 +94,21 @@ jobs:
 
         echo "GATEWAY_NAMESPACE_OVERRIDE=istio-system" >> $GITHUB_ENV
 
+    - name: Generate certificates and enable system-internal-tls
+      if: matrix.encryption == 'system-internal-tls' && matrix.istio-profile == 'no-mesh'
+      run: |
+        set -o pipefail
+        
+        echo ">> Deploy certificate for upstream traffic"
+        ./test/generate-upstream-cert.sh
+        
+        echo ">> Setting environment variables for upstream tls"
+        echo "UPSTREAM_TLS_CERT=serving-certs" >> $GITHUB_ENV
+        echo "SERVER_NAME=kn-user-serving-tests" >> $GITHUB_ENV
+        
+        echo ">> Enabling system-internal-tls in config-network"
+        kubectl apply -f test/config/system-internal-tls
+
     - name: Upload Test Images
       run: |
         # Build and Publish our test images to the docker daemon.
@@ -108,7 +127,7 @@ jobs:
     - name: Run e2e Tests
       run: |
         set -x
-
+        
         # Exclude the control-plane node, which doesn't seem to expose the nodeport service.
         IPS=( $(kubectl get nodes -lkubernetes.io/hostname!=kind-control-plane -ojsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}') )
 
