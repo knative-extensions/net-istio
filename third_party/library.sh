@@ -67,7 +67,7 @@ function download_istio() {
 
   ISTIO_TMP=$(mktemp -d)
   pushd "$ISTIO_TMP"
-  wget --no-check-certificate "$DOWNLOAD_URL"
+  curl -LO "$DOWNLOAD_URL"
   if [ $? != 0 ]; then
     echo "Failed to download Istio release: $DOWNLOAD_URL"
     exit 1
