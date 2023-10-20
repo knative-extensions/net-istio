@@ -26,7 +26,7 @@
             "type": "string"
           },
           "credentialName": {
-            "description": "The name of the secret that holds the TLS certs for the client including the CA certificates. Secret must exist in the same namespace with the proxy using the certificates. The secret (of type `generic`)should contain the following keys and values: `key: \u003cprivateKey\u003e`, `cert: \u003cclientCert\u003e`, `cacert: \u003cCACertificate\u003e`. Here CACertificate is used to verify the server certificate. Secret of type tls for client certificates along with ca.crt key for CA certificates is also supported. Only one of client certificates and CA certificate or credentialName can be specified.",
+            "description": "The name of the secret that holds the TLS certs for the client including the CA certificates. This secret must exist in the namespace of the proxy using the certificates. An Opaque secret should contain the following keys and values: `key: \u003cprivateKey\u003e`, `cert: \u003cclientCert\u003e`, `cacert: \u003cCACertificate\u003e`, `crl: \u003ccertificateRevocationList\u003e` Here CACertificate is used to verify the server certificate. For mutual TLS, `cacert: \u003cCACertificate\u003e` can be provided in the same secret or a separate secret named `\u003csecret\u003e-cacert`. A TLS secret for client certificates with an additional `ca.crt` key for CA certificates and `ca.crl` key for certificate revocation list(CRL) is also supported. Only one of client certificates and CA certificate or credentialName can be specified.",
             "type": "string"
           },
           "subjectAltNames": {
@@ -41,7 +41,7 @@
             "type": "string"
           },
           "insecureSkipVerify": {
-            "description": "InsecureSkipVerify specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host. This flag should only be set if global CA signature verifcation is enabled, `VerifyCertAtClient` environmental variable is set to `true`, but no verification is desired for a specific host. If enabled with or without `VerifyCertAtClient` enabled, verification of the CA signature and SAN will be skipped.",
+            "description": "InsecureSkipVerify specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host. This flag should only be set if global CA signature verification is enabled, `VerifyCertAtClient` environmental variable is set to `true`, but no verification is desired for a specific host. If enabled with or without `VerifyCertAtClient` enabled, verification of the CA signature and SAN will be skipped.",
             "type": "boolean",
             "nullable": true
           }
@@ -74,12 +74,12 @@
         "type": "object",
         "properties": {
           "http1MaxPendingRequests": {
-            "description": "Maximum number of requests that will be queued while waiting for a ready connection pool connection. Default 1024. Refer to https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/circuit_breaking under which conditions a new connection is created for HTTP2. Please note that this is applicable to both HTTP/1.1 and HTTP2.",
+            "description": "Maximum number of requests that will be queued while waiting for a ready connection pool connection. Default 2^32-1. Refer to https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/circuit_breaking under which conditions a new connection is created for HTTP2. Please note that this is applicable to both HTTP/1.1 and HTTP2.",
             "type": "integer",
             "format": "int32"
           },
           "http2MaxRequests": {
-            "description": "Maximum number of active requests to a destination. Default 1024. Please note that this is applicable to both HTTP/1.1 and HTTP2.",
+            "description": "Maximum number of active requests to a destination. Default 2^32-1. Please note that this is applicable to both HTTP/1.1 and HTTP2.",
             "type": "integer",
             "format": "int32"
           },
@@ -472,7 +472,7 @@
             }
           },
           "failoverPriority": {
-            "description": "failoverPriority is an ordered list of labels used to sort endpoints to do priority based load balancing. This is to support traffic failover across different groups of endpoints. Suppose there are total N labels specified: 1. Endpoints matching all N labels with the client proxy have priority P(0) i.e. the highest priority. 2. Endpoints matching the first N-1 labels with the client proxy have priority P(1) i.e. second highest priority. 3. By extension of this logic, endpoints matching only the first label with the client proxy has priority P(N-1) i.e. second lowest priority. 4. All the other endpoints have priority P(N) i.e. lowest priority.",
+            "description": "failoverPriority is an ordered list of labels used to sort endpoints to do priority based load balancing. This is to support traffic failover across different groups of endpoints. Two kinds of labels can be specified: - Specify only label keys `[key1, key2, key3]`, istio would compare the label values of client with endpoints. Suppose there are total N label keys `[key1, key2, key3, ...keyN]` specified: 1. Endpoints matching all N labels with the client proxy have priority P(0) i.e. the highest priority. 2. Endpoints matching the first N-1 labels with the client proxy have priority P(1) i.e. second highest priority. 3. By extension of this logic, endpoints matching only the first label with the client proxy has priority P(N-1) i.e. second lowest priority. 4. All the other endpoints have priority P(N) i.e. lowest priority.",
             "type": "array",
             "items": {
               "type": "string"
@@ -527,7 +527,7 @@
             "deprecated": true
           },
           "splitExternalLocalOriginErrors": {
-            "description": "Determines whether to distinguish local origin failures from external errors. If set to true consecutive_local_origin_failure is taken into account for outlier detection calculations. This should be used when you want to derive the outlier detection status based on the errors seen locally such as failure to connect, timeout while connecting etc. rather than the status code retuned by upstream service. This is especially useful when the upstream service explicitly returns a 5xx for some requests and you want to ignore those responses from upstream service while determining the outlier detection status of a host. Defaults to false.",
+            "description": "Determines whether to distinguish local origin failures from external errors. If set to true consecutive_local_origin_failure is taken into account for outlier detection calculations. This should be used when you want to derive the outlier detection status based on the errors seen locally such as failure to connect, timeout while connecting etc. rather than the status code returned by upstream service. This is especially useful when the upstream service explicitly returns a 5xx for some requests and you want to ignore those responses from upstream service while determining the outlier detection status of a host. Defaults to false.",
             "type": "boolean"
           },
           "consecutiveLocalOriginFailures": {

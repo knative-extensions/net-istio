@@ -623,11 +623,14 @@ message ServerTLSSettings {
     // the destination service from the service registry.
     PASSTHROUGH = 0;
 
-    // Secure connections with standard TLS semantics.
+    // Secure connections with standard TLS semantics. In this mode
+    // client certificate is not requested during handshake. 
     SIMPLE = 1;
 
     // Secure connections to the downstream using mutual TLS by
     // presenting server certificates for authentication.
+    // A client certificate will also be requested during the handshake and 
+    // at least one valid certificate is required to be sent by the client.
     MUTUAL = 2;
 
     // Similar to the passthrough mode, except servers with this TLS
@@ -650,6 +653,14 @@ message ServerTLSSettings {
     // for mTLS authentication. When this mode is used, all other
     // fields in `TLSOptions` should be empty.
     ISTIO_MUTUAL = 4;
+
+    // Similar to MUTUAL mode, except that the client certificate
+    // is optional. Unlike SIMPLE mode, A client certificate will 
+    // still be explicitly requested during handshake, but the client 
+    // is not required to send a certificate. If a client certificate 
+    // is presented, it will be validated. ca_certificates should
+    // be specified for validating client certificates.
+    OPTIONAL_MUTUAL = 5;
   };
 
   // Optional: Indicates whether connections to this port should be
@@ -665,20 +676,20 @@ message ServerTLSSettings {
   // holding the server's private key.
   string private_key = 4;
 
-  // REQUIRED if mode is `MUTUAL`. The path to a file containing
-  // certificate authority certificates to use in verifying a presented
+  // REQUIRED if mode is `MUTUAL` or `OPTIONAL_MUTUAL`. The path to a file
+  // containing certificate authority certificates to use in verifying a presented
   // client side certificate.
   string ca_certificates = 5;
 
   // For gateways running on Kubernetes, the name of the secret that
   // holds the TLS certs including the CA certificates. Applicable
-  // only on Kubernetes. The secret (of type `generic`) should
-  // contain the following keys and values: `key:
-  // <privateKey>` and `cert: <serverCert>`. For mutual TLS,
-  // `cacert: <CACertificate>` can be provided in the same secret or
-  // a separate secret named `<secret>-cacert`.
-  // Secret of type tls for server certificates along with
-  // ca.crt key for CA certificates is also supported.
+  // only on Kubernetes. An Opaque secret should contain the following
+  // keys and values: `key: <privateKey>` and `cert: <serverCert>`.
+  // For mutual TLS, `cacert: <CACertificate>` and `crl: <CertificateRevocationList>`
+  // can be provided in the same secret or a separate secret named `<secret>-cacert`.
+  // A TLS secret for server certificates with an additional `tls.ocsp-staple` key
+  // for specifying OCSP staple information, `ca.crt` key for CA certificates
+  // and `ca.crl` for certificate revocation list is also supported.
   // Only one of server certificates and CA certificate
   // or credentialName can be specified.
   string credential_name = 10;
@@ -731,6 +742,23 @@ message ServerTLSSettings {
   TLSProtocol max_protocol_version = 8;
 
   // Optional: If specified, only support the specified cipher list.
-  // Otherwise default to the default cipher list supported by Envoy.
+  // Otherwise default to the default cipher list supported by Envoy
+  // as specified [here](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/transport_sockets/tls/v3/common.proto).
+  // The supported list of ciphers are:
+  // * `ECDHE-ECDSA-AES128-GCM-SHA256`
+  // * `ECDHE-RSA-AES128-GCM-SHA256`
+  // * `ECDHE-ECDSA-AES256-GCM-SHA384`
+  // * `ECDHE-RSA-AES256-GCM-SHA384`
+  // * `ECDHE-ECDSA-CHACHA20-POLY1305`
+  // * `ECDHE-RSA-CHACHA20-POLY1305`
+  // * `ECDHE-ECDSA-AES128-SHA`
+  // * `ECDHE-RSA-AES128-SHA`
+  // * `ECDHE-ECDSA-AES256-SHA`
+  // * `ECDHE-RSA-AES256-SHA`
+  // * `AES128-GCM-SHA256`
+  // * `AES256-GCM-SHA384`
+  // * `AES128-SHA`
+  // * `AES256-SHA`
+  // * `DES-CBC3-SHA`
   repeated string cipher_suites = 9;
 }
