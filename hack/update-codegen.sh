@@ -33,7 +33,6 @@ group "Knative Codegen"
 ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   knative.dev/net-istio/pkg/client/istio istio.io/client-go/pkg/apis \
   "networking:v1beta1" \
-  --lister-has-pointer-elem=true \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
 
 group "Kubernetes Codegen"
