@@ -193,6 +193,17 @@ func (this *HTTPRewrite) UnmarshalJSON(b []byte) error {
 	return VirtualServiceUnmarshaler.Unmarshal(bytes.NewReader(b), this)
 }
 
+// MarshalJSON is a custom marshaler for RegexRewrite
+func (this *RegexRewrite) MarshalJSON() ([]byte, error) {
+	str, err := VirtualServiceMarshaler.MarshalToString(this)
+	return []byte(str), err
+}
+
+// UnmarshalJSON is a custom unmarshaler for RegexRewrite
+func (this *RegexRewrite) UnmarshalJSON(b []byte) error {
+	return VirtualServiceUnmarshaler.Unmarshal(bytes.NewReader(b), this)
+}
+
 // MarshalJSON is a custom marshaler for StringMatch
 func (this *StringMatch) MarshalJSON() ([]byte, error) {
 	str, err := VirtualServiceMarshaler.MarshalToString(this)
@@ -256,6 +267,17 @@ func (this *HTTPFaultInjection_Abort) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON is a custom unmarshaler for HTTPFaultInjection_Abort
 func (this *HTTPFaultInjection_Abort) UnmarshalJSON(b []byte) error {
+	return VirtualServiceUnmarshaler.Unmarshal(bytes.NewReader(b), this)
+}
+
+// MarshalJSON is a custom marshaler for HTTPMirrorPolicy
+func (this *HTTPMirrorPolicy) MarshalJSON() ([]byte, error) {
+	str, err := VirtualServiceMarshaler.MarshalToString(this)
+	return []byte(str), err
+}
+
+// UnmarshalJSON is a custom unmarshaler for HTTPMirrorPolicy
+func (this *HTTPMirrorPolicy) UnmarshalJSON(b []byte) error {
 	return VirtualServiceUnmarshaler.Unmarshal(bytes.NewReader(b), this)
 }
 
