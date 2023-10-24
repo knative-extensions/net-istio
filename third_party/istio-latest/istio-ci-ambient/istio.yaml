@@ -7937,7 +7937,7 @@ data:
         "sts": {
           "servicePort": 0
         },
-        "tag": "1.18.0",
+        "tag": "1.18.5",
         "tracer": {
           "datadog": {},
           "lightstep": {},
@@ -9778,7 +9778,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: docker.io/istio/proxyv2:1.18.0
+          image: docker.io/istio/proxyv2:1.18.5
           name: istio-proxy
           ports:
             - containerPort: 15021
@@ -9929,7 +9929,7 @@ spec:
         fsGroup: 1337
       containers:
         - name: discovery
-          image: docker.io/istio/pilot:1.18.0
+          image: docker.io/istio/pilot:1.18.5
           args:
             - discovery
             - --monitoringAddr=:15014
@@ -10428,7 +10428,7 @@ spec:
       terminationGracePeriodSeconds: 5
       containers:
         - name: install-cni
-          image: docker.io/istio/install-cni:1.18.0
+          image: docker.io/istio/install-cni:1.18.5
           readinessProbe:
             httpGet:
               path: /readyz
@@ -10551,7 +10551,7 @@ spec:
           operator: Exists
       containers:
         - name: istio-proxy
-          image: docker.io/istio/ztunnel:1.18.0
+          image: docker.io/istio/ztunnel:1.18.5
           resources:
             requests:
               cpu: 500m
