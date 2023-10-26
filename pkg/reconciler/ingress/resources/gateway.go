@@ -48,7 +48,7 @@ const (
 
 	// Ingress annotation to select gateways thru exposition flag
 	// public for testing purposes
-	ExpositionAnnotation = "serving.knative.dev/istio-exposition"
+	ExpositionAnnotation = "istio.knative.dev/exposition"
 )
 
 var httpServerPortName = "http-server"
