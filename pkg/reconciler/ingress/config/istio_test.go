@@ -352,24 +352,9 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 	}, {
-		name:    "Exposition defined but referencing no known gateways",
-		wantErr: false,
-		wantIstio: &Istio{
-			IngressGateways: []Gateway{
-				{
-					Namespace:  "knative-testing",
-					Name:       "custom-gateway",
-					ServiceURL: "istio-ingress.istio-system.svc.cluster.local",
-				},
-			},
-			LocalGateways: []Gateway{
-				{
-					Namespace:  "knative-testing",
-					Name:       "custom-local-gateway",
-					ServiceURL: "istio-ingress.istio-system.svc.cluster.local",
-				},
-			},
-		},
+		name:      "Exposition defined but referencing no known gateways",
+		wantErr:   true,
+		wantIstio: (*Istio)(nil),
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: system.Namespace(),

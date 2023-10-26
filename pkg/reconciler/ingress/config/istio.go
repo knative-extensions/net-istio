@@ -136,6 +136,7 @@ func parseGateways(configMap *corev1.ConfigMap, prefix string) ([]Gateway, error
 	return gateways, nil
 }
 
+// parseExposition returns the list of exposition per istio gateway
 func parseExposition(configMap *corev1.ConfigMap) map[string]sets.Set[string] {
 	ret := make(map[string]sets.Set[string])
 
@@ -184,8 +185,40 @@ func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
 		localGateways = defaultLocalGateways()
 	}
 
-	return &Istio{
+	ret := &Istio{
 		IngressGateways: gateways,
 		LocalGateways:   localGateways,
-	}, nil
+	}
+
+	expositions := parseExposition(configMap)
+
+	err = checkExpositionConsistency(ret, expositions)
+	if err != nil {
+		return nil, err
+	}
+
+	return ret, nil
+}
+
+func checkExpositionConsistency(conf *Istio, expositions map[string]sets.Set[string]) error {
+	gatewaysDefinedInExposition := sets.New[string]()
+	for namespaceName := range expositions {
+		gatewaysDefinedInExposition.Insert(namespaceName)
+	}
+
+	gatewaysDefinedInConfig := sets.New[string]()
+	for _, gateway := range conf.IngressGateways {
+		gatewaysDefinedInConfig.Insert(fmt.Sprintf("%s.%s", gateway.Namespace, gateway.Name))
+	}
+
+	for _, gateway := range conf.LocalGateways {
+		gatewaysDefinedInConfig.Insert(fmt.Sprintf("%s.%s", gateway.Namespace, gateway.Name))
+	}
+
+	unknownGateways := gatewaysDefinedInExposition.Difference(gatewaysDefinedInConfig)
+	if unknownGateways.Len() > 0 {
+		return fmt.Errorf("following gateways are only defined in exposition: %v", sets.List(unknownGateways))
+	}
+
+	return nil
 }
