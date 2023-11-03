@@ -20,9 +20,9 @@ require (
 	k8s.io/api v0.28.0
 	k8s.io/apimachinery v0.28.0
 	k8s.io/client-go v0.28.0
-	knative.dev/hack v0.0.0-20231025074238-d4af42e9b222
-	knative.dev/networking v0.0.0-20231023183454-7d7bb65ca524
-	knative.dev/pkg v0.0.0-20231023152443-b7a62c0b7003
+	knative.dev/hack v0.0.0-20231102183416-0d99b7ee9d63
+	knative.dev/networking v0.0.0-20231103063604-18529fd26a8b
+	knative.dev/pkg v0.0.0-20231102200604-fac3a4ffbc74
 )
 
 require (
@@ -49,7 +49,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/uuid v1.3.1 // indirect
+	github.com/google/uuid v1.4.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
@@ -101,5 +101,5 @@ require (
 	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.3.0 // indirect
-	sigs.k8s.io/yaml v1.3.0 // indirect
+	sigs.k8s.io/yaml v1.4.0 // indirect
 )
