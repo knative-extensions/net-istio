@@ -139,7 +139,8 @@ var modifiedDefaultTLSServer = istiov1beta1.Server{
 
 var ingressSpec = v1alpha1.IngressSpec{
 	Rules: []v1alpha1.IngressRule{{
-		Hosts: []string{"host1.example.com"},
+		Hosts:      []string{"host1.example.com"},
+		Visibility: v1alpha1.IngressVisibilityExternalIP,
 	}},
 	TLS: []v1alpha1.IngressTLS{{
 		Hosts:           []string{"host1.example.com"},
@@ -294,7 +295,7 @@ func TestMakeTLSServers(t *testing.T) {
 	}}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			servers, err := MakeTLSServers(c.ci, c.ci.Spec.TLS, c.gatewayServiceNamespace, c.originSecrets)
+			servers, err := MakeTLSServers(c.ci, c.ci.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP), c.gatewayServiceNamespace, c.originSecrets)
 			if (err != nil) != c.wantErr {
 				t.Fatalf("Test: %s; MakeServers error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
@@ -960,7 +961,7 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 			},
 		})
 		t.Run(c.name, func(t *testing.T) {
-			got, err := MakeIngressTLSGateways(ctx, c.ia, c.ia.Spec.TLS, c.originSecrets, svcLister)
+			got, err := MakeIngressTLSGateways(ctx, c.ia, c.ia.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP), c.originSecrets, svcLister)
 			if (err != nil) != c.wantErr {
 				t.Fatalf("Test: %s; MakeIngressTLSGateways error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
