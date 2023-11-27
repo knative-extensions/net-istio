@@ -232,8 +232,16 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	}
 
 	if ready {
-		publicLbs := getLBStatus(publicGatewayServiceURLFromContext(ctx))
-		privateLbs := getLBStatus(privateGatewayServiceURLFromContext(ctx))
+		publicLbs, err := getLBStatuses(ctx, v1alpha1.IngressVisibilityExternalIP)
+		if err != nil {
+			return fmt.Errorf("failed to get external LB status: %w", err)
+		}
+
+		privateLbs, err := getLBStatuses(ctx, v1alpha1.IngressVisibilityClusterLocal)
+		if err != nil {
+			return fmt.Errorf("failed to get local LB status: %w", err)
+		}
+
 		ing.Status.MarkLoadBalancerReady(publicLbs, privateLbs)
 	} else {
 		ing.Status.MarkLoadBalancerNotReady()
@@ -511,34 +519,39 @@ func qualifiedGatewayNamesFromContext(ctx context.Context) map[v1alpha1.IngressV
 	}
 }
 
-func publicGatewayServiceURLFromContext(ctx context.Context) string {
-	cfg := config.FromContext(ctx).Istio
-	if len(cfg.IngressGateways) > 0 {
-		return cfg.IngressGateways[0].ServiceURL
-	}
-	return ""
-}
+// getLBStatuses gets the LB Statuses.
+func getLBStatuses(ctx context.Context, visibility v1alpha1.IngressVisibility) ([]v1alpha1.LoadBalancerIngressStatus, error) {
+	ret := make([]v1alpha1.LoadBalancerIngressStatus, 0)
 
-func privateGatewayServiceURLFromContext(ctx context.Context) string {
 	cfg := config.FromContext(ctx).Istio
-	if len(cfg.LocalGateways) > 0 {
-		return cfg.LocalGateways[0].ServiceURL
-	}
-	return ""
-}
+	var gateways []config.Gateway
 
-// getLBStatus gets the LB Status.
-func getLBStatus(gatewayServiceURL string) []v1alpha1.LoadBalancerIngressStatus {
-	// The Ingress isn't load-balanced by any particular
-	// Service, but through a Service mesh.
-	if gatewayServiceURL == "" {
-		return []v1alpha1.LoadBalancerIngressStatus{
-			{MeshOnly: true},
+	switch visibility {
+	case v1alpha1.IngressVisibilityClusterLocal:
+		gateways = cfg.LocalGateways
+	case v1alpha1.IngressVisibilityExternalIP:
+		gateways = cfg.IngressGateways
+	default:
+		return nil, fmt.Errorf("unknown visibility: %s", visibility)
+	}
+
+	for _, gateway := range gateways {
+		// The Ingress isn't load-balanced by any particular
+		// Service, but through a Service mesh.
+		if gateway.ServiceURL == "" {
+			ret = append(ret, v1alpha1.LoadBalancerIngressStatus{
+				MeshOnly: true,
+			})
+
+			continue
 		}
+
+		ret = append(ret, v1alpha1.LoadBalancerIngressStatus{
+			DomainInternal: gateway.ServiceURL,
+		})
 	}
-	return []v1alpha1.LoadBalancerIngressStatus{
-		{DomainInternal: gatewayServiceURL},
-	}
+
+	return ret, nil
 }
 
 func shouldReconcileTLS(ing *v1alpha1.Ingress) bool {
