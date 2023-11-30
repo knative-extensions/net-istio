@@ -98,7 +98,7 @@ ko apply -f config/
 
 If you want to work with `system-internal-tls` enabled you can either:
 
-* Install `Knative Serving` to automatically generate the certificates. The CA will be injected in [700-istio-secret.yaml](./config/700-istio-secret.yaml).
+* Install `Knative Serving`, `cert-manager` and `net-certmanager` to automatically generate the certificates. The CA will be injected for the Knative Certificate in [700-istio-knative-certificate.yaml](./config/700-istio-knative-certificate.yaml).
 * Or use [./test/generate-upstream-cert.sh)](./test/generate-upstream-cert.sh) to manually generate the secrets.
 
 You can then enable `system-internal-tls` in `config-network` like in [our test resources](./test/config/system-internal-tls/config-network.yaml)
