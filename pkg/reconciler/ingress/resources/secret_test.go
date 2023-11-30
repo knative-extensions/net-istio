@@ -51,6 +51,12 @@ var (
 			Namespace: system.Namespace(),
 		},
 		Spec: v1alpha1.IngressSpec{
+			Rules: []v1alpha1.IngressRule{
+				{
+					Hosts:      []string{"example.com"},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+				},
+			},
 			TLS: []v1alpha1.IngressTLS{{
 				Hosts:           []string{"example.com"},
 				SecretName:      "secret0",
@@ -90,6 +96,12 @@ func TestGetSecrets(t *testing.T) {
 		secret: &corev1.Secret{},
 		ci: &v1alpha1.Ingress{
 			Spec: v1alpha1.IngressSpec{
+				Rules: []v1alpha1.IngressRule{
+					{
+						Hosts:      []string{"example.com"},
+						Visibility: v1alpha1.IngressVisibilityExternalIP,
+					},
+				},
 				TLS: []v1alpha1.IngressTLS{{
 					Hosts:           []string{"example.com"},
 					SecretName:      "no-exist-secret",

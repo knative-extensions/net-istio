@@ -143,7 +143,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 			return err
 		}
 
-		nonWildcardIngressTLS := resources.GetNonWildcardIngressTLS(ing.Spec.TLS, nonWildcardSecrets)
+		nonWildcardIngressTLS := resources.GetNonWildcardIngressTLS(ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP), nonWildcardSecrets)
 		ingressGateways, err = resources.MakeIngressTLSGateways(ctx, ing, nonWildcardIngressTLS, nonWildcardSecrets, r.svcLister)
 		if err != nil {
 			return err
@@ -419,7 +419,7 @@ func (r *Reconciler) reconcileDeletion(ctx context.Context, ing *v1alpha1.Ingres
 	}
 
 	errs := []error{}
-	for _, tls := range ing.Spec.TLS {
+	for _, tls := range ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP) {
 		nameNamespaces, err := resources.GetIngressGatewaySvcNameNamespaces(ctx)
 		if err != nil {
 			errs = append(errs, err)
@@ -542,14 +542,14 @@ func getLBStatus(gatewayServiceURL string) []v1alpha1.LoadBalancerIngressStatus 
 }
 
 func shouldReconcileTLS(ing *v1alpha1.Ingress) bool {
-	return isIngressPublic(ing) && len(ing.Spec.TLS) > 0
+	return isIngressPublic(ing) && len(ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP)) > 0
 }
 
 func shouldReconcileHTTPServer(ing *v1alpha1.Ingress) bool {
 	// We will create a Ingress specific HTTPServer when
 	// 1. auto TLS is enabled as in this case users want us to fully handle the TLS/HTTP behavior,
 	// 2. HTTPOption is set to Redirected as we don't have default HTTP server supporting HTTP redirection.
-	return isIngressPublic(ing) && (ing.Spec.HTTPOption == v1alpha1.HTTPOptionRedirected || len(ing.Spec.TLS) > 0)
+	return isIngressPublic(ing) && (ing.Spec.HTTPOption == v1alpha1.HTTPOptionRedirected || len(ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP)) > 0)
 }
 
 func isIngressPublic(ing *v1alpha1.Ingress) bool {

@@ -116,7 +116,7 @@ func MakeIngressTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressT
 	}
 	gateways := make([]*v1beta1.Gateway, len(gatewayServices))
 	for i, gatewayService := range gatewayServices {
-		servers, err := MakeTLSServers(ing, ing.Spec.TLS, gatewayService.Namespace, originSecrets)
+		servers, err := MakeTLSServers(ing, ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP), gatewayService.Namespace, originSecrets)
 		if err != nil {
 			return nil, err
 		}
