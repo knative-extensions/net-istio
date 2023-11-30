@@ -69,6 +69,9 @@ function test_setup() {
 
   ${istio_dir}/install-istio.sh ${istio_profile} || return 1
 
+  # Remove Knative Certificate as we are running without Serving CRs
+  rm -f config/700-istio-knative-certificate.yaml
+
   echo ">> Bringing up net-istio Ingress Controller"
   ko apply --platform=linux/amd64 -f config/ || return 1
 
