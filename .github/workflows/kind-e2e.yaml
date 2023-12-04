@@ -83,6 +83,9 @@ jobs:
         # Deploy Istio
         ./third_party/istio-${{ matrix.istio-version }}/install-istio.sh istio-kind-${{ matrix.istio-profile }}
 
+        # Remove Knative Certificate as we are running without Serving CRs
+        rm -f config/700-istio-knative-certificate.yaml
+  
         # Build and Publish our containers to the docker daemon (including test assets)
         ko resolve --platform=linux/amd64 -f test/config/ -f config/ | kubectl apply -f -
 

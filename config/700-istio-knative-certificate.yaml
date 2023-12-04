@@ -12,12 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: Secret
+apiVersion: networking.internal.knative.dev/v1alpha1
+kind: Certificate
 metadata:
+  annotations:
+    networking.knative.dev/certificate.class: cert-manager.certificate.networking.knative.dev
+  labels:
+    networking.knative.dev/certificate-type: system-internal
   name: routing-serving-certs
   namespace: istio-system
-  labels:
-    serving-certs-ctrl: "data-plane-routing"
-    networking.internal.knative.dev/certificate-uid: "serving-certs"
+spec:
+  dnsNames:
+    - kn-routing
+  secretName: routing-serving-certs
 # The data is populated when system-internal-tls is enabled.
