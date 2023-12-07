@@ -19,6 +19,7 @@ metadata:
     networking.knative.dev/certificate.class: cert-manager.certificate.networking.knative.dev
   labels:
     networking.knative.dev/certificate-type: system-internal
+    knative.dev/install-knative-certificate: "true"
   name: routing-serving-certs
   namespace: istio-system
 spec:
