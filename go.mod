@@ -7,6 +7,7 @@ require (
 	go.uber.org/zap v1.26.0
 	golang.org/x/sync v0.6.0
 	google.golang.org/protobuf v1.32.0
+	gopkg.in/yaml.v3 v3.0.1
 	istio.io/api v1.20.2
 	istio.io/client-go v1.20.2
 	k8s.io/api v0.28.5
@@ -83,7 +84,6 @@ require (
 	google.golang.org/grpc v1.61.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.28.5 // indirect
 	k8s.io/code-generator v0.28.5 // indirect
 	k8s.io/gengo v0.0.0-20221011193443-fad74ee6edd9 // indirect
