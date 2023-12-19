@@ -45,6 +45,7 @@ const (
 	GatewayHTTPPort       = 80
 	dns1123LabelMaxLength = 63 // Public for testing only.
 	dns1123LabelFmt       = "[a-zA-Z0-9](?:[-a-zA-Z0-9]*[a-zA-Z0-9])?"
+	localGatewayPostfix   = "-local"
 )
 
 var httpServerPortName = "http-server"
@@ -105,7 +106,8 @@ func SortServers(servers []*istiov1beta1.Server) []*istiov1beta1.Server {
 }
 
 // MakeIngressTLSGateways creates Gateways that have only TLS servers for a given Ingress.
-func MakeIngressTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, originSecrets map[string]*corev1.Secret, svcLister corev1listers.ServiceLister) ([]*v1beta1.Gateway, error) {
+func MakeIngressTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, visibility v1alpha1.IngressVisibility,
+	ingressTLS []v1alpha1.IngressTLS, originSecrets map[string]*corev1.Secret, svcLister corev1listers.ServiceLister) ([]*v1beta1.Gateway, error) {
 	// No need to create Gateway if there is no related ingress TLS.
 	if len(ingressTLS) == 0 {
 		return []*v1beta1.Gateway{}, nil
@@ -116,17 +118,17 @@ func MakeIngressTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, ingressT
 	}
 	gateways := make([]*v1beta1.Gateway, len(gatewayServices))
 	for i, gatewayService := range gatewayServices {
-		servers, err := MakeTLSServers(ing, ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP), gatewayService.Namespace, originSecrets)
+		servers, err := MakeTLSServers(ing, ingressTLS, gatewayService.Namespace, originSecrets)
 		if err != nil {
 			return nil, err
 		}
-		gateways[i] = makeIngressGateway(ing, gatewayService.Spec.Selector, servers, gatewayService)
+		gateways[i] = makeIngressGateway(ing, visibility, gatewayService.Spec.Selector, servers, gatewayService)
 	}
 	return gateways, nil
 }
 
-// MakeIngressGateways creates Gateways with given Servers for a given Ingress.
-func MakeIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, servers []*istiov1beta1.Server, svcLister corev1listers.ServiceLister) ([]*v1beta1.Gateway, error) {
+// MakeExternalIngressGateways creates Gateways with given Servers for a given Ingress.
+func MakeExternalIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, servers []*istiov1beta1.Server, svcLister corev1listers.ServiceLister) ([]*v1beta1.Gateway, error) {
 	gatewayServices, err := getGatewayServices(ctx, svcLister)
 	if err != nil {
 		return nil, err
@@ -136,7 +138,7 @@ func MakeIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, servers []*
 		if err != nil {
 			return nil, err
 		}
-		gateways[i] = makeIngressGateway(ing, gatewayService.Spec.Selector, servers, gatewayService)
+		gateways[i] = makeIngressGateway(ing, v1alpha1.IngressVisibilityExternalIP, gatewayService.Spec.Selector, servers, gatewayService)
 	}
 	return gateways, nil
 }
@@ -244,14 +246,14 @@ func GatewayRef(gw *v1beta1.Gateway) tracker.Reference {
 	}
 }
 
-func makeIngressGateway(ing *v1alpha1.Ingress, selector map[string]string, servers []*istiov1beta1.Server, gatewayService *corev1.Service) *v1beta1.Gateway {
+func makeIngressGateway(ing *v1alpha1.Ingress, visibility v1alpha1.IngressVisibility, selector map[string]string, servers []*istiov1beta1.Server, gatewayService *corev1.Service) *v1beta1.Gateway {
 	return &v1beta1.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:            GatewayName(ing, gatewayService),
+			Name:            GatewayName(ing, visibility, gatewayService),
 			Namespace:       ing.GetNamespace(),
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 			Labels: map[string]string{
-				// We need this label to find out all of Gateways of a given Ingress.
+				// We need this label to find out all Gateways of a given Ingress.
 				networking.IngressLabelKey: ing.GetName(),
 			},
 		},
@@ -280,13 +282,16 @@ func getGatewayServices(ctx context.Context, svcLister corev1listers.ServiceList
 
 // GatewayName create a name for the Gateway that is built based on the given Ingress and bonds to the
 // given ingress gateway service.
-func GatewayName(accessor kmeta.Accessor, gatewaySvc *corev1.Service) string {
+func GatewayName(accessor kmeta.Accessor, visibility v1alpha1.IngressVisibility, gatewaySvc *corev1.Service) string {
 	prefix := accessor.GetName()
 	if !isDNS1123Label(prefix) {
 		prefix = fmt.Sprint(adler32.Checksum([]byte(prefix)))
 	}
 
 	gatewayServiceKey := fmt.Sprintf("%s/%s", gatewaySvc.Namespace, gatewaySvc.Name)
+	if visibility == v1alpha1.IngressVisibilityClusterLocal {
+		gatewayServiceKey += localGatewayPostfix
+	}
 	gatewayServiceKeyChecksum := fmt.Sprint(adler32.Checksum([]byte(gatewayServiceKey)))
 
 	// Ensure that the overall gateway name still is a DNS1123 label
@@ -368,10 +373,10 @@ func MakeHTTPServer(httpOption v1alpha1.HTTPOption, hosts []string) *istiov1beta
 }
 
 // GetNonWildcardIngressTLS gets Ingress TLS that do not reference wildcard certificates.
-func GetNonWildcardIngressTLS(ingressTLS []v1alpha1.IngressTLS, nonWildcardSecrest map[string]*corev1.Secret) []v1alpha1.IngressTLS {
+func GetNonWildcardIngressTLS(ingressTLS []v1alpha1.IngressTLS, nonWildcardSecrets map[string]*corev1.Secret) []v1alpha1.IngressTLS {
 	result := []v1alpha1.IngressTLS{}
 	for _, tls := range ingressTLS {
-		if _, ok := nonWildcardSecrest[secretKey(tls)]; ok {
+		if _, ok := nonWildcardSecrets[secretKey(tls)]; ok {
 			result = append(result, tls)
 		}
 	}

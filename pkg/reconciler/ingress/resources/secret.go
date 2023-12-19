@@ -33,11 +33,11 @@ import (
 	"knative.dev/pkg/tracker"
 )
 
-// GetSecrets gets the all of the secrets referenced by the given Ingress, and
-// returns a map whose key is the a secret namespace/name key and value is pointer of the secret.
-func GetSecrets(ing *v1alpha1.Ingress, secretLister corev1listers.SecretLister) (map[string]*corev1.Secret, error) {
+// GetSecrets gets the all the secrets referenced by the given Ingress and visibility.
+// Returns a map whose key is the secret namespace/name key and value is pointer of the secret.
+func GetSecrets(ing *v1alpha1.Ingress, visibility v1alpha1.IngressVisibility, secretLister corev1listers.SecretLister) (map[string]*corev1.Secret, error) {
 	secrets := map[string]*corev1.Secret{}
-	for _, tls := range ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP) {
+	for _, tls := range ing.GetIngressTLSForVisibility(visibility) {
 		ref := secretKey(tls)
 		if _, ok := secrets[ref]; ok {
 			continue
@@ -72,7 +72,7 @@ func MakeSecrets(ctx context.Context, originSecrets map[string]*corev1.Secret, a
 	return secrets, nil
 }
 
-// MakeWildcardSecrets copies wildcard certificates from origin namespace to the namespace of gateway servicess so they could
+// MakeWildcardSecrets copies wildcard certificates from origin namespace to the namespace of gateway services, so they can be
 // consumed by Istio ingress.
 func MakeWildcardSecrets(ctx context.Context, originWildcardCerts map[string]*corev1.Secret) ([]*corev1.Secret, error) {
 	nameNamespaces, err := GetIngressGatewaySvcNameNamespaces(ctx)

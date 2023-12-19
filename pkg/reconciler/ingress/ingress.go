@@ -57,10 +57,9 @@ import (
 )
 
 const (
-	virtualServiceConditionReconciled = "Reconciled"
-	virtualServiceNotReconciled       = "ReconcileVirtualServiceFailed"
-	notReconciledReason               = "ReconcileIngressFailed"
-	notReconciledMessage              = "Ingress reconciliation failed"
+	virtualServiceNotReconciled = "ReconcileVirtualServiceFailed"
+	notReconciledReason         = "ReconcileIngressFailed"
+	notReconciledMessage        = "Ingress reconciliation failed"
 )
 
 // Reconciler implements the control loop for the Ingress resources.
@@ -106,8 +105,8 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	logger := logging.FromContext(ctx)
 
 	// We may be reading a version of the object that was stored at an older version
-	// and may not have had all of the assumed defaults specified.  This won't result
-	// in this getting written back to the API Server, but lets downstream logic make
+	// and may not have had all the assumed defaults specified.  This won't result
+	// in this getting written back to the API Server, but let's downstream logic make
 	// assumptions about defaulting.
 	ing.SetDefaults(ctx)
 
@@ -118,9 +117,9 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	gatewayNames[v1alpha1.IngressVisibilityClusterLocal] = qualifiedGatewayNamesFromContext(ctx)[v1alpha1.IngressVisibilityClusterLocal]
 	gatewayNames[v1alpha1.IngressVisibilityExternalIP] = sets.New[string]()
 
-	ingressGateways := []*v1beta1.Gateway{}
-	if shouldReconcileTLS(ing) {
-		originSecrets, err := resources.GetSecrets(ing, r.secretLister)
+	externalIngressGateways := []*v1beta1.Gateway{}
+	if shouldReconcileExternalDomainTLS(ing) {
+		originSecrets, err := resources.GetSecrets(ing, v1alpha1.IngressVisibilityExternalIP, r.secretLister)
 		if err != nil {
 			return err
 		}
@@ -144,7 +143,8 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		}
 
 		nonWildcardIngressTLS := resources.GetNonWildcardIngressTLS(ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP), nonWildcardSecrets)
-		ingressGateways, err = resources.MakeIngressTLSGateways(ctx, ing, nonWildcardIngressTLS, nonWildcardSecrets, r.svcLister)
+		externalIngressGateways, err = resources.MakeIngressTLSGateways(ctx, ing, v1alpha1.IngressVisibilityExternalIP,
+			nonWildcardIngressTLS, nonWildcardSecrets, r.svcLister)
 		if err != nil {
 			return err
 		}
@@ -164,17 +164,38 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(desiredWildcardGateways)...)
 	}
 
+	cfg := config.FromContext(ctx)
+	clusterLocalIngressGateways := []*v1beta1.Gateway{}
+	if cfg.Network.ClusterLocalDomainTLS == netconfig.EncryptionEnabled && shouldReconcileClusterLocalDomainTLS(ing) {
+		originSecrets, err := resources.GetSecrets(ing, v1alpha1.IngressVisibilityClusterLocal, r.secretLister)
+		if err != nil {
+			return err
+		}
+		targetSecrets, err := resources.MakeSecrets(ctx, originSecrets, ing)
+		if err != nil {
+			return err
+		}
+		if err = r.reconcileCertSecrets(ctx, ing, targetSecrets); err != nil {
+			return err
+		}
+		clusterLocalIngressGateways, err = resources.MakeIngressTLSGateways(ctx, ing, v1alpha1.IngressVisibilityClusterLocal,
+			ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityClusterLocal), originSecrets, r.svcLister)
+		if err != nil {
+			return err
+		}
+	}
+
 	if shouldReconcileHTTPServer(ing) {
 		httpServer := resources.MakeHTTPServer(ing.Spec.HTTPOption, getPublicHosts(ing))
-		if len(ingressGateways) == 0 {
+		if len(externalIngressGateways) == 0 {
 			var err error
-			if ingressGateways, err = resources.MakeIngressGateways(ctx, ing, []*istiov1beta1.Server{httpServer}, r.svcLister); err != nil {
+			if externalIngressGateways, err = resources.MakeExternalIngressGateways(ctx, ing, []*istiov1beta1.Server{httpServer}, r.svcLister); err != nil {
 				return err
 			}
 		} else {
 			// add HTTP Server into ingressGateways.
-			for i := range ingressGateways {
-				ingressGateways[i].Spec.Servers = append(ingressGateways[i].Spec.Servers, httpServer)
+			for i := range externalIngressGateways {
+				externalIngressGateways[i].Spec.Servers = append(externalIngressGateways[i].Spec.Servers, httpServer)
 			}
 		}
 	} else {
@@ -184,10 +205,15 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(sets.List(defaultGlobalHTTPGateways)...)
 	}
 
-	if err := r.reconcileIngressGateways(ctx, ingressGateways); err != nil {
+	if err := r.reconcileIngressGateways(ctx, externalIngressGateways); err != nil {
 		return err
 	}
-	gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(ingressGateways)...)
+	gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(externalIngressGateways)...)
+
+	if err := r.reconcileIngressGateways(ctx, clusterLocalIngressGateways); err != nil {
+		return err
+	}
+	gatewayNames[v1alpha1.IngressVisibilityClusterLocal].Insert(resources.GetQualifiedGatewayNames(clusterLocalIngressGateways)...)
 
 	if config.FromContext(ctx).Network.SystemInternalTLSEnabled() {
 		logger.Info("reconciling DestinationRules for system-internal-tls")
@@ -410,16 +436,16 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, ing *v1alpha1.Ingress) pk
 		}
 	}
 
-	return r.reconcileDeletion(ctx, ing)
+	return r.cleanupCertificateSecrets(ctx, ing)
 }
 
-func (r *Reconciler) reconcileDeletion(ctx context.Context, ing *v1alpha1.Ingress) error {
-	if !shouldReconcileTLS(ing) {
+func (r *Reconciler) cleanupCertificateSecrets(ctx context.Context, ing *v1alpha1.Ingress) error {
+	if !shouldReconcileExternalDomainTLS(ing) && !shouldReconcileClusterLocalDomainTLS(ing) {
 		return nil
 	}
 
 	errs := []error{}
-	for _, tls := range ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP) {
+	for _, tls := range ing.Spec.TLS {
 		nameNamespaces, err := resources.GetIngressGatewaySvcNameNamespaces(ctx)
 		if err != nil {
 			errs = append(errs, err)
@@ -541,13 +567,17 @@ func getLBStatus(gatewayServiceURL string) []v1alpha1.LoadBalancerIngressStatus 
 	}
 }
 
-func shouldReconcileTLS(ing *v1alpha1.Ingress) bool {
+func shouldReconcileExternalDomainTLS(ing *v1alpha1.Ingress) bool {
 	return isIngressPublic(ing) && len(ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP)) > 0
 }
 
+func shouldReconcileClusterLocalDomainTLS(ing *v1alpha1.Ingress) bool {
+	return len(ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityClusterLocal)) > 0
+}
+
 func shouldReconcileHTTPServer(ing *v1alpha1.Ingress) bool {
-	// We will create a Ingress specific HTTPServer when
-	// 1. auto TLS is enabled as in this case users want us to fully handle the TLS/HTTP behavior,
+	// We will create an Ingress specific HTTPServer when
+	// 1. external-domain-tls is enabled as in this case users want us to fully handle the TLS/HTTP behavior,
 	// 2. HTTPOption is set to Redirected as we don't have default HTTP server supporting HTTP redirection.
 	return isIngressPublic(ing) && (ing.Spec.HTTPOption == v1alpha1.HTTPOptionRedirected || len(ing.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP)) > 0)
 }
