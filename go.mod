@@ -21,8 +21,8 @@ require (
 	k8s.io/apimachinery v0.28.2
 	k8s.io/client-go v0.28.2
 	knative.dev/hack v0.0.0-20231201014241-7030d5bf584d
-	knative.dev/networking v0.0.0-20231218143655-3f2ee2a60c6d
-	knative.dev/pkg v0.0.0-20231218102303-03265f747e40
+	knative.dev/networking v0.0.0-20231219131858-8c7897c8b9a0
+	knative.dev/pkg v0.0.0-20231219072704-d513e487961e
 )
 
 require (
@@ -85,11 +85,11 @@ require (
 	golang.org/x/tools v0.16.1 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/api v0.154.0 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20231120223509-83a465c0220f // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231120223509-83a465c0220f // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231127180814-3a041ad873d4 // indirect
-	google.golang.org/grpc v1.59.0 // indirect
+	google.golang.org/grpc v1.60.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
