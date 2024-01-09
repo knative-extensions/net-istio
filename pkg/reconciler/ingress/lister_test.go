@@ -493,7 +493,7 @@ func TestListProbeTargets(t *testing.T) {
 			},
 		},
 		results: []status.ProbeTarget{{
-			PodIPs:  sets.NewString("1.1.1.1"),
+			PodIPs:  sets.New("1.1.1.1"),
 			PodPort: "8080",
 			Port:    "8080",
 			URLs:    []*url.URL{{Scheme: "http", Host: "foo.bar.com:8080"}},
@@ -580,7 +580,7 @@ func TestListProbeTargets(t *testing.T) {
 			},
 		},
 		results: []status.ProbeTarget{{
-			PodIPs:  sets.NewString("1.1.1.1"),
+			PodIPs:  sets.New("1.1.1.1"),
 			PodPort: "8443",
 			Port:    "8443",
 			URLs:    []*url.URL{{Scheme: "https", Host: "foo.bar.com:8443"}},
@@ -761,7 +761,7 @@ func TestListProbeTargets(t *testing.T) {
 			},
 		},
 		results: []status.ProbeTarget{{
-			PodIPs:  sets.NewString("1.1.1.1"),
+			PodIPs:  sets.New("1.1.1.1"),
 			PodPort: "8080",
 			Port:    "80",
 			URLs:    []*url.URL{{Scheme: "http", Host: "foo.bar.com:80"}},
@@ -1158,12 +1158,12 @@ func TestListProbeTargets(t *testing.T) {
 			},
 		},
 		results: []status.ProbeTarget{{
-			PodIPs:  sets.NewString("1.1.1.1"),
+			PodIPs:  sets.New("1.1.1.1"),
 			PodPort: "80",
 			Port:    "80",
 			URLs:    []*url.URL{{Scheme: "http", Host: "foo.bar.com:80"}},
 		}, {
-			PodIPs:  sets.NewString("2.2.2.2", "2.2.2.3"),
+			PodIPs:  sets.New("2.2.2.2", "2.2.2.3"),
 			PodPort: "90",
 			Port:    "90",
 			URLs:    []*url.URL{{Scheme: "http", Host: "foo.bar.com:90"}},
@@ -1245,7 +1245,7 @@ func TestListProbeTargets(t *testing.T) {
 			},
 		},
 		results: []status.ProbeTarget{{
-			PodIPs:  sets.NewString("1.1.1.1"),
+			PodIPs:  sets.New("1.1.1.1"),
 			PodPort: "80",
 			Port:    "80",
 			URLs: []*url.URL{
@@ -1394,7 +1394,7 @@ func TestListProbeTargets(t *testing.T) {
 			},
 		},
 		results: []status.ProbeTarget{{
-			PodIPs:  sets.NewString("2.2.2.2", "2.2.2.3"),
+			PodIPs:  sets.New("2.2.2.2", "2.2.2.3"),
 			PodPort: "80",
 			Port:    "80",
 			URLs: []*url.URL{
@@ -1486,7 +1486,7 @@ func TestListProbeTargets(t *testing.T) {
 			},
 		},
 		results: []status.ProbeTarget{{
-			PodIPs:  sets.NewString("1.1.1.1"),
+			PodIPs:  sets.New("1.1.1.1"),
 			PodPort: "80",
 			Port:    "80",
 			URLs:    []*url.URL{{Scheme: "http", Host: "foo.bar.com:80"}},

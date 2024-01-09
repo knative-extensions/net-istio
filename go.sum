@@ -37,6 +37,8 @@ contrib.go.opencensus.io/exporter/prometheus v0.4.2/go.mod h1:dvEHbiKmgvbr5pjaF9
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
+github.com/ReToCode/networking v0.0.0-20240109073627-bc010699726a h1:tNqizB6R53cc8/k0GmYQNh3qAvG7JGZXuUpD0Qc8cOQ=
+github.com/ReToCode/networking v0.0.0-20240109073627-bc010699726a/go.mod h1:KL3tdfTQ58qOdE66WagSuFtppfMCNp+ZlDL3Oc6Bxno=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
@@ -696,8 +698,6 @@ k8s.io/utils v0.0.0-20230406110748-d93618cff8a2 h1:qY1Ad8PODbnymg2pRbkyMT/ylpTrC
 k8s.io/utils v0.0.0-20230406110748-d93618cff8a2/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 knative.dev/hack v0.0.0-20240108153050-3ea694d6dad7 h1:mICurlRke2mlKP3LmyWYQYl6KZe80rYP5+ag9w2HQLA=
 knative.dev/hack v0.0.0-20240108153050-3ea694d6dad7/go.mod h1:yk2OjGDsbEnQjfxdm0/HJKS2WqTLEFg/N6nUs6Rqx3Q=
-knative.dev/networking v0.0.0-20240108134621-7cca4b010b25 h1:2H/mvXGSgfBcpNFUMWC3XCWL5zOrGGvas4RBbclEJ1M=
-knative.dev/networking v0.0.0-20240108134621-7cca4b010b25/go.mod h1:ynNh7EoqxkST4jWPw6ZVyI9jwuF68WJNrX65yoAQ7FE=
 knative.dev/pkg v0.0.0-20240108152118-de3e9cc204c9 h1:4nsTvrgApGtLTt6Gpo7ulJS03pBI+wSJ8+EOwVamDx0=
 knative.dev/pkg v0.0.0-20240108152118-de3e9cc204c9/go.mod h1:YzKN/kzcJPhL+Z4fwuzbaiEnRLIbYvOiZUuCWFJ7PRA=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
