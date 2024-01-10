@@ -53,7 +53,7 @@ func MakeIngressVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingr
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing)},
 			Annotations:     ing.GetAnnotations(),
 		},
-		Spec: *makeVirtualServiceSpec(ing, gateways, expandedHosts(getHosts(ing))),
+		Spec: *makeVirtualServiceSpec(ing, gateways, ingress.ExpandedHosts(getHosts(ing))),
 	}
 
 	// Populate the Ingress labels.
@@ -70,7 +70,7 @@ func MakeMeshVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 	// If cluster local gateway is configured, we need to expand hosts because of
 	// https://github.com/knative/serving/issues/6488#issuecomment-573513768.
 	if len(gateways[v1alpha1.IngressVisibilityClusterLocal]) != 0 {
-		hosts = expandedHosts(hosts)
+		hosts = ingress.ExpandedHosts(hosts)
 	}
 	if len(hosts) == 0 {
 		return nil
@@ -311,13 +311,4 @@ func getPublicIngressRules(i *v1alpha1.Ingress) []v1alpha1.IngressRule {
 	}
 
 	return result
-}
-
-// Keep me until ingress.ExpandedHosts uses sets.Set[string]
-func expandedHosts(hosts sets.Set[string]) sets.Set[string] {
-	tmp := sets.NewString(sets.List(hosts)...)
-
-	ret := ingress.ExpandedHosts(tmp)
-
-	return sets.New(ret.List()...)
 }

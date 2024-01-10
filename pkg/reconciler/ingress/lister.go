@@ -60,7 +60,7 @@ type gatewayPodTargetLister struct {
 
 func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1alpha1.Ingress) ([]status.ProbeTarget, error) {
 	results := []status.ProbeTarget{}
-	hostsByGateway := ingress.HostsPerVisibility(ing, convertVisibilityMap(qualifiedGatewayNamesFromContext(ctx)))
+	hostsByGateway := ingress.HostsPerVisibility(ing, qualifiedGatewayNamesFromContext(ctx))
 	gatewayNames := make([]string, 0, len(hostsByGateway))
 	for gatewayName := range hostsByGateway {
 		gatewayNames = append(gatewayNames, gatewayName)
@@ -89,7 +89,7 @@ func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1al
 			}
 			// Pick a single host since they all end up being used in the same
 			// VirtualService and will be applied atomically by Istio.
-			host := hostsByGateway[gatewayName].List()[0]
+			host := sets.List(hostsByGateway[gatewayName])[0]
 			newURL := *target.URLs[0]
 			newURL.Host = host + ":" + target.Port
 			qualifiedTarget.URLs[0] = &newURL
@@ -174,7 +174,7 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1beta1.Gateway) ([
 				continue
 			}
 			target := status.ProbeTarget{
-				PodIPs:  sets.NewString(),
+				PodIPs:  sets.New[string](),
 				PodPort: strconv.Itoa(int(portNumber)),
 				Port:    strconv.Itoa(int(server.Port.Number)),
 				URLs:    []*url.URL{tURL},
@@ -186,13 +186,4 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1beta1.Gateway) ([
 		}
 	}
 	return targets, nil
-}
-
-// Remove me when ingress.HostsPerVisibility uses sets.Set[string]
-// nolint: staticcheck
-func convertVisibilityMap(input map[v1alpha1.IngressVisibility]sets.Set[string]) map[v1alpha1.IngressVisibility]sets.String {
-	return map[v1alpha1.IngressVisibility]sets.String{
-		v1alpha1.IngressVisibilityExternalIP:   sets.NewString(sets.List(input[v1alpha1.IngressVisibilityExternalIP])...),
-		v1alpha1.IngressVisibilityClusterLocal: sets.NewString(sets.List(input[v1alpha1.IngressVisibilityClusterLocal])...),
-	}
 }
