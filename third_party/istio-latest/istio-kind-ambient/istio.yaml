@@ -85,31 +85,48 @@ metadata:
     istio.io/rev: default
     operator.istio.io/component: Cni
     release: istio
+  name: istio-cni-ambient
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods/status
+    verbs:
+      - patch
+      - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: istio-cni
+    install.operator.istio.io/owning-resource: unknown
+    istio.io/rev: default
+    operator.istio.io/component: Cni
+    release: istio
   name: istio-cni-repair-role
 rules:
   - apiGroups:
       - ""
     resources:
-      - pods
+      - events
     verbs:
-      - get
-      - list
-      - watch
-      - delete
+      - create
       - patch
-      - update
   - apiGroups:
       - ""
     resources:
-      - events
+      - pods
     verbs:
+      - watch
       - get
       - list
-      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
       - delete
-      - patch
-      - update
-      - create
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -459,6 +476,24 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: istio-cni
+subjects:
+  - kind: ServiceAccount
+    name: istio-cni
+    namespace: istio-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    install.operator.istio.io/owning-resource: unknown
+    istio.io/rev: default
+    k8s-app: istio-cni-repair
+    operator.istio.io/component: Cni
+  name: istio-cni-ambient
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: istio-cni-ambient
 subjects:
   - kind: ServiceAccount
     name: istio-cni
@@ -828,14 +863,19 @@ spec:
                       type: object
                   type: object
                 targetRef:
+                  description: Optional.
                   properties:
                     group:
+                      description: group is the group of the target resource.
                       type: string
                     kind:
+                      description: kind is kind of the target resource.
                       type: string
                     name:
+                      description: name is the name of the target resource.
                       type: string
                     namespace:
+                      description: namespace is the namespace of the referent.
                       type: string
                   type: object
               type: object
@@ -1023,14 +1063,19 @@ spec:
                       type: object
                   type: object
                 targetRef:
+                  description: Optional.
                   properties:
                     group:
+                      description: group is the group of the target resource.
                       type: string
                     kind:
+                      description: kind is kind of the target resource.
                       type: string
                     name:
+                      description: name is the name of the target resource.
                       type: string
                     namespace:
+                      description: namespace is the namespace of the referent.
                       type: string
                   type: object
               type: object
@@ -1607,7 +1652,7 @@ spec:
                                       description: The name of the secret that holds the TLS certs for the client including the CA certificates.
                                       type: string
                                     insecureSkipVerify:
-                                      description: InsecureSkipVerify specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.
+                                      description: '`insecureSkipVerify` specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.'
                                       nullable: true
                                       type: boolean
                                     mode:
@@ -1645,7 +1690,7 @@ spec:
                                 description: The name of the secret that holds the TLS certs for the client including the CA certificates.
                                 type: string
                               insecureSkipVerify:
-                                description: InsecureSkipVerify specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.
+                                description: '`insecureSkipVerify` specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.'
                                 nullable: true
                                 type: boolean
                               mode:
@@ -2191,7 +2236,7 @@ spec:
                                 description: The name of the secret that holds the TLS certs for the client including the CA certificates.
                                 type: string
                               insecureSkipVerify:
-                                description: InsecureSkipVerify specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.
+                                description: '`insecureSkipVerify` specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.'
                                 nullable: true
                                 type: boolean
                               mode:
@@ -2229,7 +2274,7 @@ spec:
                           description: The name of the secret that holds the TLS certs for the client including the CA certificates.
                           type: string
                         insecureSkipVerify:
-                          description: InsecureSkipVerify specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.
+                          description: '`insecureSkipVerify` specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.'
                           nullable: true
                           type: boolean
                         mode:
@@ -2827,7 +2872,7 @@ spec:
                                       description: The name of the secret that holds the TLS certs for the client including the CA certificates.
                                       type: string
                                     insecureSkipVerify:
-                                      description: InsecureSkipVerify specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.
+                                      description: '`insecureSkipVerify` specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.'
                                       nullable: true
                                       type: boolean
                                     mode:
@@ -2865,7 +2910,7 @@ spec:
                                 description: The name of the secret that holds the TLS certs for the client including the CA certificates.
                                 type: string
                               insecureSkipVerify:
-                                description: InsecureSkipVerify specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.
+                                description: '`insecureSkipVerify` specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.'
                                 nullable: true
                                 type: boolean
                               mode:
@@ -3411,7 +3456,7 @@ spec:
                                 description: The name of the secret that holds the TLS certs for the client including the CA certificates.
                                 type: string
                               insecureSkipVerify:
-                                description: InsecureSkipVerify specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.
+                                description: '`insecureSkipVerify` specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.'
                                 nullable: true
                                 type: boolean
                               mode:
@@ -3449,7 +3494,7 @@ spec:
                           description: The name of the secret that holds the TLS certs for the client including the CA certificates.
                           type: string
                         insecureSkipVerify:
-                          description: InsecureSkipVerify specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.
+                          description: '`insecureSkipVerify` specifies whether the proxy should skip verifying the CA signature and SAN for the server certificate corresponding to the host.'
                           nullable: true
                           type: boolean
                         mode:
@@ -4344,14 +4389,19 @@ spec:
                       type: object
                   type: object
                 targetRef:
+                  description: Optional.
                   properties:
                     group:
+                      description: group is the group of the target resource.
                       type: string
                     kind:
+                      description: kind is kind of the target resource.
                       type: string
                     name:
+                      description: name is the name of the target resource.
                       type: string
                     namespace:
+                      description: namespace is the namespace of the referent.
                       type: string
                   type: object
               type: object
@@ -4442,14 +4492,19 @@ spec:
                       type: object
                   type: object
                 targetRef:
+                  description: Optional.
                   properties:
                     group:
+                      description: group is the group of the target resource.
                       type: string
                     kind:
+                      description: kind is kind of the target resource.
                       type: string
                     name:
+                      description: name is the name of the target resource.
                       type: string
                     namespace:
+                      description: namespace is the namespace of the referent.
                       type: string
                   type: object
               type: object
@@ -5587,14 +5642,19 @@ spec:
                       type: object
                   type: object
                 targetRef:
+                  description: Optional.
                   properties:
                     group:
+                      description: group is the group of the target resource.
                       type: string
                     kind:
+                      description: kind is kind of the target resource.
                       type: string
                     name:
+                      description: name is the name of the target resource.
                       type: string
                     namespace:
+                      description: namespace is the namespace of the referent.
                       type: string
                   type: object
                 tracing:
@@ -7467,14 +7527,19 @@ spec:
                   pattern: (^$|^[a-f0-9]{64}$)
                   type: string
                 targetRef:
+                  description: Optional.
                   properties:
                     group:
+                      description: group is the group of the target resource.
                       type: string
                     kind:
+                      description: kind is kind of the target resource.
                       type: string
                     name:
+                      description: name is the name of the target resource.
                       type: string
                     namespace:
+                      description: namespace is the namespace of the referent.
                       type: string
                   type: object
                 type:
@@ -9911,7 +9976,7 @@ data:
         "sts": {
           "servicePort": 0
         },
-        "tag": "1.20.0",
+        "tag": "1.20.2",
         "tracer": {
           "datadog": {},
           "lightstep": {},
@@ -10061,7 +10126,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: docker.io/istio/proxyv2:1.20.0
+          image: docker.io/istio/proxyv2:1.20.2
           name: istio-proxy
           ports:
             - containerPort: 15021
@@ -10265,7 +10330,7 @@ spec:
                   resource: limits.cpu
             - name: PLATFORM
               value: ""
-          image: docker.io/istio/pilot:1.20.0-distroless
+          image: docker.io/istio/pilot:1.20.2-distroless
           name: discovery
           ports:
             - containerPort: 8080
@@ -10713,9 +10778,11 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
             - name: REPAIR_LABEL_PODS
-              value: "true"
+              value: "false"
             - name: REPAIR_DELETE_PODS
               value: "true"
+            - name: REPAIR_REPAIR_PODS
+              value: "false"
             - name: REPAIR_RUN_AS_DAEMON
               value: "true"
             - name: REPAIR_SIDECAR_ANNOTATION
@@ -10743,7 +10810,7 @@ spec:
               valueFrom:
                 resourceFieldRef:
                   resource: limits.cpu
-          image: docker.io/istio/install-cni:1.20.0
+          image: docker.io/istio/install-cni:1.20.2
           name: install-cni
           readinessProbe:
             httpGet:
@@ -10859,7 +10926,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.serviceAccountName
-          image: docker.io/istio/ztunnel:1.20.0-distroless
+          image: docker.io/istio/ztunnel:1.20.2-distroless
           name: istio-proxy
           ports:
             - containerPort: 15020

@@ -913,7 +913,7 @@ type Port struct {
 	// A valid non-negative integer port number.
 	Number uint32 `protobuf:"varint,1,opt,name=number,proto3" json:"number,omitempty"`
 	// The protocol exposed on the port.
-	// MUST BE one of HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP|TLS.
+	// MUST BE one of HTTP|HTTPS|GRPC|GRPC-WEB|HTTP2|MONGO|TCP|TLS.
 	// TLS can be either used to terminate non-HTTP based connections on a specific port
 	// or to route traffic based on SNI header to the destination without terminating the TLS connection.
 	Protocol string `protobuf:"bytes,2,opt,name=protocol,proto3" json:"protocol,omitempty"`
@@ -1013,7 +1013,8 @@ type ServerTLSSettings struct {
 	// For gateways running on Kubernetes, the name of the secret that
 	// holds the TLS certs including the CA certificates. Applicable
 	// only on Kubernetes. An Opaque secret should contain the following
-	// keys and values: `key: <privateKey>` and `cert: <serverCert>`.
+	// keys and values: `tls.key: <privateKey>` and `tls.crt: <serverCert>` or
+	// `key: <privateKey>` and `cert: <serverCert>`.
 	// For mutual TLS, `cacert: <CACertificate>` and `crl: <CertificateRevocationList>`
 	// can be provided in the same secret or a separate secret named `<secret>-cacert`.
 	// A TLS secret for server certificates with an additional `tls.ocsp-staple` key
