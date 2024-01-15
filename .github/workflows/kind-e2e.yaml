@@ -22,6 +22,7 @@ jobs:
         k8s-version:
         - v1.27.x
         - v1.28.x
+        - v1.29.x
 
         test-suite:
         - ./test/conformance
@@ -31,8 +32,8 @@ jobs:
         - latest
 
         encryption:
-          - disabled
-          - system-internal-tls
+        - disabled
+        - system-internal-tls
 
         istio-profile:
         - no-mesh
@@ -47,21 +48,14 @@ jobs:
 
     steps:
     - name: Set up Go 1.21.x
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v5
       with:
         go-version: 1.21.x
 
-    - name: Install Dependencies
-      working-directory: ./
-      run: |
-        echo '::group:: install ko'
-        curl -L https://github.com/google/ko/releases/download/v0.12.0/ko_0.12.0_Linux_x86_64.tar.gz | tar xzf - ko
-        chmod +x ./ko
-        sudo mv ko /usr/local/bin
-        echo '::endgroup::'
+    - uses: ko-build/setup-ko@v0.6
 
     - name: Check out code onto GOPATH
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: ./src/knative.dev/net-istio
 
@@ -85,7 +79,7 @@ jobs:
 
         # Remove Knative Certificate as we are running without Serving CRs
         rm -f config/700-istio-knative-certificate.yaml
-  
+
         # Build and Publish our containers to the docker daemon (including test assets)
         ko resolve --platform=linux/amd64 -f test/config/ -f config/ | kubectl apply -f -
 
@@ -100,14 +94,14 @@ jobs:
       if: matrix.encryption == 'system-internal-tls' && matrix.istio-profile == 'no-mesh'
       run: |
         set -o pipefail
-        
+
         echo ">> Deploy certificate for upstream traffic"
         ./test/generate-upstream-cert.sh
-        
+
         echo ">> Setting environment variables for upstream tls"
         echo "UPSTREAM_TLS_CERT=serving-certs" >> $GITHUB_ENV
         echo "SERVER_NAME=kn-user-serving-tests" >> $GITHUB_ENV
-        
+
         echo ">> Enabling system-internal-tls in config-network"
         kubectl apply -f test/config/system-internal-tls
 
@@ -129,7 +123,7 @@ jobs:
     - name: Run e2e Tests
       run: |
         set -x
-        
+
         # Exclude the control-plane node, which doesn't seem to expose the nodeport service.
         IPS=( $(kubectl get nodes -lkubernetes.io/hostname!=kind-control-plane -ojsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}') )
 
