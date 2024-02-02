@@ -57,4 +57,4 @@ spec:
       targetPort: 8081
     - name: https
       port: 443
-      targetPort: 8443
+      targetPort: 8444

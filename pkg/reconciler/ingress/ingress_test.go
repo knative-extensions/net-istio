@@ -164,7 +164,7 @@ var (
 		Hosts: []string{"*.example.com"},
 		Port: &istiov1beta1.Port{
 			Name:     "https",
-			Number:   443,
+			Number:   resources.ExternalGatewayHTTPSPort,
 			Protocol: "HTTPS",
 		},
 		Tls: &istiov1beta1.ServerTLSSettings{
@@ -249,7 +249,7 @@ var (
 		Hosts: []string{"host-tls.example.com"},
 		Port: &istiov1beta1.Port{
 			Name:     "test-ns/reconciling-ingress:0",
-			Number:   443,
+			Number:   resources.ExternalGatewayHTTPSPort,
 			Protocol: "HTTPS",
 		},
 		Tls: &istiov1beta1.ServerTLSSettings{
@@ -265,7 +265,7 @@ var (
 		Hosts: []string{"host-tls.test-ns.svc.cluster.local"},
 		Port: &istiov1beta1.Port{
 			Name:     "test-ns/reconciling-ingress:0",
-			Number:   443,
+			Number:   resources.ClusterLocalGatewayHTTPSPort,
 			Protocol: "HTTPS",
 		},
 		Tls: &istiov1beta1.ServerTLSSettings{
@@ -281,7 +281,7 @@ var (
 		Hosts: []string{"host-tls.example.com"},
 		Port: &istiov1beta1.Port{
 			Name:     "http-server",
-			Number:   80,
+			Number:   resources.GatewayHTTPPort,
 			Protocol: "HTTP",
 		},
 	}
@@ -290,7 +290,7 @@ var (
 		Hosts: []string{"*"},
 		Port: &istiov1beta1.Port{
 			Name:     "http-server",
-			Number:   80,
+			Number:   resources.GatewayHTTPPort,
 			Protocol: "HTTP",
 		},
 		Tls: &istiov1beta1.ServerTLSSettings{
@@ -303,7 +303,7 @@ var (
 		Hosts: []string{"host-tls.example.com", "host-tls.test-ns.svc.cluster.local"},
 		Port: &istiov1beta1.Port{
 			Name:     "test:0",
-			Number:   443,
+			Number:   resources.ExternalGatewayHTTPSPort,
 			Protocol: "HTTPS",
 		},
 		Tls: &istiov1beta1.ServerTLSSettings{
@@ -318,7 +318,7 @@ var (
 		Hosts: []string{"*"},
 		Port: &istiov1beta1.Port{
 			Name:     "http-server",
-			Number:   80,
+			Number:   resources.GatewayHTTPPort,
 			Protocol: "HTTP",
 		},
 	}

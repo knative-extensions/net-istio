@@ -40,12 +40,13 @@ import (
 	"knative.dev/pkg/tracker"
 )
 
-// GatewayHTTPPort is the HTTP port the gateways listen on.
 const (
-	GatewayHTTPPort       = 80
-	dns1123LabelMaxLength = 63 // Public for testing only.
-	dns1123LabelFmt       = "[a-zA-Z0-9](?:[-a-zA-Z0-9]*[a-zA-Z0-9])?"
-	localGatewayPostfix   = "-local"
+	GatewayHTTPPort              = 80
+	ExternalGatewayHTTPSPort     = 443
+	ClusterLocalGatewayHTTPSPort = 8444
+	dns1123LabelMaxLength        = 63 // Public for testing only.
+	dns1123LabelFmt              = "[a-zA-Z0-9](?:[-a-zA-Z0-9]*[a-zA-Z0-9])?"
+	localGatewayPostfix          = "-local"
 )
 
 var httpServerPortName = "http-server"
@@ -118,7 +119,7 @@ func MakeIngressTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, visibili
 	}
 	gateways := make([]*v1beta1.Gateway, len(gatewayServices))
 	for i, gatewayService := range gatewayServices {
-		servers, err := MakeTLSServers(ing, ingressTLS, gatewayService.Namespace, originSecrets)
+		servers, err := MakeTLSServers(ing, visibility, ingressTLS, gatewayService.Namespace, originSecrets)
 		if err != nil {
 			return nil, err
 		}
@@ -183,7 +184,7 @@ func makeWildcardTLSGateways(originWildcardSecrets map[string]*corev1.Secret,
 			Hosts: hosts,
 			Port: &istiov1beta1.Port{
 				Name:     "https",
-				Number:   443,
+				Number:   ExternalGatewayHTTPSPort,
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
@@ -304,8 +305,19 @@ func GatewayName(accessor kmeta.Accessor, visibility v1alpha1.IngressVisibility,
 }
 
 // MakeTLSServers creates the expected Gateway TLS `Servers` based on the given IngressTLS.
-func MakeTLSServers(ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, gatewayServiceNamespace string, originSecrets map[string]*corev1.Secret) ([]*istiov1beta1.Server, error) {
+func MakeTLSServers(ing *v1alpha1.Ingress, visibility v1alpha1.IngressVisibility, ingressTLS []v1alpha1.IngressTLS, gatewayServiceNamespace string, originSecrets map[string]*corev1.Secret) ([]*istiov1beta1.Server, error) {
 	servers := make([]*istiov1beta1.Server, len(ingressTLS))
+
+	var port uint32
+	switch {
+	case visibility == v1alpha1.IngressVisibilityExternalIP:
+		port = ExternalGatewayHTTPSPort
+	case visibility == v1alpha1.IngressVisibilityClusterLocal:
+		port = ClusterLocalGatewayHTTPSPort
+	default:
+		return nil, fmt.Errorf("invalid ingress visibility: %v", visibility)
+	}
+
 	// TODO(zhiminx): for the hosts that does not included in the IngressTLS but listed in the IngressRule,
 	// do we consider them as hosts for HTTP?
 	for i, tls := range ingressTLS {
@@ -324,7 +336,7 @@ func MakeTLSServers(ing *v1alpha1.Ingress, ingressTLS []v1alpha1.IngressTLS, gat
 			Hosts: tls.Hosts,
 			Port: &istiov1beta1.Port{
 				Name:     fmt.Sprintf(portNamePrefix(ing.GetNamespace(), ing.GetName())+":%d", i),
-				Number:   443,
+				Number:   port,
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
