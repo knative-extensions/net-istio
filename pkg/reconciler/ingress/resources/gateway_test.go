@@ -80,7 +80,7 @@ var servers = []*istiov1beta1.Server{{
 	Hosts: []string{"host1.example.com"},
 	Port: &istiov1beta1.Port{
 		Name:     "test-ns/ingress:0",
-		Number:   443,
+		Number:   ExternalGatewayHTTPSPort,
 		Protocol: "HTTPS",
 	},
 	Tls: &istiov1beta1.ServerTLSSettings{
@@ -92,7 +92,7 @@ var servers = []*istiov1beta1.Server{{
 	Hosts: []string{"host2.example.com"},
 	Port: &istiov1beta1.Port{
 		Name:     "test-ns/non-ingress:0",
-		Number:   443,
+		Number:   ExternalGatewayHTTPSPort,
 		Protocol: "HTTPS",
 	},
 	Tls: &istiov1beta1.ServerTLSSettings{
@@ -106,7 +106,7 @@ var httpServer = istiov1beta1.Server{
 	Hosts: []string{"*"},
 	Port: &istiov1beta1.Port{
 		Name:     httpServerPortName,
-		Number:   80,
+		Number:   GatewayHTTPPort,
 		Protocol: "HTTP",
 	},
 }
@@ -127,7 +127,7 @@ var modifiedDefaultTLSServer = istiov1beta1.Server{
 	Hosts: []string{"added.by.user.example.com"},
 	Port: &istiov1beta1.Port{
 		Name:     "https",
-		Number:   443,
+		Number:   ExternalGatewayHTTPSPort,
 		Protocol: "HTTPS",
 	},
 	Tls: &istiov1beta1.ServerTLSSettings{
@@ -183,7 +183,7 @@ func TestGetServers(t *testing.T) {
 		Hosts: []string{"host1.example.com"},
 		Port: &istiov1beta1.Port{
 			Name:     "test-ns/ingress:0",
-			Number:   443,
+			Number:   ExternalGatewayHTTPSPort,
 			Protocol: "HTTPS",
 		},
 		Tls: &istiov1beta1.ServerTLSSettings{
@@ -206,7 +206,7 @@ func TestGetHTTPServer(t *testing.T) {
 		Hosts: []string{"*"},
 		Port: &istiov1beta1.Port{
 			Name:     httpServerPortName,
-			Number:   80,
+			Number:   GatewayHTTPPort,
 			Protocol: "HTTP",
 		},
 	}
@@ -233,7 +233,7 @@ func TestMakeTLSServers(t *testing.T) {
 			Hosts: []string{"host1.example.com"},
 			Port: &istiov1beta1.Port{
 				Name:     "test-ns/ingress:0",
-				Number:   443,
+				Number:   ExternalGatewayHTTPSPort,
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
@@ -254,7 +254,7 @@ func TestMakeTLSServers(t *testing.T) {
 			Hosts: []string{"host1.example.com"},
 			Port: &istiov1beta1.Port{
 				Name:     "test-ns/ingress:0",
-				Number:   443,
+				Number:   ExternalGatewayHTTPSPort,
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
@@ -275,7 +275,7 @@ func TestMakeTLSServers(t *testing.T) {
 			Port: &istiov1beta1.Port{
 				// port name is created with <namespace>/<name>
 				Name:     "test-ns/ingress:0",
-				Number:   443,
+				Number:   ExternalGatewayHTTPSPort,
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
@@ -295,7 +295,7 @@ func TestMakeTLSServers(t *testing.T) {
 	}}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			servers, err := MakeTLSServers(c.ci, c.ci.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP), c.gatewayServiceNamespace, c.originSecrets)
+			servers, err := MakeTLSServers(c.ci, v1alpha1.IngressVisibilityExternalIP, c.ci.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP), c.gatewayServiceNamespace, c.originSecrets)
 			if (err != nil) != c.wantErr {
 				t.Fatalf("Test: %s; MakeServers error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
@@ -322,7 +322,7 @@ func TestMakeHTTPServer(t *testing.T) {
 			Hosts: []string{"*"},
 			Port: &istiov1beta1.Port{
 				Name:     httpServerPortName,
-				Number:   80,
+				Number:   GatewayHTTPPort,
 				Protocol: "HTTP",
 			},
 		},
@@ -333,7 +333,7 @@ func TestMakeHTTPServer(t *testing.T) {
 			Hosts: []string{"*"},
 			Port: &istiov1beta1.Port{
 				Name:     httpServerPortName,
-				Number:   80,
+				Number:   GatewayHTTPPort,
 				Protocol: "HTTP",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
@@ -364,7 +364,7 @@ func TestUpdateGateway(t *testing.T) {
 			Hosts: []string{"host1.example.com"},
 			Port: &istiov1beta1.Port{
 				Name:     "test-ns/ingress:0",
-				Number:   443,
+				Number:   ExternalGatewayHTTPSPort,
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
@@ -377,7 +377,7 @@ func TestUpdateGateway(t *testing.T) {
 			Hosts: []string{"host-new.example.com"},
 			Port: &istiov1beta1.Port{
 				Name:     "test-ns/ingress:0",
-				Number:   443,
+				Number:   ExternalGatewayHTTPSPort,
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
@@ -394,7 +394,7 @@ func TestUpdateGateway(t *testing.T) {
 					Hosts: []string{"host-new.example.com"},
 					Port: &istiov1beta1.Port{
 						Name:     "test-ns/ingress:0",
-						Number:   443,
+						Number:   ExternalGatewayHTTPSPort,
 						Protocol: "HTTPS",
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
@@ -406,7 +406,7 @@ func TestUpdateGateway(t *testing.T) {
 					Hosts: []string{"host2.example.com"},
 					Port: &istiov1beta1.Port{
 						Name:     "test-ns/non-ingress:0",
-						Number:   443,
+						Number:   ExternalGatewayHTTPSPort,
 						Protocol: "HTTPS",
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
@@ -423,7 +423,7 @@ func TestUpdateGateway(t *testing.T) {
 			Hosts: []string{"host1.example.com"},
 			Port: &istiov1beta1.Port{
 				Name:     "test-ns/ingress:0",
-				Number:   443,
+				Number:   ExternalGatewayHTTPSPort,
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
@@ -441,7 +441,7 @@ func TestUpdateGateway(t *testing.T) {
 					Hosts: []string{"host2.example.com"},
 					Port: &istiov1beta1.Port{
 						Name:     "test-ns/non-ingress:0",
-						Number:   443,
+						Number:   ExternalGatewayHTTPSPort,
 						Protocol: "HTTPS",
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
@@ -455,12 +455,12 @@ func TestUpdateGateway(t *testing.T) {
 	}, {
 		name: "Delete servers from Gateway and no real servers are left",
 
-		// All of the servers in the original gateway will be deleted.
+		// All the servers in the original gateway will be deleted.
 		existingServers: []*istiov1beta1.Server{{
 			Hosts: []string{"host1.example.com"},
 			Port: &istiov1beta1.Port{
 				Name:     "test-ns/ingress:0",
-				Number:   443,
+				Number:   ExternalGatewayHTTPSPort,
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
@@ -472,7 +472,7 @@ func TestUpdateGateway(t *testing.T) {
 			Hosts: []string{"host2.example.com"},
 			Port: &istiov1beta1.Port{
 				Name:     "test-ns/non-ingress:0",
-				Number:   443,
+				Number:   ExternalGatewayHTTPSPort,
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
@@ -491,7 +491,7 @@ func TestUpdateGateway(t *testing.T) {
 			Hosts: []string{"host1.example.com"},
 			Port: &istiov1beta1.Port{
 				Name:     "test-ns/ingress:0",
-				Number:   443,
+				Number:   ExternalGatewayHTTPSPort,
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
@@ -509,7 +509,7 @@ func TestUpdateGateway(t *testing.T) {
 					Hosts: []string{"host1.example.com"},
 					Port: &istiov1beta1.Port{
 						Name:     "test-ns/ingress:0",
-						Number:   443,
+						Number:   ExternalGatewayHTTPSPort,
 						Protocol: "HTTPS",
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
@@ -528,7 +528,7 @@ func TestUpdateGateway(t *testing.T) {
 			Hosts: []string{"host1.example.com"},
 			Port: &istiov1beta1.Port{
 				Name:     "clusteringress:0",
-				Number:   443,
+				Number:   ExternalGatewayHTTPSPort,
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
@@ -545,7 +545,7 @@ func TestUpdateGateway(t *testing.T) {
 						Hosts: []string{"host1.example.com"},
 						Port: &istiov1beta1.Port{
 							Name:     "clusteringress:0",
-							Number:   443,
+							Number:   ExternalGatewayHTTPSPort,
 							Protocol: "HTTPS",
 						},
 						Tls: &istiov1beta1.ServerTLSSettings{
@@ -601,7 +601,7 @@ func TestMakeWildcardGateways(t *testing.T) {
 					Hosts: []string{"*.example.com"},
 					Port: &istiov1beta1.Port{
 						Name:     "https",
-						Number:   443,
+						Number:   ExternalGatewayHTTPSPort,
 						Protocol: "HTTPS",
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
@@ -638,7 +638,7 @@ func TestMakeWildcardGateways(t *testing.T) {
 					Hosts: []string{"*.example.com"},
 					Port: &istiov1beta1.Port{
 						Name:     "https",
-						Number:   443,
+						Number:   ExternalGatewayHTTPSPort,
 						Protocol: "HTTPS",
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
@@ -725,7 +725,7 @@ func TestGetQualifiedGatewayNames(t *testing.T) {
 	}
 }
 
-func TestMakeIngressGateways(t *testing.T) {
+func TestMakeExternalIngressGateways(t *testing.T) {
 	cases := []struct {
 		name    string
 		ia      *v1alpha1.Ingress
@@ -785,9 +785,9 @@ func TestMakeIngressGateways(t *testing.T) {
 			},
 		})
 		t.Run(c.name, func(t *testing.T) {
-			got, err := MakeIngressGateways(ctx, c.ia, c.servers, svcLister)
+			got, err := MakeExternalIngressGateways(ctx, c.ia, c.servers, svcLister)
 			if (err != nil) != c.wantErr {
-				t.Fatalf("Test: %s; MakeIngressTLSGateways error = %v, WantErr %v", c.name, err, c.wantErr)
+				t.Fatalf("Test: %s; MakeExternalIngressGateways error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
 			if diff := cmp.Diff(c.want, got, defaultGatewayCmpOpts); diff != "" {
 				t.Error("Unexpected Gateways (-want, +got):", diff)
@@ -800,6 +800,7 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 	cases := []struct {
 		name           string
 		ia             *v1alpha1.Ingress
+		visibility     v1alpha1.IngressVisibility
 		originSecrets  map[string]*corev1.Secret
 		gatewayService *corev1.Service
 		want           []*v1beta1.Gateway
@@ -807,6 +808,7 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 	}{{
 		name:          "happy path: secret namespace is the different from the gateway service namespace",
 		ia:            &ingressResource,
+		visibility:    v1alpha1.IngressVisibilityExternalIP,
 		originSecrets: originSecrets,
 		gatewayService: &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
@@ -832,7 +834,7 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 					Hosts: []string{"host1.example.com"},
 					Port: &istiov1beta1.Port{
 						Name:     "test-ns/ingress:0",
-						Number:   443,
+						Number:   ExternalGatewayHTTPSPort,
 						Protocol: "HTTPS",
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
@@ -849,6 +851,7 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 		name:          "happy path: secret namespace is the same as the gateway service namespace",
 		ia:            &ingressResource,
 		originSecrets: originSecrets,
+		visibility:    v1alpha1.IngressVisibilityExternalIP,
 		// The namespace of gateway service is the same as the secrets.
 		gatewayService: &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
@@ -874,7 +877,7 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 					Hosts: []string{"host1.example.com"},
 					Port: &istiov1beta1.Port{
 						Name:     "test-ns/ingress:0",
-						Number:   443,
+						Number:   ExternalGatewayHTTPSPort,
 						Protocol: "HTTPS",
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
@@ -888,9 +891,56 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 			},
 		}},
 	}, {
+		name: "happy path with cluster-local visibility",
+		ia: func() *v1alpha1.Ingress {
+			ing := ingressResource.DeepCopy()
+			ing.Spec.Rules[0].Visibility = v1alpha1.IngressVisibilityClusterLocal
+			return ing
+		}(),
+		visibility:    v1alpha1.IngressVisibilityClusterLocal,
+		originSecrets: originSecrets,
+		gatewayService: &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "istio-ingressgateway",
+				Namespace: "istio-system",
+			},
+			Spec: corev1.ServiceSpec{
+				Selector: selector,
+			},
+		},
+		want: []*v1beta1.Gateway{{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:            fmt.Sprintf("ingress-%d", adler32.Checksum([]byte("istio-system/istio-ingressgateway-local"))),
+				Namespace:       "test-ns",
+				OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(&ingressResource)},
+				Labels: map[string]string{
+					networking.IngressLabelKey: "ingress",
+				},
+			},
+			Spec: istiov1beta1.Gateway{
+				Selector: selector,
+				Servers: []*istiov1beta1.Server{{
+					Hosts: []string{"host1.example.com"},
+					Port: &istiov1beta1.Port{
+						Name:     "test-ns/ingress:0",
+						Number:   ClusterLocalGatewayHTTPSPort,
+						Protocol: "HTTPS",
+					},
+					Tls: &istiov1beta1.ServerTLSSettings{
+						Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
+						ServerCertificate:  corev1.TLSCertKey,
+						PrivateKey:         corev1.TLSPrivateKeyKey,
+						CredentialName:     targetSecret(&secret, &ingressResource),
+						MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
+					},
+				}},
+			},
+		}},
+	}, {
 		name: "ingress name has dot",
 
 		ia:            &ingressResourceWithDotName,
+		visibility:    v1alpha1.IngressVisibilityExternalIP,
 		originSecrets: originSecrets,
 		gatewayService: &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
@@ -916,7 +966,7 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 					Hosts: []string{"host1.example.com"},
 					Port: &istiov1beta1.Port{
 						Name:     fmt.Sprintf("test-ns/%d:0", adler32.Checksum([]byte("ingress.com"))),
-						Number:   443,
+						Number:   ExternalGatewayHTTPSPort,
 						Protocol: "HTTPS",
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
@@ -932,6 +982,7 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 	}, {
 		name:          "error to make gateway because of incorrect originSecrets",
 		ia:            &ingressResource,
+		visibility:    v1alpha1.IngressVisibilityExternalIP,
 		originSecrets: map[string]*corev1.Secret{},
 		gatewayService: &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
@@ -961,7 +1012,7 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 			},
 		})
 		t.Run(c.name, func(t *testing.T) {
-			got, err := MakeIngressTLSGateways(ctx, c.ia, c.ia.GetIngressTLSForVisibility(v1alpha1.IngressVisibilityExternalIP), c.originSecrets, svcLister)
+			got, err := MakeIngressTLSGateways(ctx, c.ia, c.visibility, c.ia.GetIngressTLSForVisibility(c.visibility), c.originSecrets, svcLister)
 			if (err != nil) != c.wantErr {
 				t.Fatalf("Test: %s; MakeIngressTLSGateways error = %v, WantErr %v", c.name, err, c.wantErr)
 			}
@@ -999,9 +1050,15 @@ func TestGatewayName(t *testing.T) {
 	}
 
 	want := fmt.Sprintf("ingress-%d", adler32.Checksum([]byte("istio-system/gateway")))
-	got := GatewayName(ingress, svc)
+	got := GatewayName(ingress, v1alpha1.IngressVisibilityExternalIP, svc)
 	if got != want {
-		t.Errorf("Unexpected gateway name. want %q, got %q", want, got)
+		t.Errorf("Unexpected external gateway name. want %q, got %q", want, got)
+	}
+
+	want = fmt.Sprintf("ingress-%d", adler32.Checksum([]byte("istio-system/gateway-local")))
+	got = GatewayName(ingress, v1alpha1.IngressVisibilityClusterLocal, svc)
+	if got != want {
+		t.Errorf("Unexpected local gateway name. want %q, got %q", want, got)
 	}
 }
 
@@ -1020,7 +1077,7 @@ func TestGatewayNameLongIngressName(t *testing.T) {
 	}
 
 	want := fmt.Sprintf("areallyverylongdomainnamethatexcd8923dee789a086a0ac4-%d", adler32.Checksum([]byte("istio-system/gateway")))
-	got := GatewayName(ingress, svc)
+	got := GatewayName(ingress, "", svc)
 	if got != want {
 		t.Errorf("Unexpected gateway name. want %q, got %q", want, got)
 	}
