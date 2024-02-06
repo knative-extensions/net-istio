@@ -56,7 +56,7 @@ func TestGatewayConfiguration(t *testing.T) {
 	gatewayConfigTests := []struct {
 		name      string
 		wantErr   bool
-		wantIstio interface{}
+		wantIstio *Istio
 		config    *corev1.ConfigMap
 	}{{
 		name: "gateway configuration with no network input",
@@ -71,9 +71,8 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 	}, {
-		name:      "gateway configuration with invalid url",
-		wantErr:   true,
-		wantIstio: (*Istio)(nil),
+		name:    "gateway configuration with invalid url",
+		wantErr: true,
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: system.Namespace(),
@@ -84,8 +83,7 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 	}, {
-		name:    "gateway configuration with valid url",
-		wantErr: false,
+		name: "gateway configuration with valid url",
 		wantIstio: &Istio{
 			IngressGateways: []Gateway{{
 				Namespace:  "knative-testing",
@@ -104,8 +102,7 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 	}, {
-		name:    "gateway configuration with valid url having a dot at the end",
-		wantErr: false,
+		name: "gateway configuration with valid url having a dot at the end",
 		wantIstio: &Istio{
 			IngressGateways: []Gateway{{
 				Namespace:  "knative-testing",
@@ -124,8 +121,7 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 	}, {
-		name:    "gateway configuration in custom namespace with valid url",
-		wantErr: false,
+		name: "gateway configuration in custom namespace with valid url",
 		wantIstio: &Istio{
 			IngressGateways: []Gateway{{
 				Namespace:  "custom-namespace",
@@ -144,9 +140,8 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 	}, {
-		name:      "gateway configuration in custom namespace with invalid url",
-		wantErr:   true,
-		wantIstio: (*Istio)(nil),
+		name:    "gateway configuration in custom namespace with invalid url",
+		wantErr: true,
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: system.Namespace(),
@@ -157,8 +152,7 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 	}, {
-		name:    "local gateway configuration with valid url",
-		wantErr: false,
+		name: "local gateway configuration with valid url",
 		wantIstio: &Istio{
 			IngressGateways: defaultIngressGateways(),
 			LocalGateways: []Gateway{{
@@ -177,9 +171,8 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 	}, {
-		name:      "local gateway configuration with invalid url",
-		wantErr:   true,
-		wantIstio: (*Istio)(nil),
+		name:    "local gateway configuration with invalid url",
+		wantErr: true,
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: system.Namespace(),
@@ -190,8 +183,7 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 	}, {
-		name:    "local gateway configuration in custom namespace with valid url",
-		wantErr: false,
+		name: "local gateway configuration in custom namespace with valid url",
 		wantIstio: &Istio{
 			IngressGateways: defaultIngressGateways(),
 			LocalGateways: []Gateway{{
@@ -210,9 +202,8 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 	}, {
-		name:      "local gateway configuration in custom namespace with invalid url",
-		wantErr:   true,
-		wantIstio: (*Istio)(nil),
+		name:    "local gateway configuration in custom namespace with invalid url",
+		wantErr: true,
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: system.Namespace(),
@@ -221,6 +212,231 @@ func TestGatewayConfiguration(t *testing.T) {
 			Data: map[string]string{
 				"local-gateway.custom-namespace.invalid": "_invalid",
 			},
+		},
+	}, {
+		name: "new format alone",
+		wantIstio: &Istio{
+			IngressGateways: []Gateway{{
+				Namespace:  "namespace1",
+				Name:       "gateway1",
+				ServiceURL: "istio-ingressbackroad.istio-system.svc.cluster.local",
+			}},
+			LocalGateways: []Gateway{{
+				Namespace:  "namespace2",
+				Name:       "gateway2",
+				ServiceURL: "istio-local-gateway.istio-system.svc.cluster.local",
+			}},
+		},
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": `
+                  - namespace: "namespace1"
+                    name: "gateway1"
+                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
+				"local-gateways": `
+                  - namespace: "namespace2"
+                    name: "gateway2"
+                    service:  "istio-local-gateway.istio-system.svc.cluster.local"`,
+			},
+		},
+	}, {
+		name:    "new & old format",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": `
+                  - namespace: "namespace1"
+                    name: "gateway1"
+                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
+				"local-gateways": `
+                  - namespace: "namespace2"
+                    name: "gateway2"
+                    service:  "istio-local-gateway.istio-system.svc.cluster.local"`,
+				"local-gateway.custom-namespace.custom-local-gateway": "istio-ingressbackroad.istio-system.svc.cluster.local",
+				"gateway.custom-namespace.custom-gateway":             "istio-ingressfreeway.istio-system.svc.cluster.local",
+			},
+		},
+	}, {
+		name:    "new format - double local gateway",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": `
+                  - namespace: "namespace1"
+                    name: "gateway1"
+                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
+				"local-gateways": `
+                  - namespace: "namespace1"
+                    name: "gateway1"
+                    service:  "istio-local-gateway1.istio-system.svc.cluster.local"
+                  - namespace: "namespace2"
+                    name: "gateway2"
+                    service:  "istio-local-gateway2.istio-system.svc.cluster.local"`,
+			},
+		},
+	}, {
+		name:    "new format - invalid URL",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": `
+                  - namespace: "namespace1"
+                    name: "gateway1"
+                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
+				"local-gateways": `
+                  - namespace: "namespace2"
+                    name: "gateway2"
+                    service:  "_invalid"`,
+			},
+		},
+	}, {
+		name:    "new format - missing service",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": `
+                  - namespace: "namespace1"
+                    name: "gateway1"
+                    service:  ""`,
+				"local-gateways": `
+                  - namespace: "namespace2"
+                    name: "gateway2"
+                    service:  "istio-local-gateway.istio-system.svc.cluster.local"`,
+			},
+		},
+	}, {
+		name:    "new format - missing name",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": `
+                  - namespace: "namespace1"
+                    name: ""
+                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
+				"local-gateways": `
+                  - namespace: "namespace2"
+                    name: "gateway2"
+                    service:  "istio-local-gateway.istio-system.svc.cluster.local"`,
+			},
+		},
+	}, {
+		name:    "new format - missing namespace",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": `
+                  - namespace: "namespace1"
+                    name: "gateway1"
+                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
+				"local-gateways": `
+                  - namespace: ""
+                    name: "gateway2"
+                    service:  "istio-local-gateway.istio-system.svc.cluster.local"`,
+			},
+		},
+	}, {
+		name:    "new format - invalid local yaml",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": `
+                  - namespace: "namespace1"
+                    name: "gateway1"
+                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
+				"local-gateways": "notYAML",
+			},
+		},
+	}, {
+		name:    "new format - invalid external yaml",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": "notYAML",
+				"local-gateways": `
+                  - namespace: "namespace2"
+                    name: "gateway2"
+                    service:  "istio-local-gateway.istio-system.svc.cluster.local"`,
+			},
+		},
+	}, {
+		name: "new format - missing external gateway configuration",
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"local-gateways": `
+                  - namespace: "namespace2"
+                    name: "gateway2"
+                    service:  "istio-local-gateway.istio-system.svc.cluster.local"`,
+			},
+		},
+		wantIstio: &Istio{
+			LocalGateways: []Gateway{{
+				Namespace:  "namespace2",
+				Name:       "gateway2",
+				ServiceURL: "istio-local-gateway.istio-system.svc.cluster.local",
+			}},
+			IngressGateways: defaultIngressGateways(),
+		},
+	}, {
+		name: "new format - missing local gateway configuration",
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": `
+                  - namespace: "namespace1"
+                    name: "gateway1"
+                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
+			},
+		},
+		wantIstio: &Istio{
+			IngressGateways: []Gateway{{
+				Namespace:  "namespace1",
+				Name:       "gateway1",
+				ServiceURL: "istio-ingressbackroad.istio-system.svc.cluster.local",
+			}},
+			LocalGateways: defaultLocalGateways(),
 		},
 	}}
 
@@ -232,7 +448,7 @@ func TestGatewayConfiguration(t *testing.T) {
 			}
 
 			if diff := cmp.Diff(actualIstio, tt.wantIstio); diff != "" {
-				t.Fatalf("Want %v, but got %v", tt.wantIstio, actualIstio)
+				t.Fatalf("Want %+v, but got %+v", tt.wantIstio, actualIstio)
 			}
 		})
 	}

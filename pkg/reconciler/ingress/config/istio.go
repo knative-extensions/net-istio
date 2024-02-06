@@ -21,6 +21,7 @@ import (
 	"sort"
 	"strings"
 
+	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"knative.dev/pkg/network"
@@ -37,6 +38,12 @@ const (
 
 	// localGatewayKeyPrefix is the prefix of all keys to configure Istio gateways for public & private Ingresses.
 	localGatewayKeyPrefix = "local-gateway."
+
+	// externalGatewaysKey is the configmap key to configure Istio gateways for public Ingresses.
+	externalGatewaysKey = "external-gateways"
+
+	// localGatewaysKey is the configmap key to configure Istio gateways for private Ingresses.
+	localGatewaysKey = "local-gateways"
 
 	// KnativeIngressGateway is the name of the ingress gateway
 	KnativeIngressGateway = "knative-ingress-gateway"
@@ -71,12 +78,32 @@ func defaultLocalGateways() []Gateway {
 type Gateway struct {
 	Namespace  string
 	Name       string
-	ServiceURL string
+	ServiceURL string `yaml:"service"`
 }
 
 // QualifiedName returns gateway name in '{namespace}/{name}' format.
 func (g Gateway) QualifiedName() string {
 	return g.Namespace + "/" + g.Name
+}
+
+func (g Gateway) Validate() error {
+	if g.Namespace == "" {
+		return fmt.Errorf("missing namespace")
+	}
+
+	if g.Name == "" {
+		return fmt.Errorf("missing name")
+	}
+
+	if g.ServiceURL == "" {
+		return fmt.Errorf("missing service")
+	}
+
+	if errs := validation.IsDNS1123Subdomain(strings.TrimSuffix(g.ServiceURL, ".")); len(errs) > 0 {
+		return fmt.Errorf("invalid gateway service format: %v", errs)
+	}
+
+	return nil
 }
 
 // Istio contains istio related configuration defined in the
@@ -89,7 +116,123 @@ type Istio struct {
 	LocalGateways []Gateway
 }
 
-func parseGateways(configMap *corev1.ConfigMap, prefix string) ([]Gateway, error) {
+func (i Istio) Validate() error {
+	for _, gtw := range i.IngressGateways {
+		if err := gtw.Validate(); err != nil {
+			return fmt.Errorf("invalid gateway: %w", err)
+		}
+	}
+
+	for _, gtw := range i.LocalGateways {
+		if err := gtw.Validate(); err != nil {
+			return fmt.Errorf("invalid local gateway: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// NewIstioFromConfigMap creates an Istio config from the supplied ConfigMap
+func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
+	ret := &Istio{}
+	var err error
+
+	oldFormatDefined := isOldFormatDefined(configMap)
+	newFormatDefined := isNewFormatDefined(configMap)
+
+	switch {
+	case newFormatDefined && oldFormatDefined:
+		return nil, fmt.Errorf(
+			"invalid configmap: %q or %q can not be defined simultaneously with %q or %q",
+			localGatewaysKey, externalGatewaysKey, gatewayKeyPrefix, localGatewayKeyPrefix,
+		)
+	case newFormatDefined:
+		ret, err = parseNewFormat(configMap)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse configmap: %w", err)
+		}
+	case oldFormatDefined:
+		ret = parseOldFormat(configMap)
+	}
+
+	defaultValues(ret)
+
+	err = ret.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("invalid configuration: %w", err)
+	}
+
+	return ret, nil
+}
+
+func isNewFormatDefined(configMap *corev1.ConfigMap) bool {
+	_, hasGateway := configMap.Data[externalGatewaysKey]
+	_, hasLocalGateway := configMap.Data[localGatewaysKey]
+
+	return hasGateway || hasLocalGateway
+}
+
+func isOldFormatDefined(configMap *corev1.ConfigMap) bool {
+	for key := range configMap.Data {
+		if strings.HasPrefix(key, gatewayKeyPrefix) || strings.HasPrefix(key, localGatewayKeyPrefix) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func parseNewFormat(configMap *corev1.ConfigMap) (*Istio, error) {
+	ret := &Istio{}
+
+	gatewaysStr, hasGateway := configMap.Data[externalGatewaysKey]
+
+	if hasGateway {
+		gateways, err := parseNewFormatGateways(gatewaysStr)
+		if err != nil {
+			return ret, fmt.Errorf("failed to parse %q gateways: %w", externalGatewaysKey, err)
+		}
+
+		ret.IngressGateways = gateways
+	}
+
+	localGatewaysStr, hasLocalGateway := configMap.Data[localGatewaysKey]
+
+	if hasLocalGateway {
+		localGateways, err := parseNewFormatGateways(localGatewaysStr)
+		if err != nil {
+			return ret, fmt.Errorf("failed to parse %q gateways: %w", localGatewaysKey, err)
+		}
+
+		ret.LocalGateways = localGateways
+	}
+
+	if len(ret.LocalGateways) > 1 {
+		return ret, fmt.Errorf("only one local gateway can be defined: current %q value is %q", localGatewaysKey, localGatewaysStr)
+	}
+
+	return ret, nil
+}
+
+func parseNewFormatGateways(data string) ([]Gateway, error) {
+	ret := make([]Gateway, 0)
+
+	err := yaml.Unmarshal([]byte(data), &ret)
+	if err != nil {
+		return ret, fmt.Errorf("failed to unmarshal: %w", err)
+	}
+
+	return ret, nil
+}
+
+func parseOldFormat(configMap *corev1.ConfigMap) *Istio {
+	return &Istio{
+		IngressGateways: parseOldFormatGateways(configMap, gatewayKeyPrefix),
+		LocalGateways:   parseOldFormatGateways(configMap, localGatewayKeyPrefix),
+	}
+}
+
+func parseOldFormatGateways(configMap *corev1.ConfigMap, prefix string) []Gateway {
 	urls := map[string]string{}
 	gatewayNames := []string{}
 	for k, v := range configMap.Data {
@@ -97,9 +240,7 @@ func parseGateways(configMap *corev1.ConfigMap, prefix string) ([]Gateway, error
 			continue
 		}
 		gatewayName, serviceURL := k[len(prefix):], v
-		if errs := validation.IsDNS1123Subdomain(strings.TrimSuffix(serviceURL, ".")); len(errs) > 0 {
-			return nil, fmt.Errorf("invalid gateway format: %v", errs)
-		}
+
 		gatewayNames = append(gatewayNames, gatewayName)
 		urls[gatewayName] = serviceURL
 	}
@@ -121,28 +262,15 @@ func parseGateways(configMap *corev1.ConfigMap, prefix string) ([]Gateway, error
 			ServiceURL: urls[gatewayName],
 		}
 	}
-	return gateways, nil
+	return gateways
 }
 
-// NewIstioFromConfigMap creates an Istio config from the supplied ConfigMap
-func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
-	gateways, err := parseGateways(configMap, gatewayKeyPrefix)
-	if err != nil {
-		return nil, err
-	}
-	if len(gateways) == 0 {
-		gateways = defaultIngressGateways()
-	}
-	localGateways, err := parseGateways(configMap, localGatewayKeyPrefix)
-	if err != nil {
-		return nil, err
-	}
-	if len(localGateways) == 0 {
-		localGateways = defaultLocalGateways()
+func defaultValues(conf *Istio) {
+	if len(conf.IngressGateways) == 0 {
+		conf.IngressGateways = defaultIngressGateways()
 	}
 
-	return &Istio{
-		IngressGateways: gateways,
-		LocalGateways:   localGateways,
-	}, nil
+	if len(conf.LocalGateways) == 0 {
+		conf.LocalGateways = defaultLocalGateways()
+	}
 }
