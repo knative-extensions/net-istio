@@ -21,11 +21,12 @@ import (
 	"sort"
 	"strings"
 
-	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/system"
+	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -76,9 +77,10 @@ func defaultLocalGateways() []Gateway {
 
 // Gateway specifies the name of the Gateway and the K8s Service backing it.
 type Gateway struct {
-	Namespace  string
-	Name       string
-	ServiceURL string `yaml:"service"`
+	Namespace     string
+	Name          string
+	ServiceURL    string                `json:"service"`
+	LabelSelector *metav1.LabelSelector `json:"labelSelector,omitempty"`
 }
 
 // QualifiedName returns gateway name in '{namespace}/{name}' format.
@@ -109,10 +111,10 @@ func (g Gateway) Validate() error {
 // Istio contains istio related configuration defined in the
 // istio config map.
 type Istio struct {
-	// IngressGateway specifies the gateway urls for public Ingress.
+	// IngressGateways specifies the gateway urls for public Ingress.
 	IngressGateways []Gateway
 
-	// LocalGateway specifies the gateway urls for public & private Ingress.
+	// LocalGateways specifies the gateway urls for public & private Ingress.
 	LocalGateways []Gateway
 }
 
@@ -130,6 +132,28 @@ func (i Istio) Validate() error {
 	}
 
 	return nil
+}
+
+func (i Istio) DefaultExternalGateways() []Gateway {
+	return defaultGateways(i.IngressGateways)
+}
+
+func (i Istio) DefaultLocalGateways() []Gateway {
+	return defaultGateways(i.LocalGateways)
+}
+
+func defaultGateways(gtws []Gateway) []Gateway {
+	ret := make([]Gateway, 0)
+
+	for _, gtw := range gtws {
+		gateway := gtw
+
+		if gtw.LabelSelector == nil {
+			ret = append(ret, gateway)
+		}
+	}
+
+	return ret
 }
 
 // NewIstioFromConfigMap creates an Istio config from the supplied ConfigMap
@@ -205,10 +229,6 @@ func parseNewFormat(configMap *corev1.ConfigMap) (*Istio, error) {
 		}
 
 		ret.LocalGateways = localGateways
-	}
-
-	if len(ret.LocalGateways) > 1 {
-		return ret, fmt.Errorf("only one local gateway can be defined: current %q value is %q", localGatewaysKey, localGatewaysStr)
 	}
 
 	return ret, nil

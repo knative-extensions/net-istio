@@ -7,7 +7,6 @@ require (
 	go.uber.org/zap v1.27.0
 	golang.org/x/sync v0.6.0
 	google.golang.org/protobuf v1.33.0
-	gopkg.in/yaml.v3 v3.0.1
 	istio.io/api v1.20.2
 	istio.io/client-go v1.20.2
 	k8s.io/api v0.29.2
@@ -16,6 +15,7 @@ require (
 	knative.dev/hack v0.0.0-20240318013248-424e75ed769a
 	knative.dev/networking v0.0.0-20240326200906-419ebf9a1d87
 	knative.dev/pkg v0.0.0-20240325103648-fd7cc2153e6a
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
@@ -83,6 +83,7 @@ require (
 	google.golang.org/grpc v1.62.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.29.2 // indirect
 	k8s.io/code-generator v0.29.2 // indirect
 	k8s.io/gengo v0.0.0-20240129211411-f967bbeff4b4 // indirect
@@ -91,5 +92,4 @@ require (
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
-	sigs.k8s.io/yaml v1.4.0 // indirect
 )

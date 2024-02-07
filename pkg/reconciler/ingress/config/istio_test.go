@@ -265,28 +265,6 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 	}, {
-		name:    "new format - double local gateway",
-		wantErr: true,
-		config: &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: system.Namespace(),
-				Name:      IstioConfigName,
-			},
-			Data: map[string]string{
-				"external-gateways": `
-                  - namespace: "namespace1"
-                    name: "gateway1"
-                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
-				"local-gateways": `
-                  - namespace: "namespace1"
-                    name: "gateway1"
-                    service:  "istio-local-gateway1.istio-system.svc.cluster.local"
-                  - namespace: "namespace2"
-                    name: "gateway2"
-                    service:  "istio-local-gateway2.istio-system.svc.cluster.local"`,
-			},
-		},
-	}, {
 		name:    "new format - invalid URL",
 		wantErr: true,
 		config: &corev1.ConfigMap{
@@ -437,6 +415,106 @@ func TestGatewayConfiguration(t *testing.T) {
 				ServiceURL: "istio-ingressbackroad.istio-system.svc.cluster.local",
 			}},
 			LocalGateways: defaultLocalGateways(),
+		},
+	}, {
+		name: "new format - label selector",
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": `
+                  - namespace: "namespace"
+                    name: "gateway"
+                    service: "istio-gateway.istio-system.svc.cluster.local"
+                    labelSelector:
+                      matchExpressions:
+                      - key: "key"
+                        operator: "In"
+                        values: ["value"]`,
+
+				"local-gateways": `
+                  - namespace: "namespace2"
+                    name: "gateway2"
+                    service: "istio-local-gateway.istio-system.svc.cluster.local"`,
+			},
+		},
+		wantIstio: &Istio{
+			IngressGateways: []Gateway{{
+				Namespace:  "namespace",
+				Name:       "gateway",
+				ServiceURL: "istio-gateway.istio-system.svc.cluster.local",
+				LabelSelector: &metav1.LabelSelector{
+					MatchExpressions: []metav1.LabelSelectorRequirement{
+						{
+							Key:      "key",
+							Operator: metav1.LabelSelectorOpIn,
+							Values:   []string{"value"},
+						},
+					},
+				},
+			}},
+			LocalGateways: []Gateway{{
+				Namespace:  "namespace2",
+				Name:       "gateway2",
+				ServiceURL: "istio-local-gateway.istio-system.svc.cluster.local",
+			}},
+		},
+	}, {
+		name: "local gateway with selector",
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"local-gateways": `
+                  - namespace: "namespace"
+                    name: "gateway"
+                    service: "istio-local.istio-system.svc.cluster.local"
+                    labelSelector:
+                      matchExpressions:
+                      - key: "key"
+                        operator: "In"
+                        values: ["value"]
+                  - namespace: "namespace1"
+                    name: "gateway1"
+                    service: "istio-local-gateway.istio-system.svc.cluster.local"`,
+
+				"external-gateways": `
+                  - namespace: "namespace2"
+                    name: "gateway2"
+                    service: "istio-gateway.istio-system.svc.cluster.local"`,
+			},
+		},
+		wantIstio: &Istio{
+			IngressGateways: []Gateway{{
+				Namespace:  "namespace2",
+				Name:       "gateway2",
+				ServiceURL: "istio-gateway.istio-system.svc.cluster.local",
+			}},
+			LocalGateways: []Gateway{
+				{
+					Namespace:  "namespace",
+					Name:       "gateway",
+					ServiceURL: "istio-local.istio-system.svc.cluster.local",
+					LabelSelector: &metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "key",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"value"},
+							},
+						},
+					},
+				},
+				{
+					Namespace:  "namespace1",
+					Name:       "gateway1",
+					ServiceURL: "istio-local-gateway.istio-system.svc.cluster.local",
+				},
+			},
 		},
 	}}
 
