@@ -41,9 +41,10 @@ data:
     # this example block and unindented to be in the data block
     # to actually change the configuration.
 
-    # A gateway and Istio service to serve external traffic.
-    #
-    # The configuration format should be
+
+    # external-gateways defines a gateway and Istio service to serve external traffic.
+    # It is the new and preferred way to define the configuration.
+    # The format is as follow:
     # ```
     # external-gateways: |
     #   - name: {{gateway_name}}
@@ -56,10 +57,15 @@ data:
         namespace: knative-serving
         service: istio-ingressgateway.istio-system.svc.cluster.local
     #
-    # Format `gateway.{{gateway_namespace}}.{{gateway_name}}: "{{ingress_name}}.{{ingress_namespace}}.svc.cluster.local"`
-    # should be replaced by `external-gateways`.
-    # This key is ignored if either `external-gateways` or `local-gateways` is defined.
+    #
+    # The old format has the following pattern:
+    # ```
+    # gateway.{{gateway_namespace}}.{{gateway_name}}: "{{ingress_name}}.{{ingress_namespace}}.svc.cluster.local"
+    # ```
+    # Please use the new configuration format `external-gateways` for future compatibility.
+    # This configuration format is ignored if either `external-gateways` or `local-gateways` is defined.
     gateway.knative-serving.knative-ingress-gateway: "istio-ingressgateway.istio-system.svc.cluster.local"
+    #
     #
     # If no values are specified for the external traffic, it will default to:
     # external-gateways: |
@@ -67,16 +73,18 @@ data:
     #    namespace: {{serving_system_namespace}}
     #    service: istio-ingressgateway.istio-system.{{cluster_domain}}
 
-    # A cluster local gateway to allow pods outside of the mesh to access
-    # Services and Routes not exposing through an ingress.  If the users
+
+    # local-gateways defines a cluster local gateway to allow pods outside of the mesh to access
+    # Services and Routes not exposing through an ingress. If the users
     # do have a service mesh setup, this isn't required and can be removed.
     #
     # An example use case is when users want to use Istio without any
-    # sidecar injection (like Knative's istio-ci-no-mesh.yaml).  Since every pod
-    # is outside of the service mesh in that case, a cluster-local  service
+    # sidecar injection (like Knative's istio-ci-no-mesh.yaml). Since every pod
+    # is outside of the service mesh in that case, a cluster-local service
     # will need to be exposed to a cluster-local gateway to be accessible.
     #
-    # The configuration format should be
+    # It is the new and preferred way to define the configuration.
+    # The format is as follow:
     # ```
     # local-gateways: |
     #   - name: {{local_gateway_name}}
@@ -90,11 +98,16 @@ data:
         namespace: knative-serving
         service: knative-local-gateway.istio-system.svc.cluster.local
     #
-    # Format `local-gateway.{{local_gateway_namespace}}.{{local_gateway_name}}:
-    # "{{cluster_local_gateway_name}}.{{cluster_local_gateway_namespace}}.svc.cluster.local"`
-    # should be replaced by `local-gateways`.
-    # This key is ignored if either `external-gateways` or `local-gateways` is defined.
+    #
+    # The old format has the following pattern:
+    # ```
+    # local-gateway.{{local_gateway_namespace}}.{{local_gateway_name}}:
+    # "{{cluster_local_gateway_name}}.{{cluster_local_gateway_namespace}}.svc.cluster.local"
+    # ```
+    # Please use the new configuration format `local-gateways` for future compatibility.
+    # This configuration format is ignored if either `external-gateways` or `local-gateways` is defined.
     local-gateway.knative-serving.knative-local-gateway: "knative-local-gateway.istio-system.svc.cluster.local"
+    #
     #
     # If no values are specified for the local traffic, it will default to:
     # local-gateways: |
