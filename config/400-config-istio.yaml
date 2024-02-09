@@ -65,13 +65,6 @@ data:
     # Please use the new configuration format `external-gateways` for future compatibility.
     # This configuration format is ignored if either `external-gateways` or `local-gateways` is defined.
     gateway.knative-serving.knative-ingress-gateway: "istio-ingressgateway.istio-system.svc.cluster.local"
-    #
-    #
-    # If no values are specified for the external traffic, it will default to:
-    # external-gateways: |
-    #  - name: knative-ingress-gateway
-    #    namespace: {{serving_system_namespace}}
-    #    service: istio-ingressgateway.istio-system.{{cluster_domain}}
 
 
     # local-gateways defines a cluster local gateway to allow pods outside of the mesh to access
@@ -107,10 +100,3 @@ data:
     # Please use the new configuration format `local-gateways` for future compatibility.
     # This configuration format is ignored if either `external-gateways` or `local-gateways` is defined.
     local-gateway.knative-serving.knative-local-gateway: "knative-local-gateway.istio-system.svc.cluster.local"
-    #
-    #
-    # If no values are specified for the local traffic, it will default to:
-    # local-gateways: |
-    #  - name: knative-local-gateway
-    #    namespace: {{serving_system_namespace}}
-    #    service: knative-local-gateway.istio-system.{{cluster_domain}}
