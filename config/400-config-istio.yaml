@@ -63,7 +63,7 @@ data:
     # gateway.{{gateway_namespace}}.{{gateway_name}}: "{{ingress_name}}.{{ingress_namespace}}.svc.cluster.local"
     # ```
     # Please use the new configuration format `external-gateways` for future compatibility.
-    # This configuration format is ignored if either `external-gateways` or `local-gateways` is defined.
+    # This configuration will raise an error if either `external-gateways` or `local-gateways` is defined.
     gateway.knative-serving.knative-ingress-gateway: "istio-ingressgateway.istio-system.svc.cluster.local"
 
 
@@ -98,5 +98,5 @@ data:
     # "{{cluster_local_gateway_name}}.{{cluster_local_gateway_namespace}}.svc.cluster.local"
     # ```
     # Please use the new configuration format `local-gateways` for future compatibility.
-    # This configuration format is ignored if either `external-gateways` or `local-gateways` is defined.
+    # This configuration will raise an error if either `external-gateways` or `local-gateways` is defined.
     local-gateway.knative-serving.knative-local-gateway: "knative-local-gateway.istio-system.svc.cluster.local"
