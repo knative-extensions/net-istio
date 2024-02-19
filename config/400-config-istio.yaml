@@ -50,8 +50,18 @@ data:
     #   - name: {{gateway_name}}
     #     namespace: {{gateway_namespace}}
     #     service: {{ingress_name}}.{{ingress_namespace}}.svc.cluster.local
+    #     labelSelector:
+    #       matchExpressions:
+    #       - key: {{label_key}}
+    #         operator: {{operator}}
+    #         values: [{{label_value}}]
+    #       matchLabels:
+    #         {{label_key}}: {{label_value}}
     # ```
-    # name, namespace & service are mandatory and can't be empty.
+    # name, namespace & service are mandatory and can't be empty. labelSelector is optional.
+    # If labelSelector is specified, the external gateway will be used by the knative service with matching labels.
+    # See https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ for more details about labelSelector.
+    # Only one external gateway can be specified without a selector. It will act as the default external gateway.
     external-gateways: |
       - name: knative-ingress-gateway
         namespace: knative-serving
@@ -83,9 +93,18 @@ data:
     #   - name: {{local_gateway_name}}
     #     namespace: {{local_gateway_namespace}}
     #     service: {{cluster_local_gateway_name}}.{{cluster_local_gateway_namespace}}.svc.cluster.local
+    #     labelSelector:
+    #       matchExpressions:
+    #       - key: {{label_key}}
+    #         operator: {{operator}}
+    #         values: [{{label_value}}]
+    #       matchLabels:
+    #         {{label_key}}: {{label_value}}
     # ```
-    # name, namespace & service are mandatory and can't be empty.
-    # Only one local gateway can be specified.
+    # name, namespace & service are mandatory and can't be empty. labelSelector is optional.
+    # If labelSelector is specified, the local gateway will be used by the knative service with matching labels.
+    # See https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ for more details about labelSelector.
+    # Only one local gateway can be specified without a selector. It will act as the default local gateway.
     local-gateways: |
       - name: knative-local-gateway
         namespace: knative-serving
