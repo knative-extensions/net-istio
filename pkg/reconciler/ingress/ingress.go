@@ -113,14 +113,19 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	ing.Status.InitializeConditions()
 	logger.Infof("Reconciling ingress: %#v", ing)
 
-	defaultGateways, err := resources.QualifiedGatewayNamesFromContext(ctx, ing)
+	defaultGateways, err := resources.GatewaysFromContext(ctx, ing)
 	if err != nil {
 		return err
 	}
 
-	gatewayNames := map[v1alpha1.IngressVisibility]sets.Set[string]{}
-	gatewayNames[v1alpha1.IngressVisibilityClusterLocal] = defaultGateways[v1alpha1.IngressVisibilityClusterLocal]
-	gatewayNames[v1alpha1.IngressVisibilityExternalIP] = sets.New[string]()
+	gatewayNames := map[v1alpha1.IngressVisibility]sets.Set[string]{
+		v1alpha1.IngressVisibilityClusterLocal: sets.New[string](),
+		v1alpha1.IngressVisibilityExternalIP:   sets.New[string](),
+	}
+
+	for _, gateway := range defaultGateways[v1alpha1.IngressVisibilityClusterLocal] {
+		gatewayNames[v1alpha1.IngressVisibilityClusterLocal].Insert(gateway.QualifiedName())
+	}
 
 	externalIngressGateways := []*v1beta1.Gateway{}
 	if shouldReconcileExternalDomainTLS(ing) {
@@ -206,7 +211,11 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	} else {
 		// Otherwise, we fall back to the default global Gateways for HTTP behavior.
 		// We need this for the backward compatibility.
-		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(sets.List(defaultGateways[v1alpha1.IngressVisibilityExternalIP])...)
+		defaultGlobalHTTPGateways := defaultGateways[v1alpha1.IngressVisibilityExternalIP]
+
+		for _, gateway := range defaultGlobalHTTPGateways {
+			gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(gateway.QualifiedName())
+		}
 	}
 
 	if err := r.reconcileIngressGateways(ctx, externalIngressGateways); err != nil {
@@ -262,17 +271,11 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	}
 
 	if ready {
-		publicGateways, err := resources.PublicGatewayServiceURLFromContext(ctx, ing)
-		if err != nil {
-			return fmt.Errorf("failed to get public gateways: %w", err)
-		}
-		publicLbs := getLBStatus(publicGateways)
+		publicGatewayURL := gatewayServiceURL(defaultGateways[v1alpha1.IngressVisibilityExternalIP])
+		publicLbs := getLBStatus(publicGatewayURL)
 
-		privateGateways, err := resources.PrivateGatewayServiceURLFromContext(ctx, ing)
-		if err != nil {
-			return fmt.Errorf("failed to get private gateways: %w", err)
-		}
-		privateLbs := getLBStatus(privateGateways)
+		privateGatewayURL := gatewayServiceURL(defaultGateways[v1alpha1.IngressVisibilityClusterLocal])
+		privateLbs := getLBStatus(privateGatewayURL)
 
 		ing.Status.MarkLoadBalancerReady(publicLbs, privateLbs)
 	} else {
@@ -530,6 +533,14 @@ func (r *Reconciler) GetVirtualServiceLister() istiolisters.VirtualServiceLister
 
 func (r *Reconciler) GetDestinationRuleLister() istiolisters.DestinationRuleLister {
 	return r.destinationRuleLister
+}
+
+func gatewayServiceURL(gateways []config.Gateway) string {
+	if len(gateways) == 0 {
+		return ""
+	}
+
+	return gateways[0].ServiceURL
 }
 
 // getLBStatus gets the LB Status.

@@ -187,6 +187,18 @@ var defaultGatewayService = corev1.Service{
 	},
 }
 
+var configDefaultGateway = &config.Config{
+	Istio: &config.Istio{
+		IngressGateways: []config.Gateway{{
+			Name:       config.KnativeIngressGateway,
+			ServiceURL: fmt.Sprintf("%s.%s.svc.cluster.local", defaultGatewayService.Name, defaultGatewayService.Namespace),
+		}},
+	},
+	Network: &netconfig.Config{
+		HTTPProtocol: netconfig.HTTPEnabled,
+	},
+}
+
 var defaultGatewayCmpOpts = protocmp.Transform()
 
 func TestGetServers(t *testing.T) {
@@ -755,19 +767,7 @@ func TestMakeExternalIngressGateways(t *testing.T) {
 		}
 	}
 
-	configDefaultGateway := &config.Config{
-		Istio: &config.Istio{
-			IngressGateways: []config.Gateway{{
-				Name:       config.KnativeIngressGateway,
-				ServiceURL: fmt.Sprintf("%s.%s.svc.cluster.local", defaultGatewayService.Name, defaultGatewayService.Namespace),
-			}},
-		},
-		Network: &netconfig.Config{
-			HTTPProtocol: netconfig.HTTPEnabled,
-		},
-	}
-
-	var gateway1Service = corev1.Service{
+	gateway1Service := corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "gateway1",
 			Namespace: "aNamespace",
@@ -779,7 +779,7 @@ func TestMakeExternalIngressGateways(t *testing.T) {
 		},
 	}
 
-	var gateway2Service = corev1.Service{
+	gateway2Service := corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "gateway2",
 			Namespace: "aNamespace",

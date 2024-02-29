@@ -231,6 +231,14 @@ func parseNewFormat(configMap *corev1.ConfigMap) (*Istio, error) {
 		ret.LocalGateways = localGateways
 	}
 
+	if len(ret.DefaultExternalGateways()) > 1 {
+		return ret, fmt.Errorf("only one external gateway with no selector can be defined, here: %v", ret.DefaultExternalGateways())
+	}
+
+	if len(ret.DefaultLocalGateways()) > 1 {
+		return ret, fmt.Errorf("only one local gateway with no selector can be defined, here: %v", ret.DefaultLocalGateways())
+	}
+
 	return ret, nil
 }
 

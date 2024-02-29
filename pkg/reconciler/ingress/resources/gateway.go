@@ -266,8 +266,8 @@ func makeIngressGateway(ing *v1alpha1.Ingress, visibility v1alpha1.IngressVisibi
 	}
 }
 
-func getGatewayServices(ctx context.Context, ing *v1alpha1.Ingress, svcLister corev1listers.ServiceLister) ([]*corev1.Service, error) {
-	ingressSvcMetas, err := GetIngressGatewaySvcNameNamespaces(ctx, ing)
+func getGatewayServices(ctx context.Context, obj kmeta.Accessor, svcLister corev1listers.ServiceLister) ([]*corev1.Service, error) {
+	ingressSvcMetas, err := GetIngressGatewaySvcNameNamespaces(ctx, obj)
 	if err != nil {
 		return nil, err
 	}
@@ -397,10 +397,10 @@ func GetNonWildcardIngressTLS(ingressTLS []v1alpha1.IngressTLS, nonWildcardSecre
 }
 
 // GetIngressGatewaySvcNameNamespaces gets the Istio ingress namespaces from ConfigMap for gateways that should expose the service.
-func GetIngressGatewaySvcNameNamespaces(ctx context.Context, ing *v1alpha1.Ingress) ([]metav1.ObjectMeta, error) {
+func GetIngressGatewaySvcNameNamespaces(ctx context.Context, obj kmeta.Accessor) ([]metav1.ObjectMeta, error) {
 	nameNamespaces := make([]metav1.ObjectMeta, 0)
 
-	serviceGateways, err := gatewaysFromContext(ctx, ing)
+	serviceGateways, err := GatewaysFromContext(ctx, obj)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get gateway from configuration: %w", err)
 	}
@@ -471,10 +471,10 @@ func isPlaceHolderServer(server *istiov1beta1.Server) bool {
 }
 
 // QualifiedGatewayNamesFromContext get gateway names from context.
-func QualifiedGatewayNamesFromContext(ctx context.Context, ing *v1alpha1.Ingress) (map[v1alpha1.IngressVisibility]sets.Set[string], error) {
+func QualifiedGatewayNamesFromContext(ctx context.Context, obj kmeta.Accessor) (map[v1alpha1.IngressVisibility]sets.Set[string], error) {
 	ret := make(map[v1alpha1.IngressVisibility]sets.Set[string])
 
-	gateways, err := gatewaysFromContext(ctx, ing)
+	gateways, err := GatewaysFromContext(ctx, obj)
 	if err != nil {
 		return ret, fmt.Errorf("failed to get gateways from configuration: %w", err)
 	}
@@ -490,14 +490,14 @@ func QualifiedGatewayNamesFromContext(ctx context.Context, ing *v1alpha1.Ingress
 	return ret, nil
 }
 
-// gatewaysFromContext get gateways relevant to this ingress from context.
-func gatewaysFromContext(ctx context.Context, ing *v1alpha1.Ingress) (map[v1alpha1.IngressVisibility][]config.Gateway, error) {
+// GatewaysFromContext get gateways relevant to this ingress from context.
+func GatewaysFromContext(ctx context.Context, obj kmeta.Accessor) (map[v1alpha1.IngressVisibility][]config.Gateway, error) {
 	ret := make(map[v1alpha1.IngressVisibility][]config.Gateway)
 
 	istioConfig := config.FromContext(ctx).Istio
 
 	// External gateways selection
-	externalGateways, err := filterGateway(istioConfig.IngressGateways, ing.ObjectMeta.Labels)
+	externalGateways, err := filterGateway(istioConfig.IngressGateways, obj.GetLabels())
 	if err != nil {
 		return ret, fmt.Errorf("failed to filter external gateways: %w", err)
 	}
@@ -509,7 +509,7 @@ func gatewaysFromContext(ctx context.Context, ing *v1alpha1.Ingress) (map[v1alph
 	ret[v1alpha1.IngressVisibilityExternalIP] = externalGateways
 
 	// Local gateways selection
-	localGateways, err := filterGateway(istioConfig.LocalGateways, ing.ObjectMeta.Labels)
+	localGateways, err := filterGateway(istioConfig.LocalGateways, obj.GetLabels())
 	if err != nil {
 		return ret, fmt.Errorf("failed to filter local gateways: %w", err)
 	}
@@ -544,26 +544,4 @@ func filterGateway(gtws []config.Gateway, ingressLabels map[string]string) ([]co
 	}
 
 	return ret, nil
-}
-
-func PublicGatewayServiceURLFromContext(ctx context.Context, ing *v1alpha1.Ingress) (string, error) {
-	return getGatewayServiceURLFromContext(ctx, ing, v1alpha1.IngressVisibilityExternalIP)
-}
-
-func PrivateGatewayServiceURLFromContext(ctx context.Context, ing *v1alpha1.Ingress) (string, error) {
-	return getGatewayServiceURLFromContext(ctx, ing, v1alpha1.IngressVisibilityClusterLocal)
-}
-
-func getGatewayServiceURLFromContext(ctx context.Context, ing *v1alpha1.Ingress, visibility v1alpha1.IngressVisibility) (string, error) {
-	allGateways, err := gatewaysFromContext(ctx, ing)
-	if err != nil {
-		return "", fmt.Errorf("failed to get gateways from configuration: %w", err)
-	}
-
-	gateways, ok := allGateways[visibility]
-	if ok && len(gateways) > 0 {
-		return gateways[0].ServiceURL, nil
-	}
-
-	return "", nil
 }

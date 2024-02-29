@@ -17,6 +17,7 @@ limitations under the License.
 package config
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -233,14 +234,14 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:      IstioConfigName,
 			},
 			Data: map[string]string{
-				"external-gateways": `
-                  - namespace: "namespace1"
-                    name: "gateway1"
-                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
-				"local-gateways": `
-                  - namespace: "namespace2"
-                    name: "gateway2"
-                    service:  "istio-local-gateway.istio-system.svc.cluster.local"`,
+				"external-gateways": replaceTabs(`
+				- namespace: "namespace1"
+				  name: "gateway1"
+				  service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`),
+				"local-gateways": replaceTabs(`
+				- namespace: "namespace2"
+				  name: "gateway2"
+				  service:  "istio-local-gateway.istio-system.svc.cluster.local"`),
 			},
 		},
 	}, {
@@ -252,14 +253,14 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:      IstioConfigName,
 			},
 			Data: map[string]string{
-				"external-gateways": `
-                  - namespace: "namespace1"
-                    name: "gateway1"
-                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
-				"local-gateways": `
-                  - namespace: "namespace2"
-                    name: "gateway2"
-                    service:  "istio-local-gateway.istio-system.svc.cluster.local"`,
+				"external-gateways": replaceTabs(`
+				- namespace: "namespace1"
+				  name: "gateway1"
+				  service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`),
+				"local-gateways": replaceTabs(`
+				- namespace: "namespace2"
+				  name: "gateway2"
+				  service:  "istio-local-gateway.istio-system.svc.cluster.local"`),
 				"local-gateway.custom-namespace.custom-local-gateway": "istio-ingressbackroad.istio-system.svc.cluster.local",
 				"gateway.custom-namespace.custom-gateway":             "istio-ingressfreeway.istio-system.svc.cluster.local",
 			},
@@ -273,14 +274,14 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:      IstioConfigName,
 			},
 			Data: map[string]string{
-				"external-gateways": `
-                  - namespace: "namespace1"
-                    name: "gateway1"
-                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
-				"local-gateways": `
-                  - namespace: "namespace2"
-                    name: "gateway2"
-                    service:  "_invalid"`,
+				"external-gateways": replaceTabs(`
+				- namespace: "namespace1"
+				  name: "gateway1"
+				  service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`),
+				"local-gateways": replaceTabs(`
+				- namespace: "namespace2"
+				  name: "gateway2"
+				  service:  "_invalid"`),
 			},
 		},
 	}, {
@@ -292,14 +293,14 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:      IstioConfigName,
 			},
 			Data: map[string]string{
-				"external-gateways": `
-                  - namespace: "namespace1"
-                    name: "gateway1"
-                    service:  ""`,
-				"local-gateways": `
-                  - namespace: "namespace2"
-                    name: "gateway2"
-                    service:  "istio-local-gateway.istio-system.svc.cluster.local"`,
+				"external-gateways": replaceTabs(`
+				- namespace: "namespace1"
+				  name: "gateway1"
+				  service:  ""`),
+				"local-gateways": replaceTabs(`
+				- namespace: "namespace2"
+				  name: "gateway2"
+				  service:  "istio-local-gateway.istio-system.svc.cluster.local"`),
 			},
 		},
 	}, {
@@ -311,14 +312,14 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:      IstioConfigName,
 			},
 			Data: map[string]string{
-				"external-gateways": `
-                  - namespace: "namespace1"
-                    name: ""
-                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
-				"local-gateways": `
-                  - namespace: "namespace2"
-                    name: "gateway2"
-                    service:  "istio-local-gateway.istio-system.svc.cluster.local"`,
+				"external-gateways": replaceTabs(`
+				- namespace: "namespace1"
+				  name: ""
+				  service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`),
+				"local-gateways": replaceTabs(`
+				- namespace: "namespace2"
+				  name: "gateway2"
+				  service:  "istio-local-gateway.istio-system.svc.cluster.local"`),
 			},
 		},
 	}, {
@@ -330,14 +331,14 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:      IstioConfigName,
 			},
 			Data: map[string]string{
-				"external-gateways": `
-                  - namespace: "namespace1"
-                    name: "gateway1"
-                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
-				"local-gateways": `
-                  - namespace: ""
-                    name: "gateway2"
-                    service:  "istio-local-gateway.istio-system.svc.cluster.local"`,
+				"external-gateways": replaceTabs(`
+				- namespace: "namespace1"
+				  name: "gateway1"
+				  service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`),
+				"local-gateways": replaceTabs(`
+				- namespace: ""
+				  name: "gateway2"
+				  service:  "istio-local-gateway.istio-system.svc.cluster.local"`),
 			},
 		},
 	}, {
@@ -349,10 +350,10 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:      IstioConfigName,
 			},
 			Data: map[string]string{
-				"external-gateways": `
-                  - namespace: "namespace1"
-                    name: "gateway1"
-                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
+				"external-gateways": replaceTabs(`
+				- namespace: "namespace1"
+				  name: "gateway1"
+				  service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`),
 				"local-gateways": "notYAML",
 			},
 		},
@@ -366,10 +367,10 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 			Data: map[string]string{
 				"external-gateways": "notYAML",
-				"local-gateways": `
-                  - namespace: "namespace2"
-                    name: "gateway2"
-                    service:  "istio-local-gateway.istio-system.svc.cluster.local"`,
+				"local-gateways": replaceTabs(`
+				- namespace: "namespace2"
+				  name: "gateway2"
+				  service:  "istio-local-gateway.istio-system.svc.cluster.local"`),
 			},
 		},
 	}, {
@@ -380,10 +381,10 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:      IstioConfigName,
 			},
 			Data: map[string]string{
-				"local-gateways": `
-                  - namespace: "namespace2"
-                    name: "gateway2"
-                    service:  "istio-local-gateway.istio-system.svc.cluster.local"`,
+				"local-gateways": replaceTabs(`
+				- namespace: "namespace2"
+				  name: "gateway2"
+				  service:  "istio-local-gateway.istio-system.svc.cluster.local"`),
 			},
 		},
 		wantIstio: &Istio{
@@ -402,10 +403,10 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:      IstioConfigName,
 			},
 			Data: map[string]string{
-				"external-gateways": `
-                  - namespace: "namespace1"
-                    name: "gateway1"
-                    service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`,
+				"external-gateways": replaceTabs(`
+				- namespace: "namespace1"
+				  name: "gateway1"
+				  service:  "istio-ingressbackroad.istio-system.svc.cluster.local"`),
 			},
 		},
 		wantIstio: &Istio{
@@ -424,20 +425,20 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:      IstioConfigName,
 			},
 			Data: map[string]string{
-				"external-gateways": `
-                  - namespace: "namespace"
-                    name: "gateway"
-                    service: "istio-gateway.istio-system.svc.cluster.local"
-                    labelSelector:
-                      matchExpressions:
-                      - key: "key"
-                        operator: "In"
-                        values: ["value"]`,
+				"external-gateways": replaceTabs(`
+				- namespace: "namespace"
+				  name: "gateway"
+				  service: "istio-gateway.istio-system.svc.cluster.local"
+				  labelSelector:
+					matchExpressions:
+					- key: "key"
+					  operator: "In"
+					  values: ["value"]`),
 
-				"local-gateways": `
-                  - namespace: "namespace2"
-                    name: "gateway2"
-                    service: "istio-local-gateway.istio-system.svc.cluster.local"`,
+				"local-gateways": replaceTabs(`
+				- namespace: "namespace2"
+				  name: "gateway2"
+				  service: "istio-local-gateway.istio-system.svc.cluster.local"`),
 			},
 		},
 		wantIstio: &Istio{
@@ -469,23 +470,23 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:      IstioConfigName,
 			},
 			Data: map[string]string{
-				"local-gateways": `
-                  - namespace: "namespace"
-                    name: "gateway"
-                    service: "istio-local.istio-system.svc.cluster.local"
-                    labelSelector:
-                      matchExpressions:
-                      - key: "key"
-                        operator: "In"
-                        values: ["value"]
-                  - namespace: "namespace1"
-                    name: "gateway1"
-                    service: "istio-local-gateway.istio-system.svc.cluster.local"`,
+				"local-gateways": replaceTabs(`
+				- namespace: "namespace"
+				  name: "gateway"
+				  service: "istio-local.istio-system.svc.cluster.local"
+				  labelSelector:
+					matchExpressions:
+					- key: "key"
+					  operator: "In"
+					  values: ["value"]
+				- namespace: "namespace1"
+				  name: "gateway1"
+				  service: "istio-local-gateway.istio-system.svc.cluster.local"`),
 
-				"external-gateways": `
-                  - namespace: "namespace2"
-                    name: "gateway2"
-                    service: "istio-gateway.istio-system.svc.cluster.local"`,
+				"external-gateways": replaceTabs(`
+				- namespace: "namespace2"
+				  name: "gateway2"
+				  service: "istio-gateway.istio-system.svc.cluster.local"`),
 			},
 		},
 		wantIstio: &Istio{
@@ -530,4 +531,8 @@ func TestGatewayConfiguration(t *testing.T) {
 			}
 		})
 	}
+}
+
+func replaceTabs(s string) string {
+	return strings.ReplaceAll(s, "\t", "    ")
 }
