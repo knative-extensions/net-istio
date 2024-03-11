@@ -105,6 +105,11 @@ func (g Gateway) Validate() error {
 		return fmt.Errorf("invalid gateway service format: %v", errs)
 	}
 
+	_, err := metav1.LabelSelectorAsSelector(g.LabelSelector)
+	if err != nil {
+		return fmt.Errorf("failed to create selector from label selector: %w", err)
+	}
+
 	return nil
 }
 
@@ -121,13 +126,13 @@ type Istio struct {
 func (i Istio) Validate() error {
 	for _, gtw := range i.IngressGateways {
 		if err := gtw.Validate(); err != nil {
-			return fmt.Errorf("invalid gateway: %w", err)
+			return fmt.Errorf("invalid gateway %s: %w", gtw.QualifiedName(), err)
 		}
 	}
 
 	for _, gtw := range i.LocalGateways {
 		if err := gtw.Validate(); err != nil {
-			return fmt.Errorf("invalid local gateway: %w", err)
+			return fmt.Errorf("invalid local gateway %s: %w", gtw.QualifiedName(), err)
 		}
 	}
 
@@ -177,9 +182,9 @@ func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
 		}
 	case oldFormatDefined:
 		ret = parseOldFormat(configMap)
+	default:
+		defaultValues(ret)
 	}
-
-	defaultValues(ret)
 
 	err = ret.Validate()
 	if err != nil {
@@ -231,12 +236,14 @@ func parseNewFormat(configMap *corev1.ConfigMap) (*Istio, error) {
 		ret.LocalGateways = localGateways
 	}
 
-	if len(ret.DefaultExternalGateways()) > 1 {
-		return ret, fmt.Errorf("only one external gateway with no selector can be defined, here: %v", ret.DefaultExternalGateways())
+	defaultValues(ret)
+
+	if len(ret.DefaultExternalGateways()) != 1 {
+		return ret, fmt.Errorf("exactly one external gateway with no selector can be defined, here: %v", ret.DefaultExternalGateways())
 	}
 
-	if len(ret.DefaultLocalGateways()) > 1 {
-		return ret, fmt.Errorf("only one local gateway with no selector can be defined, here: %v", ret.DefaultLocalGateways())
+	if len(ret.DefaultLocalGateways()) != 1 {
+		return ret, fmt.Errorf("exactly one local gateway with no selector can be defined, here: %v", ret.DefaultLocalGateways())
 	}
 
 	return ret, nil
@@ -254,10 +261,14 @@ func parseNewFormatGateways(data string) ([]Gateway, error) {
 }
 
 func parseOldFormat(configMap *corev1.ConfigMap) *Istio {
-	return &Istio{
+	ret := &Istio{
 		IngressGateways: parseOldFormatGateways(configMap, gatewayKeyPrefix),
 		LocalGateways:   parseOldFormatGateways(configMap, localGatewayKeyPrefix),
 	}
+
+	defaultValues(ret)
+
+	return ret
 }
 
 func parseOldFormatGateways(configMap *corev1.ConfigMap, prefix string) []Gateway {

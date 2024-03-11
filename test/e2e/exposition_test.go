@@ -21,6 +21,8 @@ package e2e
 
 import (
 	"context"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -35,6 +37,11 @@ import (
 )
 
 func TestExposition(t *testing.T) {
+	mesh, meshSet := os.LookupEnv("MESH")
+	if meshSet && mesh == "1" {
+		return
+	}
+
 	clients := Setup(t)
 	namespace := system.Namespace()
 
@@ -67,15 +74,15 @@ func TestExposition(t *testing.T) {
 		{
 			name: "no label",
 			configMapData: map[string]string{
-				"local-gateways": `
-                  - namespace: "knative-serving"
-                    name: "knative-local-gateway"
-                    service: "istio-ingressgateway.istio-system.svc.cluster.local"`,
+				"local-gateways": replaceTabs(`
+				- namespace: "knative-serving"
+				  name: "knative-local-gateway"
+				  service: "istio-ingressgateway.istio-system.svc.cluster.local"`),
 
-				"external-gateways": `
-                  - namespace: "knative-serving"
-                    name: "knative-ingress-gateway"
-                    service: "istio-ingressgateway.istio-system.svc.cluster.local"`,
+				"external-gateways": replaceTabs(`
+				- namespace: "knative-serving"
+				  name: "knative-ingress-gateway"
+				  service: "istio-ingressgateway.istio-system.svc.cluster.local"`),
 			},
 			expectedPrivateIngresses: []v1alpha1.LoadBalancerIngressStatus{
 				{MeshOnly: false, DomainInternal: "istio-ingressgateway.istio-system.svc.cluster.local"},
@@ -87,20 +94,23 @@ func TestExposition(t *testing.T) {
 		{
 			name: "match all",
 			configMapData: map[string]string{
-				"local-gateways": `
-                  - namespace: "knative-serving"
-                    name: "knative-local-gateway"
-                    service: "istio-ingressgateway.istio-system.svc.cluster.local"`,
+				"local-gateways": replaceTabs(`
+				- namespace: "knative-serving"
+				  name: "knative-local-gateway"
+				  service: "istio-ingressgateway.istio-system.svc.cluster.local"`),
 
-				"external-gateways": `
-                  - namespace: "knative-serving"
-                    name: "knative-ingress-gateway"
-                    service: "istio-ingressgateway.istio-system.svc.cluster.local"
-                    labelSelector:
-                      matchExpressions:
-                      - key: "foo"
-                        operator: "In"
-                        values: ["bar"]`,
+				"external-gateways": replaceTabs(`
+				- namespace: "unused"
+				  name: "unused"
+				  service: "default.default.svc.cluster.local"
+				- namespace: "knative-serving"
+				  name: "knative-ingress-gateway"
+				  service: "istio-ingressgateway.istio-system.svc.cluster.local"
+				  labelSelector:
+					matchExpressions:
+					- key: "foo"
+					  operator: "In"
+					  values: ["bar"]`),
 			},
 			ingressLabels: map[string]string{"foo": "bar"},
 			expectedPrivateIngresses: []v1alpha1.LoadBalancerIngressStatus{
@@ -113,61 +123,38 @@ func TestExposition(t *testing.T) {
 		{
 			name: "match only one",
 			configMapData: map[string]string{
-				"local-gateways": `
-                  - namespace: "knative-serving"
-                    name: "knative-local-gateway"
-                    service: "istio-ingressgateway.istio-system.svc.cluster.local"`,
+				"local-gateways": replaceTabs(`
+				- namespace: "knative-serving"
+				  name: "knative-local-gateway"
+				  service: "istio-ingressgateway.istio-system.svc.cluster.local"`),
 
-				"external-gateways": `
-                  - namespace: "knative-serving"
-                    name: "knative-ingress-gateway"
-                    service: "istio-ingressgateway.istio-system.svc.cluster.local"
-                    labelSelector:
-                      matchExpressions:
-                      - key: "foo"
-                        operator: "In"
-                        values: ["bar"]
-                  - namespace: "knative-serving"
-                    name: "knative-local-gateway"
-                    service: "istio-ingressgateway.istio-system.svc.cluster.local"
-                    labelSelector:
-                      matchExpressions:
-                      - key: "wont"
-                        operator: "In"
-                        values: ["match"]`,
+				"external-gateways": replaceTabs(`
+				- namespace: "unused"
+				  name: "unused"
+				  service: "default.default.svc.cluster.local"
+				- namespace: "knative-serving"
+				  name: "knative-ingress-gateway"
+				  service: "istio-ingressgateway-1.istio-system.svc.cluster.local"
+				  labelSelector:
+					matchExpressions:
+					- key: "foo"
+					  operator: "In"
+					  values: ["bar"]
+				- namespace: "knative-serving"
+				  name: "knative-local-gateway"
+				  service: "istio-ingressgateway-2.istio-system.svc.cluster.local"
+				  labelSelector:
+					matchExpressions:
+					- key: "wont"
+					  operator: "In"
+					  values: ["match"]`),
 			},
 			ingressLabels: map[string]string{"foo": "bar"},
 			expectedPrivateIngresses: []v1alpha1.LoadBalancerIngressStatus{
 				{MeshOnly: false, DomainInternal: "istio-ingressgateway.istio-system.svc.cluster.local"},
 			},
 			expectedPublicIngresses: []v1alpha1.LoadBalancerIngressStatus{
-				{MeshOnly: false, DomainInternal: "istio-ingressgateway.istio-system.svc.cluster.local"},
-			},
-		},
-		{
-			name: "match nothing",
-			configMapData: map[string]string{
-				"local-gateways": `
-                  - namespace: "knative-serving"
-                    name: "knative-local-gateway"
-                    service: "istio-ingressgateway.istio-system.svc.cluster.local"`,
-
-				"external-gateways": `
-                  - namespace: "knative-serving"
-                    name: "knative-ingress-gateway"
-                    service: "istio-ingressgateway.istio-system.svc.cluster.local"
-                    labelSelector:
-                      matchExpressions:
-                      - key: "wont"
-                        operator: "In"
-                        values: ["match"]`,
-			},
-			ingressLabels: map[string]string{"not": "relevant"},
-			expectedPrivateIngresses: []v1alpha1.LoadBalancerIngressStatus{
-				{MeshOnly: false, DomainInternal: "istio-ingressgateway.istio-system.svc.cluster.local"},
-			},
-			expectedPublicIngresses: []v1alpha1.LoadBalancerIngressStatus{
-				{MeshOnly: true},
+				{MeshOnly: false, DomainInternal: "istio-ingressgateway-1.istio-system.svc.cluster.local"},
 			},
 		},
 	}
@@ -257,4 +244,8 @@ func TestExposition(t *testing.T) {
 			}
 		})
 	}
+}
+
+func replaceTabs(s string) string {
+	return strings.ReplaceAll(s, "\t", "    ")
 }

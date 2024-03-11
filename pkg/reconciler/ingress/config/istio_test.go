@@ -418,6 +418,46 @@ func TestGatewayConfiguration(t *testing.T) {
 			LocalGateways: defaultLocalGateways(),
 		},
 	}, {
+		name: "new format - missing default gateway",
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": replaceTabs(`
+				- namespace: "namespace"
+				  name: "gateway"
+				  service: "istio-gateway.istio-system.svc.cluster.local"
+				  labelSelector:
+					matchExpressions:
+					- key: "key"
+					  operator: "In"
+					  values: ["value"]`),
+			},
+		},
+		wantErr: true,
+	}, {
+		name: "new format - missing default local gateway",
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"local-gateways": replaceTabs(`
+				- namespace: "namespace"
+				  name: "gateway"
+				  service: "istio-gateway.istio-system.svc.cluster.local"
+				  labelSelector:
+					matchExpressions:
+					- key: "key"
+					  operator: "In"
+					  values: ["value"]`),
+			},
+		},
+		wantErr: true,
+	}, {
 		name: "new format - label selector",
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -426,6 +466,9 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 			Data: map[string]string{
 				"external-gateways": replaceTabs(`
+				- namespace: "unused"
+				  name: "unused"
+				  service: "default.default.svc.cluster.local"
 				- namespace: "namespace"
 				  name: "gateway"
 				  service: "istio-gateway.istio-system.svc.cluster.local"
@@ -442,20 +485,27 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 		wantIstio: &Istio{
-			IngressGateways: []Gateway{{
-				Namespace:  "namespace",
-				Name:       "gateway",
-				ServiceURL: "istio-gateway.istio-system.svc.cluster.local",
-				LabelSelector: &metav1.LabelSelector{
-					MatchExpressions: []metav1.LabelSelectorRequirement{
-						{
-							Key:      "key",
-							Operator: metav1.LabelSelectorOpIn,
-							Values:   []string{"value"},
+			IngressGateways: []Gateway{
+				{
+					Namespace:  "unused",
+					Name:       "unused",
+					ServiceURL: "default.default.svc.cluster.local",
+				},
+				{
+					Namespace:  "namespace",
+					Name:       "gateway",
+					ServiceURL: "istio-gateway.istio-system.svc.cluster.local",
+					LabelSelector: &metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "key",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"value"},
+							},
 						},
 					},
 				},
-			}},
+			},
 			LocalGateways: []Gateway{{
 				Namespace:  "namespace2",
 				Name:       "gateway2",
@@ -517,6 +567,28 @@ func TestGatewayConfiguration(t *testing.T) {
 				},
 			},
 		},
+	}, {
+		name: "new format - invalid label selector",
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": replaceTabs(`
+				- namespace: "default"
+				  name: "default"
+				  service: "default.default.svc.cluster.local"
+				- namespace: "namespace"
+				  name: "gateway"
+				  service: "istio-gateway.istio-system.svc.cluster.local"
+				  labelSelector:
+					matchExpressions:
+					- key: "key"
+					  operator: "In"`),
+			},
+		},
+		wantErr: true,
 	}}
 
 	for _, tt := range gatewayConfigTests {
