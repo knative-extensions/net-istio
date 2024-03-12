@@ -105,8 +105,7 @@ func (g Gateway) Validate() error {
 		return fmt.Errorf("invalid gateway service format: %v", errs)
 	}
 
-	_, err := metav1.LabelSelectorAsSelector(g.LabelSelector)
-	if err != nil {
+	if _, err := metav1.LabelSelectorAsSelector(g.LabelSelector); err != nil {
 		return fmt.Errorf("failed to create selector from label selector: %w", err)
 	}
 
@@ -139,10 +138,12 @@ func (i Istio) Validate() error {
 	return nil
 }
 
+// DefaultExternalGateways returns the external gateway without any label selector
 func (i Istio) DefaultExternalGateways() []Gateway {
 	return defaultGateways(i.IngressGateways)
 }
 
+// DefaultLocalGateways returns the local gateway without any label selector
 func (i Istio) DefaultLocalGateways() []Gateway {
 	return defaultGateways(i.LocalGateways)
 }
