@@ -146,7 +146,7 @@ func MakeExternalIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, ser
 }
 
 // MakeWildcardTLSGateways creates gateways that only contain TLS server with wildcard hosts based on the wildcard secret information.
-// The configuration gateways that applies are determined with the ingress parameter.
+// Gateways generated are based on the related ingress being reconciled.
 // For each public ingress service, we will create a list of Gateways. Each Gateway of the list corresponds to a wildcard cert secret.
 func MakeWildcardTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, originWildcardSecrets map[string]*corev1.Secret,
 	svcLister corev1listers.ServiceLister) ([]*v1beta1.Gateway, error) {
