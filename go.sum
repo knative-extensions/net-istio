@@ -696,8 +696,8 @@ k8s.io/utils v0.0.0-20240102154912-e7106e64919e h1:eQ/4ljkx21sObifjzXwlPKpdGLrCf
 k8s.io/utils v0.0.0-20240102154912-e7106e64919e/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 knative.dev/hack v0.0.0-20240318013248-424e75ed769a h1:E5aUF562P5BXHsBYx7S4Oa4KKXSH8SkKFG5CqZOTypg=
 knative.dev/hack v0.0.0-20240318013248-424e75ed769a/go.mod h1:yk2OjGDsbEnQjfxdm0/HJKS2WqTLEFg/N6nUs6Rqx3Q=
-knative.dev/networking v0.0.0-20240325132627-1aa1ec299a43 h1:DVIHGLGifRmvtlBYBfpXE+TXpyDgz9OW/dTKymZZMS8=
-knative.dev/networking v0.0.0-20240325132627-1aa1ec299a43/go.mod h1:a7GsNTW10dXsWd9u2ylCctblfhvZmeeZLL0VOYC7A6w=
+knative.dev/networking v0.0.0-20240326200906-419ebf9a1d87 h1:mIVcuY7bAGVvXjD3TNPChZdoAL2H2SaHTNUllcAoB80=
+knative.dev/networking v0.0.0-20240326200906-419ebf9a1d87/go.mod h1:a7GsNTW10dXsWd9u2ylCctblfhvZmeeZLL0VOYC7A6w=
 knative.dev/pkg v0.0.0-20240325103648-fd7cc2153e6a h1:17E1oL6VhFTZBmgF4D3DlHt+GH8y9MQNlGCM60Db7fY=
 knative.dev/pkg v0.0.0-20240325103648-fd7cc2153e6a/go.mod h1:Meb7JQFjMOloRJRA2GG2RcRT/JnscMOI8/6KmBaC2/k=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
