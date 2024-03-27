@@ -29,6 +29,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 
 	istiov1beta1 "istio.io/api/networking/v1beta1"
@@ -157,6 +158,17 @@ var ingressResource = v1alpha1.Ingress{
 	Spec: ingressSpec,
 }
 
+var ingressResourceWithPublicGatewayLabel = v1alpha1.Ingress{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "ingress",
+		Namespace: "test-ns",
+		Labels: map[string]string{
+			"exposition": "special",
+		},
+	},
+	Spec: ingressSpec,
+}
+
 var ingressResourceWithDotName = v1alpha1.Ingress{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      "ingress.com",
@@ -172,6 +184,18 @@ var defaultGatewayService = corev1.Service{
 	},
 	Spec: corev1.ServiceSpec{
 		Selector: selector,
+	},
+}
+
+var configDefaultGateway = &config.Config{
+	Istio: &config.Istio{
+		IngressGateways: []config.Gateway{{
+			Name:       config.KnativeIngressGateway,
+			ServiceURL: fmt.Sprintf("%s.%s.svc.cluster.local", defaultGatewayService.Name, defaultGatewayService.Namespace),
+		}},
+	},
+	Network: &netconfig.Config{
+		HTTPProtocol: netconfig.HTTPEnabled,
 	},
 }
 
@@ -682,7 +706,7 @@ func TestMakeWildcardGateways(t *testing.T) {
 			},
 		})
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := MakeWildcardTLSGateways(ctx, tc.wildcardSecrets, svcLister)
+			got, err := MakeWildcardTLSGateways(ctx, &ingressResource, tc.wildcardSecrets, svcLister)
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("Test: %s; MakeWildcardGateways error = %v, WantErr %v", tc.name, err, tc.wantErr)
 			}
@@ -726,64 +750,125 @@ func TestGetQualifiedGatewayNames(t *testing.T) {
 }
 
 func TestMakeExternalIngressGateways(t *testing.T) {
+	createGateway := func(qualifiedName string, sel map[string]string, serv *istiov1beta1.Server) *v1beta1.Gateway {
+		return &v1beta1.Gateway{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:            fmt.Sprintf("ingress-%d", adler32.Checksum([]byte(qualifiedName))),
+				Namespace:       "test-ns",
+				OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(&ingressResource)},
+				Labels: map[string]string{
+					networking.IngressLabelKey: "ingress",
+				},
+			},
+			Spec: istiov1beta1.Gateway{
+				Selector: sel,
+				Servers:  []*istiov1beta1.Server{serv},
+			},
+		}
+	}
+
+	gateway1Service := corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "gateway1",
+			Namespace: "aNamespace",
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: map[string]string{
+				"istio": "ingressgateway1",
+			},
+		},
+	}
+
+	gateway2Service := corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "gateway2",
+			Namespace: "aNamespace",
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: map[string]string{
+				"istio": "ingressgateway2",
+			},
+		},
+	}
+
+	configDoubleGateway := &config.Config{
+		Istio: &config.Istio{
+			IngressGateways: []config.Gateway{
+				{
+					Namespace:  "knative-serving",
+					Name:       "gateway1",
+					ServiceURL: "gateway1.aNamespace.svc.cluster.local",
+					LabelSelector: &metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "exposition",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"special"},
+							},
+						},
+					},
+				},
+				{
+					Namespace:  "knative-serving",
+					Name:       "gateway2",
+					ServiceURL: "gateway2.aNamespace.svc.cluster.local",
+				},
+			},
+		},
+		Network: &netconfig.Config{
+			HTTPProtocol: netconfig.HTTPEnabled,
+		},
+	}
+
 	cases := []struct {
 		name    string
 		ia      *v1alpha1.Ingress
+		conf    *config.Config
 		servers []*istiov1beta1.Server
 		want    []*v1beta1.Gateway
 		wantErr bool
 	}{{
 		name:    "HTTP server",
 		ia:      &ingressResource,
+		conf:    configDefaultGateway,
 		servers: []*istiov1beta1.Server{&httpServer},
-		want: []*v1beta1.Gateway{{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:            fmt.Sprintf("ingress-%d", adler32.Checksum([]byte("istio-system/istio-ingressgateway"))),
-				Namespace:       "test-ns",
-				OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(&ingressResource)},
-				Labels: map[string]string{
-					networking.IngressLabelKey: "ingress",
-				},
-			},
-			Spec: istiov1beta1.Gateway{
-				Selector: selector,
-				Servers:  []*istiov1beta1.Server{&httpServer},
-			},
-		}},
+		want:    []*v1beta1.Gateway{createGateway("istio-system/istio-ingressgateway", selector, &httpServer)},
 	}, {
 		name:    "HTTPS server",
 		ia:      &ingressResource,
+		conf:    configDefaultGateway,
 		servers: []*istiov1beta1.Server{&modifiedDefaultTLSServer},
-		want: []*v1beta1.Gateway{{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:            fmt.Sprintf("ingress-%d", adler32.Checksum([]byte("istio-system/istio-ingressgateway"))),
-				Namespace:       "test-ns",
-				OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(&ingressResource)},
-				Labels: map[string]string{
-					networking.IngressLabelKey: "ingress",
-				},
-			},
-			Spec: istiov1beta1.Gateway{
-				Selector: selector,
-				Servers:  []*istiov1beta1.Server{&modifiedDefaultTLSServer},
-			},
-		}},
+		want:    []*v1beta1.Gateway{createGateway("istio-system/istio-ingressgateway", selector, &modifiedDefaultTLSServer)},
+	}, {
+		name:    "HTTP Server Gateways filtered",
+		ia:      &ingressResourceWithPublicGatewayLabel,
+		conf:    configDoubleGateway,
+		servers: []*istiov1beta1.Server{&httpServer},
+		want: []*v1beta1.Gateway{createGateway("aNamespace/gateway1", map[string]string{
+			"istio": "ingressgateway1",
+		}, &httpServer)},
+	}, {
+		name:    "HTTPS Server Gateways filtered",
+		ia:      &ingressResourceWithPublicGatewayLabel,
+		conf:    configDoubleGateway,
+		servers: []*istiov1beta1.Server{&modifiedDefaultTLSServer},
+		want: []*v1beta1.Gateway{createGateway("aNamespace/gateway1", map[string]string{
+			"istio": "ingressgateway1",
+		}, &modifiedDefaultTLSServer)},
+	}, {
+		name:    "No gateway matched",
+		ia:      &ingressResourceWithPublicGatewayLabel,
+		conf:    configDefaultGateway, // default config have a default gateway
+		servers: []*istiov1beta1.Server{&httpServer},
+		want:    []*v1beta1.Gateway{createGateway("istio-system/istio-ingressgateway", selector, &httpServer)},
 	}}
 	for _, c := range cases {
 		ctx, cancel, _ := rtesting.SetupFakeContextWithCancel(t)
 		defer cancel()
-		svcLister := serviceLister(ctx, &defaultGatewayService)
-		ctx = config.ToContext(context.Background(), &config.Config{
-			Istio: &config.Istio{
-				IngressGateways: []config.Gateway{{
-					Name:       config.KnativeIngressGateway,
-					ServiceURL: fmt.Sprintf("%s.%s.svc.cluster.local", defaultGatewayService.Name, defaultGatewayService.Namespace),
-				}},
-			},
-			Network: &netconfig.Config{
-				HTTPProtocol: netconfig.HTTPEnabled,
-			},
-		})
+
+		svcLister := serviceLister(ctx, &defaultGatewayService, &gateway1Service, &gateway2Service)
+		ctx = config.ToContext(context.Background(), c.conf)
+
 		t.Run(c.name, func(t *testing.T) {
 			got, err := MakeExternalIngressGateways(ctx, c.ia, c.servers, svcLister)
 			if (err != nil) != c.wantErr {
@@ -1080,5 +1165,181 @@ func TestGatewayNameLongIngressName(t *testing.T) {
 	got := GatewayName(ingress, "", svc)
 	if got != want {
 		t.Errorf("Unexpected gateway name. want %q, got %q", want, got)
+	}
+}
+
+func TestParseIngressGatewayConfig(t *testing.T) {
+	type Expectation struct {
+		Error bool
+		Value metav1.ObjectMeta
+	}
+
+	cases := []struct {
+		name    string
+		gateway config.Gateway
+		want    Expectation
+	}{
+		{
+			name:    "Happy path svc.cluster.local",
+			gateway: config.Gateway{ServiceURL: "service.namespace.svc.cluster.local"},
+			want:    Expectation{Value: metav1.ObjectMeta{Name: "service", Namespace: "namespace"}},
+		},
+		{
+			name:    "Happy path custom suffix",
+			gateway: config.Gateway{ServiceURL: "service.namespace.customsuffix"},
+			want:    Expectation{Value: metav1.ObjectMeta{Name: "service", Namespace: "namespace"}},
+		},
+		{
+			name:    "Invalid service URL, no suffix",
+			gateway: config.Gateway{ServiceURL: "service.namespace"},
+			want:    Expectation{Error: true},
+		},
+		{
+			name:    "Invalid service URL, no namespace, no suffix",
+			gateway: config.Gateway{ServiceURL: "service"},
+			want:    Expectation{Error: true},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			gotMeta, err := parseIngressGatewayConfig(c.gateway)
+			if (err != nil) != c.want.Error {
+				t.Errorf("Expecting error: %v, got error: %v", c.want.Error, err)
+			}
+
+			if !c.want.Error {
+				if diff := cmp.Diff(c.want.Value, gotMeta); diff != "" {
+					t.Error("Unexpected meta (-want, +got):", diff)
+				}
+			}
+		})
+	}
+}
+
+func TestQualifiedGatewayNamesFromContext(t *testing.T) {
+	cases := []struct {
+		name       string
+		cfg        *config.Istio
+		ingress    *v1alpha1.Ingress
+		want       map[v1alpha1.IngressVisibility]sets.Set[string]
+		shouldFail bool
+	}{
+		{
+			name: "All match",
+			cfg: &config.Istio{
+				IngressGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw1", LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"expo": "my-value"}}},
+				},
+				LocalGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw2"},
+				},
+			},
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{
+				"expo": "my-value",
+			}}},
+			want: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityExternalIP:   sets.New[string]("ns1/gtw1"),
+				v1alpha1.IngressVisibilityClusterLocal: sets.New[string]("ns1/gtw2"),
+			},
+		},
+		{
+			name: "Different expo",
+			cfg: &config.Istio{
+				IngressGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw1", LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"expo1": "my-value-1"}}},
+					{Namespace: "ns1", Name: "gtw2", LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"expo2": "my-value-2"}}},
+				},
+				LocalGateways: []config.Gateway{
+					{Namespace: "ns2", Name: "gtw3"},
+				},
+			},
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{
+				"expo1": "my-value-1",
+			}}},
+			want: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityExternalIP:   sets.New[string]("ns1/gtw1"),
+				v1alpha1.IngressVisibilityClusterLocal: sets.New[string]("ns2/gtw3"),
+			},
+		},
+		{
+			name: "Partial match",
+			cfg: &config.Istio{
+				IngressGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw1"},
+					{Namespace: "wontmatch", Name: "wontmatch1", LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"good-key": "bad-value"}}},
+					{Namespace: "wontmatch", Name: "wontmatch2", LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"bad-key": "good-value"}}},
+					{Namespace: "matchingns", Name: "matching", LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"good-key": "good-value"}}},
+				},
+				LocalGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw2"},
+				},
+			},
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{
+				"good-key": "good-value",
+			}}},
+			want: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityExternalIP:   sets.New[string]("matchingns/matching"),
+				v1alpha1.IngressVisibilityClusterLocal: sets.New[string]("ns1/gtw2"),
+			},
+		},
+		{
+			name: "Matching default",
+			cfg: &config.Istio{
+				IngressGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw1"},
+					{Namespace: "wontmatch", Name: "wontmatch", LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{"foo": "bar"}}},
+				},
+				LocalGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw2"},
+				},
+			},
+			ingress: &v1alpha1.Ingress{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{
+				"not": "relevant",
+			}}},
+			want: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityExternalIP:   sets.New[string]("ns1/gtw1"),
+				v1alpha1.IngressVisibilityClusterLocal: sets.New[string]("ns1/gtw2"),
+			},
+		},
+		{
+			name: "No annotation",
+			cfg: &config.Istio{
+				IngressGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw1"},
+				},
+				LocalGateways: []config.Gateway{
+					{Namespace: "ns1", Name: "gtw2"},
+				},
+			},
+			ingress: &v1alpha1.Ingress{},
+			want: map[v1alpha1.IngressVisibility]sets.Set[string]{
+				v1alpha1.IngressVisibilityExternalIP:   sets.New[string]("ns1/gtw1"),
+				v1alpha1.IngressVisibilityClusterLocal: sets.New[string]("ns1/gtw2"),
+			},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			ctx := config.ToContext(context.Background(), &config.Config{Istio: c.cfg})
+
+			got, err := QualifiedGatewayNamesFromContext(ctx, c.ingress)
+			if c.shouldFail && (err == nil) {
+				t.Fatal("test is supposed to fail and it's not")
+			}
+
+			if !c.shouldFail && (err != nil) {
+				t.Fatal("test is supposed to succeed and it's not")
+			}
+
+			if c.shouldFail {
+				return
+			}
+
+			if diff := cmp.Diff(c.want, got); diff != "" {
+				t.Error("Unexpected Gateways (-want, +got):", diff)
+			}
+		})
 	}
 }

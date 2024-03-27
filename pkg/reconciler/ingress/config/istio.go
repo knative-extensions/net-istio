@@ -21,11 +21,12 @@ import (
 	"sort"
 	"strings"
 
-	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/system"
+	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -76,9 +77,10 @@ func defaultLocalGateways() []Gateway {
 
 // Gateway specifies the name of the Gateway and the K8s Service backing it.
 type Gateway struct {
-	Namespace  string
-	Name       string
-	ServiceURL string `yaml:"service"`
+	Namespace     string
+	Name          string
+	ServiceURL    string                `json:"service"`
+	LabelSelector *metav1.LabelSelector `json:"labelSelector,omitempty"`
 }
 
 // QualifiedName returns gateway name in '{namespace}/{name}' format.
@@ -103,33 +105,61 @@ func (g Gateway) Validate() error {
 		return fmt.Errorf("invalid gateway service format: %v", errs)
 	}
 
+	if _, err := metav1.LabelSelectorAsSelector(g.LabelSelector); err != nil {
+		return fmt.Errorf("failed to create selector from label selector: %w", err)
+	}
+
 	return nil
 }
 
 // Istio contains istio related configuration defined in the
 // istio config map.
 type Istio struct {
-	// IngressGateway specifies the gateway urls for public Ingress.
+	// IngressGateways specifies the gateway urls for public Ingress.
 	IngressGateways []Gateway
 
-	// LocalGateway specifies the gateway urls for public & private Ingress.
+	// LocalGateways specifies the gateway urls for public & private Ingress.
 	LocalGateways []Gateway
 }
 
 func (i Istio) Validate() error {
 	for _, gtw := range i.IngressGateways {
 		if err := gtw.Validate(); err != nil {
-			return fmt.Errorf("invalid gateway: %w", err)
+			return fmt.Errorf("invalid gateway %s: %w", gtw.QualifiedName(), err)
 		}
 	}
 
 	for _, gtw := range i.LocalGateways {
 		if err := gtw.Validate(); err != nil {
-			return fmt.Errorf("invalid local gateway: %w", err)
+			return fmt.Errorf("invalid local gateway %s: %w", gtw.QualifiedName(), err)
 		}
 	}
 
 	return nil
+}
+
+// DefaultExternalGateways returns the external gateway without any label selector
+func (i Istio) DefaultExternalGateways() []Gateway {
+	return defaultGateways(i.IngressGateways)
+}
+
+// DefaultLocalGateways returns the local gateway without any label selector
+func (i Istio) DefaultLocalGateways() []Gateway {
+	return defaultGateways(i.LocalGateways)
+}
+
+func defaultGateways(gtws []Gateway) []Gateway {
+	ret := make([]Gateway, 0)
+
+	for _, gtw := range gtws {
+		gateway := gtw
+
+		if gtw.LabelSelector == nil {
+			ret = append(ret, gateway)
+		}
+	}
+
+	return ret
 }
 
 // NewIstioFromConfigMap creates an Istio config from the supplied ConfigMap
@@ -153,9 +183,9 @@ func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
 		}
 	case oldFormatDefined:
 		ret = parseOldFormat(configMap)
+	default:
+		defaultValues(ret)
 	}
-
-	defaultValues(ret)
 
 	err = ret.Validate()
 	if err != nil {
@@ -207,8 +237,14 @@ func parseNewFormat(configMap *corev1.ConfigMap) (*Istio, error) {
 		ret.LocalGateways = localGateways
 	}
 
-	if len(ret.LocalGateways) > 1 {
-		return ret, fmt.Errorf("only one local gateway can be defined: current %q value is %q", localGatewaysKey, localGatewaysStr)
+	defaultValues(ret)
+
+	if len(ret.DefaultExternalGateways()) != 1 {
+		return ret, fmt.Errorf("exactly one external gateway with no selector can be defined, here: %v", ret.DefaultExternalGateways())
+	}
+
+	if len(ret.DefaultLocalGateways()) != 1 {
+		return ret, fmt.Errorf("exactly one local gateway with no selector can be defined, here: %v", ret.DefaultLocalGateways())
 	}
 
 	return ret, nil
@@ -226,10 +262,14 @@ func parseNewFormatGateways(data string) ([]Gateway, error) {
 }
 
 func parseOldFormat(configMap *corev1.ConfigMap) *Istio {
-	return &Istio{
+	ret := &Istio{
 		IngressGateways: parseOldFormatGateways(configMap, gatewayKeyPrefix),
 		LocalGateways:   parseOldFormatGateways(configMap, localGatewayKeyPrefix),
 	}
+
+	defaultValues(ret)
+
+	return ret
 }
 
 func parseOldFormatGateways(configMap *corev1.ConfigMap, prefix string) []Gateway {
