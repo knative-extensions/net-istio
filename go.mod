@@ -5,16 +5,16 @@ go 1.21
 require (
 	github.com/google/go-cmp v0.6.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/sync v0.6.0
+	golang.org/x/sync v0.7.0
 	google.golang.org/protobuf v1.33.0
 	istio.io/api v1.20.2
 	istio.io/client-go v1.20.2
 	k8s.io/api v0.29.2
 	k8s.io/apimachinery v0.29.2
 	k8s.io/client-go v0.29.2
-	knative.dev/hack v0.0.0-20240327150553-47368d631660
-	knative.dev/networking v0.0.0-20240329112016-75762caf9e15
-	knative.dev/pkg v0.0.0-20240402144403-fef5da99bd14
+	knative.dev/hack v0.0.0-20240404013450-1133b37da8d7
+	knative.dev/networking v0.0.0-20240404014421-97688e760925
+	knative.dev/pkg v0.0.0-20240408131417-094f1527d5fc
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -58,7 +58,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.19.0 // indirect
 	github.com/prometheus/client_model v0.6.0 // indirect
-	github.com/prometheus/common v0.51.1 // indirect
+	github.com/prometheus/common v0.52.2 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/prometheus/statsd_exporter v0.22.7 // indirect
 	github.com/rs/dnscache v0.0.0-20211102005908-e0241e321417 // indirect
