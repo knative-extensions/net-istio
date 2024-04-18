@@ -121,12 +121,6 @@ rules:
       - watch
       - get
       - list
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -1176,6 +1170,10 @@ spec:
                                   idleTimeout:
                                     description: The idle timeout for upstream connection pool connections.
                                     type: string
+                                  maxConcurrentStreams:
+                                    description: The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
+                                    format: int32
+                                    type: integer
                                   maxRequestsPerConnection:
                                     description: Maximum number of requests per connection to a backend.
                                     format: int32
@@ -1193,6 +1191,9 @@ spec:
                                 properties:
                                   connectTimeout:
                                     description: TCP connection timeout.
+                                    type: string
+                                  idleTimeout:
+                                    description: The idle timeout for TCP connections.
                                     type: string
                                   maxConnectionDuration:
                                     description: The maximum duration of a connection.
@@ -1418,6 +1419,10 @@ spec:
                                         idleTimeout:
                                           description: The idle timeout for upstream connection pool connections.
                                           type: string
+                                        maxConcurrentStreams:
+                                          description: The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
+                                          format: int32
+                                          type: integer
                                         maxRequestsPerConnection:
                                           description: Maximum number of requests per connection to a backend.
                                           format: int32
@@ -1435,6 +1440,9 @@ spec:
                                       properties:
                                         connectTimeout:
                                           description: TCP connection timeout.
+                                          type: string
+                                        idleTimeout:
+                                          description: The idle timeout for TCP connections.
                                           type: string
                                         maxConnectionDuration:
                                           description: The maximum duration of a connection.
@@ -1677,6 +1685,16 @@ spec:
                                   type: object
                               type: object
                             type: array
+                          proxyProtocol:
+                            description: The upstream PROXY protocol settings.
+                            properties:
+                              version:
+                                description: The PROXY protocol version to use.
+                                enum:
+                                  - V1
+                                  - V2
+                                type: string
+                            type: object
                           tls:
                             description: TLS related settings for connections to the upstream service.
                             properties:
@@ -1760,6 +1778,10 @@ spec:
                             idleTimeout:
                               description: The idle timeout for upstream connection pool connections.
                               type: string
+                            maxConcurrentStreams:
+                              description: The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
+                              format: int32
+                              type: integer
                             maxRequestsPerConnection:
                               description: Maximum number of requests per connection to a backend.
                               format: int32
@@ -1777,6 +1799,9 @@ spec:
                           properties:
                             connectTimeout:
                               description: TCP connection timeout.
+                              type: string
+                            idleTimeout:
+                              description: The idle timeout for TCP connections.
                               type: string
                             maxConnectionDuration:
                               description: The maximum duration of a connection.
@@ -2002,6 +2027,10 @@ spec:
                                   idleTimeout:
                                     description: The idle timeout for upstream connection pool connections.
                                     type: string
+                                  maxConcurrentStreams:
+                                    description: The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
+                                    format: int32
+                                    type: integer
                                   maxRequestsPerConnection:
                                     description: Maximum number of requests per connection to a backend.
                                     format: int32
@@ -2019,6 +2048,9 @@ spec:
                                 properties:
                                   connectTimeout:
                                     description: TCP connection timeout.
+                                    type: string
+                                  idleTimeout:
+                                    description: The idle timeout for TCP connections.
                                     type: string
                                   maxConnectionDuration:
                                     description: The maximum duration of a connection.
@@ -2261,6 +2293,16 @@ spec:
                             type: object
                         type: object
                       type: array
+                    proxyProtocol:
+                      description: The upstream PROXY protocol settings.
+                      properties:
+                        version:
+                          description: The PROXY protocol version to use.
+                          enum:
+                            - V1
+                            - V2
+                          type: string
+                      type: object
                     tls:
                       description: TLS related settings for connections to the upstream service.
                       properties:
@@ -2396,6 +2438,10 @@ spec:
                                   idleTimeout:
                                     description: The idle timeout for upstream connection pool connections.
                                     type: string
+                                  maxConcurrentStreams:
+                                    description: The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
+                                    format: int32
+                                    type: integer
                                   maxRequestsPerConnection:
                                     description: Maximum number of requests per connection to a backend.
                                     format: int32
@@ -2413,6 +2459,9 @@ spec:
                                 properties:
                                   connectTimeout:
                                     description: TCP connection timeout.
+                                    type: string
+                                  idleTimeout:
+                                    description: The idle timeout for TCP connections.
                                     type: string
                                   maxConnectionDuration:
                                     description: The maximum duration of a connection.
@@ -2638,6 +2687,10 @@ spec:
                                         idleTimeout:
                                           description: The idle timeout for upstream connection pool connections.
                                           type: string
+                                        maxConcurrentStreams:
+                                          description: The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
+                                          format: int32
+                                          type: integer
                                         maxRequestsPerConnection:
                                           description: Maximum number of requests per connection to a backend.
                                           format: int32
@@ -2655,6 +2708,9 @@ spec:
                                       properties:
                                         connectTimeout:
                                           description: TCP connection timeout.
+                                          type: string
+                                        idleTimeout:
+                                          description: The idle timeout for TCP connections.
                                           type: string
                                         maxConnectionDuration:
                                           description: The maximum duration of a connection.
@@ -2897,6 +2953,16 @@ spec:
                                   type: object
                               type: object
                             type: array
+                          proxyProtocol:
+                            description: The upstream PROXY protocol settings.
+                            properties:
+                              version:
+                                description: The PROXY protocol version to use.
+                                enum:
+                                  - V1
+                                  - V2
+                                type: string
+                            type: object
                           tls:
                             description: TLS related settings for connections to the upstream service.
                             properties:
@@ -2980,6 +3046,10 @@ spec:
                             idleTimeout:
                               description: The idle timeout for upstream connection pool connections.
                               type: string
+                            maxConcurrentStreams:
+                              description: The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
+                              format: int32
+                              type: integer
                             maxRequestsPerConnection:
                               description: Maximum number of requests per connection to a backend.
                               format: int32
@@ -2997,6 +3067,9 @@ spec:
                           properties:
                             connectTimeout:
                               description: TCP connection timeout.
+                              type: string
+                            idleTimeout:
+                              description: The idle timeout for TCP connections.
                               type: string
                             maxConnectionDuration:
                               description: The maximum duration of a connection.
@@ -3222,6 +3295,10 @@ spec:
                                   idleTimeout:
                                     description: The idle timeout for upstream connection pool connections.
                                     type: string
+                                  maxConcurrentStreams:
+                                    description: The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
+                                    format: int32
+                                    type: integer
                                   maxRequestsPerConnection:
                                     description: Maximum number of requests per connection to a backend.
                                     format: int32
@@ -3239,6 +3316,9 @@ spec:
                                 properties:
                                   connectTimeout:
                                     description: TCP connection timeout.
+                                    type: string
+                                  idleTimeout:
+                                    description: The idle timeout for TCP connections.
                                     type: string
                                   maxConnectionDuration:
                                     description: The maximum duration of a connection.
@@ -3481,6 +3561,16 @@ spec:
                             type: object
                         type: object
                       type: array
+                    proxyProtocol:
+                      description: The upstream PROXY protocol settings.
+                      properties:
+                        version:
+                          description: The PROXY protocol version to use.
+                          enum:
+                            - V1
+                            - V2
+                          type: string
+                      type: object
                     tls:
                       description: TLS related settings for connections to the upstream service.
                       properties:
@@ -4088,50 +4178,6 @@ spec:
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  labels:
-    release: istio
-    knative.dev/crd-install: "true"
-  name: istiooperators.install.istio.io
-spec:
-  conversion:
-    strategy: None
-  group: install.istio.io
-  names:
-    kind: IstioOperator
-    listKind: IstioOperatorList
-    plural: istiooperators
-    shortNames:
-      - iop
-      - io
-    singular: istiooperator
-  scope: Namespaced
-  versions:
-    - additionalPrinterColumns:
-        - description: Istio control plane revision
-          jsonPath: .spec.revision
-          name: Revision
-          type: string
-        - description: IOP current state
-          jsonPath: .status.status
-          name: Status
-          type: string
-        - description: 'CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC. Populated by the system. Read-only. Null for lists. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata'
-          jsonPath: .metadata.creationTimestamp
-          name: Age
-          type: date
-      name: v1alpha1
-      schema:
-        openAPIV3Schema:
-          type: object
-          x-kubernetes-preserve-unknown-fields: true
-      served: true
-      storage: true
-      subresources:
-        status: {}
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
   annotations:
     helm.sh/resource-policy: keep
   labels:
@@ -4199,7 +4245,7 @@ spec:
                   description: Port specific mutual TLS settings.
                   type: object
                 selector:
-                  description: The selector determines the workloads to apply the ChannelAuthentication on.
+                  description: The selector determines the workloads to apply the PeerAuthentication on.
                   properties:
                     matchLabels:
                       additionalProperties:
@@ -4329,6 +4375,11 @@ spec:
                       forwardOriginalToken:
                         description: If set to true, the original token will be kept for the upstream request.
                         type: boolean
+                      fromCookies:
+                        description: List of cookie names from which JWT is expected.
+                        items:
+                          type: string
+                        type: array
                       fromHeaders:
                         description: List of header locations from which JWT is expected.
                         items:
@@ -4432,6 +4483,11 @@ spec:
                       forwardOriginalToken:
                         description: If set to true, the original token will be kept for the upstream request.
                         type: boolean
+                      fromCookies:
+                        description: List of cookie names from which JWT is expected.
+                        items:
+                          type: string
+                        type: array
                       fromHeaders:
                         description: List of header locations from which JWT is expected.
                         items:
@@ -4897,6 +4953,10 @@ spec:
                         idleTimeout:
                           description: The idle timeout for upstream connection pool connections.
                           type: string
+                        maxConcurrentStreams:
+                          description: The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
+                          format: int32
+                          type: integer
                         maxRequestsPerConnection:
                           description: Maximum number of requests per connection to a backend.
                           format: int32
@@ -4914,6 +4974,9 @@ spec:
                       properties:
                         connectTimeout:
                           description: TCP connection timeout.
+                          type: string
+                        idleTimeout:
+                          description: The idle timeout for TCP connections.
                           type: string
                         maxConnectionDuration:
                           description: The maximum duration of a connection.
@@ -4975,6 +5038,10 @@ spec:
                               idleTimeout:
                                 description: The idle timeout for upstream connection pool connections.
                                 type: string
+                              maxConcurrentStreams:
+                                description: The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
+                                format: int32
+                                type: integer
                               maxRequestsPerConnection:
                                 description: Maximum number of requests per connection to a backend.
                                 format: int32
@@ -4992,6 +5059,9 @@ spec:
                             properties:
                               connectTimeout:
                                 description: TCP connection timeout.
+                                type: string
+                              idleTimeout:
+                                description: The idle timeout for TCP connections.
                                 type: string
                               maxConnectionDuration:
                                 description: The maximum duration of a connection.
@@ -5217,6 +5287,10 @@ spec:
                         idleTimeout:
                           description: The idle timeout for upstream connection pool connections.
                           type: string
+                        maxConcurrentStreams:
+                          description: The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
+                          format: int32
+                          type: integer
                         maxRequestsPerConnection:
                           description: Maximum number of requests per connection to a backend.
                           format: int32
@@ -5234,6 +5308,9 @@ spec:
                       properties:
                         connectTimeout:
                           description: TCP connection timeout.
+                          type: string
+                        idleTimeout:
+                          description: The idle timeout for TCP connections.
                           type: string
                         maxConnectionDuration:
                           description: The maximum duration of a connection.
@@ -5295,6 +5372,10 @@ spec:
                               idleTimeout:
                                 description: The idle timeout for upstream connection pool connections.
                                 type: string
+                              maxConcurrentStreams:
+                                description: The maximum number of concurrent streams allowed for a peer on one HTTP/2 connection.
+                                format: int32
+                                type: integer
                               maxRequestsPerConnection:
                                 description: Maximum number of requests per connection to a backend.
                                 format: int32
@@ -5312,6 +5393,9 @@ spec:
                             properties:
                               connectTimeout:
                                 description: TCP connection timeout.
+                                type: string
+                              idleTimeout:
+                                description: The idle timeout for TCP connections.
                                 type: string
                               maxConnectionDuration:
                                 description: The maximum duration of a connection.
@@ -5540,6 +5624,7 @@ spec:
                           properties:
                             name:
                               description: Required.
+                              minLength: 1
                               type: string
                           required:
                             - name
@@ -5560,7 +5645,7 @@ spec:
                               nullable: true
                               type: boolean
                             match:
-                              description: Match allows provides the scope of the override.
+                              description: Match allows providing the scope of the override.
                               oneOf:
                                 - not:
                                     anyOf:
@@ -5575,9 +5660,10 @@ spec:
                               properties:
                                 customMetric:
                                   description: Allows free-form specification of a metric.
+                                  minLength: 1
                                   type: string
                                 metric:
-                                  description: One of the well-known Istio Standard Metrics.
+                                  description: One of the well-known [Istio Standard Metrics](https://istio.io/latest/docs/reference/config/metrics/).
                                   enum:
                                     - ALL_METRICS
                                     - REQUEST_COUNT
@@ -5592,7 +5678,7 @@ spec:
                                     - GRPC_RESPONSE_MESSAGES
                                   type: string
                                 mode:
-                                  description: 'Controls which mode of metrics generation is selected: CLIENT and/or SERVER.'
+                                  description: 'Controls which mode of metrics generation is selected: `CLIENT`, `SERVER`, or `CLIENT_AND_SERVER`.'
                                   enum:
                                     - CLIENT_AND_SERVER
                                     - CLIENT
@@ -5612,6 +5698,11 @@ spec:
                                     description: Value is only considered if the operation is `UPSERT`.
                                     type: string
                                 type: object
+                                x-kubernetes-validations:
+                                  - message: value must be set when operation is UPSERT
+                                    rule: '((has(self.operation) ? self.operation : '''') == ''UPSERT'') ? self.value != '''' : true'
+                                  - message: value must not be set when operation is REMOVE
+                                    rule: '((has(self.operation) ? self.operation : '''') == ''REMOVE'') ? !has(self.value) : true'
                               description: Optional.
                               type: object
                           type: object
@@ -5622,6 +5713,7 @@ spec:
                           properties:
                             name:
                               description: Required.
+                              minLength: 1
                               type: string
                           required:
                             - name
@@ -5687,7 +5779,10 @@ spec:
                                   type: string
                                 name:
                                   description: Name of the environment variable from which to extract the tag value.
+                                  minLength: 1
                                   type: string
+                              required:
+                                - name
                               type: object
                             header:
                               description: RequestHeader adds the value of an header from the request to each span.
@@ -5697,14 +5792,20 @@ spec:
                                   type: string
                                 name:
                                   description: Name of the header from which to extract the tag value.
+                                  minLength: 1
                                   type: string
+                              required:
+                                - name
                               type: object
                             literal:
                               description: Literal adds the same, hard-coded value to each span.
                               properties:
                                 value:
                                   description: The tag value to use.
+                                  minLength: 1
                                   type: string
+                              required:
+                                - value
                               type: object
                           type: object
                         description: Optional.
@@ -5730,6 +5831,7 @@ spec:
                           properties:
                             name:
                               description: Required.
+                              minLength: 1
                               type: string
                           required:
                             - name
@@ -5737,6 +5839,8 @@ spec:
                         type: array
                       randomSamplingPercentage:
                         description: Controls the rate at which traffic will be selected for tracing if no prior sampling decision has been made.
+                        maximum: 100
+                        minimum: 0
                         nullable: true
                         type: number
                       useRequestIdForTraceSampling:
@@ -7452,7 +7556,7 @@ spec:
                     - FAIL_OPEN
                   type: string
                 imagePullPolicy:
-                  description: The pull behaviour to be applied when fetching Wasm module by either OCI image or http/https.
+                  description: The pull behaviour to be applied when fetching Wasm module by either OCI image or `http/https`.
                   enum:
                     - UNSPECIFIED_POLICY
                     - IfNotPresent
@@ -8070,9 +8174,6 @@ data:
       metrics:
       - prometheus
     enablePrometheusMerge: true
-    extensionProviders:
-    - name: prometheus
-      prometheus: {}
     rootNamespace: istio-system
     trustDomain: cluster.local
   meshNetworks: 'networks: {}'
@@ -8096,6 +8197,7 @@ data:
       "log_level": "info",
       "log_uds_address": "__LOG_UDS_ADDRESS__",
       "ambient_enabled": true,
+      "cni_event_address": "__CNI_EVENT_ADDRESS__",
       "kubernetes": {
           "kubeconfig": "__KUBECONFIG_FILEPATH__",
           "cni_bin_dir": "/opt/cni/bin",
@@ -8162,7 +8264,7 @@ data:
             {{- if eq (index .ProxyConfig.ProxyMetadata "ISTIO_META_ENABLE_HBONE") "true" }}
             networking.istio.io/tunnel: {{ index .ObjectMeta.Labels `networking.istio.io/tunnel` | default "http"  | quote }}
             {{- end }}
-            service.istio.io/canonical-name: {{ index .ObjectMeta.Labels `service.istio.io/canonical-name` | default (index .ObjectMeta.Labels `app.kubernetes.io/name`) | default (index .ObjectMeta.Labels `app`) | default .DeploymentMeta.Name  | quote }}
+            service.istio.io/canonical-name: {{ index .ObjectMeta.Labels `service.istio.io/canonical-name` | default (index .ObjectMeta.Labels `app.kubernetes.io/name`) | default (index .ObjectMeta.Labels `app`) | default .DeploymentMeta.Name  | trunc 63 | trimSuffix "-" | quote }}
             service.istio.io/canonical-revision: {{ index .ObjectMeta.Labels `service.istio.io/canonical-revision` | default (index .ObjectMeta.Labels `app.kubernetes.io/version`) | default (index .ObjectMeta.Labels `version`) | default "latest"  | quote }}
           annotations: {
             istio.io/rev: {{ .Revision | default "default" | quote }},
@@ -8194,7 +8296,9 @@ data:
         {{- end }}
           }
         spec:
-          {{- $holdProxy := or .ProxyConfig.HoldApplicationUntilProxyStarts.GetValue .Values.global.proxy.holdApplicationUntilProxyStarts }}
+          {{- $holdProxy := and
+              (or .ProxyConfig.HoldApplicationUntilProxyStarts.GetValue .Values.global.proxy.holdApplicationUntilProxyStarts)
+              (not $nativeSidecar) }}
           initContainers:
           {{ if ne (annotation .ObjectMeta `sidecar.istio.io/interceptionMode` .ProxyConfig.InterceptionMode) `NONE` }}
           {{ if .Values.istio_cni.enabled -}}
@@ -8352,6 +8456,17 @@ data:
                   command:
                   - pilot-agent
                   - wait
+          {{- else if $nativeSidecar }}
+            {{- /* preStop is called when the pod starts shutdown. Initialize drain. We will get SIGTERM once applications are torn down. */}}
+            lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - pilot-agent
+                  - request
+                  - --debug-port={{(annotation .ObjectMeta `status.sidecar.istio.io/port` .Values.global.proxy.statusPort)}}
+                  - POST
+                  - drain
           {{- end }}
             env:
             {{- if eq (env "PILOT_ENABLE_INBOUND_PASSTHROUGH" "true") "false" }}
@@ -8418,6 +8533,10 @@ data:
               valueFrom:
                 resourceFieldRef:
                   resource: limits.cpu
+            {{- if .CompliancePolicy }}
+            - name: COMPLIANCE_POLICY
+              value: "{{ .CompliancePolicy }}"
+            {{- end }}
             - name: ISTIO_META_CLUSTER_ID
               value: "{{ valueOrDefault .Values.global.multiCluster.clusterName `Kubernetes` }}"
             - name: ISTIO_META_NODE_NAME
@@ -8768,6 +8887,10 @@ data:
               valueFrom:
                 resourceFieldRef:
                   resource: limits.cpu
+            {{- if .CompliancePolicy }}
+            - name: COMPLIANCE_POLICY
+              value: "{{ .CompliancePolicy }}"
+            {{- end }}
             - name: ISTIO_META_APP_CONTAINERS
               value: "{{ $containers | join "," }}"
             - name: ISTIO_META_CLUSTER_ID
@@ -9296,6 +9419,15 @@ data:
         metadata:
           name: {{.ServiceAccount | quote}}
           namespace: {{.Namespace | quote}}
+          annotations:
+            {{- toJsonMap (omit .InfrastructureAnnotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version") | nindent 4 }}
+          labels:
+            {{- toJsonMap
+              .InfrastructureLabels
+              (strdict
+                "gateway.networking.k8s.io/gateway-name" .Name
+                "istio.io/gateway-name" .Name
+              ) | nindent 4 }}
         ---
         apiVersion: apps/v1
         kind: Deployment
@@ -9303,9 +9435,15 @@ data:
           name: {{.DeploymentName | quote}}
           namespace: {{.Namespace | quote}}
           annotations:
-            {{- toJsonMap (omit .Annotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version") | nindent 4 }}
+            {{- toJsonMap (omit .InfrastructureAnnotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version") | nindent 4 }}
           labels:
-            {{- toJsonMap .Labels | nindent 4 }}
+            {{- toJsonMap
+              .InfrastructureLabels
+              (strdict
+                "gateway.networking.k8s.io/gateway-name" .Name
+                "istio.io/gateway-name" .Name
+                "gateway.istio.io/managed" "istio.io-mesh-controller"
+              ) | nindent 4 }}
           ownerReferences:
           - apiVersion: gateway.networking.k8s.io/v1beta1
             kind: Gateway
@@ -9314,12 +9452,12 @@ data:
         spec:
           selector:
             matchLabels:
-              istio.io/gateway-name: "{{.Name}}"
+              "{{.GatewayNameLabel}}": "{{.Name}}"
           template:
             metadata:
               annotations:
                 {{- toJsonMap
-                  (omit .Annotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version")
+                  (omit .InfrastructureAnnotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version")
                   (strdict "istio.io/rev" (.Revision | default "default"))
                   (strdict
                     "ambient.istio.io/redirection" "disabled"
@@ -9334,8 +9472,9 @@ data:
                     "service.istio.io/canonical-name" .DeploymentName
                     "service.istio.io/canonical-revision" "latest"
                    )
-                  .Labels
+                  .InfrastructureLabels
                   (strdict
+                    "gateway.networking.k8s.io/gateway-name" .Name
                     "istio.io/gateway-name" .Name
                     "gateway.istio.io/managed" "istio.io-mesh-controller"
                   ) | nindent 8}}
@@ -9419,6 +9558,12 @@ data:
                 - name: PROXY_CONFIG
                   value: |
                          {{ protoToJSON .ProxyConfig }}
+                {{- if .ProxyConfig.ProxyMetadata }}
+                {{- range $key, $value := .ProxyConfig.ProxyMetadata }}
+                - name: {{ $key }}
+                  value: "{{ $value }}"
+                {{- end }}
+                {{- end }}
                 - name: GOMEMLIMIT
                   valueFrom:
                     resourceFieldRef:
@@ -9429,7 +9574,7 @@ data:
                       resource: limits.cpu
                 - name: ISTIO_META_CLUSTER_ID
                   value: "{{ valueOrDefault .Values.global.multiCluster.clusterName `Kubernetes` }}"
-                {{- $network := valueOrDefault (index .Labels `topology.istio.io/network`) .Values.global.network }}
+                {{- $network := valueOrDefault (index .InfrastructureLabels `topology.istio.io/network`) .Values.global.network }}
                 {{- if $network }}
                 - name: ISTIO_META_NETWORK
                   value: "{{ $network }}"
@@ -9475,14 +9620,15 @@ data:
                   successThreshold: 1
                   timeoutSeconds: 1
                 securityContext:
-                  privileged: true
+                  privileged: false
                   runAsGroup: 1337
                   runAsUser: 0
                   capabilities:
-                    add:
-                    - NET_ADMIN
-                    - NET_RAW
+                    drop:
+                    - ALL
                 volumeMounts:
+                - name: workload-socket
+                  mountPath: /var/run/secrets/workload-spiffe-uds
                 - mountPath: /var/run/secrets/istio
                   name: istiod-ca-cert
                 - mountPath: /var/lib/istio/data
@@ -9494,6 +9640,8 @@ data:
                 - mountPath: /etc/istio/pod
                   name: istio-podinfo
               volumes:
+              - emptyDir: {}
+                name: workload-socket
               - emptyDir:
                   medium: Memory
                 name: istio-envoy
@@ -9534,9 +9682,14 @@ data:
         kind: Service
         metadata:
           annotations:
-            {{ toJsonMap (omit .Annotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version") | nindent 4 }}
+            {{ toJsonMap (omit .InfrastructureAnnotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version") | nindent 4 }}
           labels:
-            {{ toJsonMap .Labels | nindent 4}}
+            {{- toJsonMap
+              .InfrastructureLabels
+              (strdict
+                "gateway.networking.k8s.io/gateway-name" .Name
+                "istio.io/gateway-name" .Name
+              ) | nindent 4 }}
           name: {{.DeploymentName | quote}}
           namespace: {{.Namespace | quote}}
           ownerReferences:
@@ -9553,7 +9706,7 @@ data:
             appProtocol: {{ $val.AppProtocol }}
           {{- end }}
           selector:
-            istio.io/gateway-name: "{{.Name}}"
+            "{{.GatewayNameLabel}}": "{{.Name}}"
           {{- if and (.Spec.Addresses) (eq .ServiceType "LoadBalancer") }}
           loadBalancerIP: {{ (index .Spec.Addresses 0).Value | quote}}
           {{- end }}
@@ -9565,6 +9718,15 @@ data:
         metadata:
           name: {{.ServiceAccount | quote}}
           namespace: {{.Namespace | quote}}
+          annotations:
+            {{- toJsonMap (omit .InfrastructureAnnotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version") | nindent 4 }}
+          labels:
+            {{- toJsonMap
+              .InfrastructureLabels
+              (strdict
+                "gateway.networking.k8s.io/gateway-name" .Name
+                "istio.io/gateway-name" .Name
+              ) | nindent 4 }}
         ---
         apiVersion: apps/v1
         kind: Deployment
@@ -9572,9 +9734,14 @@ data:
           name: {{.DeploymentName | quote}}
           namespace: {{.Namespace | quote}}
           annotations:
-            {{- toJsonMap (omit .Annotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version") | nindent 4 }}
+            {{- toJsonMap (omit .InfrastructureAnnotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version") | nindent 4 }}
           labels:
-            {{- toJsonMap .Labels | nindent 4 }}
+            {{- toJsonMap
+              .InfrastructureLabels
+              (strdict
+                "gateway.networking.k8s.io/gateway-name" .Name
+                "istio.io/gateway-name" .Name
+              ) | nindent 4 }}
           ownerReferences:
           - apiVersion: gateway.networking.k8s.io/v1beta1
             kind: Gateway
@@ -9583,12 +9750,12 @@ data:
         spec:
           selector:
             matchLabels:
-              istio.io/gateway-name: {{.Name}}
+              "{{.GatewayNameLabel}}": {{.Name}}
           template:
             metadata:
               annotations:
                 {{- toJsonMap
-                  (omit .Annotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version")
+                  (omit .InfrastructureAnnotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version")
                   (strdict "istio.io/rev" (.Revision | default "default"))
                   (strdict
                     "prometheus.io/path" "/stats/prometheus"
@@ -9602,8 +9769,11 @@ data:
                     "service.istio.io/canonical-name" .DeploymentName
                     "service.istio.io/canonical-revision" "latest"
                    )
-                  .Labels
-                  (strdict "istio.io/gateway-name" .Name) | nindent 8}}
+                  .InfrastructureLabels
+                  (strdict
+                    "gateway.networking.k8s.io/gateway-name" .Name
+                    "istio.io/gateway-name" .Name
+                  ) | nindent 8 }}
             spec:
               {{- if .KubeVersion122 }}
               {{/* safe since 1.22: https://github.com/kubernetes/kubernetes/pull/103326. */}}
@@ -9735,7 +9905,7 @@ data:
                       fieldPath: spec.nodeName
                 - name: ISTIO_META_INTERCEPTION_MODE
                   value: "{{ .ProxyConfig.InterceptionMode.String }}"
-                {{- with (valueOrDefault  (index .Labels "topology.istio.io/network") .Values.global.network) }}
+                {{- with (valueOrDefault  (index .InfrastructureLabels "topology.istio.io/network") .Values.global.network) }}
                 - name: ISTIO_META_NETWORK
                   value: {{.|quote}}
                 {{- end }}
@@ -9758,7 +9928,7 @@ data:
                 - name: {{ $key }}
                   value: "{{ $value }}"
                 {{- end }}
-                {{- with (index .Labels "topology.istio.io/network") }}
+                {{- with (index .InfrastructureLabels "topology.istio.io/network") }}
                 - name: ISTIO_META_REQUESTED_NETWORK_VIEW
                   value: {{.|quote}}
                 {{- end }}
@@ -9863,9 +10033,14 @@ data:
         kind: Service
         metadata:
           annotations:
-            {{ toJsonMap (omit .Annotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version") | nindent 4 }}
+            {{ toJsonMap (omit .InfrastructureAnnotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version") | nindent 4 }}
           labels:
-            {{ toJsonMap .Labels | nindent 4}}
+            {{- toJsonMap
+              .InfrastructureLabels
+              (strdict
+                "gateway.networking.k8s.io/gateway-name" .Name
+                "istio.io/gateway-name" .Name
+              ) | nindent 4 }}
           name: {{.DeploymentName | quote}}
           namespace: {{.Namespace | quote}}
           ownerReferences:
@@ -9882,7 +10057,7 @@ data:
             appProtocol: {{ $val.AppProtocol }}
           {{- end }}
           selector:
-            istio.io/gateway-name: {{.Name}}
+            "{{.GatewayNameLabel}}": {{.Name}}
           {{- if and (.Spec.Addresses) (eq .ServiceType "LoadBalancer") }}
           loadBalancerIP: {{ (index .Spec.Addresses 0).Value | quote}}
           {{- end }}
@@ -9897,7 +10072,6 @@ data:
         "certSigners": [],
         "configCluster": false,
         "configValidation": true,
-        "defaultNodeSelector": {},
         "defaultPodDisruptionBudget": {
           "enabled": true
         },
@@ -9980,14 +10154,7 @@ data:
         "sts": {
           "servicePort": 0
         },
-        "tag": "1.20.3",
-        "tracer": {
-          "datadog": {},
-          "lightstep": {},
-          "stackdriver": {},
-          "zipkin": {}
-        },
-        "useMCP": false,
+        "tag": "1.21.1",
         "variant": ""
       },
       "istio_cni": {
@@ -10130,7 +10297,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: docker.io/istio/proxyv2:1.20.3
+          image: docker.io/istio/proxyv2:1.21.1
           name: istio-proxy
           ports:
             - containerPort: 15021
@@ -10334,7 +10501,7 @@ spec:
                   resource: limits.cpu
             - name: PLATFORM
               value: ""
-          image: docker.io/istio/pilot:1.20.3-distroless
+          image: docker.io/istio/pilot:1.21.1-distroless
           name: discovery
           ports:
             - containerPort: 8080
@@ -10762,7 +10929,7 @@ spec:
     spec:
       containers:
         - args:
-            - --log_output_level=default:info
+            - --log_output_level=default:info,cni:info
           command:
             - install-cni
           env:
@@ -10777,6 +10944,8 @@ spec:
               value: "true"
             - name: REPAIR_ENABLED
               value: "true"
+            - name: AMBIENT_DNS_CAPTURE
+              value: "false"
             - name: REPAIR_NODE_NAME
               valueFrom:
                 fieldRef:
@@ -10784,9 +10953,9 @@ spec:
             - name: REPAIR_LABEL_PODS
               value: "false"
             - name: REPAIR_DELETE_PODS
-              value: "true"
-            - name: REPAIR_REPAIR_PODS
               value: "false"
+            - name: REPAIR_REPAIR_PODS
+              value: "true"
             - name: REPAIR_RUN_AS_DAEMON
               value: "true"
             - name: REPAIR_SIDECAR_ANNOTATION
@@ -10814,7 +10983,7 @@ spec:
               valueFrom:
                 resourceFieldRef:
                   resource: limits.cpu
-          image: docker.io/istio/install-cni:1.20.3
+          image: docker.io/istio/install-cni:1.21.1
           name: install-cni
           readinessProbe:
             httpGet:
@@ -10825,6 +10994,13 @@ spec:
               cpu: 100m
               memory: 100Mi
           securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+                - SYS_ADMIN
+                - NET_RAW
+              drop:
+                - ALL
             privileged: true
             runAsGroup: 0
             runAsNonRoot: false
@@ -10832,15 +11008,18 @@ spec:
           volumeMounts:
             - mountPath: /host/opt/cni/bin
               name: cni-bin-dir
+            - mountPath: /host/proc
+              name: cni-host-procfs
+              readOnly: true
             - mountPath: /host/etc/cni/net.d
               name: cni-net-dir
             - mountPath: /var/run/istio-cni
-              name: cni-log-dir
-            - mountPath: /etc/ambient-config
-              name: cni-ambient-config-dir
-            - mountPath: /var/run/netns
+              name: cni-socket-dir
+            - mountPath: /host/var/run/netns
               mountPropagation: HostToContainer
               name: cni-netns-dir
+            - mountPath: /var/run/ztunnel
+              name: cni-ztunnel-sock-dir
       hostNetwork: true
       nodeSelector:
         kubernetes.io/os: linux
@@ -10859,17 +11038,22 @@ spec:
             path: /opt/cni/bin
           name: cni-bin-dir
         - hostPath:
-            path: /etc/ambient-config
-          name: cni-ambient-config-dir
+            path: /proc
+            type: Directory
+          name: cni-host-procfs
+        - hostPath:
+            path: /var/run/ztunnel
+            type: DirectoryOrCreate
+          name: cni-ztunnel-sock-dir
         - hostPath:
             path: /etc/cni/net.d
           name: cni-net-dir
         - hostPath:
             path: /var/run/istio-cni
-          name: cni-log-dir
+          name: cni-socket-dir
         - hostPath:
             path: /var/run/netns
-            type: Directory
+            type: DirectoryOrCreate
           name: cni-netns-dir
   updateStrategy:
     rollingUpdate:
@@ -10891,7 +11075,6 @@ spec:
     metadata:
       annotations:
         ambient.istio.io/redirection: disabled
-        cni.projectcalico.org/allowedSourcePrefixes: '["0.0.0.0/0"]'
         prometheus.io/port: "15020"
         prometheus.io/scrape: "true"
         sidecar.istio.io/inject: "false"
@@ -10908,8 +11091,14 @@ spec:
               value: istiod.istio-system.svc:15012
             - name: XDS_ADDRESS
               value: istiod.istio-system.svc:15012
-            - name: CLUSTER_ID
+            - name: RUST_LOG
+              value: info
+            - name: ISTIO_META_CLUSTER_ID
               value: Kubernetes
+            - name: INPOD_ENABLED
+              value: "true"
+            - name: ISTIO_META_DNS_PROXY_ADDR
+              value: 127.0.0.1:15053
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -10930,7 +11119,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.serviceAccountName
-          image: docker.io/istio/ztunnel:1.20.3-distroless
+          image: docker.io/istio/ztunnel:1.21.1
           name: istio-proxy
           ports:
             - containerPort: 15020
@@ -10949,6 +11138,8 @@ spec:
             capabilities:
               add:
                 - NET_ADMIN
+                - SYS_ADMIN
+                - NET_RAW
               drop:
                 - ALL
             privileged: false
@@ -10961,8 +11152,11 @@ spec:
               name: istiod-ca-cert
             - mountPath: /var/run/secrets/tokens
               name: istio-token
+            - mountPath: /var/run/ztunnel
+              name: cni-ztunnel-sock-dir
       nodeSelector:
         kubernetes.io/os: linux
+      priorityClassName: system-node-critical
       serviceAccountName: ztunnel
       terminationGracePeriodSeconds: 30
       tolerations:
@@ -10983,6 +11177,10 @@ spec:
         - configMap:
             name: istio-ca-root-cert
           name: istiod-ca-cert
+        - hostPath:
+            path: /var/run/ztunnel
+            type: DirectoryOrCreate
+          name: cni-ztunnel-sock-dir
   updateStrategy:
     rollingUpdate:
       maxSurge: 1
