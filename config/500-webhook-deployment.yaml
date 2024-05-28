@@ -87,7 +87,7 @@ spec:
             port: 8443
           failureThreshold: 3
         livenessProbe:
-          periodSeconds: 1
+          periodSeconds: 10
           httpGet:
             scheme: HTTPS
             port: 8443
