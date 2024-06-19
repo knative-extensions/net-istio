@@ -16,4 +16,4 @@
 
 source "$(dirname $0)/../library.sh"
 
-generate "1.21.1" "$(dirname $0)"
+generate "1.22.1" "$(dirname $0)"
