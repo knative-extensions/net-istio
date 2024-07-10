@@ -14278,7 +14278,7 @@ metadata:
   name: istio-ingressgateway
   namespace: istio-system
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: istio-ingressgateway
@@ -14399,11 +14399,11 @@ spec:
           timeoutSeconds: 1
         resources:
           limits:
-            cpu: 3000m
-            memory: 2048Mi
-          requests:
-            cpu: 1000m
+            cpu: 2000m
             memory: 1024Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -14792,7 +14792,7 @@ metadata:
   name: istiod
   namespace: istio-system
 spec:
-  maxReplicas: 10
+  maxReplicas: 1
   metrics:
   - resource:
       name: cpu
@@ -14800,7 +14800,7 @@ spec:
         averageUtilization: 60
         type: Utilization
     type: Resource
-  minReplicas: 3
+  minReplicas: 1
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
@@ -14868,3 +14868,12 @@ spec:
   selector:
     app: istiod
     istio: pilot
+---
+apiVersion: "security.istio.io/v1beta1"
+kind: "PeerAuthentication"
+metadata:
+  name: "default"
+  namespace: "istio-system"
+spec:
+  mtls:
+    mode: STRICT

@@ -55,6 +55,3 @@ ${GOPATH}/bin/deepcopy-gen \
 group "Update deps post-codegen"
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT_DIR}/hack/update-deps.sh
-
-group "Update istio generated manifests"
-${REPO_ROOT_DIR}/third_party/istio-latest/generate-manifests.sh

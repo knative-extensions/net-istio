@@ -19,6 +19,12 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
+ISTIO_VERSION="1.22.2"
 
+source $(dirname "$0")/library.sh
+
+generate "${ISTIO_VERSION}" ./third_party/istio-latest
+
+go get "istio.io/client-go@v${ISTIO_VERSION}"
 go_update_deps "$@"
+

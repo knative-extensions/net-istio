@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 # Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source "$(dirname $0)/../library.sh"
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+spec:
+  values:
+    global:
+      proxy:
+        autoInject: enabled
+    pilot:
+      autoscaleMin: 1
+      autoscaleMax: 1
+      cpu:
+        targetAverageUtilization: 60
+    gateways:
+      istio-ingressgateway:
+        autoscaleEnabled: false
 
-generate "1.22.1" "$(dirname $0)"
+  meshConfig:
+    defaultConfig:
+      terminationDrainDuration: "20s"
+
+  components:
+    ingressGateways:
+      - name: istio-ingressgateway
+        k8s:
+          replicaCount: 1
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi

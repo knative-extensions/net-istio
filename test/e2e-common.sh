@@ -67,7 +67,7 @@ function test_setup() {
     istio_profile=istio-ci-mesh
   fi
 
-  ${istio_dir}/install-istio.sh ${istio_profile} || return 1
+  kubectl apply -f ${istio_dir}/${istio_profile} || return 1
 
   echo ">> Bringing up net-istio Ingress Controller"
   # Do not install Knative Certificate for e2e tests, as we are running without Serving CRs
