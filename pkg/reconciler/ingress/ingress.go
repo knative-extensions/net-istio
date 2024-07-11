@@ -24,8 +24,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/testing/protocmp"
-	pkgnetwork "knative.dev/pkg/network"
-
 	istiov1beta1 "istio.io/api/networking/v1beta1"
 	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
@@ -66,12 +64,11 @@ const (
 type Reconciler struct {
 	kubeclient kubernetes.Interface
 
-	istioClientSet        istioclientset.Interface
-	virtualServiceLister  istiolisters.VirtualServiceLister
-	destinationRuleLister istiolisters.DestinationRuleLister
-	gatewayLister         istiolisters.GatewayLister
-	secretLister          corev1listers.SecretLister
-	svcLister             corev1listers.ServiceLister
+	istioClientSet       istioclientset.Interface
+	virtualServiceLister istiolisters.VirtualServiceLister
+	gatewayLister        istiolisters.GatewayLister
+	secretLister         corev1listers.SecretLister
+	svcLister            corev1listers.ServiceLister
 
 	tracker tracker.Interface
 
@@ -79,11 +76,10 @@ type Reconciler struct {
 }
 
 var (
-	_ ingressreconciler.Interface           = (*Reconciler)(nil)
-	_ ingressreconciler.Finalizer           = (*Reconciler)(nil)
-	_ coreaccessor.SecretAccessor           = (*Reconciler)(nil)
-	_ istioaccessor.VirtualServiceAccessor  = (*Reconciler)(nil)
-	_ istioaccessor.DestinationRuleAccessor = (*Reconciler)(nil)
+	_ ingressreconciler.Interface          = (*Reconciler)(nil)
+	_ ingressreconciler.Finalizer          = (*Reconciler)(nil)
+	_ coreaccessor.SecretAccessor          = (*Reconciler)(nil)
+	_ istioaccessor.VirtualServiceAccessor = (*Reconciler)(nil)
 )
 
 // ReconcileKind compares the actual state with the desired, and attempts to
@@ -227,13 +223,6 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		return err
 	}
 	gatewayNames[v1alpha1.IngressVisibilityClusterLocal].Insert(resources.GetQualifiedGatewayNames(clusterLocalIngressGateways)...)
-
-	if config.FromContext(ctx).Network.SystemInternalTLSEnabled() {
-		logger.Info("reconciling DestinationRules for system-internal-tls")
-		if err := r.reconcileDestinationRules(ctx, ing); err != nil {
-			return err
-		}
-	}
 
 	vses, err := resources.MakeVirtualServices(ing, gatewayNames)
 	if err != nil {
@@ -400,47 +389,6 @@ func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1
 	return nil
 }
 
-func (r *Reconciler) reconcileDestinationRules(ctx context.Context, ing *v1alpha1.Ingress) error {
-	var drs = sets.New[string]()
-	for _, rule := range ing.Spec.Rules {
-		for _, path := range rule.HTTP.Paths {
-			// Currently DomainMappings point to the cluster local domain on the local gateway.
-			// As there is no encryption there yet (https://github.com/knative/serving/issues/13472),
-			// we cannot use upstream TLS here, so we need to skip it for DomainMappings
-			if path.RewriteHost != "" {
-				continue
-			}
-
-			for _, split := range path.Splits {
-				svc, err := r.svcLister.Services(split.ServiceNamespace).Get(split.ServiceName)
-				if err != nil {
-					return fmt.Errorf("failed to get service: %w", err)
-				}
-
-				http2 := false
-				for _, port := range svc.Spec.Ports {
-					if port.Name == "http2" || port.Name == "h2c" {
-						http2 = true
-					}
-				}
-
-				hostname := pkgnetwork.GetServiceHostname(split.ServiceName, split.ServiceNamespace)
-
-				// skip duplicate entries, as we only need one DR per unique upstream k8s service
-				if !drs.Has(hostname) {
-					dr := resources.MakeInternalEncryptionDestinationRule(hostname, ing, http2)
-					if _, err := istioaccessor.ReconcileDestinationRule(ctx, ing, dr, r); err != nil {
-						return fmt.Errorf("failed to reconcile DestinationRule: %w", err)
-					}
-					drs.Insert(hostname)
-				}
-			}
-		}
-	}
-
-	return nil
-}
-
 func (r *Reconciler) FinalizeKind(ctx context.Context, ing *v1alpha1.Ingress) pkgreconciler.Event {
 	logger := logging.FromContext(ctx)
 	istiocfg := config.FromContext(ctx).Istio
@@ -529,10 +477,6 @@ func (r *Reconciler) GetIstioClient() istioclientset.Interface {
 // GetVirtualServiceLister returns the lister for VirtualService.
 func (r *Reconciler) GetVirtualServiceLister() istiolisters.VirtualServiceLister {
 	return r.virtualServiceLister
-}
-
-func (r *Reconciler) GetDestinationRuleLister() istiolisters.DestinationRuleLister {
-	return r.destinationRuleLister
 }
 
 func gatewayServiceURL(gateways []config.Gateway) string {

@@ -94,17 +94,3 @@ Run the following command to install net-istio components
 ko apply -f config/
 ```
 
-### System Internal TLS (optional)
-
-If you want to work with `system-internal-tls` enabled you can either:
-
-* Install `Knative Serving`, `cert-manager` and `net-certmanager` to automatically generate the certificates. The CA will be injected for the Knative Certificate in [700-istio-knative-certificate.yaml](./config/700-istio-knative-certificate.yaml).
-* Or use [./test/generate-upstream-cert.sh)](./test/generate-upstream-cert.sh) to manually generate the secrets.
-
-You can then enable `system-internal-tls` in `config-network` like in [our test resources](./test/config/system-internal-tls/config-network.yaml)
-and specify the following environment variables before you run the e2e/conformance tests:
-
-```bash
-export UPSTREAM_TLS_CERT=serving-certs
-export SERVER_NAME=kn-user-serving-tests
-```

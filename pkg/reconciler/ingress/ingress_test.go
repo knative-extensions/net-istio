@@ -27,7 +27,6 @@ import (
 	// Inject our fakes
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
 	fakeistioclient "knative.dev/net-istio/pkg/client/istio/injection/client/fake"
-	_ "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/destinationrule/fake"
 	_ "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/gateway/fake"
 	_ "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/virtualservice/fake"
 	fakenetworkingclient "knative.dev/networking/pkg/client/injection/client/fake"
@@ -116,48 +115,6 @@ var (
 		},
 		Spec: corev1.ServiceSpec{
 			Selector: selector,
-		},
-	}
-	ingressServiceHTTP1 = &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-service",
-			Namespace: testNS,
-		},
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{
-				{
-					Name: "http",
-					Port: 8080,
-				},
-			},
-		},
-	}
-	ingressService2HTTP1 = &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-service-2",
-			Namespace: testNS,
-		},
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{
-				{
-					Name: "http",
-					Port: 8080,
-				},
-			},
-		},
-	}
-	ingressServiceHTTP2 = &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-service",
-			Namespace: testNS,
-		},
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{
-				{
-					Name: "http2",
-					Port: 8080,
-				},
-			},
 		},
 	}
 	wildcardTLSServer = &istiov1beta1.Server{
@@ -527,208 +484,6 @@ func TestReconcile(t *testing.T) {
 			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, netconfig.IstioIngressClassName, controller.Options{
 				ConfigStore: &testConfigStore{
 					config: ReconcilerTestConfig(),
-				}})
-	}))
-}
-
-func TestReconcile_EnableSystemInternalTLS(t *testing.T) {
-	table := TableTest{{
-		Name:                    "create DestinationRules single split http1",
-		SkipNamespaceValidation: true,
-		Objects: []runtime.Object{
-			ing("reconcile-virtualservice"),
-			ingressServiceHTTP1,
-			gateway("knative-ingress-gateway", system.Namespace(), []*istiov1beta1.Server{irrelevantServer1}),
-			gateway("knative-test-gateway", system.Namespace(), []*istiov1beta1.Server{irrelevantServer1}),
-		},
-		WantCreates: []runtime.Object{
-			resources.MakeInternalEncryptionDestinationRule("test-service.test-ns.svc.cluster.local", ing("reconcile-virtualservice"), false),
-			resources.MakeMeshVirtualService(insertProbe(ing("reconcile-virtualservice")), gateways),
-			resources.MakeIngressVirtualService(insertProbe(ing("reconcile-virtualservice")),
-				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
-		},
-		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: ingressWithStatus("reconcile-virtualservice",
-				v1alpha1.IngressStatus{
-					PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{DomainInternal: pkgnet.GetServiceHostname("test-ingressgateway", "istio-system")},
-						},
-					},
-					PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{MeshOnly: true},
-						},
-					},
-					Status: duckv1.Status{
-						Conditions: duckv1.Conditions{{
-							Type:     v1alpha1.IngressConditionLoadBalancerReady,
-							Status:   corev1.ConditionTrue,
-							Severity: apis.ConditionSeverityError,
-						}, {
-							Type:     v1alpha1.IngressConditionNetworkConfigured,
-							Status:   corev1.ConditionTrue,
-							Severity: apis.ConditionSeverityError,
-						}, {
-							Type:     v1alpha1.IngressConditionReady,
-							Status:   corev1.ConditionTrue,
-							Severity: apis.ConditionSeverityError,
-						}},
-					},
-				},
-			),
-		}},
-		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconcile-virtualservice"),
-			Eventf(corev1.EventTypeNormal, "Created", "Created DestinationRule %q", "test-service.test-ns.svc.cluster.local"),
-			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconcile-virtualservice-mesh"),
-			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconcile-virtualservice-ingress"),
-		},
-		WantPatches: []clientgotesting.PatchActionImpl{
-			patchAddFinalizerAction("reconcile-virtualservice", "ingresses.networking.internal.knative.dev"),
-		},
-		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(1)},
-		Key:            "test-ns/reconcile-virtualservice",
-		CmpOpts:        defaultCmpOptsList,
-	}, {
-		Name:                    "create DestinationRules single split http2",
-		SkipNamespaceValidation: true,
-		Objects: []runtime.Object{
-			ing("reconcile-virtualservice"),
-			ingressServiceHTTP2,
-			gateway("knative-ingress-gateway", system.Namespace(), []*istiov1beta1.Server{irrelevantServer1}),
-			gateway("knative-test-gateway", system.Namespace(), []*istiov1beta1.Server{irrelevantServer1}),
-		},
-		WantCreates: []runtime.Object{
-			resources.MakeInternalEncryptionDestinationRule("test-service.test-ns.svc.cluster.local", ing("reconcile-virtualservice"), true),
-			resources.MakeMeshVirtualService(insertProbe(ing("reconcile-virtualservice")), gateways),
-			resources.MakeIngressVirtualService(insertProbe(ing("reconcile-virtualservice")),
-				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
-		},
-		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: ingressWithStatus("reconcile-virtualservice",
-				v1alpha1.IngressStatus{
-					PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{DomainInternal: pkgnet.GetServiceHostname("test-ingressgateway", "istio-system")},
-						},
-					},
-					PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{MeshOnly: true},
-						},
-					},
-					Status: duckv1.Status{
-						Conditions: duckv1.Conditions{{
-							Type:     v1alpha1.IngressConditionLoadBalancerReady,
-							Status:   corev1.ConditionTrue,
-							Severity: apis.ConditionSeverityError,
-						}, {
-							Type:     v1alpha1.IngressConditionNetworkConfigured,
-							Status:   corev1.ConditionTrue,
-							Severity: apis.ConditionSeverityError,
-						}, {
-							Type:     v1alpha1.IngressConditionReady,
-							Status:   corev1.ConditionTrue,
-							Severity: apis.ConditionSeverityError,
-						}},
-					},
-				},
-			),
-		}},
-		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconcile-virtualservice"),
-			Eventf(corev1.EventTypeNormal, "Created", "Created DestinationRule %q", "test-service.test-ns.svc.cluster.local"),
-			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconcile-virtualservice-mesh"),
-			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconcile-virtualservice-ingress"),
-		},
-		WantPatches: []clientgotesting.PatchActionImpl{
-			patchAddFinalizerAction("reconcile-virtualservice", "ingresses.networking.internal.knative.dev"),
-		},
-		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(1)},
-		Key:            "test-ns/reconcile-virtualservice",
-		CmpOpts:        defaultCmpOptsList,
-	}, {
-		Name:                    "create DestinationRules multiple splits",
-		SkipNamespaceValidation: true,
-		Objects: []runtime.Object{
-			ingWithMultipleSplitsWithStatus("reconcile-virtualservice", v1alpha1.IngressStatus{}),
-			ingressServiceHTTP1,
-			ingressService2HTTP1,
-			gateway("knative-ingress-gateway", system.Namespace(), []*istiov1beta1.Server{irrelevantServer1}),
-			gateway("knative-test-gateway", system.Namespace(), []*istiov1beta1.Server{irrelevantServer1}),
-		},
-		WantCreates: []runtime.Object{
-			resources.MakeInternalEncryptionDestinationRule("test-service.test-ns.svc.cluster.local", ing("reconcile-virtualservice"), false),
-			resources.MakeInternalEncryptionDestinationRule("test-service-2.test-ns.svc.cluster.local", ing("reconcile-virtualservice"), false),
-			resources.MakeMeshVirtualService(insertProbe(ingWithMultipleSplitsWithStatus("reconcile-virtualservice", v1alpha1.IngressStatus{})), gateways),
-			resources.MakeIngressVirtualService(insertProbe(ingWithMultipleSplitsWithStatus("reconcile-virtualservice", v1alpha1.IngressStatus{})),
-				makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
-		},
-		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: ingWithMultipleSplitsWithStatus("reconcile-virtualservice",
-				v1alpha1.IngressStatus{
-					PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{DomainInternal: pkgnet.GetServiceHostname("test-ingressgateway", "istio-system")},
-						},
-					},
-					PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{
-						Ingress: []v1alpha1.LoadBalancerIngressStatus{
-							{MeshOnly: true},
-						},
-					},
-					Status: duckv1.Status{
-						Conditions: duckv1.Conditions{{
-							Type:     v1alpha1.IngressConditionLoadBalancerReady,
-							Status:   corev1.ConditionTrue,
-							Severity: apis.ConditionSeverityError,
-						}, {
-							Type:     v1alpha1.IngressConditionNetworkConfigured,
-							Status:   corev1.ConditionTrue,
-							Severity: apis.ConditionSeverityError,
-						}, {
-							Type:     v1alpha1.IngressConditionReady,
-							Status:   corev1.ConditionTrue,
-							Severity: apis.ConditionSeverityError,
-						}},
-					},
-				},
-			),
-		}},
-		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconcile-virtualservice"),
-			Eventf(corev1.EventTypeNormal, "Created", "Created DestinationRule %q", "test-service.test-ns.svc.cluster.local"),
-			Eventf(corev1.EventTypeNormal, "Created", "Created DestinationRule %q", "test-service-2.test-ns.svc.cluster.local"),
-			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconcile-virtualservice-mesh"),
-			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconcile-virtualservice-ingress"),
-		},
-		WantPatches: []clientgotesting.PatchActionImpl{
-			patchAddFinalizerAction("reconcile-virtualservice", "ingresses.networking.internal.knative.dev"),
-		},
-		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(1)},
-		Key:            "test-ns/reconcile-virtualservice",
-		CmpOpts:        defaultCmpOptsList,
-	},
-	}
-
-	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
-		r := &Reconciler{
-			kubeclient:            kubeclient.Get(ctx),
-			istioClientSet:        istioclient.Get(ctx),
-			virtualServiceLister:  listers.GetVirtualServiceLister(),
-			destinationRuleLister: listers.GetDestinationRuleLister(),
-			gatewayLister:         listers.GetGatewayLister(),
-			svcLister:             listers.GetK8sServiceLister(),
-			statusManager:         ctx.Value(FakeStatusManagerKey).(status.Manager),
-		}
-
-		testConfig := ReconcilerTestConfig()
-		testConfig.Network.SystemInternalTLS = netconfig.EncryptionEnabled
-		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakenetworkingclient.Get(ctx),
-			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, netconfig.IstioIngressClassName, controller.Options{
-				ConfigStore: &testConfigStore{
-					config: testConfig,
 				}})
 	}))
 }
@@ -1250,14 +1005,13 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 		}
 
 		r := &Reconciler{
-			kubeclient:            kubeclient.Get(ctx),
-			istioClientSet:        istioclient.Get(ctx),
-			virtualServiceLister:  listers.GetVirtualServiceLister(),
-			destinationRuleLister: listers.GetDestinationRuleLister(),
-			gatewayLister:         listers.GetGatewayLister(),
-			secretLister:          listers.GetSecretLister(),
-			svcLister:             listers.GetK8sServiceLister(),
-			tracker:               &NullTracker{},
+			kubeclient:           kubeclient.Get(ctx),
+			istioClientSet:       istioclient.Get(ctx),
+			virtualServiceLister: listers.GetVirtualServiceLister(),
+			gatewayLister:        listers.GetGatewayLister(),
+			secretLister:         listers.GetSecretLister(),
+			svcLister:            listers.GetK8sServiceLister(),
+			tracker:              &NullTracker{},
 			statusManager: &fakestatusmanager.FakeStatusManager{
 				FakeIsReady: func(ctx context.Context, ing *v1alpha1.Ingress) (bool, error) {
 					return true, nil
@@ -1467,14 +1221,13 @@ func TestReconcile_ClusterLocalDomainTLS(t *testing.T) {
 		}
 
 		r := &Reconciler{
-			kubeclient:            kubeclient.Get(ctx),
-			istioClientSet:        istioclient.Get(ctx),
-			virtualServiceLister:  listers.GetVirtualServiceLister(),
-			destinationRuleLister: listers.GetDestinationRuleLister(),
-			gatewayLister:         listers.GetGatewayLister(),
-			secretLister:          listers.GetSecretLister(),
-			svcLister:             listers.GetK8sServiceLister(),
-			tracker:               &NullTracker{},
+			kubeclient:           kubeclient.Get(ctx),
+			istioClientSet:       istioclient.Get(ctx),
+			virtualServiceLister: listers.GetVirtualServiceLister(),
+			gatewayLister:        listers.GetGatewayLister(),
+			secretLister:         listers.GetSecretLister(),
+			svcLister:            listers.GetK8sServiceLister(),
+			tracker:              &NullTracker{},
 			statusManager: &fakestatusmanager.FakeStatusManager{
 				FakeIsReady: func(ctx context.Context, ing *v1alpha1.Ingress) (bool, error) {
 					return true, nil
@@ -1685,17 +1438,6 @@ func ingressWithStatus(name string, status v1alpha1.IngressStatus) *v1alpha1.Ing
 
 func ing(name string) *v1alpha1.Ingress {
 	return ingressWithStatus(name, v1alpha1.IngressStatus{})
-}
-
-func ingWithMultipleSplitsWithStatus(name string, status v1alpha1.IngressStatus) *v1alpha1.Ingress {
-	ing := ingressWithStatus(name, status).DeepCopy()
-	split1 := ing.Spec.Rules[0].HTTP.Paths[0].Splits[0]
-	split1.Percent = 50
-	split2 := split1.DeepCopy()
-	split2.ServiceName = ingressService2HTTP1.Name
-	ing.Spec.Rules[0].HTTP.Paths[0].Splits = []v1alpha1.IngressBackendSplit{split1, *split2}
-	ing.Spec.Rules[1].HTTP.Paths[0].Splits = []v1alpha1.IngressBackendSplit{split1, *split2}
-	return ing
 }
 
 func ingressWithFinalizers(name string, tls []v1alpha1.IngressTLS, finalizers []string, deletionTime *metav1.Time) *v1alpha1.Ingress {
