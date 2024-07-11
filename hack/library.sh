@@ -14,29 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source "$(git rev-parse --show-toplevel)/vendor/knative.dev/hack/library.sh"
-
-readonly APPLY_ORDER=(
-  Namespace
-  ServiceAccount
-  ClusterRole
-  ClusterRoleBinding
-  Role
-  RoleBinding
-  CustomResourceDefinition
-  ConfigMap
-  Deployment
-  Service
-  HorizontalPodAutoscaler
-  PodDisruptionBudget
-  MutatingWebhookConfiguration
-  ValidatingWebhookConfiguration
-
-  # Istio resources
-  EnvoyFilter
-  PeerAuthentication
-)
-
+source $(dirname "$0")/../vendor/knative.dev/hack/library.sh
 
 function download_istio() {
   # Find the right arch so we can download the correct istioctl version
@@ -63,8 +41,6 @@ function download_istio() {
     DOWNLOAD_URL=https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/${ISTIO_TARBALL}
   fi
 
-  SYSTEM_NAMESPACE="${SYSTEM_NAMESPACE:-"knative-serving"}"
-
   ISTIO_TMP=$(mktemp -d)
   pushd "$ISTIO_TMP"
   curl -LO "$DOWNLOAD_URL"
@@ -86,7 +62,18 @@ function cleanup_istio() {
 function add_crd_label() {
   local lib_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   go_run github.com/vmware-tanzu/carvel-ytt/cmd/ytt@v0.43.0 \
-    -f - -f "${lib_path}/label-crd-overlay.ytt.yaml"
+    -f - \
+    -f <(cat <<EOF
+#@ load("@ytt:overlay", "overlay")
+
+#@overlay/match by=overlay.subset({"kind":"CustomResourceDefinition"}), expects="1+"
+---
+metadata:
+  labels:
+    #@overlay/match missing_ok=True
+    knative.dev/crd-install: "true"
+EOF
+)
 }
 
 function generate_manifests() {
@@ -101,7 +88,6 @@ function generate_manifests() {
     mkdir -p "$target_dir"
 
     echo "Generating manifest from $(basename $(dirname "$file"))/$(basename "$file")"
-    echo "  using istioctl flags $@"
 
     tmpfile=$(mktemp)
     rm "${target_dir}/istio.yaml" || true
@@ -116,17 +102,6 @@ metadata:
 EOF
 
     "${ISTIO_DIR}"/bin/istioctl manifest generate -f "$file" "$@" | add_crd_label >> "${tmpfile}"
-
-    for kind in "${APPLY_ORDER[@]}"; do
-      run_yq eval "select(.kind == \"${kind}\")" "${tmpfile}" >> "${target_dir}/istio.yaml"
-      echo "---" >> "${target_dir}/istio.yaml"
-
-      # Remove the kind we added - after iteration we'll add what's remaining
-      run_yq eval --inplace "select(.kind != \"${kind}\")" "${tmpfile}"
-      if [ ! -s ${tmpfile} ]; then
-        break
-      fi
-    done
 
     # Add any resources that weren't on our prioritized list
     cat "${tmpfile}" >> "${target_dir}/istio.yaml"
@@ -148,9 +123,6 @@ EOF
       echo "  appending ${istio_extra}"
       cat "${istio_extra}" >> "${target_dir}/istio.yaml"
     fi
-
-    # Remove documents with no content
-    run_yq eval --inplace 'select(. != null)' "${target_dir}/istio.yaml"
   done
 }
 
@@ -163,17 +135,4 @@ function generate() {
   trap cleanup_istio EXIT
 
   generate_manifests "$path" "$@"
-}
-
-function run_yq() {
-  go_run github.com/mikefarah/yq/v4@v4.28.1 "$@"
-}
-
-function install_yaml() {
-  for kind in "${APPLY_ORDER[@]}"; do
-    run_yq eval "select(.kind == \"${kind}\")" "$1" | kubectl apply -f -
-  done
-
-  # In case we missed anything in our list
-  kubectl apply -f "$1"
 }

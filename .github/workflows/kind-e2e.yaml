@@ -23,9 +23,6 @@ jobs:
         - ./test/conformance
         - ./test/e2e
 
-        istio-version:
-        - latest
-
         encryption:
         - disabled
         - system-internal-tls
@@ -56,10 +53,10 @@ jobs:
         set -o pipefail
 
         # Replace cluster.local with random suffix.
-        sed -ie "s/cluster\.local/${CLUSTER_SUFFIX}/g" third_party/istio-${{ matrix.istio-version }}/istio-kind-${{ matrix.istio-profile }}/istio.yaml
+        sed -ie "s/cluster\.local/${CLUSTER_SUFFIX}/g" third_party/istio-latest/istio-kind-${{ matrix.istio-profile }}/istio.yaml
 
         # Deploy Istio
-        ./third_party/istio-${{ matrix.istio-version }}/install-istio.sh istio-kind-${{ matrix.istio-profile }}
+        kubectl apply -f ./third_party/istio-latest/istio-kind-${{ matrix.istio-profile }}
 
         # Remove Knative Certificate as we are running without Serving CRs
         rm -f config/700-istio-knative-certificate.yaml
@@ -67,7 +64,7 @@ jobs:
         # Build and Publish our containers to the docker daemon (including test assets)
         ko resolve --platform=linux/amd64 -f test/config/ -f config/ | kubectl apply -f -
 
-        CONFIG_ISTIO="./third_party/istio-${{ matrix.istio-version }}/istio-kind-${{ matrix.istio-profile }}/config-istio.yaml"
+        CONFIG_ISTIO="./third_party/istio-latest/istio-kind-${{ matrix.istio-profile }}/config-istio.yaml"
         if [[ -f "${CONFIG_ISTIO}" ]]; then
            kubectl apply -f "${CONFIG_ISTIO}"
         fi
