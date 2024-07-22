@@ -137,9 +137,6 @@ func MakeExternalIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, ser
 	}
 	gateways := make([]*v1beta1.Gateway, len(gatewayServices))
 	for i, gatewayService := range gatewayServices {
-		if err != nil {
-			return nil, err
-		}
 		gateways[i] = makeIngressGateway(ing, v1alpha1.IngressVisibilityExternalIP, gatewayService.Spec.Selector, servers, gatewayService)
 	}
 	return gateways, nil
