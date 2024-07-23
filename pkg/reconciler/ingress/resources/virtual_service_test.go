@@ -212,7 +212,6 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 }
 
 func TestMakeVirtualServicesSpec_CorrectGateways(t *testing.T) {
-
 	tests := []struct {
 		name             string
 		ingress          *v1alpha1.Ingress
@@ -640,6 +639,9 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 			"my-header": {
 				Exact: "my-header-value",
 			},
+			"my-second-header": {
+				Exact: "my-second-header-value",
+			},
 		},
 		Splits: []v1alpha1.IngressBackendSplit{{
 			IngressBackend: v1alpha1.IngressBackend{
@@ -664,6 +666,11 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 						Exact: "my-header-value",
 					},
 				},
+				"my-second-header": {
+					MatchType: &istiov1beta1.StringMatch_Exact{
+						Exact: "my-second-header-value",
+					},
+				},
 			},
 		}, {
 			Gateways: []string{"gateway-1"},
@@ -674,6 +681,11 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 				"my-header": {
 					MatchType: &istiov1beta1.StringMatch_Exact{
 						Exact: "my-header-value",
+					},
+				},
+				"my-second-header": {
+					MatchType: &istiov1beta1.StringMatch_Exact{
+						Exact: "my-second-header-value",
 					},
 				},
 			},
