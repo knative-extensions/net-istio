@@ -6,15 +6,15 @@ require (
 	github.com/google/go-cmp v0.6.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/sync v0.8.0
-	google.golang.org/protobuf v1.34.2
+	google.golang.org/protobuf v1.35.1
 	istio.io/api v1.22.2-0.20240619002433-8214ad1c7bd7
 	istio.io/client-go v1.22.2
 	k8s.io/api v0.30.3
 	k8s.io/apimachinery v0.30.3
 	k8s.io/client-go v0.30.3
-	knative.dev/hack v0.0.0-20240909014011-fc6a8452af6d
-	knative.dev/networking v0.0.0-20240925061159-939600981bda
-	knative.dev/pkg v0.0.0-20241009125603-952269c2bd2d
+	knative.dev/hack v0.0.0-20241010131451-05b2fb30cb4d
+	knative.dev/networking v0.0.0-20241015085032-a3d46633cfb3
+	knative.dev/pkg v0.0.0-20241015082832-95b4b97567b5
 	sigs.k8s.io/yaml v1.4.0
 )
 
