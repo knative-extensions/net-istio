@@ -17,7 +17,7 @@
 source $(dirname $0)/e2e-common.sh
 
 # Script entry point.
-initialize "$@" --cluster-version=1.28
+initialize "$@" --cluster-version=1.30
 
 # TODO Re-enable conformance tests for mesh when everything's been fixed
 # https://github.com/knative-sandbox/net-istio/issues/584
