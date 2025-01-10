@@ -311,7 +311,8 @@ func TestMakeMeshVirtualServiceSpec_CorrectGateways(t *testing.T) {
 				},
 				Visibility: v1alpha1.IngressVisibilityExternalIP,
 				HTTP:       defaultIngressRuleValue,
-			}}},
+			}},
+		},
 	}
 	expected := []string{"mesh"}
 	gateways := MakeMeshVirtualService(ci, defaultGateways).Spec.Gateways
@@ -348,7 +349,6 @@ func TestMakeMeshVirtualServiceSpecCorrectHosts(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestMakeMeshVirtualServiceSpec_CorrectRoutes(t *testing.T) {

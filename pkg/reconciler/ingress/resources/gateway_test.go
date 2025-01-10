@@ -60,11 +60,11 @@ var secretGVK = schema.GroupVersionKind{Version: "v1", Kind: "Secret"}
 var wildcardSecret, _ = GenerateCertificate([]string{"*.example.com"}, "secret0", system.Namespace())
 
 var wildcardSecrets = map[string]*corev1.Secret{
-	fmt.Sprintf("%s/secret0", system.Namespace()): wildcardSecret,
+	system.Namespace() + "/secret0": wildcardSecret,
 }
 
 var originSecrets = map[string]*corev1.Secret{
-	fmt.Sprintf("%s/secret0", system.Namespace()): &secret,
+	system.Namespace() + "/secret0": &secret,
 }
 
 var selector = map[string]string{

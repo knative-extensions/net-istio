@@ -42,7 +42,8 @@ func NewProbeTargetLister(
 	logger *zap.SugaredLogger,
 	gatewayLister istiolisters.GatewayLister,
 	endpointsLister corev1listers.EndpointsLister,
-	serviceLister corev1listers.ServiceLister) status.ProbeTargetLister {
+	serviceLister corev1listers.ServiceLister,
+) status.ProbeTargetLister {
 	return &gatewayPodTargetLister{
 		logger:          logger,
 		gatewayLister:   gatewayLister,
@@ -117,7 +118,7 @@ func (l *gatewayPodTargetLister) getGateway(name string) (*v1beta1.Gateway, erro
 
 // listGatewayPodsURLs returns a probe targets for a given Gateway.
 func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1beta1.Gateway) ([]status.ProbeTarget, error) {
-	selector := labels.SelectorFromSet(gateway.Spec.Selector)
+	selector := labels.SelectorFromSet(gateway.Spec.GetSelector())
 
 	services, err := l.serviceLister.List(selector)
 	if err != nil {
@@ -136,33 +137,34 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1beta1.Gateway) ([
 
 	seen := sets.New[string]()
 	targets := []status.ProbeTarget{}
-	for _, server := range gateway.Spec.Servers {
+	for _, server := range gateway.Spec.GetServers() {
 		tURL := &url.URL{}
-		switch server.Port.Protocol {
+		switch server.GetPort().GetProtocol() {
 		case "HTTP", "HTTP2":
-			if server.Tls != nil && server.Tls.HttpsRedirect {
+			if server.GetTls() != nil && server.GetTls().GetHttpsRedirect() {
 				// ignoring HTTPS redirects.
 				continue
 			}
 			tURL.Scheme = "http"
 		case "HTTPS":
 			if server.GetTls().GetMode() == istiov1beta1.ServerTLSSettings_MUTUAL {
-				l.logger.Infof("Skipping Server %q because HTTPS with TLS mode MUTUAL is not supported", server.Port.Name)
+				l.logger.Infof("Skipping Server %q because HTTPS with TLS mode MUTUAL is not supported", server.GetPort().GetName())
 				continue
 			}
 			tURL.Scheme = "https"
 		default:
-			l.logger.Infof("Skipping Server %q because protocol %q is not supported", server.Port.Name, server.Port.Protocol)
+			l.logger.Infof("Skipping Server %q because protocol %q is not supported", server.GetPort().GetName(), server.GetPort().GetProtocol())
 			continue
 		}
 
-		portName, err := k8s.NameForPortNumber(service, int32(server.Port.Number))
+		//nolint:gosec // ignore integer overflow
+		portName, err := k8s.NameForPortNumber(service, int32(server.GetPort().GetNumber()))
 		if err != nil {
-			l.logger.Infof("Skipping Server %q because Service %s/%s doesn't contain a port %d", server.Port.Name, service.Namespace, service.Name, server.Port.Number)
+			l.logger.Infof("Skipping Server %q because Service %s/%s doesn't contain a port %d", server.GetPort().GetName(), service.Namespace, service.Name, server.GetPort().GetNumber())
 			continue
 		}
 
-		key := server.Port.Protocol + "/" + strconv.Itoa(int(server.Port.Number))
+		key := server.GetPort().GetProtocol() + "/" + strconv.Itoa(int(server.GetPort().GetNumber()))
 		if seen.Has(key) {
 			continue
 		}
@@ -181,7 +183,7 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1beta1.Gateway) ([
 			target := status.ProbeTarget{
 				PodIPs:  sets.New[string](),
 				PodPort: strconv.Itoa(int(portNumber)),
-				Port:    strconv.Itoa(int(server.Port.Number)),
+				Port:    strconv.Itoa(int(server.GetPort().GetNumber())),
 				URLs:    []*url.URL{tURL},
 			}
 			for _, addr := range sub.Addresses {

@@ -71,14 +71,13 @@ func AnnotateLoggerWithName(ctx context.Context, name string) context.Context {
 		With(zap.String(logkey.ControllerType, name))
 
 	return logging.WithLogger(ctx, logger)
-
 }
+
 func newControllerWithOptions(
 	ctx context.Context,
 	cmw configmap.Watcher,
 	opts ...ingressOption,
 ) *controller.Impl {
-
 	ctx = AnnotateLoggerWithName(ctx, controllerAgentName)
 	logger := logging.FromContext(ctx)
 	virtualServiceInformer := virtualserviceinformer.Get(ctx)

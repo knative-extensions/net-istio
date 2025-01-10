@@ -177,8 +177,8 @@ func TestNotOwnedFailure(t *testing.T) {
 }
 
 func setup(ctx context.Context, certs []*v1alpha1.Certificate,
-	client clientset.Interface, t *testing.T) (*FakeAccessor, func()) {
-
+	client clientset.Interface, t *testing.T,
+) (*FakeAccessor, func()) {
 	fake := fakenetworkingclient.Get(ctx)
 	certInformer := fakecertinformer.Get(ctx)
 

@@ -38,7 +38,6 @@ func NewController(
 	ctx context.Context,
 	cmw configmap.Watcher,
 ) *controller.Impl {
-
 	logger := logging.FromContext(ctx)
 	sksInformer := sksinformer.Get(ctx)
 	virtualServiceInformer := virtualserviceinformer.Get(ctx)

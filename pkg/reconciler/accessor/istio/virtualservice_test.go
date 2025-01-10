@@ -175,12 +175,11 @@ func TestReconcileVirtualService_NotOwnedFailure(t *testing.T) {
 	if !kaccessor.IsNotOwned(err) {
 		t.Error("Expected to get NotOwnedError but got", err)
 	}
-
 }
 
 func setup(ctx context.Context, vses []*v1beta1.VirtualService,
-	istioClient istioclientset.Interface, t *testing.T) (*FakeAccessor, func()) {
-
+	istioClient istioclientset.Interface, t *testing.T,
+) (*FakeAccessor, func()) {
 	fake := istiofake.NewSimpleClientset()
 	informer := istioinformers.NewSharedInformerFactory(fake, 0)
 	vsInformer := informer.Networking().V1beta1().VirtualServices()

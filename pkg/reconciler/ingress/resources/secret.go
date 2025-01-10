@@ -22,6 +22,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"hash/adler32"
+	"strconv"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -122,7 +123,7 @@ func MakeTargetSecretLabels(originSecretName, originSecretNamespace string) map[
 	if len(originSecretName) <= dns1123LabelMaxLength {
 		labels[networking.OriginSecretNameLabelKey] = originSecretName
 	} else {
-		suffix := fmt.Sprint(adler32.Checksum([]byte(originSecretName)))
+		suffix := strconv.FormatUint(uint64(adler32.Checksum([]byte(originSecretName))), 10)
 
 		maxPrefixLength := dns1123LabelMaxLength - len(suffix) - 1
 		prefix := originSecretName[0:maxPrefixLength]

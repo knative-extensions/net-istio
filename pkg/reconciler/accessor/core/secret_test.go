@@ -172,8 +172,8 @@ func TestNotOwnedFailure(t *testing.T) {
 }
 
 func setup(ctx context.Context, secrets []*corev1.Secret,
-	kubeClient kubernetes.Interface, t *testing.T) (*FakeAccessor, func()) {
-
+	kubeClient kubernetes.Interface, t *testing.T,
+) (*FakeAccessor, func()) {
 	secretInformer := fakesecretinformer.Get(ctx)
 
 	fake := fakekubeclient.Get(ctx)

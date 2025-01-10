@@ -47,8 +47,8 @@ func destionationRuleIsDifferent(current, desired *v1beta1.DestinationRule) bool
 
 // ReconcileDestinationRule reconciles DestinationRule to the desired status.
 func ReconcileDestinationRule(ctx context.Context, owner kmeta.Accessor, desired *v1beta1.DestinationRule,
-	drAccessor DestinationRuleAccessor) (*v1beta1.DestinationRule, error) {
-
+	drAccessor DestinationRuleAccessor,
+) (*v1beta1.DestinationRule, error) {
 	recorder := controller.GetEventRecorder(ctx)
 	if recorder == nil {
 		return nil, fmt.Errorf("recorder for reconciling DestinationRule %s/%s is not created", desired.Namespace, desired.Name)
