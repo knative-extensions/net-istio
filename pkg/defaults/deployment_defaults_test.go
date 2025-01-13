@@ -198,7 +198,6 @@ func TestValidate(t *testing.T) {
 }
 
 func TestDeepCopyObject(t *testing.T) {
-
 	tests := []struct {
 		name string
 		in   *IstioDeployment

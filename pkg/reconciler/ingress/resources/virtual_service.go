@@ -138,8 +138,8 @@ func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 				// the VirtualService.
 				// This ensures that we are only using the Gateways that actually appear
 				// in VirtualService routes.
-				for _, m := range http.Match {
-					gw = gw.Union(sets.New(m.Gateways...))
+				for _, m := range http.GetMatch() {
+					gw = gw.Union(sets.New(m.GetGateways()...))
 				}
 				spec.Http = append(spec.Http, http)
 			}
@@ -174,9 +174,12 @@ func makeVirtualServiceRoute(hosts sets.Set[string], http *v1alpha1.HTTPIngressP
 				Host: network.GetServiceHostname(
 					split.ServiceName, split.ServiceNamespace),
 				Port: &istiov1beta1.PortSelector{
+					//nolint:gosec // ignore integer overflow
 					Number: uint32(split.ServicePort.IntValue()),
 				},
 			},
+
+			//nolint:gosec // ignore integer overflow - percent is always >0 & <100
 			Weight:  int32(split.Percent),
 			Headers: h,
 		})

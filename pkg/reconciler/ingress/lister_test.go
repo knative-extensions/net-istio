@@ -1249,7 +1249,8 @@ func TestListProbeTargets(t *testing.T) {
 			PodPort: "80",
 			Port:    "80",
 			URLs: []*url.URL{
-				{Scheme: "http", Host: "foo.bar.com:80"}},
+				{Scheme: "http", Host: "foo.bar.com:80"},
+			},
 		}},
 	}, {
 		name: "local gateways",
@@ -1398,7 +1399,8 @@ func TestListProbeTargets(t *testing.T) {
 			PodPort: "80",
 			Port:    "80",
 			URLs: []*url.URL{
-				{Scheme: "http", Host: "foo.bar:80"}},
+				{Scheme: "http", Host: "foo.bar:80"},
+			},
 		}},
 	}, {
 		name: "two servers, same port, same protocol",
@@ -1510,27 +1512,29 @@ func TestListProbeTargets(t *testing.T) {
 						},
 					},
 				},
-			}},
+			},
+		},
 		gatewayLister: &fakeGatewayLister{
-			gateways: []*v1beta1.Gateway{{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "default",
-					Name:      "gateway-not-matching",
-				},
-				Spec: istiov1beta1.Gateway{
-					Servers: []*istiov1beta1.Server{{
-						Hosts: []string{"*"},
-						Port: &istiov1beta1.Port{
-							Name:     "http",
-							Number:   8888,
-							Protocol: "HTTP",
+			gateways: []*v1beta1.Gateway{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "default",
+						Name:      "gateway-not-matching",
+					},
+					Spec: istiov1beta1.Gateway{
+						Servers: []*istiov1beta1.Server{{
+							Hosts: []string{"*"},
+							Port: &istiov1beta1.Port{
+								Name:     "http",
+								Number:   8888,
+								Protocol: "HTTP",
+							},
+						}},
+						Selector: map[string]string{
+							"gwt": "istio-not-matching",
 						},
-					}},
-					Selector: map[string]string{
-						"gwt": "istio-not-matching",
 					},
 				},
-			},
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "default",
@@ -1549,7 +1553,8 @@ func TestListProbeTargets(t *testing.T) {
 							"gwt": "istio",
 						},
 					},
-				}},
+				},
+			},
 		},
 		endpointsLister: &fakeEndpointsLister{
 			endpointses: []*v1.Endpoints{{

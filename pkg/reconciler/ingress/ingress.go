@@ -337,7 +337,8 @@ func (r *Reconciler) reconcileSystemGeneratedGateway(ctx context.Context, desire
 }
 
 func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1.Ingress,
-	desired []*v1beta1.VirtualService) error {
+	desired []*v1beta1.VirtualService,
+) error {
 	// First, create all needed VirtualServices.
 	kept := sets.New[string]()
 	for _, d := range desired {

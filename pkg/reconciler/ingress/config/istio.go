@@ -17,6 +17,7 @@ limitations under the License.
 package config
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -90,15 +91,15 @@ func (g Gateway) QualifiedName() string {
 
 func (g Gateway) Validate() error {
 	if g.Namespace == "" {
-		return fmt.Errorf("missing namespace")
+		return errors.New("missing namespace")
 	}
 
 	if g.Name == "" {
-		return fmt.Errorf("missing name")
+		return errors.New("missing name")
 	}
 
 	if g.ServiceURL == "" {
-		return fmt.Errorf("missing service")
+		return errors.New("missing service")
 	}
 
 	if errs := validation.IsDNS1123Subdomain(strings.TrimSuffix(g.ServiceURL, ".")); len(errs) > 0 {

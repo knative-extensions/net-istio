@@ -231,7 +231,6 @@ func TestIstioProbing(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-
 			name, port, _ := ingress.CreateRuntimeService(context.Background(), t, clients.NetworkingClient, networking.ServicePortNameHTTP1)
 			hosts := []string{name + ".example.com"}
 
@@ -263,7 +262,6 @@ func TestIstioProbing(t *testing.T) {
 			// Probe the Service on all endpoints
 			var g errgroup.Group
 			for _, tmpl := range c.urls {
-				tmpl := tmpl
 				g.Go(func() error {
 					u, err := url.Parse(fmt.Sprintf(tmpl, hosts[0]))
 					if err != nil {

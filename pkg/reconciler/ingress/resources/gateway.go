@@ -22,6 +22,7 @@ import (
 	"hash/adler32"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/google/go-cmp/cmp"
@@ -70,9 +71,9 @@ var dns1123LabelRegexp = regexp.MustCompile("^" + dns1123LabelFmt + "$")
 // GetServers gets the `Servers` from `Gateway` that belongs to the given Ingress.
 func GetServers(gateway *v1beta1.Gateway, ing *v1alpha1.Ingress) []*istiov1beta1.Server {
 	servers := []*istiov1beta1.Server{}
-	for i := range gateway.Spec.Servers {
-		if belongsToIngress(gateway.Spec.Servers[i], ing) {
-			servers = append(servers, gateway.Spec.Servers[i])
+	for i := range gateway.Spec.GetServers() {
+		if belongsToIngress(gateway.Spec.GetServers()[i], ing) {
+			servers = append(servers, gateway.Spec.GetServers()[i])
 		}
 	}
 	return SortServers(servers)
@@ -80,9 +81,9 @@ func GetServers(gateway *v1beta1.Gateway, ing *v1alpha1.Ingress) []*istiov1beta1
 
 // GetHTTPServer gets the HTTP `Server` from `Gateway`.
 func GetHTTPServer(gateway *v1beta1.Gateway) *istiov1beta1.Server {
-	for _, server := range gateway.Spec.Servers {
+	for _, server := range gateway.Spec.GetServers() {
 		// The server with "http" port is the default HTTP server.
-		if server.Port.Name == httpServerPortName || server.Port.Name == "http" {
+		if server.GetPort().GetName() == httpServerPortName || server.GetPort().GetName() == "http" {
 			return server
 		}
 	}
@@ -92,7 +93,7 @@ func GetHTTPServer(gateway *v1beta1.Gateway) *istiov1beta1.Server {
 func belongsToIngress(server *istiov1beta1.Server, ing *v1alpha1.Ingress) bool {
 	// The format of the portName should be "<namespace>/<ingress_name>:<number>".
 	// For example, default/routetest:0.
-	portNameSplits := strings.Split(server.Port.Name, ":")
+	portNameSplits := strings.Split(server.GetPort().GetName(), ":")
 	if len(portNameSplits) != 2 {
 		return false
 	}
@@ -102,14 +103,15 @@ func belongsToIngress(server *istiov1beta1.Server, ing *v1alpha1.Ingress) bool {
 // SortServers sorts `Server` according to its port name.
 func SortServers(servers []*istiov1beta1.Server) []*istiov1beta1.Server {
 	sort.Slice(servers, func(i, j int) bool {
-		return strings.Compare(servers[i].Port.Name, servers[j].Port.Name) < 0
+		return strings.Compare(servers[i].GetPort().GetName(), servers[j].GetPort().GetName()) < 0
 	})
 	return servers
 }
 
 // MakeIngressTLSGateways creates Gateways that have only TLS servers for a given Ingress.
 func MakeIngressTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, visibility v1alpha1.IngressVisibility,
-	ingressTLS []v1alpha1.IngressTLS, originSecrets map[string]*corev1.Secret, svcLister corev1listers.ServiceLister) ([]*v1beta1.Gateway, error) {
+	ingressTLS []v1alpha1.IngressTLS, originSecrets map[string]*corev1.Secret, svcLister corev1listers.ServiceLister,
+) ([]*v1beta1.Gateway, error) {
 	// No need to create Gateway if there is no related ingress TLS.
 	if len(ingressTLS) == 0 {
 		return []*v1beta1.Gateway{}, nil
@@ -146,7 +148,8 @@ func MakeExternalIngressGateways(ctx context.Context, ing *v1alpha1.Ingress, ser
 // Gateways generated are based on the related ingress being reconciled.
 // For each public ingress service, we will create a list of Gateways. Each Gateway of the list corresponds to a wildcard cert secret.
 func MakeWildcardTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, originWildcardSecrets map[string]*corev1.Secret,
-	svcLister corev1listers.ServiceLister) ([]*v1beta1.Gateway, error) {
+	svcLister corev1listers.ServiceLister,
+) ([]*v1beta1.Gateway, error) {
 	if len(originWildcardSecrets) == 0 {
 		return []*v1beta1.Gateway{}, nil
 	}
@@ -166,7 +169,8 @@ func MakeWildcardTLSGateways(ctx context.Context, ing *v1alpha1.Ingress, originW
 }
 
 func makeWildcardTLSGateways(originWildcardSecrets map[string]*corev1.Secret,
-	gatewayService *corev1.Service) ([]*v1beta1.Gateway, error) {
+	gatewayService *corev1.Service,
+) ([]*v1beta1.Gateway, error) {
 	gateways := make([]*v1beta1.Gateway, 0, len(originWildcardSecrets))
 	for _, secret := range originWildcardSecrets {
 		hosts, err := GetHostsFromCertSecret(secret)
@@ -285,14 +289,14 @@ func getGatewayServices(ctx context.Context, obj kmeta.Accessor, svcLister corev
 func GatewayName(accessor kmeta.Accessor, visibility v1alpha1.IngressVisibility, gatewaySvc *corev1.Service) string {
 	prefix := accessor.GetName()
 	if !isDNS1123Label(prefix) {
-		prefix = fmt.Sprint(adler32.Checksum([]byte(prefix)))
+		prefix = strconv.FormatUint(uint64(adler32.Checksum([]byte(prefix))), 10)
 	}
 
 	gatewayServiceKey := fmt.Sprintf("%s/%s", gatewaySvc.Namespace, gatewaySvc.Name)
 	if visibility == v1alpha1.IngressVisibilityClusterLocal {
 		gatewayServiceKey += localGatewayPostfix
 	}
-	gatewayServiceKeyChecksum := fmt.Sprint(adler32.Checksum([]byte(gatewayServiceKey)))
+	gatewayServiceKeyChecksum := strconv.FormatUint(uint64(adler32.Checksum([]byte(gatewayServiceKey))), 10)
 
 	// Ensure that the overall gateway name still is a DNS1123 label
 	maxPrefixLength := dns1123LabelMaxLength - len(gatewayServiceKeyChecksum) - 1
@@ -353,7 +357,7 @@ func MakeTLSServers(ing *v1alpha1.Ingress, visibility v1alpha1.IngressVisibility
 
 func portNamePrefix(prefix, suffix string) string {
 	if !isDNS1123Label(suffix) {
-		suffix = fmt.Sprint(adler32.Checksum([]byte(suffix)))
+		suffix = strconv.FormatUint(uint64(adler32.Checksum([]byte(suffix))), 10)
 	}
 	return prefix + "/" + suffix
 }
@@ -439,15 +443,15 @@ func parseIngressGatewayConfig(ingressgateway config.Gateway) (metav1.ObjectMeta
 func UpdateGateway(gateway *v1beta1.Gateway, want []*istiov1beta1.Server, existing []*istiov1beta1.Server) *v1beta1.Gateway {
 	existingServers := sets.New[string]()
 	for i := range existing {
-		existingServers.Insert(existing[i].Port.Name)
+		existingServers.Insert(existing[i].GetPort().GetName())
 	}
 
 	servers := []*istiov1beta1.Server{}
-	for _, server := range gateway.Spec.Servers {
+	for _, server := range gateway.Spec.GetServers() {
 		// We remove
 		//  1) the existing servers
 		//  2) the placeholder servers.
-		if existingServers.Has(server.Port.Name) || isPlaceHolderServer(server) {
+		if existingServers.Has(server.GetPort().GetName()) || isPlaceHolderServer(server) {
 			continue
 		}
 		servers = append(servers, server)

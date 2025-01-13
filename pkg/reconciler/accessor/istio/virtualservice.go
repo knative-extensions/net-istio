@@ -48,8 +48,8 @@ func hasDesiredDiff(current, desired *v1beta1.VirtualService) bool {
 
 // ReconcileVirtualService reconciles VirtualService to the desired status.
 func ReconcileVirtualService(ctx context.Context, owner kmeta.Accessor, desired *v1beta1.VirtualService,
-	vsAccessor VirtualServiceAccessor) (*v1beta1.VirtualService, error) {
-
+	vsAccessor VirtualServiceAccessor,
+) (*v1beta1.VirtualService, error) {
 	recorder := controller.GetEventRecorder(ctx)
 	if recorder == nil {
 		return nil, fmt.Errorf("recoder for reconciling VirtualService %s/%s is not created", desired.Namespace, desired.Name)
