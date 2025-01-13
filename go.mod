@@ -13,8 +13,8 @@ require (
 	k8s.io/apimachinery v0.31.4
 	k8s.io/client-go v0.31.4
 	knative.dev/hack v0.0.0-20250109131303-f8be0ccdff36
-	knative.dev/networking v0.0.0-20250110041416-61c6cb642bc9
-	knative.dev/pkg v0.0.0-20250110102817-b4ff2c14fbc2
+	knative.dev/networking v0.0.0-20250113195501-679796878afc
+	knative.dev/pkg v0.0.0-20250113161000-0c2a238a16ed
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -65,7 +65,6 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/mod v0.22.0 // indirect
@@ -75,7 +74,7 @@ require (
 	golang.org/x/term v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
-	golang.org/x/tools v0.28.0 // indirect
+	golang.org/x/tools v0.29.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/api v0.183.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241015192408-796eee8c2d53 // indirect
