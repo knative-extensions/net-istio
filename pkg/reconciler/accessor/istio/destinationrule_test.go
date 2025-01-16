@@ -25,11 +25,11 @@ import (
 	istiov1beta1 "istio.io/api/networking/v1beta1"
 	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	istioclientset "istio.io/client-go/pkg/clientset/versioned"
+	istiolisters "istio.io/client-go/pkg/listers/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	fakeistioclient "knative.dev/net-istio/pkg/client/istio/injection/client/fake"
 	fakedrinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/destinationrule/fake"
-	istiolisters "istio.io/client-go/pkg/listers/networking/v1beta1"
 	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
 
 	. "knative.dev/pkg/reconciler/testing"
