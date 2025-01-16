@@ -18,13 +18,13 @@ package istio
 
 import (
 	istiov1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
+	fakeistioclientset "istio.io/client-go/pkg/clientset/versioned/fake"
+	istiolisters "istio.io/client-go/pkg/listers/networking/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
-	fakeistioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned/fake"
-	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
 	networking "knative.dev/networking/pkg/apis/networking/v1alpha1"
 	fakenetworkingclientset "knative.dev/networking/pkg/client/clientset/versioned/fake"
 	networkinglisters "knative.dev/networking/pkg/client/listers/networking/v1alpha1"

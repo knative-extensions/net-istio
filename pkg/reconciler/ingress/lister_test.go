@@ -38,7 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
-	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
+	istiolisters "istio.io/client-go/pkg/listers/networking/v1beta1"
 )
 
 func TestListProbeTargets(t *testing.T) {

@@ -30,7 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
-	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
+	istiolisters "istio.io/client-go/pkg/listers/networking/v1beta1"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/ingress"
