@@ -19,6 +19,7 @@ source $(dirname $0)/../vendor/knative.dev/hack/e2e-tests.sh
 
 # Default to Istio 'latest' version.
 ISTIO_VERSION="latest"
+export KO_FLAGS="${KO_FLAGS:---platform=linux/amd64}"
 
 # Parse our custom flags.
 function parse_flags() {
@@ -53,7 +54,7 @@ function test_setup() {
   echo ">> Publishing test images"
   $(dirname $0)/upload-test-images.sh || fail_test "Error uploading test images"
   echo ">> Creating test resources (test/config/)"
-  ko apply --platform=linux/amd64 ${KO_FLAGS} -f test/config/ || return 1
+  ko apply ${KO_FLAGS} -f test/config/ || return 1
   if (( MESH )); then
     kubectl label namespace serving-tests istio-injection=enabled
   fi
