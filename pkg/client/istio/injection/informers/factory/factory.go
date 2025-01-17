@@ -21,7 +21,7 @@ package factory
 import (
 	context "context"
 
-	externalversions "knative.dev/net-istio/pkg/client/istio/informers/externalversions"
+	externalversions "istio.io/client-go/pkg/informers/externalversions"
 	client "knative.dev/net-istio/pkg/client/istio/injection/client"
 	controller "knative.dev/pkg/controller"
 	injection "knative.dev/pkg/injection"
@@ -50,7 +50,7 @@ func Get(ctx context.Context) externalversions.SharedInformerFactory {
 	untyped := ctx.Value(Key{})
 	if untyped == nil {
 		logging.FromContext(ctx).Panic(
-			"Unable to fetch knative.dev/net-istio/pkg/client/istio/informers/externalversions.SharedInformerFactory from context.")
+			"Unable to fetch istio.io/client-go/pkg/informers/externalversions.SharedInformerFactory from context.")
 	}
 	return untyped.(externalversions.SharedInformerFactory)
 }

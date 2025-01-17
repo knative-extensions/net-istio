@@ -21,7 +21,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
+	istioclientset "istio.io/client-go/pkg/clientset/versioned"
 	nettest "knative.dev/networking/test"
 
 	// Required to run e2e tests against OpenID based clusters.

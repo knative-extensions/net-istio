@@ -420,16 +420,77 @@ gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# istio.io/api v1.22.2-0.20240619002433-8214ad1c7bd7
-## explicit; go 1.22
+# istio.io/api v1.24.2-0.20241206152109-43afb8563706
+## explicit; go 1.22.0
 istio.io/api/analysis/v1alpha1
+istio.io/api/extensions/v1alpha1
 istio.io/api/label
 istio.io/api/meta/v1alpha1
+istio.io/api/networking/v1alpha3
 istio.io/api/networking/v1beta1
+istio.io/api/security/v1beta1
+istio.io/api/telemetry/v1alpha1
 istio.io/api/type/v1beta1
-# istio.io/client-go v1.22.2
-## explicit; go 1.22
+# istio.io/client-go v1.24.2
+## explicit; go 1.22.0
+istio.io/client-go/pkg/apis/extensions/v1alpha1
+istio.io/client-go/pkg/apis/networking/v1
+istio.io/client-go/pkg/apis/networking/v1alpha3
 istio.io/client-go/pkg/apis/networking/v1beta1
+istio.io/client-go/pkg/apis/security/v1
+istio.io/client-go/pkg/apis/security/v1beta1
+istio.io/client-go/pkg/apis/telemetry/v1
+istio.io/client-go/pkg/apis/telemetry/v1alpha1
+istio.io/client-go/pkg/applyconfiguration/extensions/v1alpha1
+istio.io/client-go/pkg/applyconfiguration/meta/v1
+istio.io/client-go/pkg/applyconfiguration/networking/v1
+istio.io/client-go/pkg/applyconfiguration/networking/v1alpha3
+istio.io/client-go/pkg/applyconfiguration/networking/v1beta1
+istio.io/client-go/pkg/applyconfiguration/security/v1
+istio.io/client-go/pkg/applyconfiguration/security/v1beta1
+istio.io/client-go/pkg/applyconfiguration/telemetry/v1
+istio.io/client-go/pkg/applyconfiguration/telemetry/v1alpha1
+istio.io/client-go/pkg/clientset/versioned
+istio.io/client-go/pkg/clientset/versioned/fake
+istio.io/client-go/pkg/clientset/versioned/scheme
+istio.io/client-go/pkg/clientset/versioned/typed/extensions/v1alpha1
+istio.io/client-go/pkg/clientset/versioned/typed/extensions/v1alpha1/fake
+istio.io/client-go/pkg/clientset/versioned/typed/networking/v1
+istio.io/client-go/pkg/clientset/versioned/typed/networking/v1/fake
+istio.io/client-go/pkg/clientset/versioned/typed/networking/v1alpha3
+istio.io/client-go/pkg/clientset/versioned/typed/networking/v1alpha3/fake
+istio.io/client-go/pkg/clientset/versioned/typed/networking/v1beta1
+istio.io/client-go/pkg/clientset/versioned/typed/networking/v1beta1/fake
+istio.io/client-go/pkg/clientset/versioned/typed/security/v1
+istio.io/client-go/pkg/clientset/versioned/typed/security/v1/fake
+istio.io/client-go/pkg/clientset/versioned/typed/security/v1beta1
+istio.io/client-go/pkg/clientset/versioned/typed/security/v1beta1/fake
+istio.io/client-go/pkg/clientset/versioned/typed/telemetry/v1
+istio.io/client-go/pkg/clientset/versioned/typed/telemetry/v1/fake
+istio.io/client-go/pkg/clientset/versioned/typed/telemetry/v1alpha1
+istio.io/client-go/pkg/clientset/versioned/typed/telemetry/v1alpha1/fake
+istio.io/client-go/pkg/informers/externalversions
+istio.io/client-go/pkg/informers/externalversions/extensions
+istio.io/client-go/pkg/informers/externalversions/extensions/v1alpha1
+istio.io/client-go/pkg/informers/externalversions/internalinterfaces
+istio.io/client-go/pkg/informers/externalversions/networking
+istio.io/client-go/pkg/informers/externalversions/networking/v1
+istio.io/client-go/pkg/informers/externalversions/networking/v1alpha3
+istio.io/client-go/pkg/informers/externalversions/networking/v1beta1
+istio.io/client-go/pkg/informers/externalversions/security
+istio.io/client-go/pkg/informers/externalversions/security/v1
+istio.io/client-go/pkg/informers/externalversions/security/v1beta1
+istio.io/client-go/pkg/informers/externalversions/telemetry
+istio.io/client-go/pkg/informers/externalversions/telemetry/v1
+istio.io/client-go/pkg/informers/externalversions/telemetry/v1alpha1
+istio.io/client-go/pkg/listers/extensions/v1alpha1
+istio.io/client-go/pkg/listers/networking/v1
+istio.io/client-go/pkg/listers/networking/v1alpha3
+istio.io/client-go/pkg/listers/networking/v1beta1
+istio.io/client-go/pkg/listers/security/v1
+istio.io/client-go/pkg/listers/security/v1beta1
+istio.io/client-go/pkg/listers/telemetry/v1
+istio.io/client-go/pkg/listers/telemetry/v1alpha1
 # k8s.io/api v0.31.4
 ## explicit; go 1.22.0
 k8s.io/api/admission/v1

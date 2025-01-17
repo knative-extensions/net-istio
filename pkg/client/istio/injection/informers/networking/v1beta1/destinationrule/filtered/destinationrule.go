@@ -21,7 +21,7 @@ package filtered
 import (
 	context "context"
 
-	v1beta1 "knative.dev/net-istio/pkg/client/istio/informers/externalversions/networking/v1beta1"
+	v1beta1 "istio.io/client-go/pkg/informers/externalversions/networking/v1beta1"
 	filtered "knative.dev/net-istio/pkg/client/istio/injection/informers/factory/filtered"
 	controller "knative.dev/pkg/controller"
 	injection "knative.dev/pkg/injection"
@@ -59,7 +59,7 @@ func Get(ctx context.Context, selector string) v1beta1.DestinationRuleInformer {
 	untyped := ctx.Value(Key{Selector: selector})
 	if untyped == nil {
 		logging.FromContext(ctx).Panicf(
-			"Unable to fetch knative.dev/net-istio/pkg/client/istio/informers/externalversions/networking/v1beta1.DestinationRuleInformer with selector %s from context.", selector)
+			"Unable to fetch istio.io/client-go/pkg/informers/externalversions/networking/v1beta1.DestinationRuleInformer with selector %s from context.", selector)
 	}
 	return untyped.(v1beta1.DestinationRuleInformer)
 }

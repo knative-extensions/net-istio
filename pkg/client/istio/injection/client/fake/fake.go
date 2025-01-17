@@ -21,9 +21,9 @@ package fake
 import (
 	context "context"
 
+	fake "istio.io/client-go/pkg/clientset/versioned/fake"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	rest "k8s.io/client-go/rest"
-	fake "knative.dev/net-istio/pkg/client/istio/clientset/versioned/fake"
 	client "knative.dev/net-istio/pkg/client/istio/injection/client"
 	injection "knative.dev/pkg/injection"
 	logging "knative.dev/pkg/logging"
@@ -51,7 +51,7 @@ func Get(ctx context.Context) *fake.Clientset {
 	untyped := ctx.Value(client.Key{})
 	if untyped == nil {
 		logging.FromContext(ctx).Panic(
-			"Unable to fetch knative.dev/net-istio/pkg/client/istio/clientset/versioned/fake.Clientset from context.")
+			"Unable to fetch istio.io/client-go/pkg/clientset/versioned/fake.Clientset from context.")
 	}
 	return untyped.(*fake.Clientset)
 }

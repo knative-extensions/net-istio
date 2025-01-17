@@ -21,7 +21,7 @@ package fake
 import (
 	context "context"
 
-	externalversions "knative.dev/net-istio/pkg/client/istio/informers/externalversions"
+	externalversions "istio.io/client-go/pkg/informers/externalversions"
 	fake "knative.dev/net-istio/pkg/client/istio/injection/client/fake"
 	factory "knative.dev/net-istio/pkg/client/istio/injection/informers/factory"
 	controller "knative.dev/pkg/controller"

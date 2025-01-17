@@ -26,11 +26,11 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 	istiov1beta1 "istio.io/api/networking/v1beta1"
 	"istio.io/client-go/pkg/apis/networking/v1beta1"
-	istiolisters "knative.dev/net-istio/pkg/client/istio/listers/networking/v1beta1"
+	istiolisters "istio.io/client-go/pkg/listers/networking/v1beta1"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/tracker"
 
-	istioclientset "knative.dev/net-istio/pkg/client/istio/clientset/versioned"
+	istioclientset "istio.io/client-go/pkg/clientset/versioned"
 	kaccessor "knative.dev/net-istio/pkg/reconciler/accessor"
 	coreaccessor "knative.dev/net-istio/pkg/reconciler/accessor/core"
 	istioaccessor "knative.dev/net-istio/pkg/reconciler/accessor/istio"

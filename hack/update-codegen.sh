@@ -30,27 +30,18 @@ echo "=== Update Codegen for $MODULE_NAME"
 group "Knative Codegen"
 
 # Knative Injection (for istio)
+OUTPUT_PKG="knative.dev/net-istio/pkg/client/istio/injection" \
 ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
-  knative.dev/net-istio/pkg/client/istio istio.io/client-go/pkg/apis \
+  istio.io/client-go/pkg istio.io/client-go/pkg/apis \
   "networking:v1beta1" \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
-
-group "Kubernetes Codegen"
-
-# Generate our own client for istio (otherwise injection won't work)
-${CODEGEN_PKG}/generate-groups.sh "client,informer,lister" \
-  knative.dev/net-istio/pkg/client/istio istio.io/client-go/pkg/apis \
-  "networking:v1beta1" \
-  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
-
-group "Deepcopy Gen"
 
 # Depends on generate-groups.sh to install bin/deepcopy-gen
-${GOPATH}/bin/deepcopy-gen \
-  -O zz_generated.deepcopy \
+go run k8s.io/code-generator/cmd/deepcopy-gen \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt \
-  -i knative.dev/net-istio/pkg/reconciler/ingress/config \
-  -i knative.dev/net-istio/pkg/defaults
+  --output-file zz_generated.deepcopy.go \
+  knative.dev/net-istio/pkg/reconciler/ingress/config \
+  knative.dev/net-istio/pkg/defaults
 
 group "Update deps post-codegen"
 # Make sure our dependencies are up-to-date

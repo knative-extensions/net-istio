@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"istio.io/api/networking/v1beta1"
 	"knative.dev/net-istio/pkg/reconciler/informerfiltering"
 	"knative.dev/net-istio/pkg/reconciler/ingress"
 	"knative.dev/net-istio/pkg/reconciler/serverlessservice"
@@ -28,11 +27,6 @@ import (
 )
 
 func main() {
-	// Allow unknown fields in Istio API client. This is to be more
-	// resilient to clusters containing malformed resources.
-	v1beta1.VirtualServiceUnmarshaler.AllowUnknownFields = true
-	v1beta1.GatewayUnmarshaler.AllowUnknownFields = true
-
 	ctx := informerfiltering.GetContextWithFilteringLabelSelector(signals.NewContext())
 	sharedmain.MainWithContext(ctx, "net-istio-controller", ingress.NewController, serverlessservice.NewController)
 }

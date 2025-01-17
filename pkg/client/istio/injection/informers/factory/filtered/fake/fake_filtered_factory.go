@@ -21,8 +21,8 @@ package fakeFilteredFactory
 import (
 	context "context"
 
+	externalversions "istio.io/client-go/pkg/informers/externalversions"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	externalversions "knative.dev/net-istio/pkg/client/istio/informers/externalversions"
 	fake "knative.dev/net-istio/pkg/client/istio/injection/client/fake"
 	filtered "knative.dev/net-istio/pkg/client/istio/injection/informers/factory/filtered"
 	controller "knative.dev/pkg/controller"
