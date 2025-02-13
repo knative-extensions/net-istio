@@ -5,8 +5,8 @@ go 1.22.7
 require (
 	github.com/google/go-cmp v0.6.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/sync v0.10.0
-	google.golang.org/protobuf v1.36.4
+	golang.org/x/sync v0.11.0
+	google.golang.org/protobuf v1.36.5
 	istio.io/api v1.24.2-0.20241206152109-43afb8563706
 	istio.io/client-go v1.24.2
 	k8s.io/api v0.31.4
@@ -14,7 +14,7 @@ require (
 	k8s.io/client-go v0.31.4
 	knative.dev/hack v0.0.0-20250128013659-5f7f0f50e9de
 	knative.dev/networking v0.0.0-20250204225923-e6fc9bbf3fb0
-	knative.dev/pkg v0.0.0-20250203163623-f62a97fc6ad4
+	knative.dev/pkg v0.0.0-20250211185550-c8bea7c326ff
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -86,7 +86,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.31.4 // indirect
 	k8s.io/code-generator v0.31.4 // indirect
-	k8s.io/gengo v0.0.0-20240404160639-a0386bf69313 // indirect
 	k8s.io/gengo/v2 v2.0.0-20240228010128-51d4e06bde70 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240808142205-8e686545bdb8 // indirect
