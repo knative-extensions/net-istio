@@ -396,7 +396,8 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, ing *v1alpha1.Ingress) pk
 	logger.Info("Cleaning up Gateway Servers")
 	for _, gws := range [][]config.Gateway{istiocfg.IngressGateways, istiocfg.LocalGateways} {
 		for _, gw := range gws {
-			if err := r.reconcileIngressServers(ctx, ing, gw, []*istiov1beta1.Server{}); err != nil {
+			err := r.reconcileIngressServers(ctx, ing, gw, []*istiov1beta1.Server{})
+			if err != nil && !apierrs.IsNotFound(err) {
 				return err
 			}
 		}

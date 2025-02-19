@@ -744,6 +744,20 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 		Key:     "test-ns/reconciling-ingress",
 		CmpOpts: defaultCmpOptsList,
 	}, {
+		Name:                    "delete Ingress with missing gateway",
+		SkipNamespaceValidation: true,
+		Objects: []runtime.Object{
+			ingressWithFinalizers("reconciling-ingress", externalIngressTLS, []string{ingressFinalizer}, &deletionTime),
+		},
+		WantPatches: []clientgotesting.PatchActionImpl{
+			patchAddFinalizerAction("reconciling-ingress", ""),
+		},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
+		},
+		Key:     "test-ns/reconciling-ingress",
+		CmpOpts: defaultCmpOptsList,
+	}, {
 		Name:                    "delete ingress with leftover secrets",
 		SkipNamespaceValidation: true,
 		Objects: []runtime.Object{
