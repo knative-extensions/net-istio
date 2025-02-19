@@ -35,22 +35,26 @@ ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   "networking:v1beta1" \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
 
+source "${CODEGEN_PKG}/kube_codegen.sh"
+
 group "Kubernetes Codegen"
 
 # Generate our own client for istio (otherwise injection won't work)
-${CODEGEN_PKG}/generate-groups.sh "client,informer,lister" \
-  knative.dev/net-istio/pkg/client/istio istio.io/client-go/pkg/apis \
-  "networking:v1beta1" \
-  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
+kube::codegen::gen_client \
+  --boilerplate "${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt" \
+  --output-dir "${REPO_ROOT_DIR}/pkg/client/istio" \
+  --output-pkg "knative.dev/net-istio/pkg/client/istio" \
+  --one-input-api "networking" \
+  --with-watch \
+  "${REPO_ROOT_DIR}/vendor/istio.io/client-go/pkg/apis"
 
 group "Deepcopy Gen"
 
-# Depends on generate-groups.sh to install bin/deepcopy-gen
-${GOPATH}/bin/deepcopy-gen \
-  -O zz_generated.deepcopy \
-  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt \
-  -i knative.dev/net-istio/pkg/reconciler/ingress/config \
-  -i knative.dev/net-istio/pkg/defaults
+kube::codegen::gen_helpers \
+  --boilerplate "${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt" \
+  --extra-peer-dir "reconciler/ingress/config" \
+  --extra-peer-dir "defaults" \
+  "${REPO_ROOT_DIR}/pkg"
 
 group "Update deps post-codegen"
 # Make sure our dependencies are up-to-date
