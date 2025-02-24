@@ -17,6 +17,7 @@ limitations under the License.
 package config
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -58,6 +59,9 @@ const (
 
 	// IstioNamespace is the namespace containing Istio
 	IstioNamespace = "istio-system"
+
+	// IstioConfigSidecar is the name of the configmap contains sidecar configuration
+	IstioConfigSidecar = "istio-sidecar-injector"
 )
 
 func defaultIngressGateways() []Gateway {
@@ -82,6 +86,15 @@ type Gateway struct {
 	Name          string
 	ServiceURL    string                `json:"service"`
 	LabelSelector *metav1.LabelSelector `json:"labelSelector,omitempty"`
+}
+
+// IstioSideCar contains the istio cluster domain used by pilot & proxy
+type IstioSideCar struct {
+	Global struct {
+		Proxy struct {
+			ClusterDomain string `json:"clusterDomain"`
+		} `json:"proxy"`
+	} `json:"global"`
 }
 
 // QualifiedName returns gateway name in '{namespace}/{name}' format.
@@ -314,4 +327,25 @@ func defaultValues(conf *Istio) {
 	if len(conf.LocalGateways) == 0 {
 		conf.LocalGateways = defaultLocalGateways()
 	}
+}
+
+// Retrieve the cluster domain from configmap
+func SidecarClusterDomain(configMap *corev1.ConfigMap) (string, error) {
+	cleanConfig := func(src string, replaces []string) string {
+		clean := src
+		for _, replace := range replaces {
+			clean = strings.ReplaceAll(clean, replace, "")
+		}
+		return clean
+	}
+	if len(configMap.Data["values"]) > 0 {
+		conf := IstioSideCar{}
+		err := json.Unmarshal([]byte(cleanConfig(configMap.Data["values"], []string{"\n", " "})), &conf)
+
+		if err != nil {
+			return "", err
+		}
+		return conf.Global.Proxy.ClusterDomain, nil
+	}
+	return "", nil
 }
