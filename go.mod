@@ -3,7 +3,7 @@ module knative.dev/net-istio
 go 1.23.0
 
 require (
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/sync v0.11.0
 	google.golang.org/protobuf v1.36.5
@@ -13,8 +13,8 @@ require (
 	k8s.io/apimachinery v0.32.2
 	k8s.io/client-go v0.32.2
 	knative.dev/hack v0.0.0-20250219013704-306ce745e077
-	knative.dev/networking v0.0.0-20250219014631-d23278a39bb3
-	knative.dev/pkg v0.0.0-20250219013713-9e265611c097
+	knative.dev/networking v0.0.0-20250226145929-863b7af736fb
+	knative.dev/pkg v0.0.0-20250226145529-0372c089c78f
 	sigs.k8s.io/yaml v1.4.0
 )
 
