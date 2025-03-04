@@ -224,6 +224,16 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	}
 	gatewayNames[v1alpha1.IngressVisibilityClusterLocal].Insert(resources.GetQualifiedGatewayNames(clusterLocalIngressGateways)...)
 
+	if sidecarConfig, err := r.GetKubeClient().CoreV1().ConfigMaps(config.IstioNamespace).Get(ctx,
+		config.IstioConfigSidecar, metav1.GetOptions{}); err == nil {
+		resources.IstioClusterDomain, err = config.SidecarClusterDomain(sidecarConfig)
+		if err != nil {
+			logger.Debug("failed to parse istio cluster domain, match service host in resolve.conf. " + err.Error())
+		}
+	} else {
+		logger.Debug("failed to retrieve istio configmap, parse resolve.conf instead. " + err.Error())
+	}
+
 	vses, err := resources.MakeVirtualServices(ing, gatewayNames)
 	if err != nil {
 		return err

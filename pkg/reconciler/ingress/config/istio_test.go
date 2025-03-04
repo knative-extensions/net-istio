@@ -29,6 +29,18 @@ import (
 	_ "knative.dev/pkg/system/testing"
 )
 
+func TestIstioClusterDomain(t *testing.T) {
+	cm := ConfigMapFromTestFile(t, IstioConfigSidecar)
+	expected := "cluster.local"
+	domain, err := SidecarClusterDomain(cm)
+	if err != nil {
+		t.Error("Test: ConfigMapFromTestFile(cm) error = ", err)
+	}
+	if domain != expected {
+		t.Fatalf("Test: ConfigMapFromTestFile(cm), incorrect domain = %s, want domain = %s", domain, expected)
+	}
+}
+
 func TestIstio(t *testing.T) {
 	cm, example := ConfigMapsFromTestFile(t, IstioConfigName)
 
