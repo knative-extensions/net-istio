@@ -1,8 +1,9 @@
 run:
   timeout: 10m
   allow-parallel-runners: true
-  build-tags:
-  - e2e
+  exclude-dirs:
+    - client
+    - injection/clients
 
 output:
   sort-results: true
@@ -11,12 +12,11 @@ output:
   - file
   show-stats: true
 
+
 issues:
   uniq-by-line: true
   max-issues-per-linter: 0
   max-same-issues: 0
-  exclude-dirs:
-  - pkg/client
   exclude-rules:
   - path: test # Excludes /test, *_test.go etc.
     linters:
