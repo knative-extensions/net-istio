@@ -1,30 +1,14 @@
 version: "2"
-
 run:
+  build-tags:
+    - e2e
+    - hpa
+    - upgrade
   allow-parallel-runners: true
 output:
   sort-order:
     - linter
     - file
-
-issues:
-  max-issues-per-linter: 0
-  max-same-issues: 0
-  uniq-by-line: true
-formatters:
-  enable:
-    - gofmt
-    - gofumpt
-    - goimports
-  exclusions:
-    generated: lax
-    paths:
-      - client
-      - injection/clients
-      - third_party$
-      - builtin$
-      - examples$
-
 linters:
   enable:
     # Check for pass []any as any in variadic func(...any).
@@ -41,6 +25,15 @@ linters:
 
     # Canonicalheader checks whether net/http.Header uses canonical header.
     - canonicalheader
+
+    # TODO - do a follow up PR
+    # # Containedctx is a linter that detects struct contained context.Context
+    # # field.
+    # - containedctx
+    #
+    # TODO - do a follow up PR
+    # # Check whether the function uses a non-inherited context.
+    # - contextcheck
 
     # Copyloopvar is a linter detects places where loop variables are copied.
     - copyloopvar
@@ -124,7 +117,6 @@ linters:
     # Checks for mistakes with OpenTelemetry/Census spans.
     - spancheck
 
-    # Stylecheck is a replacement for golint.
     - staticcheck
 
     # Linter checks if examples are testable (have an expected output).
@@ -146,10 +138,13 @@ linters:
     # Whitespace is a linter that checks for unnecessary newlines at the start
     # and end of functions, if, for, etc.
     - whitespace
-
   disable:
     - errcheck
   settings:
+    gocritic:
+      disabled-checks:
+        - exitAfterDefer
+        - appendAssign
     gomodguard:
       blocked:
         modules:
@@ -173,7 +168,6 @@ linters:
               reason: use errors.Join
     revive:
       rules:
-        # use unparam linter instead - defaults are better
         - name: unused-parameter
           disabled: true
   exclusions:
@@ -194,8 +188,23 @@ linters:
           - gocritic
         text: ifElseChain
     paths:
-      - client
-      - injection/clients
+      - pkg/client
+      - third_party$
+      - builtin$
+      - examples$
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  uniq-by-line: true
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - pkg/client
       - third_party$
       - builtin$
       - examples$
