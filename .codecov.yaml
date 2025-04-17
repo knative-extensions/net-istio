@@ -15,10 +15,11 @@ comment:
   # Update existing comment or create new if deleted.
   behavior: default
 ignore:
-  - "**/zz_generated*.go" # Ignore generated files.
   - "**/*.pb.go" # Ignore proto-generated files.
+  - "**/zz_generated*.go" # Ignore generated files.
   - "hack"
   - "pkg/client"
+  - "pkg/reconciler/testing"
   - "test"
   - "third_party"
   - "vendor"
