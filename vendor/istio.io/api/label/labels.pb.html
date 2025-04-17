@@ -144,7 +144,7 @@ The waypoint is assumed to be in the same namespace; for cross-namespace, see <c
 <p>When set or a <code>Pod</code> or a <code>Service</code>, this binds that specific resource to the waypoint.
 When set on a <code>Namespace</code>, this applies to all <code>Pod</code>/<code>Service</code> in the namespace.</p>
 
-<p>Note: the waypoint must allow the type, see <code>stio.io/waypoint-for</code>.</p>
+<p>Note: the waypoint must allow the type, see <code>istio.io/waypoint-for</code>.</p>
 </td>
     </tr>
   </tbody>
@@ -283,6 +283,29 @@ indicates the type of traffic this waypoint can handle.</p>
     <tr>
       <th>Description</th>
       <td><p>The name of a revision within a canonical service that the workload belongs to</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h2 id="ServiceWorkloadName">service.istio.io/workload-name</h2>
+<table class="annotations">
+  <tbody>
+    <tr>
+      <th>Name</th>
+      <td><code>service.istio.io/workload-name</code></td>
+    </tr>
+    <tr>
+      <th>Feature Status</th>
+      <td>Alpha</td>
+    </tr>
+    <tr>
+      <th>Resource Types</th>
+      <td>[Pod WorkloadEntry]</td>
+    </tr>
+    <tr>
+      <th>Description</th>
+      <td><p>The workload name of the application a workload belongs to. If unset, defaults to the detect parent resource.
+For example, a <code>Pod</code> resource may default to the <code>Deployment</code> name.</p>
 </td>
     </tr>
   </tbody>

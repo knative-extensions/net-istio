@@ -34,18 +34,16 @@ import "istio.io/api/networking/v1alpha3"
 // +k8s:deepcopy-gen=true
 // istiostatus-override: ServiceEntryStatus: istio.io/api/networking/v1alpha3
 // -->
-// +kubebuilder:validation:XValidation:message="only one of WorkloadSelector or Endpoints can be set",rule="(has(self.workloadSelector)?1:0)+(has(self.endpoints)?1:0)<=1"
-// +kubebuilder:validation:XValidation:message="CIDR addresses are allowed only for NONE/STATIC resolution types",rule="!(has(self.addresses) && self.addresses.exists(k, k.contains('/')) && (has(self.resolution) && self.resolution != 'STATIC' && self.resolution != 'NONE'))"
-// +kubebuilder:validation:XValidation:message="NONE mode cannot set endpoints",rule="(!has(self.resolution) || self.resolution == 'NONE') ? !has(self.endpoints) : true"
-// +kubebuilder:validation:XValidation:message="DNS_ROUND_ROBIN mode cannot have multiple endpoints",rule="(has(self.resolution) && self.resolution == 'DNS_ROUND_ROBIN') ? (!has(self.endpoints) || size(self.endpoints) == 1) : true"
+// +kubebuilder:validation:XValidation:message="only one of WorkloadSelector or Endpoints can be set",rule="oneof(self.workloadSelector, self.endpoints)"
+// +kubebuilder:validation:XValidation:message="CIDR addresses are allowed only for NONE/STATIC resolution types",rule="!(default(self.addresses, []).exists(k, k.contains('/')) && !(default(self.resolution, 'NONE') in ['STATIC', 'NONE']))"
+// +kubebuilder:validation:XValidation:message="NONE mode cannot set endpoints",rule="default(self.resolution, 'NONE') == 'NONE' ? !has(self.endpoints) : true"
+// +kubebuilder:validation:XValidation:message="DNS_ROUND_ROBIN mode cannot have multiple endpoints",rule="default(self.resolution, ”) == 'DNS_ROUND_ROBIN' ? default(self.endpoints, []).size() <= 1 : true"
 type ServiceEntry = v1alpha3.ServiceEntry
 
 // Location specifies whether the service is part of Istio mesh or
 // outside the mesh.  Location determines the behavior of several
 // features, such as service-to-service mTLS authentication, policy
-// enforcement, etc. When communicating with services outside the mesh,
-// Istio's mTLS authentication is disabled, and policy enforcement is
-// performed on the client-side as opposed to server-side.
+// enforcement, etc.
 type ServiceEntry_Location = v1alpha3.ServiceEntry_Location
 
 // Signifies that the service is external to the mesh. Typically used
@@ -106,5 +104,5 @@ const ServiceEntry_DNS_ROUND_ROBIN ServiceEntry_Resolution = v1alpha3.ServiceEnt
 type ServicePort = v1alpha3.ServicePort
 type ServiceEntryStatus = v1alpha3.ServiceEntryStatus
 
-// minor abstraction to allow for adding hostnames if relevant
+// A minor abstraction to allow for adding hostnames if relevant.
 type ServiceEntryAddress = v1alpha3.ServiceEntryAddress

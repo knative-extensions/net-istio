@@ -21,10 +21,6 @@ import "type/v1beta1/selector.proto";
 // $location: https://istio.io/docs/reference/config/security/peer_authentication.html
 // $aliases: [/docs/reference/config/security/v1beta1/peer_authentication]
 
-package istio.security.v1beta1;
-
-option go_package="istio.io/api/security/v1beta1";
-
 // PeerAuthentication defines mutual TLS (mTLS) requirements for incoming connections.
 //
 // In sidecar mode, PeerAuthentication determines whether or not mTLS is allowed or required
@@ -111,7 +107,10 @@ option go_package="istio.io/api/security/v1beta1";
 //     8080:
 //       mode: DISABLE
 // ```
-//
+package istio.security.v1beta1;
+
+option go_package="istio.io/api/security/v1beta1";
+
 // <!-- crd generation tags
 // +cue-gen:PeerAuthentication:groupName:security.istio.io
 // +cue-gen:PeerAuthentication:versions:v1beta1,v1
@@ -135,7 +134,7 @@ option go_package="istio.io/api/security/v1beta1";
 // +genclient
 // +k8s:deepcopy-gen=true
 // -->
-// +kubebuilder:validation:XValidation:message="portLevelMtls requires selector",rule="(has(self.selector) && has(self.selector.matchLabels) && self.selector.matchLabels.size() > 0) || !has(self.portLevelMtls)"
+// +kubebuilder:validation:XValidation:message="portLevelMtls requires selector",rule="has(self.portLevelMtls) ? self.index({}, selector, matchLabels).size() > 0 : true"
 message PeerAuthentication {
   // The selector determines the workloads to apply the PeerAuthentication on. The selector will match with workloads in the
   // same namespace as the policy. If the policy is in the root namespace, the selector will additionally match with workloads in all namespace.
