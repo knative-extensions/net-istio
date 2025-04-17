@@ -179,7 +179,7 @@ type LoadBalancerSettings_ConsistentHashLB_RingHash_ = v1alpha3.LoadBalancerSett
 // The Maglev load balancer implements consistent hashing to backend hosts.
 type LoadBalancerSettings_ConsistentHashLB_Maglev = v1alpha3.LoadBalancerSettings_ConsistentHashLB_Maglev
 
-// +kubebuilder:validation:XValidation:message="only one of warmupDurationSecs or warmup can be set",rule="(has(self.warmupDurationSecs)?1:0)+(has(self.warmup)?1:0)<=1"
+// +kubebuilder:validation:XValidation:message="only one of warmupDurationSecs or warmup can be set",rule="oneof(self.warmupDurationSecs, self.warmup)"
 // Standard load balancing algorithms that require no tuning.
 type LoadBalancerSettings_SimpleLB = v1alpha3.LoadBalancerSettings_SimpleLB
 
@@ -406,13 +406,13 @@ const ClientTLSSettings_ISTIO_MUTUAL ClientTLSSettings_TLSmode = v1alpha3.Client
 // [Locality Weight](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/load_balancing/locality_weight)
 // The following example shows how to setup locality weights mesh-wide.
 //
-// Given a mesh with workloads and their service deployed to "us-west/zone1/*"
-// and "us-west/zone2/*". This example specifies that when traffic accessing a
-// service originates from workloads in "us-west/zone1/*", 80% of the traffic
-// will be sent to endpoints in "us-west/zone1/*", i.e the same zone, and the
-// remaining 20% will go to endpoints in "us-west/zone2/*". This setup is
+// Given a mesh with workloads and their service deployed to "us-west/zone1/\*"
+// and "us-west/zone2/\*". This example specifies that when traffic accessing a
+// service originates from workloads in "us-west/zone1/\*", 80% of the traffic
+// will be sent to endpoints in "us-west/zone1/\*", i.e the same zone, and the
+// remaining 20% will go to endpoints in "us-west/zone2/\*". This setup is
 // intended to favor routing traffic to endpoints in the same locality.
-// A similar setting is specified for traffic originating in "us-west/zone2/*".
+// A similar setting is specified for traffic originating in "us-west/zone2/\*".
 //
 // ```yaml
 //
@@ -448,7 +448,6 @@ const ClientTLSSettings_ISTIO_MUTUAL ClientTLSSettings_TLSmode = v1alpha3.Client
 //	    to: us-east
 //
 // ```
-// Locality load balancing settings.
 type LocalityLoadBalancerSetting = v1alpha3.LocalityLoadBalancerSetting
 
 // Describes how traffic originating in the 'from' zone or sub-zone is

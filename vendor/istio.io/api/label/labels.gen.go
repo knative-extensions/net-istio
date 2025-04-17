@@ -172,7 +172,7 @@ The waypoint is assumed to be in the same namespace; for cross-namespace, see "i
 When set or a "Pod" or a "Service", this binds that specific resource to the waypoint.
 When set on a "Namespace", this applies to all "Pod"/"Service" in the namespace.
 
-Note: the waypoint must allow the type, see "stio.io/waypoint-for".
+Note: the waypoint must allow the type, see "istio.io/waypoint-for".
 `,
 		FeatureStatus: Stable,
 		Hidden:        false,
@@ -322,6 +322,20 @@ Valid options: "true", "false"
 		},
 	}
 
+	ServiceWorkloadName = Instance {
+		Name:          "service.istio.io/workload-name",
+		Description:   `The workload name of the application a workload belongs to. If unset, defaults to the detect parent resource.
+For example, a "Pod" resource may default to the "Deployment" name.
+`,
+		FeatureStatus: Alpha,
+		Hidden:        false,
+		Deprecated:    false,
+		Resources: []ResourceTypes{
+			Pod,
+			WorkloadEntry,
+		},
+	}
+
 	SidecarInject = Instance {
 		Name:          "sidecar.istio.io/inject",
 		Description:   "Specifies whether or not an Envoy sidecar should be "+
@@ -433,6 +447,7 @@ func AllResourceLabels() []*Instance {
 		&SecurityTlsMode,
 		&ServiceCanonicalName,
 		&ServiceCanonicalRevision,
+		&ServiceWorkloadName,
 		&SidecarInject,
 		&TopologyCluster,
 		&TopologyNetwork,
