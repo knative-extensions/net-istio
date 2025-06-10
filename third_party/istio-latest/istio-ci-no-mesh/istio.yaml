@@ -12,8 +12,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: base-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: base-1.26.1
   name: authorizationpolicies.security.istio.io
 spec:
   group: security.istio.io
@@ -753,8 +753,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: base-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: base-1.26.1
   name: destinationrules.networking.istio.io
 spec:
   group: networking.istio.io
@@ -5739,8 +5739,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: base-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: base-1.26.1
   name: envoyfilters.networking.istio.io
 spec:
   group: networking.istio.io
@@ -6117,8 +6117,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: base-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: base-1.26.1
   name: gateways.networking.istio.io
 spec:
   group: networking.istio.io
@@ -6203,6 +6203,13 @@ spec:
                         credentialName:
                           description: For gateways running on Kubernetes, the name of the secret that holds the TLS certs including the CA certificates.
                           type: string
+                        credentialNames:
+                          description: Same as CredentialName but for multiple certificates.
+                          items:
+                            type: string
+                          maxItems: 2
+                          minItems: 1
+                          type: array
                         httpsRedirect:
                           description: If set to true, the load balancer will send a 301 redirect for all http connections, asking the clients to use HTTPS.
                           type: boolean
@@ -6254,6 +6261,23 @@ spec:
                           items:
                             type: string
                           type: array
+                        tlsCertificates:
+                          description: Only one of `server_certificate`, `private_key`, `ca_certificates` or `credential_name` or `credential_names` or `tls_certificates` should be specified.
+                          items:
+                            properties:
+                              caCertificates:
+                                description: REQUIRED if mode is `MUTUAL` or `OPTIONAL_MUTUAL`.
+                                type: string
+                              privateKey:
+                                description: REQUIRED if mode is `SIMPLE` or `MUTUAL`.
+                                type: string
+                              serverCertificate:
+                                description: REQUIRED if mode is `SIMPLE` or `MUTUAL`.
+                                type: string
+                            type: object
+                          maxItems: 2
+                          minItems: 1
+                          type: array
                         verifyCertificateHash:
                           description: An optional list of hex-encoded SHA-256 hashes of the authorized client certificates.
                           items:
@@ -6265,6 +6289,13 @@ spec:
                             type: string
                           type: array
                       type: object
+                      x-kubernetes-validations:
+                      - message: only one of credentialNames or tlsCertificates can be set
+                        rule: '(has(self.tlsCertificates) ? 1 : 0) + (has(self.credentialNames) ? 1 : 0) <= 1'
+                      - message: only one of credentialName or credentialNames can be set
+                        rule: '(has(self.credentialName) ? 1 : 0) + (has(self.credentialNames) ? 1 : 0) <= 1'
+                      - message: only one of credentialName or tlsCertificates can be set
+                        rule: '(has(self.credentialNames) ? 1 : 0) + (has(self.tlsCertificates) ? 1 : 0) <= 1'
                   required:
                   - port
                   - hosts
@@ -6415,6 +6446,13 @@ spec:
                         credentialName:
                           description: For gateways running on Kubernetes, the name of the secret that holds the TLS certs including the CA certificates.
                           type: string
+                        credentialNames:
+                          description: Same as CredentialName but for multiple certificates.
+                          items:
+                            type: string
+                          maxItems: 2
+                          minItems: 1
+                          type: array
                         httpsRedirect:
                           description: If set to true, the load balancer will send a 301 redirect for all http connections, asking the clients to use HTTPS.
                           type: boolean
@@ -6466,6 +6504,23 @@ spec:
                           items:
                             type: string
                           type: array
+                        tlsCertificates:
+                          description: Only one of `server_certificate`, `private_key`, `ca_certificates` or `credential_name` or `credential_names` or `tls_certificates` should be specified.
+                          items:
+                            properties:
+                              caCertificates:
+                                description: REQUIRED if mode is `MUTUAL` or `OPTIONAL_MUTUAL`.
+                                type: string
+                              privateKey:
+                                description: REQUIRED if mode is `SIMPLE` or `MUTUAL`.
+                                type: string
+                              serverCertificate:
+                                description: REQUIRED if mode is `SIMPLE` or `MUTUAL`.
+                                type: string
+                            type: object
+                          maxItems: 2
+                          minItems: 1
+                          type: array
                         verifyCertificateHash:
                           description: An optional list of hex-encoded SHA-256 hashes of the authorized client certificates.
                           items:
@@ -6477,6 +6532,13 @@ spec:
                             type: string
                           type: array
                       type: object
+                      x-kubernetes-validations:
+                      - message: only one of credentialNames or tlsCertificates can be set
+                        rule: '(has(self.tlsCertificates) ? 1 : 0) + (has(self.credentialNames) ? 1 : 0) <= 1'
+                      - message: only one of credentialName or credentialNames can be set
+                        rule: '(has(self.credentialName) ? 1 : 0) + (has(self.credentialNames) ? 1 : 0) <= 1'
+                      - message: only one of credentialName or tlsCertificates can be set
+                        rule: '(has(self.credentialNames) ? 1 : 0) + (has(self.tlsCertificates) ? 1 : 0) <= 1'
                   required:
                   - port
                   - hosts
@@ -6627,6 +6689,13 @@ spec:
                         credentialName:
                           description: For gateways running on Kubernetes, the name of the secret that holds the TLS certs including the CA certificates.
                           type: string
+                        credentialNames:
+                          description: Same as CredentialName but for multiple certificates.
+                          items:
+                            type: string
+                          maxItems: 2
+                          minItems: 1
+                          type: array
                         httpsRedirect:
                           description: If set to true, the load balancer will send a 301 redirect for all http connections, asking the clients to use HTTPS.
                           type: boolean
@@ -6678,6 +6747,23 @@ spec:
                           items:
                             type: string
                           type: array
+                        tlsCertificates:
+                          description: Only one of `server_certificate`, `private_key`, `ca_certificates` or `credential_name` or `credential_names` or `tls_certificates` should be specified.
+                          items:
+                            properties:
+                              caCertificates:
+                                description: REQUIRED if mode is `MUTUAL` or `OPTIONAL_MUTUAL`.
+                                type: string
+                              privateKey:
+                                description: REQUIRED if mode is `SIMPLE` or `MUTUAL`.
+                                type: string
+                              serverCertificate:
+                                description: REQUIRED if mode is `SIMPLE` or `MUTUAL`.
+                                type: string
+                            type: object
+                          maxItems: 2
+                          minItems: 1
+                          type: array
                         verifyCertificateHash:
                           description: An optional list of hex-encoded SHA-256 hashes of the authorized client certificates.
                           items:
@@ -6689,6 +6775,13 @@ spec:
                             type: string
                           type: array
                       type: object
+                      x-kubernetes-validations:
+                      - message: only one of credentialNames or tlsCertificates can be set
+                        rule: '(has(self.tlsCertificates) ? 1 : 0) + (has(self.credentialNames) ? 1 : 0) <= 1'
+                      - message: only one of credentialName or credentialNames can be set
+                        rule: '(has(self.credentialName) ? 1 : 0) + (has(self.credentialNames) ? 1 : 0) <= 1'
+                      - message: only one of credentialName or tlsCertificates can be set
+                        rule: '(has(self.credentialNames) ? 1 : 0) + (has(self.tlsCertificates) ? 1 : 0) <= 1'
                   required:
                   - port
                   - hosts
@@ -6780,8 +6873,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: base-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: base-1.26.1
   name: peerauthentications.security.istio.io
 spec:
   group: security.istio.io
@@ -7107,8 +7200,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: base-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: base-1.26.1
   name: proxyconfigs.networking.istio.io
 spec:
   group: networking.istio.io
@@ -7253,8 +7346,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: base-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: base-1.26.1
   name: requestauthentications.security.istio.io
 spec:
   group: security.istio.io
@@ -7806,8 +7899,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: base-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: base-1.26.1
   name: serviceentries.networking.istio.io
 spec:
   group: networking.istio.io
@@ -8649,8 +8742,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: base-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: base-1.26.1
   name: sidecars.networking.istio.io
 spec:
   group: networking.istio.io
@@ -8954,6 +9047,13 @@ spec:
                         credentialName:
                           description: For gateways running on Kubernetes, the name of the secret that holds the TLS certs including the CA certificates.
                           type: string
+                        credentialNames:
+                          description: Same as CredentialName but for multiple certificates.
+                          items:
+                            type: string
+                          maxItems: 2
+                          minItems: 1
+                          type: array
                         httpsRedirect:
                           description: If set to true, the load balancer will send a 301 redirect for all http connections, asking the clients to use HTTPS.
                           type: boolean
@@ -9005,6 +9105,23 @@ spec:
                           items:
                             type: string
                           type: array
+                        tlsCertificates:
+                          description: Only one of `server_certificate`, `private_key`, `ca_certificates` or `credential_name` or `credential_names` or `tls_certificates` should be specified.
+                          items:
+                            properties:
+                              caCertificates:
+                                description: REQUIRED if mode is `MUTUAL` or `OPTIONAL_MUTUAL`.
+                                type: string
+                              privateKey:
+                                description: REQUIRED if mode is `SIMPLE` or `MUTUAL`.
+                                type: string
+                              serverCertificate:
+                                description: REQUIRED if mode is `SIMPLE` or `MUTUAL`.
+                                type: string
+                            type: object
+                          maxItems: 2
+                          minItems: 1
+                          type: array
                         verifyCertificateHash:
                           description: An optional list of hex-encoded SHA-256 hashes of the authorized client certificates.
                           items:
@@ -9016,6 +9133,13 @@ spec:
                             type: string
                           type: array
                       type: object
+                      x-kubernetes-validations:
+                      - message: only one of credentialNames or tlsCertificates can be set
+                        rule: '(has(self.tlsCertificates) ? 1 : 0) + (has(self.credentialNames) ? 1 : 0) <= 1'
+                      - message: only one of credentialName or credentialNames can be set
+                        rule: '(has(self.credentialName) ? 1 : 0) + (has(self.credentialNames) ? 1 : 0) <= 1'
+                      - message: only one of credentialName or tlsCertificates can be set
+                        rule: '(has(self.credentialNames) ? 1 : 0) + (has(self.tlsCertificates) ? 1 : 0) <= 1'
                   required:
                   - port
                   type: object
@@ -9432,6 +9556,13 @@ spec:
                         credentialName:
                           description: For gateways running on Kubernetes, the name of the secret that holds the TLS certs including the CA certificates.
                           type: string
+                        credentialNames:
+                          description: Same as CredentialName but for multiple certificates.
+                          items:
+                            type: string
+                          maxItems: 2
+                          minItems: 1
+                          type: array
                         httpsRedirect:
                           description: If set to true, the load balancer will send a 301 redirect for all http connections, asking the clients to use HTTPS.
                           type: boolean
@@ -9483,6 +9614,23 @@ spec:
                           items:
                             type: string
                           type: array
+                        tlsCertificates:
+                          description: Only one of `server_certificate`, `private_key`, `ca_certificates` or `credential_name` or `credential_names` or `tls_certificates` should be specified.
+                          items:
+                            properties:
+                              caCertificates:
+                                description: REQUIRED if mode is `MUTUAL` or `OPTIONAL_MUTUAL`.
+                                type: string
+                              privateKey:
+                                description: REQUIRED if mode is `SIMPLE` or `MUTUAL`.
+                                type: string
+                              serverCertificate:
+                                description: REQUIRED if mode is `SIMPLE` or `MUTUAL`.
+                                type: string
+                            type: object
+                          maxItems: 2
+                          minItems: 1
+                          type: array
                         verifyCertificateHash:
                           description: An optional list of hex-encoded SHA-256 hashes of the authorized client certificates.
                           items:
@@ -9494,6 +9642,13 @@ spec:
                             type: string
                           type: array
                       type: object
+                      x-kubernetes-validations:
+                      - message: only one of credentialNames or tlsCertificates can be set
+                        rule: '(has(self.tlsCertificates) ? 1 : 0) + (has(self.credentialNames) ? 1 : 0) <= 1'
+                      - message: only one of credentialName or credentialNames can be set
+                        rule: '(has(self.credentialName) ? 1 : 0) + (has(self.credentialNames) ? 1 : 0) <= 1'
+                      - message: only one of credentialName or tlsCertificates can be set
+                        rule: '(has(self.credentialNames) ? 1 : 0) + (has(self.tlsCertificates) ? 1 : 0) <= 1'
                   required:
                   - port
                   type: object
@@ -9910,6 +10065,13 @@ spec:
                         credentialName:
                           description: For gateways running on Kubernetes, the name of the secret that holds the TLS certs including the CA certificates.
                           type: string
+                        credentialNames:
+                          description: Same as CredentialName but for multiple certificates.
+                          items:
+                            type: string
+                          maxItems: 2
+                          minItems: 1
+                          type: array
                         httpsRedirect:
                           description: If set to true, the load balancer will send a 301 redirect for all http connections, asking the clients to use HTTPS.
                           type: boolean
@@ -9961,6 +10123,23 @@ spec:
                           items:
                             type: string
                           type: array
+                        tlsCertificates:
+                          description: Only one of `server_certificate`, `private_key`, `ca_certificates` or `credential_name` or `credential_names` or `tls_certificates` should be specified.
+                          items:
+                            properties:
+                              caCertificates:
+                                description: REQUIRED if mode is `MUTUAL` or `OPTIONAL_MUTUAL`.
+                                type: string
+                              privateKey:
+                                description: REQUIRED if mode is `SIMPLE` or `MUTUAL`.
+                                type: string
+                              serverCertificate:
+                                description: REQUIRED if mode is `SIMPLE` or `MUTUAL`.
+                                type: string
+                            type: object
+                          maxItems: 2
+                          minItems: 1
+                          type: array
                         verifyCertificateHash:
                           description: An optional list of hex-encoded SHA-256 hashes of the authorized client certificates.
                           items:
@@ -9972,6 +10151,13 @@ spec:
                             type: string
                           type: array
                       type: object
+                      x-kubernetes-validations:
+                      - message: only one of credentialNames or tlsCertificates can be set
+                        rule: '(has(self.tlsCertificates) ? 1 : 0) + (has(self.credentialNames) ? 1 : 0) <= 1'
+                      - message: only one of credentialName or credentialNames can be set
+                        rule: '(has(self.credentialName) ? 1 : 0) + (has(self.credentialNames) ? 1 : 0) <= 1'
+                      - message: only one of credentialName or tlsCertificates can be set
+                        rule: '(has(self.credentialNames) ? 1 : 0) + (has(self.tlsCertificates) ? 1 : 0) <= 1'
                   required:
                   - port
                   type: object
@@ -10108,8 +10294,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: base-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: base-1.26.1
   name: telemetries.telemetry.istio.io
 spec:
   group: telemetry.istio.io
@@ -10983,8 +11169,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: base-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: base-1.26.1
   name: virtualservices.networking.istio.io
 spec:
   group: networking.istio.io
@@ -11607,12 +11793,22 @@ spec:
                           description: Number of retries to be allowed for a given request.
                           format: int32
                           type: integer
+                        backoff:
+                          description: Specifies the minimum duration between retry attempts.
+                          type: string
+                          x-kubernetes-validations:
+                          - message: must be a valid duration greater than 1ms
+                            rule: duration(self) >= duration('1ms')
                         perTryTimeout:
                           description: Timeout per attempt for a given request, including the initial call and any retries.
                           type: string
                           x-kubernetes-validations:
                           - message: must be a valid duration greater than 1ms
                             rule: duration(self) >= duration('1ms')
+                        retryIgnorePreviousHosts:
+                          description: Flag to specify whether the retries should ignore previously tried hosts during retry.
+                          nullable: true
+                          type: boolean
                         retryOn:
                           description: Specifies the conditions under which retry takes place.
                           type: string
@@ -12542,12 +12738,22 @@ spec:
                           description: Number of retries to be allowed for a given request.
                           format: int32
                           type: integer
+                        backoff:
+                          description: Specifies the minimum duration between retry attempts.
+                          type: string
+                          x-kubernetes-validations:
+                          - message: must be a valid duration greater than 1ms
+                            rule: duration(self) >= duration('1ms')
                         perTryTimeout:
                           description: Timeout per attempt for a given request, including the initial call and any retries.
                           type: string
                           x-kubernetes-validations:
                           - message: must be a valid duration greater than 1ms
                             rule: duration(self) >= duration('1ms')
+                        retryIgnorePreviousHosts:
+                          description: Flag to specify whether the retries should ignore previously tried hosts during retry.
+                          nullable: true
+                          type: boolean
                         retryOn:
                           description: Specifies the conditions under which retry takes place.
                           type: string
@@ -13477,12 +13683,22 @@ spec:
                           description: Number of retries to be allowed for a given request.
                           format: int32
                           type: integer
+                        backoff:
+                          description: Specifies the minimum duration between retry attempts.
+                          type: string
+                          x-kubernetes-validations:
+                          - message: must be a valid duration greater than 1ms
+                            rule: duration(self) >= duration('1ms')
                         perTryTimeout:
                           description: Timeout per attempt for a given request, including the initial call and any retries.
                           type: string
                           x-kubernetes-validations:
                           - message: must be a valid duration greater than 1ms
                             rule: duration(self) >= duration('1ms')
+                        retryIgnorePreviousHosts:
+                          description: Flag to specify whether the retries should ignore previously tried hosts during retry.
+                          nullable: true
+                          type: boolean
                         retryOn:
                           description: Specifies the conditions under which retry takes place.
                           type: string
@@ -13815,8 +14031,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: base-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: base-1.26.1
   name: wasmplugins.extensions.istio.io
 spec:
   group: extensions.istio.io
@@ -14157,8 +14373,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: base-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: base-1.26.1
   name: workloadentries.networking.istio.io
 spec:
   group: networking.istio.io
@@ -14617,8 +14833,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: base-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: base-1.26.1
   name: workloadgroups.networking.istio.io
 spec:
   group: networking.istio.io
@@ -15496,8 +15712,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-ingressgateway
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istio-ingress-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istio-ingress-1.26.1
     install.operator.istio.io/owning-resource: unknown
     istio: ingressgateway
     istio.io/rev: default
@@ -15515,8 +15731,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-reader
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: base-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: base-1.26.1
     release: istio
   name: istio-reader-service-account
   namespace: istio-system
@@ -15530,8 +15746,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     release: istio
   name: istiod
   namespace: istio-system
@@ -15545,8 +15761,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-reader
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     release: istio
   name: istio-reader-clusterrole-istio-system
 rules:
@@ -15574,6 +15790,7 @@ rules:
   - replicationcontrollers
   - namespaces
   - secrets
+  - configmaps
   verbs:
   - get
   - list
@@ -15659,8 +15876,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     release: istio
   name: istiod-clusterrole-istio-system
 rules:
@@ -15813,12 +16030,20 @@ rules:
   - create
 - apiGroups:
   - gateway.networking.k8s.io
+  - gateway.networking.x-k8s.io
   resources:
   - '*'
   verbs:
   - get
   - watch
   - list
+- apiGroups:
+  - gateway.networking.x-k8s.io
+  resources:
+  - xbackendtrafficpolicies/status
+  verbs:
+  - update
+  - patch
 - apiGroups:
   - gateway.networking.k8s.io
   resources:
@@ -15879,8 +16104,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     release: istio
   name: istiod-gateway-controller-istio-system
 rules:
@@ -15888,6 +16113,30 @@ rules:
   - apps
   resources:
   - deployments
+  verbs:
+  - get
+  - watch
+  - list
+  - update
+  - patch
+  - create
+  - delete
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - get
+  - watch
+  - list
+  - update
+  - patch
+  - create
+  - delete
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
   verbs:
   - get
   - watch
@@ -15930,8 +16179,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-reader
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     release: istio
   name: istio-reader-clusterrole-istio-system
 roleRef:
@@ -15952,8 +16201,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     release: istio
   name: istiod-clusterrole-istio-system
 roleRef:
@@ -15974,8 +16223,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     release: istio
   name: istiod-gateway-controller-istio-system
 roleRef:
@@ -15996,8 +16245,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     istio: istiod
     istio.io/rev: default
     release: istio
@@ -16053,8 +16302,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Pilot
@@ -16147,6 +16396,12 @@ data:
           {{- $holdProxy := and
               (or .ProxyConfig.HoldApplicationUntilProxyStarts.GetValue .Values.global.proxy.holdApplicationUntilProxyStarts)
               (not $nativeSidecar) }}
+          {{- $noInitContainer := and
+              (eq (annotation .ObjectMeta `sidecar.istio.io/interceptionMode` .ProxyConfig.InterceptionMode) `NONE`)
+              (not $nativeSidecar) }}
+          {{ if $noInitContainer }}
+          initContainers: []
+          {{ else -}}
           initContainers:
           {{ if ne (annotation .ObjectMeta `sidecar.istio.io/interceptionMode` .ProxyConfig.InterceptionMode) `NONE` }}
           {{ if .Values.pilot.cni.enabled -}}
@@ -16243,6 +16498,7 @@ data:
               runAsUser: {{ .ProxyUID | default "1337" }}
               runAsNonRoot: true
             {{- end }}
+          {{ end -}}
           {{ end -}}
           {{ if not $nativeSidecar }}
           containers:
@@ -16559,8 +16815,16 @@ data:
                   audience: {{ .Values.global.sds.token.aud }}
           {{- if eq .Values.global.pilotCertProvider "istiod" }}
           - name: istiod-ca-cert
+          {{- if eq (.Values.pilot.env).ENABLE_CLUSTER_TRUST_BUNDLE_API true }}
+            projected:
+              sources:
+              - clusterTrustBundle:
+                name: istio.io:istiod-ca:root-cert
+                path: root-cert.pem
+          {{- else }}
             configMap:
               name: istio-ca-root-cert
+          {{- end }}
           {{- end }}
           {{- if .Values.global.mountMtlsCerts }}
           # Use the key and cert mounted to /etc/certs/ for the in-cluster mTLS communications.
@@ -16825,8 +17089,16 @@ data:
                   audience: {{ .Values.global.sds.token.aud }}
           {{- if eq .Values.global.pilotCertProvider "istiod" }}
           - name: istiod-ca-cert
+          {{- if eq (.Values.pilot.env).ENABLE_CLUSTER_TRUST_BUNDLE_API true }}
+            projected:
+              sources:
+              - clusterTrustBundle:
+                name: istio.io:istiod-ca:root-cert
+                path: root-cert.pem
+          {{- else }}
             configMap:
               name: istio-ca-root-cert
+          {{- end }}
           {{- end }}
           {{- if .Values.global.mountMtlsCerts }}
           # Use the key and cert mounted to /etc/certs/ for the in-cluster mTLS communications.
@@ -17196,8 +17468,16 @@ data:
                   audience: {{ .Values.global.sds.token.aud }}
           {{- if eq .Values.global.pilotCertProvider "istiod" }}
           - name: istiod-ca-cert
+          {{- if eq (.Values.pilot.env).ENABLE_CLUSTER_TRUST_BUNDLE_API true }}
+            projected:
+              sources:
+              - clusterTrustBundle:
+                name: istio.io:istiod-ca:root-cert
+                path: root-cert.pem
+          {{- else }}
             configMap:
               name: istio-ca-root-cert
+          {{- end }}
           {{- end }}
           {{- if .Values.global.mountMtlsCerts }}
           # Use the key and cert mounted to /etc/certs/ for the in-cluster mTLS communications.
@@ -17512,9 +17792,17 @@ data:
                       audience: istio-ca
                       expirationSeconds: 43200
                       path: istio-token
-              - configMap:
+              - name: istiod-ca-cert
+              {{- if eq (.Values.pilot.env).ENABLE_CLUSTER_TRUST_BUNDLE_API true }}
+                projected:
+                  sources:
+                  - clusterTrustBundle:
+                      name: istio.io:istiod-ca:root-cert
+                      path: root-cert.pem
+              {{- else }}
+                configMap:
                   name: istio-ca-root-cert
-                name: istiod-ca-cert
+              {{- end }}
               {{- if .Values.global.imagePullSecrets }}
               imagePullSecrets:
                 {{- range .Values.global.imagePullSecrets }}
@@ -17563,6 +17851,53 @@ data:
           {{- end }}
           type: {{ .ServiceType | quote }}
         ---
+        apiVersion: autoscaling/v2
+        kind: HorizontalPodAutoscaler
+        metadata:
+          name: {{.DeploymentName | quote}}
+          namespace: {{.Namespace | quote}}
+          annotations:
+            {{- toJsonMap (omit .InfrastructureAnnotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version") | nindent 4 }}
+          labels:
+            {{- toJsonMap
+                  .InfrastructureLabels
+                  (strdict
+                  "gateway.networking.k8s.io/gateway-name" .Name
+                  ) | nindent 4 }}
+          ownerReferences:
+            - apiVersion: gateway.networking.k8s.io/v1beta1
+              kind: Gateway
+              name: {{.Name}}
+              uid: "{{.UID}}"
+        spec:
+          scaleTargetRef:
+            apiVersion: apps/v1
+            kind: Deployment
+            name:  {{.DeploymentName | quote}}
+          maxReplicas: 1
+        ---
+        apiVersion: policy/v1
+        kind: PodDisruptionBudget
+        metadata:
+          name: {{.DeploymentName | quote}}
+          namespace: {{.Namespace | quote}}
+          annotations:
+            {{- toJsonMap (omit .InfrastructureAnnotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version") | nindent 4 }}
+          labels:
+            {{- toJsonMap
+                  .InfrastructureLabels
+                  (strdict
+                  "gateway.networking.k8s.io/gateway-name" .Name
+                  ) | nindent 4 }}
+          ownerReferences:
+            - apiVersion: gateway.networking.k8s.io/v1beta1
+              kind: Gateway
+              name: {{.Name}}
+              uid: "{{.UID}}"
+        spec:
+          selector:
+            matchLabels:
+              gateway.networking.k8s.io/gateway-name: {{.Name|quote}}
       kube-gateway: |
         apiVersion: v1
         kind: ServiceAccount
@@ -17865,8 +18200,16 @@ data:
                       audience: {{ .Values.global.sds.token.aud }}
               {{- if eq .Values.global.pilotCertProvider "istiod" }}
               - name: istiod-ca-cert
+              {{- if eq ((.Values.pilot).env).ENABLE_CLUSTER_TRUST_BUNDLE_API true }}
+                projected:
+                  sources:
+                  - clusterTrustBundle:
+                      name: istio.io:istiod-ca:root-cert
+                      path: root-cert.pem
+              {{- else }}
                 configMap:
                   name: istio-ca-root-cert
+              {{- end }}
               {{- end }}
               {{- if .Values.global.imagePullSecrets }}
               imagePullSecrets:
@@ -17909,6 +18252,53 @@ data:
           {{- end }}
           type: {{ .ServiceType | quote }}
         ---
+        apiVersion: autoscaling/v2
+        kind: HorizontalPodAutoscaler
+        metadata:
+          name: {{.DeploymentName | quote}}
+          namespace: {{.Namespace | quote}}
+          annotations:
+            {{- toJsonMap (omit .InfrastructureAnnotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version") | nindent 4 }}
+          labels:
+            {{- toJsonMap
+                  .InfrastructureLabels
+                  (strdict
+                  "gateway.networking.k8s.io/gateway-name" .Name
+                  ) | nindent 4 }}
+          ownerReferences:
+            - apiVersion: gateway.networking.k8s.io/v1beta1
+              kind: Gateway
+              name: {{.Name}}
+              uid: "{{.UID}}"
+        spec:
+          scaleTargetRef:
+            apiVersion: apps/v1
+            kind: Deployment
+            name:  {{.DeploymentName | quote}}
+          maxReplicas: 1
+        ---
+        apiVersion: policy/v1
+        kind: PodDisruptionBudget
+        metadata:
+          name: {{.DeploymentName | quote}}
+          namespace: {{.Namespace | quote}}
+          annotations:
+            {{- toJsonMap (omit .InfrastructureAnnotations "kubectl.kubernetes.io/last-applied-configuration" "gateway.istio.io/name-override" "gateway.istio.io/service-account" "gateway.istio.io/controller-version") | nindent 4 }}
+          labels:
+            {{- toJsonMap
+                  .InfrastructureLabels
+                  (strdict
+                  "gateway.networking.k8s.io/gateway-name" .Name
+                  ) | nindent 4 }}
+          ownerReferences:
+            - apiVersion: gateway.networking.k8s.io/v1beta1
+              kind: Gateway
+              name: {{.Name}}
+              uid: "{{.UID}}"
+        spec:
+          selector:
+            matchLabels:
+              gateway.networking.k8s.io/gateway-name: {{.Name|quote}}
   values: |-
     {
       "gateways": {
@@ -18000,7 +18390,7 @@ data:
         "sts": {
           "servicePort": 0
         },
-        "tag": "1.25.2",
+        "tag": "1.26.1",
         "variant": "",
         "waypoint": {
           "affinity": {},
@@ -18023,7 +18413,8 @@ data:
         "cni": {
           "enabled": false,
           "provider": "default"
-        }
+        },
+        "env": {}
       },
       "revision": "",
       "sidecarInjectorWebhook": {
@@ -18044,13 +18435,297 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Pilot
     release: istio
   name: istio-sidecar-injector
+  namespace: istio-system
+---
+apiVersion: v1
+data:
+  merged-values: |-
+    {
+      "affinity": {},
+      "autoscaleBehavior": {},
+      "autoscaleEnabled": true,
+      "autoscaleMax": 10,
+      "autoscaleMin": 3,
+      "base": {
+        "enableIstioConfigCRDs": true
+      },
+      "cni": {
+        "enabled": false,
+        "provider": "default"
+      },
+      "configMap": true,
+      "cpu": {
+        "targetAverageUtilization": 60
+      },
+      "defaultRevision": "",
+      "deploymentLabels": {},
+      "enabled": true,
+      "env": {},
+      "envVarFrom": [],
+      "experimental": {
+        "stableValidationPolicy": false
+      },
+      "extraContainerArgs": [],
+      "gatewayClasses": {},
+      "gateways": {
+        "istio-egressgateway": {},
+        "istio-ingressgateway": {
+          "autoscaleEnabled": false
+        },
+        "seccompProfile": {},
+        "securityContext": {}
+      },
+      "global": {
+        "caAddress": "",
+        "caName": "",
+        "certSigners": [],
+        "configCluster": false,
+        "configValidation": true,
+        "defaultPodDisruptionBudget": {
+          "enabled": true
+        },
+        "defaultResources": {
+          "requests": {
+            "cpu": "10m"
+          }
+        },
+        "externalIstiod": false,
+        "hub": "docker.io/istio",
+        "imagePullPolicy": "",
+        "imagePullSecrets": [],
+        "istioNamespace": "istio-system",
+        "istiod": {
+          "enableAnalysis": false
+        },
+        "logAsJson": false,
+        "logging": {
+          "level": "default:info"
+        },
+        "meshID": "",
+        "meshNetworks": {},
+        "mountMtlsCerts": false,
+        "multiCluster": {
+          "clusterName": "",
+          "enabled": false
+        },
+        "network": "",
+        "omitSidecarInjectorConfigMap": false,
+        "operatorManageWebhooks": false,
+        "pilotCertProvider": "istiod",
+        "priorityClassName": "",
+        "proxy": {
+          "autoInject": "enabled",
+          "clusterDomain": "cluster.local",
+          "componentLogLevel": "misc:error",
+          "excludeIPRanges": "",
+          "excludeInboundPorts": "",
+          "excludeOutboundPorts": "",
+          "image": "proxyv2",
+          "includeIPRanges": "*",
+          "includeInboundPorts": "*",
+          "includeOutboundPorts": "",
+          "logLevel": "warning",
+          "outlierLogPath": "",
+          "privileged": false,
+          "readinessFailureThreshold": 4,
+          "readinessInitialDelaySeconds": 0,
+          "readinessPeriodSeconds": 15,
+          "resources": {
+            "limits": {
+              "cpu": "2000m",
+              "memory": "1024Mi"
+            },
+            "requests": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            }
+          },
+          "startupProbe": {
+            "enabled": true,
+            "failureThreshold": 600
+          },
+          "statusPort": 15020,
+          "tracer": "none"
+        },
+        "proxy_init": {
+          "forceApplyIptables": false,
+          "image": "proxyv2"
+        },
+        "remotePilotAddress": "",
+        "sds": {
+          "token": {
+            "aud": "istio-ca"
+          }
+        },
+        "sts": {
+          "servicePort": 0
+        },
+        "tag": "1.26.1",
+        "variant": "",
+        "waypoint": {
+          "affinity": {},
+          "nodeSelector": {},
+          "resources": {
+            "limits": {
+              "cpu": "2",
+              "memory": "1Gi"
+            },
+            "requests": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            }
+          },
+          "tolerations": [],
+          "topologySpreadConstraints": []
+        }
+      },
+      "hub": "",
+      "image": "pilot",
+      "initContainers": [],
+      "ipFamilies": [],
+      "ipFamilyPolicy": "",
+      "istiodRemote": {
+        "enabled": false,
+        "injectionCABundle": "",
+        "injectionPath": "/inject",
+        "injectionURL": ""
+      },
+      "jwksResolverExtraRootCA": "",
+      "keepaliveMaxServerConnectionAge": "30m",
+      "memory": {},
+      "meshConfig": {
+        "defaultConfig": {
+          "terminationDrainDuration": "20s"
+        },
+        "enablePrometheusMerge": true
+      },
+      "nodeSelector": {},
+      "ownerName": "",
+      "pilot": {
+        "autoscaleMax": 10,
+        "autoscaleMin": 3,
+        "cni": {
+          "enabled": false
+        },
+        "cpu": {
+          "targetAverageUtilization": 60
+        },
+        "enabled": true
+      },
+      "podAnnotations": {},
+      "podLabels": {},
+      "replicaCount": 1,
+      "resources": {
+        "requests": {
+          "cpu": "500m",
+          "memory": "2048Mi"
+        }
+      },
+      "revision": "",
+      "revisionTags": [],
+      "rollingMaxSurge": "100%",
+      "rollingMaxUnavailable": "25%",
+      "seccompProfile": {},
+      "serviceAccountAnnotations": {},
+      "serviceAnnotations": {},
+      "sidecarInjectorWebhook": {
+        "alwaysInjectSelector": [],
+        "defaultTemplates": [],
+        "enableNamespacesByDefault": false,
+        "injectedAnnotations": {},
+        "neverInjectSelector": [],
+        "reinvocationPolicy": "Never",
+        "rewriteAppHTTPProbe": true,
+        "templates": {}
+      },
+      "sidecarInjectorWebhookAnnotations": {},
+      "tag": "",
+      "taint": {
+        "enabled": false,
+        "namespace": ""
+      },
+      "telemetry": {
+        "enabled": true,
+        "v2": {
+          "enabled": true,
+          "prometheus": {
+            "enabled": true
+          },
+          "stackdriver": {
+            "enabled": false
+          }
+        }
+      },
+      "tolerations": [],
+      "topologySpreadConstraints": [],
+      "traceSampling": 1,
+      "trustedZtunnelName": "",
+      "trustedZtunnelNamespace": "",
+      "variant": "",
+      "volumeMounts": [],
+      "volumes": [],
+      "ztunnel": {
+        "resourceName": "ztunnel"
+      }
+    }
+  original-values: |-
+    {
+      "defaultRevision": "",
+      "gateways": {
+        "istio-egressgateway": {},
+        "istio-ingressgateway": {
+          "autoscaleEnabled": false
+        }
+      },
+      "global": {
+        "configValidation": true,
+        "hub": "docker.io/istio",
+        "istioNamespace": "istio-system",
+        "tag": "1.26.1"
+      },
+      "meshConfig": {
+        "defaultConfig": {
+          "terminationDrainDuration": "20s"
+        }
+      },
+      "pilot": {
+        "autoscaleMax": 10,
+        "autoscaleMin": 3,
+        "cni": {
+          "enabled": false
+        },
+        "cpu": {
+          "targetAverageUtilization": 60
+        },
+        "enabled": true
+      },
+      "ztunnel": {
+        "resourceName": "ztunnel"
+      }
+    }
+kind: ConfigMap
+metadata:
+  annotations:
+    kubernetes.io/description: This ConfigMap contains the Helm values used during chart rendering. This ConfigMap is rendered for debugging purposes and external tooling; modifying these values has no effect.
+  labels:
+    app.kubernetes.io/instance: istio
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: istiod
+    app.kubernetes.io/part-of: istio
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
+    install.operator.istio.io/owning-resource: unknown
+    istio.io/rev: default
+    operator.istio.io/component: Pilot
+    release: istio
+  name: values
   namespace: istio-system
 ---
 apiVersion: admissionregistration.k8s.io/v1
@@ -18062,8 +18737,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Pilot
@@ -18220,8 +18895,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-ingressgateway
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istio-ingress-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istio-ingress-1.26.1
     install.operator.istio.io/owning-resource: unknown
     istio: ingressgateway
     istio.io/dataplane-mode: none
@@ -18254,9 +18929,9 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: istio-ingressgateway
         app.kubernetes.io/part-of: istio
-        app.kubernetes.io/version: 1.25.2
+        app.kubernetes.io/version: 1.26.1
         chart: gateways
-        helm.sh/chart: istio-ingress-1.25.2
+        helm.sh/chart: istio-ingress-1.26.1
         heritage: Tiller
         install.operator.istio.io/owning-resource: unknown
         istio: ingressgateway
@@ -18335,7 +19010,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        image: docker.io/istio/proxyv2:1.25.2
+        image: docker.io/istio/proxyv2:1.26.1
         name: istio-proxy
         ports:
         - containerPort: 15021
@@ -18454,8 +19129,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     install.operator.istio.io/owning-resource: unknown
     istio: pilot
     istio.io/rev: default
@@ -18483,8 +19158,8 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: istiod
         app.kubernetes.io/part-of: istio
-        app.kubernetes.io/version: 1.25.2
-        helm.sh/chart: istiod-1.25.2
+        app.kubernetes.io/version: 1.26.1
+        helm.sh/chart: istiod-1.26.1
         install.operator.istio.io/owning-resource: unknown
         istio: pilot
         istio.io/dataplane-mode: none
@@ -18534,6 +19209,7 @@ spec:
         - name: GOMEMLIMIT
           valueFrom:
             resourceFieldRef:
+              divisor: "1"
               resource: limits.memory
         - name: GOMAXPROCS
           valueFrom:
@@ -18542,7 +19218,7 @@ spec:
               resource: limits.cpu
         - name: PLATFORM
           value: ""
-        image: docker.io/istio/pilot:1.25.2
+        image: docker.io/istio/pilot:1.26.1
         name: discovery
         ports:
         - containerPort: 8080
@@ -18638,8 +19314,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-ingressgateway
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istio-ingress-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istio-ingress-1.26.1
     install.operator.istio.io/owning-resource: unknown
     istio: ingressgateway
     istio.io/rev: default
@@ -18663,8 +19339,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     install.operator.istio.io/owning-resource: unknown
     istio: pilot
     istio.io/rev: default
@@ -18687,8 +19363,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-ingressgateway
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istio-ingress-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istio-ingress-1.26.1
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: IngressGateways
@@ -18714,8 +19390,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     release: istio
   name: istiod
   namespace: istio-system
@@ -18761,8 +19437,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-ingressgateway
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istio-ingress-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istio-ingress-1.26.1
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: IngressGateways
@@ -18786,8 +19462,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     release: istio
   name: istiod
   namespace: istio-system
@@ -18809,8 +19485,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Pilot
@@ -18842,8 +19518,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-ingressgateway
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istio-ingress-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istio-ingress-1.26.1
     install.operator.istio.io/owning-resource: unknown
     istio: ingressgateway
     istio.io/rev: default
@@ -18879,8 +19555,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.25.2
-    helm.sh/chart: istiod-1.25.2
+    app.kubernetes.io/version: 1.26.1
+    helm.sh/chart: istiod-1.26.1
     install.operator.istio.io/owning-resource: unknown
     istio: pilot
     istio.io/rev: default
