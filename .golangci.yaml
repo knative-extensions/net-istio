@@ -180,7 +180,7 @@ linters:
     rules:
       - linters:
           - staticcheck
-        text: corev1.Endpoint.* is deprecated
+        text: v1.Endpoint.* is deprecated
       - linters:
           - gosec
           - noctx
