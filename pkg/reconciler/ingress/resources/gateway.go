@@ -312,10 +312,10 @@ func MakeTLSServers(ing *v1alpha1.Ingress, visibility v1alpha1.IngressVisibility
 	servers := make([]*istiov1beta1.Server, len(ingressTLS))
 
 	var port uint32
-	switch {
-	case visibility == v1alpha1.IngressVisibilityExternalIP:
+	switch visibility {
+	case v1alpha1.IngressVisibilityExternalIP:
 		port = ExternalGatewayHTTPSPort
-	case visibility == v1alpha1.IngressVisibilityClusterLocal:
+	case v1alpha1.IngressVisibilityClusterLocal:
 		port = ClusterLocalGatewayHTTPSPort
 	default:
 		return nil, fmt.Errorf("invalid ingress visibility: %v", visibility)
