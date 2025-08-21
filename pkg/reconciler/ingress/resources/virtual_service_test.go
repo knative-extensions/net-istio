@@ -600,7 +600,8 @@ func TestMakeVirtualServiceRoute_RewriteHost(t *testing.T) {
 			},
 		}},
 	}
-	route := makeVirtualServiceRoute(sets.New("a.vanity.url", "another.vanity.url"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	ing := &v1alpha1.Ingress{}
+	route := makeVirtualServiceRoute(sets.New("a.vanity.url", "another.vanity.url"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP, ing)
 	expected := &istiov1beta1.HTTPRoute{
 		Retries: &istiov1beta1.HTTPRetry{},
 		Match: []*istiov1beta1.HTTPMatchRequest{{
@@ -652,7 +653,8 @@ func TestMakeVirtualServiceRoute_Vanilla(t *testing.T) {
 			Percent: 100,
 		}},
 	}
-	route := makeVirtualServiceRoute(sets.New("a.com", "b.org"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	ing := &v1alpha1.Ingress{}
+	route := makeVirtualServiceRoute(sets.New("a.com", "b.org"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP, ing)
 	expected := &istiov1beta1.HTTPRoute{
 		Retries: &istiov1beta1.HTTPRetry{},
 		Match: []*istiov1beta1.HTTPMatchRequest{{
@@ -715,8 +717,9 @@ func TestMakeVirtualServiceRoute_Internal(t *testing.T) {
 			Percent: 100,
 		}},
 	}
+	ing := &v1alpha1.Ingress{}
 	route := makeVirtualServiceRoute(sets.New("a.default", "a.default.svc", "a.default.svc.cluster.local"),
-		ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+		ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP, ing)
 	expected := &istiov1beta1.HTTPRoute{
 		Retries: &istiov1beta1.HTTPRetry{},
 		Match: []*istiov1beta1.HTTPMatchRequest{{
@@ -757,7 +760,8 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 			Percent: 10,
 		}},
 	}
-	route := makeVirtualServiceRoute(sets.New("test.org"), ingressPath, makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP)
+	ing := &v1alpha1.Ingress{}
+	route := makeVirtualServiceRoute(sets.New("test.org"), ingressPath, makeGatewayMap([]string{"knative-testing/gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP, ing)
 	expected := &istiov1beta1.HTTPRoute{
 		Retries: &istiov1beta1.HTTPRetry{},
 		Match: []*istiov1beta1.HTTPMatchRequest{{
@@ -828,5 +832,63 @@ func TestGetDistinctHostPrefixes(t *testing.T) {
 				t.Fatalf("Expected %v, got %v", tt.out, got)
 			}
 		})
+	}
+}
+
+func TestMakeVirtualServiceRoute_WithMirroring(t *testing.T) {
+	ingressPath := &v1alpha1.HTTPIngressPath{
+		Path: "/testpath",
+		Splits: []v1alpha1.IngressBackendSplit{{
+			IngressBackend: v1alpha1.IngressBackend{
+				ServiceNamespace: "test-ns",
+				ServiceName:      "test-service",
+				ServicePort:      intstr.FromInt(8080),
+			},
+			Percent: 100,
+		}},
+	}
+	
+	// Create Ingress with mirroring annotations
+	ing := &v1alpha1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{
+				"networking.knative.dev/request-mirror": "mirror-service.mirror-ns.svc.cluster.local",
+				"networking.knative.dev/request-mirror-port": "9090",
+				"networking.knative.dev/request-mirror-percentage": "50.0",
+			},
+		},
+	}
+	
+	route := makeVirtualServiceRoute(sets.New("test.com"), ingressPath, makeGatewayMap([]string{"gateway-1"}, nil), v1alpha1.IngressVisibilityExternalIP, ing)
+	
+	expected := &istiov1beta1.HTTPRoute{
+		Retries: &istiov1beta1.HTTPRetry{},
+		Match: []*istiov1beta1.HTTPMatchRequest{{
+			Gateways: []string{"gateway-1"},
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: "test.com"},
+			},
+			Uri: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: "/testpath"},
+			},
+		}},
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
+				Host: "test-service.test-ns.svc.cluster.local",
+				Port: &istiov1beta1.PortSelector{Number: 8080},
+			},
+			Weight: 100,
+		}},
+		Mirror: &istiov1beta1.Destination{
+			Host: "mirror-service.mirror-ns.svc.cluster.local",
+			Port: &istiov1beta1.PortSelector{Number: 9090},
+		},
+		MirrorPercentage: &istiov1beta1.Percent{
+			Value: 50.0,
+		},
+	}
+	
+	if diff := cmp.Diff(expected, route, defaultVSCmpOpts); diff != "" {
+		t.Error("Unexpected route  (-want +got):", diff)
 	}
 }
