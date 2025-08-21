@@ -18,6 +18,7 @@ package resources
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -133,7 +134,7 @@ func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 			p := rule.HTTP.Paths[i]
 			hosts := hosts.Intersection(sets.New(rule.Hosts...))
 			if hosts.Len() != 0 {
-				http := makeVirtualServiceRoute(hosts, &p, gateways, rule.Visibility)
+				http := makeVirtualServiceRoute(hosts, &p, gateways, rule.Visibility, ing)
 				// Add all the Gateways that exist inside the http.match section of
 				// the VirtualService.
 				// This ensures that we are only using the Gateways that actually appear
@@ -149,7 +150,7 @@ func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 	return &spec
 }
 
-func makeVirtualServiceRoute(hosts sets.Set[string], http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.Set[string], visibility v1alpha1.IngressVisibility) *istiov1beta1.HTTPRoute {
+func makeVirtualServiceRoute(hosts sets.Set[string], http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.Set[string], visibility v1alpha1.IngressVisibility, ing *v1alpha1.Ingress) *istiov1beta1.HTTPRoute {
 	matches := []*istiov1beta1.HTTPMatchRequest{}
 	// Deduplicate hosts to avoid excessive matches, which cause a combinatorial expansion in Istio
 	distinctHosts := getDistinctHostPrefixes(hosts)
@@ -201,12 +202,43 @@ func makeVirtualServiceRoute(hosts sets.Set[string], http *v1alpha1.HTTPIngressP
 		}
 	}
 
+	// Parse mirroring annotations
+	var mirror *istiov1beta1.Destination
+	var mirrorPercentage *istiov1beta1.Percent
+	
+	annotations := ing.GetAnnotations()
+	if mirrorHost, exists := annotations["networking.knative.dev/request-mirror"]; exists && mirrorHost != "" {
+		mirror = &istiov1beta1.Destination{
+			Host: mirrorHost,
+		}
+		
+		// Check for optional mirror port
+		if mirrorPort, exists := annotations["networking.knative.dev/request-mirror-port"]; exists && mirrorPort != "" {
+			if port, err := strconv.ParseUint(mirrorPort, 10, 32); err == nil {
+				mirror.Port = &istiov1beta1.PortSelector{
+					Number: uint32(port),
+				}
+			}
+		}
+		
+		// Check for optional mirror percentage
+		if mirrorPercent, exists := annotations["networking.knative.dev/request-mirror-percentage"]; exists && mirrorPercent != "" {
+			if percent, err := strconv.ParseFloat(mirrorPercent, 64); err == nil && percent >= 0 && percent <= 100 {
+				mirrorPercentage = &istiov1beta1.Percent{
+					Value: percent,
+				}
+			}
+		}
+	}
+
 	route := &istiov1beta1.HTTPRoute{
 		Retries: &istiov1beta1.HTTPRetry{}, // Override default istio behaviour of retrying twice.
 		Match:   matches,
 		Route:   weights,
 		Rewrite: rewrite,
 		Headers: h,
+		Mirror:  mirror,
+		MirrorPercentage: mirrorPercentage,
 	}
 	return route
 }
