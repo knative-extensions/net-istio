@@ -5,16 +5,16 @@ go 1.24.0
 require (
 	github.com/google/go-cmp v0.7.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/sync v0.16.0
-	google.golang.org/protobuf v1.36.7
+	golang.org/x/sync v0.17.0
+	google.golang.org/protobuf v1.36.8
 	istio.io/api v1.26.2-0.20250616094816-cb08ed2587d4
 	istio.io/client-go v1.26.2
 	k8s.io/api v0.33.4
 	k8s.io/apimachinery v0.33.4
 	k8s.io/client-go v0.33.4
 	knative.dev/hack v0.0.0-20250902153942-1499de21e119
-	knative.dev/networking v0.0.0-20250903015244-1dd9be99b5c9
-	knative.dev/pkg v0.0.0-20250903014743-528bde37b646
+	knative.dev/networking v0.0.0-20250909015233-e3b68fc57bea
+	knative.dev/pkg v0.0.0-20250909010931-8c9c1d368e4b
 	sigs.k8s.io/yaml v1.6.0
 )
 
@@ -52,9 +52,9 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_golang v1.23.0 // indirect
+	github.com/prometheus/client_golang v1.23.2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/common v0.65.0 // indirect
+	github.com/prometheus/common v0.66.1 // indirect
 	github.com/prometheus/otlptranslator v0.0.0-20250717125610-8549f4ab4f8f // indirect
 	github.com/prometheus/procfs v0.17.0 // indirect
 	github.com/rs/dnscache v0.0.0-20230804202142-fc85eb664529 // indirect
