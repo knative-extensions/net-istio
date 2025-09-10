@@ -191,10 +191,8 @@ func makeWildcardTLSGateways(originWildcardSecrets map[string]*corev1.Secret,
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
-				Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-				ServerCertificate: corev1.TLSCertKey,
-				PrivateKey:        corev1.TLSPrivateKeyKey,
-				CredentialName:    credentialName,
+				Mode:           istiov1beta1.ServerTLSSettings_SIMPLE,
+				CredentialName: credentialName,
 				// TODO: Drop this when all supported Istio version uses TLS v1.2 by default.
 				MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 			},
@@ -343,10 +341,8 @@ func MakeTLSServers(ing *v1alpha1.Ingress, visibility v1alpha1.IngressVisibility
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
-				Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-				ServerCertificate: corev1.TLSCertKey,
-				PrivateKey:        corev1.TLSPrivateKeyKey,
-				CredentialName:    credentialName,
+				Mode:           istiov1beta1.ServerTLSSettings_SIMPLE,
+				CredentialName: credentialName,
 				// TODO: Drop this when all supported Istio version uses TLS v1.2 by default.
 				MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 			},

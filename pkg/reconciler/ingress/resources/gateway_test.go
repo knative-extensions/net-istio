@@ -85,9 +85,7 @@ var servers = []*istiov1beta1.Server{{
 		Protocol: "HTTPS",
 	},
 	Tls: &istiov1beta1.ServerTLSSettings{
-		Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-		ServerCertificate: corev1.TLSCertKey,
-		PrivateKey:        corev1.TLSPrivateKeyKey,
+		Mode: istiov1beta1.ServerTLSSettings_SIMPLE,
 	},
 }, {
 	Hosts: []string{"host2.example.com"},
@@ -97,9 +95,7 @@ var servers = []*istiov1beta1.Server{{
 		Protocol: "HTTPS",
 	},
 	Tls: &istiov1beta1.ServerTLSSettings{
-		Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-		ServerCertificate: corev1.TLSCertKey,
-		PrivateKey:        corev1.TLSPrivateKeyKey,
+		Mode: istiov1beta1.ServerTLSSettings_SIMPLE,
 	},
 }}
 
@@ -132,9 +128,7 @@ var modifiedDefaultTLSServer = istiov1beta1.Server{
 		Protocol: "HTTPS",
 	},
 	Tls: &istiov1beta1.ServerTLSSettings{
-		Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-		ServerCertificate: corev1.TLSCertKey,
-		PrivateKey:        corev1.TLSPrivateKeyKey,
+		Mode: istiov1beta1.ServerTLSSettings_SIMPLE,
 	},
 }
 
@@ -211,9 +205,7 @@ func TestGetServers(t *testing.T) {
 			Protocol: "HTTPS",
 		},
 		Tls: &istiov1beta1.ServerTLSSettings{
-			Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-			ServerCertificate: corev1.TLSCertKey,
-			PrivateKey:        corev1.TLSPrivateKeyKey,
+			Mode: istiov1beta1.ServerTLSSettings_SIMPLE,
 		},
 	}}
 
@@ -262,8 +254,6 @@ func TestMakeTLSServers(t *testing.T) {
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
 				Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
-				ServerCertificate:  corev1.TLSCertKey,
-				PrivateKey:         corev1.TLSPrivateKeyKey,
 				CredentialName:     targetSecret(&secret, &ingressResource),
 				MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 			},
@@ -283,8 +273,6 @@ func TestMakeTLSServers(t *testing.T) {
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
 				Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
-				ServerCertificate:  corev1.TLSCertKey,
-				PrivateKey:         corev1.TLSPrivateKeyKey,
 				CredentialName:     "secret0",
 				MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 			},
@@ -304,8 +292,6 @@ func TestMakeTLSServers(t *testing.T) {
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
 				Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
-				ServerCertificate:  corev1.TLSCertKey,
-				PrivateKey:         corev1.TLSPrivateKeyKey,
 				CredentialName:     "secret0",
 				MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 			},
@@ -392,9 +378,7 @@ func TestUpdateGateway(t *testing.T) {
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
-				Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-				ServerCertificate: corev1.TLSCertKey,
-				PrivateKey:        corev1.TLSPrivateKeyKey,
+				Mode: istiov1beta1.ServerTLSSettings_SIMPLE,
 			},
 		}},
 		newServers: []*istiov1beta1.Server{{
@@ -405,9 +389,7 @@ func TestUpdateGateway(t *testing.T) {
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
-				Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-				ServerCertificate: corev1.TLSCertKey,
-				PrivateKey:        corev1.TLSPrivateKeyKey,
+				Mode: istiov1beta1.ServerTLSSettings_SIMPLE,
 			},
 		}},
 		original: gateway.DeepCopy(),
@@ -422,9 +404,7 @@ func TestUpdateGateway(t *testing.T) {
 						Protocol: "HTTPS",
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
-						Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-						ServerCertificate: corev1.TLSCertKey,
-						PrivateKey:        corev1.TLSPrivateKeyKey,
+						Mode: istiov1beta1.ServerTLSSettings_SIMPLE,
 					},
 				}, {
 					Hosts: []string{"host2.example.com"},
@@ -434,9 +414,7 @@ func TestUpdateGateway(t *testing.T) {
 						Protocol: "HTTPS",
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
-						Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-						ServerCertificate: corev1.TLSCertKey,
-						PrivateKey:        corev1.TLSPrivateKeyKey,
+						Mode: istiov1beta1.ServerTLSSettings_SIMPLE,
 					},
 				}},
 			},
@@ -451,9 +429,7 @@ func TestUpdateGateway(t *testing.T) {
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
-				Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-				ServerCertificate: corev1.TLSCertKey,
-				PrivateKey:        corev1.TLSPrivateKeyKey,
+				Mode: istiov1beta1.ServerTLSSettings_SIMPLE,
 			},
 		}},
 		newServers: []*istiov1beta1.Server{},
@@ -469,9 +445,7 @@ func TestUpdateGateway(t *testing.T) {
 						Protocol: "HTTPS",
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
-						Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-						ServerCertificate: corev1.TLSCertKey,
-						PrivateKey:        corev1.TLSPrivateKeyKey,
+						Mode: istiov1beta1.ServerTLSSettings_SIMPLE,
 					},
 				}},
 			},
@@ -488,9 +462,7 @@ func TestUpdateGateway(t *testing.T) {
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
-				Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-				ServerCertificate: corev1.TLSCertKey,
-				PrivateKey:        corev1.TLSPrivateKeyKey,
+				Mode: istiov1beta1.ServerTLSSettings_SIMPLE,
 			},
 		}, {
 			Hosts: []string{"host2.example.com"},
@@ -500,9 +472,7 @@ func TestUpdateGateway(t *testing.T) {
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
-				Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-				ServerCertificate: corev1.TLSCertKey,
-				PrivateKey:        corev1.TLSPrivateKeyKey,
+				Mode: istiov1beta1.ServerTLSSettings_SIMPLE,
 			},
 		}},
 		newServers: []*istiov1beta1.Server{},
@@ -520,8 +490,6 @@ func TestUpdateGateway(t *testing.T) {
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
 				Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
-				ServerCertificate:  corev1.TLSCertKey,
-				PrivateKey:         corev1.TLSPrivateKeyKey,
 				MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 			},
 		}},
@@ -538,8 +506,6 @@ func TestUpdateGateway(t *testing.T) {
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
 						Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
-						ServerCertificate:  corev1.TLSCertKey,
-						PrivateKey:         corev1.TLSPrivateKeyKey,
 						MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 					},
 				}},
@@ -556,9 +522,7 @@ func TestUpdateGateway(t *testing.T) {
 				Protocol: "HTTPS",
 			},
 			Tls: &istiov1beta1.ServerTLSSettings{
-				Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-				ServerCertificate: corev1.TLSCertKey,
-				PrivateKey:        corev1.TLSPrivateKeyKey,
+				Mode: istiov1beta1.ServerTLSSettings_SIMPLE,
 			},
 		}},
 		original: gatewayWithModifiedWildcardTLSServer.DeepCopy(),
@@ -573,9 +537,7 @@ func TestUpdateGateway(t *testing.T) {
 							Protocol: "HTTPS",
 						},
 						Tls: &istiov1beta1.ServerTLSSettings{
-							Mode:              istiov1beta1.ServerTLSSettings_SIMPLE,
-							ServerCertificate: corev1.TLSCertKey,
-							PrivateKey:        corev1.TLSPrivateKeyKey,
+							Mode: istiov1beta1.ServerTLSSettings_SIMPLE,
 						},
 					},
 					&modifiedDefaultTLSServer,
@@ -630,8 +592,6 @@ func TestMakeWildcardGateways(t *testing.T) {
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
 						Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
-						ServerCertificate:  corev1.TLSCertKey,
-						PrivateKey:         corev1.TLSPrivateKeyKey,
 						CredentialName:     targetWildcardSecretName(wildcardSecret.Name, wildcardSecret.Namespace),
 						MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 					},
@@ -667,8 +627,6 @@ func TestMakeWildcardGateways(t *testing.T) {
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
 						Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
-						ServerCertificate:  corev1.TLSCertKey,
-						PrivateKey:         corev1.TLSPrivateKeyKey,
 						CredentialName:     wildcardSecret.Name,
 						MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 					},
@@ -924,8 +882,6 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
 						Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
-						ServerCertificate:  corev1.TLSCertKey,
-						PrivateKey:         corev1.TLSPrivateKeyKey,
 						CredentialName:     targetSecret(&secret, &ingressResource),
 						MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 					},
@@ -967,8 +923,6 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
 						Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
-						ServerCertificate:  corev1.TLSCertKey,
-						PrivateKey:         corev1.TLSPrivateKeyKey,
 						CredentialName:     secret.Name,
 						MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 					},
@@ -1013,8 +967,6 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
 						Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
-						ServerCertificate:  corev1.TLSCertKey,
-						PrivateKey:         corev1.TLSPrivateKeyKey,
 						CredentialName:     targetSecret(&secret, &ingressResource),
 						MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 					},
@@ -1056,8 +1008,6 @@ func TestMakeIngressTLSGateways(t *testing.T) {
 					},
 					Tls: &istiov1beta1.ServerTLSSettings{
 						Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
-						ServerCertificate:  corev1.TLSCertKey,
-						PrivateKey:         corev1.TLSPrivateKeyKey,
 						CredentialName:     targetSecret(&secret, &ingressResourceWithDotName),
 						MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 					},

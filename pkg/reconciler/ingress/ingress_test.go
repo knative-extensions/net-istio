@@ -126,8 +126,6 @@ var (
 		},
 		Tls: &istiov1beta1.ServerTLSSettings{
 			Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
-			ServerCertificate:  corev1.TLSCertKey,
-			PrivateKey:         corev1.TLSPrivateKeyKey,
 			CredentialName:     "secret0",
 			MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 		},
@@ -211,8 +209,6 @@ var (
 		},
 		Tls: &istiov1beta1.ServerTLSSettings{
 			Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
-			ServerCertificate:  "tls.crt",
-			PrivateKey:         "tls.key",
 			CredentialName:     "secret0",
 			MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 		},
@@ -227,8 +223,6 @@ var (
 		},
 		Tls: &istiov1beta1.ServerTLSSettings{
 			Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
-			ServerCertificate:  "tls.crt",
-			PrivateKey:         "tls.key",
 			CredentialName:     "secret0",
 			MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 		},
@@ -265,8 +259,6 @@ var (
 		},
 		Tls: &istiov1beta1.ServerTLSSettings{
 			Mode:               istiov1beta1.ServerTLSSettings_SIMPLE,
-			ServerCertificate:  "tls.crt",
-			PrivateKey:         "tls.key",
 			CredentialName:     "other-secret",
 			MinProtocolVersion: istiov1beta1.ServerTLSSettings_TLSV1_2,
 		},
