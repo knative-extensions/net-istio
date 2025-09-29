@@ -8,7 +8,7 @@ import "istio.io/api/networking/v1alpha3"
 //
 // <!-- crd generation tags
 // +cue-gen:DestinationRule:groupName:networking.istio.io
-// +cue-gen:DestinationRule:versions:v1beta1,v1alpha3,v1
+// +cue-gen:DestinationRule:versions:v1,v1beta1,v1alpha3
 // +cue-gen:DestinationRule:annotations:helm.sh/resource-policy=keep
 // +cue-gen:DestinationRule:labels:app=istio-pilot,chart=istio,heritage=Tiller,release=istio
 // +cue-gen:DestinationRule:subresource:status
@@ -18,7 +18,7 @@ import "istio.io/api/networking/v1alpha3"
 // +cue-gen:DestinationRule:printerColumn:name=Age,type=date,JSONPath=.metadata.creationTimestamp,description="CreationTimestamp is a timestamp
 // representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations.
 // Clients may not set this value. It is represented in RFC3339 form and is in UTC.
-// Populated by the system. Read-only. Null for lists. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata"
+// Populated by the system. Read-only. Null for lists. For more information, see [Kubernetes API Conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata)"
 // +cue-gen:DestinationRule:preserveUnknownFields:false
 // -->
 //
@@ -45,6 +45,8 @@ const TrafficPolicy_ProxyProtocol_V1 TrafficPolicy_ProxyProtocol_VERSION = v1alp
 
 // ⁣PROXY protocol version 2. Binary format.
 const TrafficPolicy_ProxyProtocol_V2 TrafficPolicy_ProxyProtocol_VERSION = v1alpha3.TrafficPolicy_ProxyProtocol_V2
+
+type TrafficPolicy_RetryBudget = v1alpha3.TrafficPolicy_RetryBudget
 
 // A subset of endpoints of a service. Subsets can be used for scenarios
 // like A/B testing, or routing to a specific version of a service. Refer
@@ -284,7 +286,7 @@ const ConnectionPoolSettings_HTTPSettings_UPGRADE ConnectionPoolSettings_HTTPSet
 //
 // The following rule sets a connection pool size of 100 HTTP1 connections
 // with no more than 10 req/connection to the "reviews" service. In addition,
-// it sets a limit of 1000 concurrent HTTP2 requests and configures upstream
+// it sets a limit of 1000 concurrent HTTP/2 requests and configures upstream
 // hosts to be scanned every 5 mins so that any host that fails 7 consecutive
 // times with a 502, 503, or 504 error code will be ejected for 15 minutes.
 //

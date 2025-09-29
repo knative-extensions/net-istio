@@ -567,7 +567,7 @@ func (ServiceEntry_Resolution) EnumDescriptor() ([]byte, []int) {
 //
 // <!-- crd generation tags
 // +cue-gen:ServiceEntry:groupName:networking.istio.io
-// +cue-gen:ServiceEntry:versions:v1beta1,v1alpha3,v1
+// +cue-gen:ServiceEntry:versions:v1,v1beta1,v1alpha3
 // +cue-gen:ServiceEntry:annotations:helm.sh/resource-policy=keep
 // +cue-gen:ServiceEntry:labels:app=istio-pilot,chart=istio,heritage=Tiller,release=istio
 // +cue-gen:ServiceEntry:subresource:status
@@ -640,7 +640,9 @@ type ServiceEntry struct {
 	// service in the mesh. In other words, the sidecar will behave as a
 	// simple TCP proxy, forwarding incoming traffic on a specified port to
 	// the specified destination endpoint IP/host. Unix domain socket
-	// addresses are not supported in this field.
+	// addresses are not supported in this field. Although the API allows
+	// specifying addresses in a list, multiple addresses will not be used by a single host.
+	// This means manual specification of dual-stack addressing is not supported.
 	// +kubebuilder:validation:MaxItems=256
 	// +protoc-gen-crd:list-value-validation:MaxLength=64
 	Addresses []string `protobuf:"bytes,2,rep,name=addresses,proto3" json:"addresses,omitempty"`
@@ -1016,7 +1018,7 @@ var File_networking_v1alpha3_service_entry_proto protoreflect.FileDescriptor
 
 const file_networking_v1alpha3_service_entry_proto_rawDesc = "" +
 	"\n" +
-	"'networking/v1alpha3/service_entry.proto\x12\x19istio.networking.v1alpha3\x1a\x1fgoogle/api/field_behavior.proto\x1a!networking/v1alpha3/sidecar.proto\x1a(networking/v1alpha3/workload_entry.proto\x1a\x1fanalysis/v1alpha1/message.proto\x1a\x1ameta/v1alpha1/status.proto\"\x87\x05\n" +
+	"'networking/v1alpha3/service_entry.proto\x12\x19istio.networking.v1alpha3\x1a\x1fanalysis/v1alpha1/message.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1ameta/v1alpha1/status.proto\x1a!networking/v1alpha3/sidecar.proto\x1a(networking/v1alpha3/workload_entry.proto\"\x87\x05\n" +
 	"\fServiceEntry\x12\x1a\n" +
 	"\x05hosts\x18\x01 \x03(\tB\x04\xe2A\x01\x02R\x05hosts\x12\x1c\n" +
 	"\taddresses\x18\x02 \x03(\tR\taddresses\x12<\n" +

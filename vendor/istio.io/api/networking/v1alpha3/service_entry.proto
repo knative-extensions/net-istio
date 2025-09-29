@@ -14,12 +14,6 @@
 
 syntax = "proto3";
 
-import "google/api/field_behavior.proto";
-import "networking/v1alpha3/sidecar.proto";
-import "networking/v1alpha3/workload_entry.proto";
-import "analysis/v1alpha1/message.proto";
-import "meta/v1alpha1/status.proto";
-
 // $schema: istio.networking.v1alpha3.ServiceEntry
 // $title: Service Entry
 // $description: Configuration affecting service registry.
@@ -403,15 +397,20 @@ import "meta/v1alpha1/status.proto";
 // ```
 package istio.networking.v1alpha3;
 
-option go_package = "istio.io/api/networking/v1alpha3";
+import "analysis/v1alpha1/message.proto";
+import "google/api/field_behavior.proto";
+import "meta/v1alpha1/status.proto";
+import "networking/v1alpha3/sidecar.proto";
+import "networking/v1alpha3/workload_entry.proto";
 
+option go_package = "istio.io/api/networking/v1alpha3";
 
 // ServiceEntry enables adding additional entries into Istio's internal
 // service registry.
 //
 // <!-- crd generation tags
 // +cue-gen:ServiceEntry:groupName:networking.istio.io
-// +cue-gen:ServiceEntry:versions:v1beta1,v1alpha3,v1
+// +cue-gen:ServiceEntry:versions:v1,v1beta1,v1alpha3
 // +cue-gen:ServiceEntry:annotations:helm.sh/resource-policy=keep
 // +cue-gen:ServiceEntry:labels:app=istio-pilot,chart=istio,heritage=Tiller,release=istio
 // +cue-gen:ServiceEntry:subresource:status
@@ -483,7 +482,9 @@ message ServiceEntry {
   // service in the mesh. In other words, the sidecar will behave as a
   // simple TCP proxy, forwarding incoming traffic on a specified port to
   // the specified destination endpoint IP/host. Unix domain socket
-  // addresses are not supported in this field.
+  // addresses are not supported in this field. Although the API allows
+  // specifying addresses in a list, multiple addresses will not be used by a single host.
+  // This means manual specification of dual-stack addressing is not supported.
   // +kubebuilder:validation:MaxItems=256
   // +protoc-gen-crd:list-value-validation:MaxLength=64
   repeated string addresses = 2;
@@ -511,7 +512,7 @@ message ServiceEntry {
     // mesh to include unmanaged infrastructure (e.g., VMs added to a
     // Kubernetes based service mesh).
     MESH_INTERNAL = 1;
-  };
+  }
 
   // Specify whether the service should be considered external to the mesh
   // or part of the mesh.
@@ -559,7 +560,7 @@ message ServiceEntry {
     // specified in the hosts field, if wildcards are not used. DNS resolution
     // cannot be used with Unix domain socket endpoints.
     DNS_ROUND_ROBIN = 3;
-  };
+  }
 
   // Service resolution mode for the hosts. Care must be taken
   // when setting the resolution mode to NONE for a TCP port without
@@ -659,11 +660,10 @@ message ServiceEntryStatus {
 }
 
 // A minor abstraction to allow for adding hostnames if relevant.
-message ServiceEntryAddress{
+message ServiceEntryAddress {
   // The address (e.g. 192.168.0.2)
   string value = 1;
 
   // The host name associated with this address
   string host = 2;
 }
-
