@@ -14,8 +14,6 @@
 
 syntax = "proto3";
 
-import "google/api/field_behavior.proto";
-
 // $schema: istio.networking.v1alpha3.Gateway
 // $title: Gateway
 // $description: Configuration affecting edge load balancer.
@@ -194,6 +192,8 @@ import "google/api/field_behavior.proto";
 //
 package istio.networking.v1alpha3;
 
+import "google/api/field_behavior.proto";
+
 option go_package = "istio.io/api/networking/v1alpha3";
 
 // Gateway describes a load balancer operating at the edge of the mesh
@@ -201,7 +201,7 @@ option go_package = "istio.io/api/networking/v1alpha3";
 //
 // <!-- crd generation tags
 // +cue-gen:Gateway:groupName:networking.istio.io
-// +cue-gen:Gateway:versions:v1beta1,v1alpha3,v1
+// +cue-gen:Gateway:versions:v1,v1beta1,v1alpha3
 // +cue-gen:Gateway:annotations:helm.sh/resource-policy=keep
 // +cue-gen:Gateway:labels:app=istio-pilot,chart=istio,heritage=Tiller,release=istio
 // +cue-gen:Gateway:subresource:status
@@ -377,7 +377,7 @@ message Port {
   // The port number on the endpoint where the traffic will be
   // received. Applicable only when used with ServiceEntries.
   // $hide_from_docs
-  uint32 target_port = 4 [deprecated=true];
+  uint32 target_port = 4 [deprecated = true];
 }
 
 // +kubebuilder:validation:XValidation:message="only one of credentialNames or tlsCertificates can be set",rule="oneof(self.tlsCertificates, self.credentialNames)"
@@ -433,7 +433,7 @@ message ServerTLSSettings {
     // is presented, it will be validated. ca_certificates should
     // be specified for validating client certificates.
     OPTIONAL_MUTUAL = 5;
-  };
+  }
 
   // Optional: Indicates whether connections to this port should be
   // secured using TLS. The value of this field determines how TLS is
@@ -490,13 +490,15 @@ message ServerTLSSettings {
     // holding the server's private key.
     string private_key = 2;
 
+    // $hide_from_docs
     // REQUIRED if mode is `MUTUAL` or `OPTIONAL_MUTUAL`. The path to a file
     // containing certificate authority certificates to use in verifying a presented
     // client side certificate.
+    // $hide_from_docs
     string ca_certificates = 3;
   }
 
-  // Only one of `server_certificate`, `private_key`, `ca_certificates` or `credential_name`
+  // Only one of `server_certificate`, `private_key` or `credential_name`
   // or `credential_names` or `tls_certificates` should be specified.
   // This is mainly used for specifying RSA and ECDSA certificates for the same server.
   // +kubebuilder:validation:MaxItems=2

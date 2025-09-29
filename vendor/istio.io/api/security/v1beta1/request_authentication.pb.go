@@ -745,16 +745,16 @@ var File_security_v1beta1_request_authentication_proto protoreflect.FileDescript
 
 const file_security_v1beta1_request_authentication_proto_rawDesc = "" +
 	"\n" +
-	"-security/v1beta1/request_authentication.proto\x12\x16istio.security.v1beta1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1btype/v1beta1/selector.proto\"\xab\x02\n" +
+	"-security/v1beta1/request_authentication.proto\x12\x16istio.security.v1beta1\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1btype/v1beta1/selector.proto\"\xab\x02\n" +
 	"\x15RequestAuthentication\x12@\n" +
 	"\bselector\x18\x01 \x01(\v2$.istio.type.v1beta1.WorkloadSelectorR\bselector\x12G\n" +
 	"\ttargetRef\x18\x03 \x01(\v2).istio.type.v1beta1.PolicyTargetReferenceR\ttargetRef\x12I\n" +
 	"\n" +
 	"targetRefs\x18\x04 \x03(\v2).istio.type.v1beta1.PolicyTargetReferenceR\n" +
 	"targetRefs\x12<\n" +
-	"\tjwt_rules\x18\x02 \x03(\v2\x1f.istio.security.v1beta1.JWTRuleR\bjwtRules\"\x80\x04\n" +
-	"\aJWTRule\x12\x1c\n" +
-	"\x06issuer\x18\x01 \x01(\tB\x04\xe2A\x01\x02R\x06issuer\x12\x1c\n" +
+	"\tjwt_rules\x18\x02 \x03(\v2\x1f.istio.security.v1beta1.JWTRuleR\bjwtRules\"\xfa\x03\n" +
+	"\aJWTRule\x12\x16\n" +
+	"\x06issuer\x18\x01 \x01(\tR\x06issuer\x12\x1c\n" +
 	"\taudiences\x18\x02 \x03(\tR\taudiences\x12\x19\n" +
 	"\bjwks_uri\x18\x03 \x01(\tR\ajwksUri\x12\x12\n" +
 	"\x04jwks\x18\n" +

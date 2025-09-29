@@ -240,7 +240,7 @@ func (CorsPolicy_UnmatchedPreflights) EnumDescriptor() ([]byte, []int) {
 //
 // <!-- crd generation tags
 // +cue-gen:VirtualService:groupName:networking.istio.io
-// +cue-gen:VirtualService:versions:v1beta1,v1alpha3,v1
+// +cue-gen:VirtualService:versions:v1,v1beta1,v1alpha3
 // +cue-gen:VirtualService:annotations:helm.sh/resource-policy=keep
 // +cue-gen:VirtualService:labels:app=istio-pilot,chart=istio,heritage=Tiller,release=istio
 // +cue-gen:VirtualService:subresource:status
@@ -698,7 +698,7 @@ type HTTPRoute struct {
 	//
 	// ```yaml
 	// attempts: 2
-	// retryOn: "connect-failure,refused-stream,unavailable,cancelled,503"
+	// retryOn: "connect-failure,refused-stream,unavailable,cancelled"
 	// ```
 	//
 	// This can be customized in [`Mesh Config` `defaultHttpRetryPolicy`](https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#MeshConfig).
