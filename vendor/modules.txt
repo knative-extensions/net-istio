@@ -491,7 +491,7 @@ gopkg.in/inf.v0
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# istio.io/api v1.27.1-0.20250820125923-f5a5d3a605a9
+# istio.io/api v1.27.2-0.20251010085937-bc3692c751f3
 ## explicit; go 1.23.0
 istio.io/api/analysis/v1alpha1
 istio.io/api/extensions/v1alpha1
@@ -502,7 +502,7 @@ istio.io/api/networking/v1beta1
 istio.io/api/security/v1beta1
 istio.io/api/telemetry/v1alpha1
 istio.io/api/type/v1beta1
-# istio.io/client-go v1.27.1
+# istio.io/client-go v1.27.3
 ## explicit; go 1.23.0
 istio.io/client-go/pkg/apis/extensions/v1alpha1
 istio.io/client-go/pkg/apis/networking/v1
