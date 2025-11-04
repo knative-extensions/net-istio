@@ -31,7 +31,7 @@ import (
 	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
@@ -530,7 +530,7 @@ func filterGateway(gtws []config.Gateway, ingressLabels map[string]string) ([]co
 			return ret, fmt.Errorf("failed to create selector from gateway (%s) label selector: %w", gtw.QualifiedName(), err)
 		}
 
-		if !selector.Matches(fields.Set(ingressLabels)) {
+		if !selector.Matches(labels.Set(ingressLabels)) {
 			continue
 		}
 
