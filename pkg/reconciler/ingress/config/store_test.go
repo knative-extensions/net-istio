@@ -21,10 +21,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+
+	netconfig "knative.dev/networking/pkg/config"
 	logtesting "knative.dev/pkg/logging/testing"
 
-	network "knative.dev/networking/pkg"
-	netconfig "knative.dev/networking/pkg/config"
 	. "knative.dev/pkg/configmap/testing"
 )
 
@@ -42,7 +42,7 @@ func TestStoreLoadWithContext(t *testing.T) {
 		t.Error("Unexpected istio config (-want, +got):", diff)
 	}
 
-	expectNetworkConfig, _ := network.NewConfigFromConfigMap(networkConfig)
+	expectNetworkConfig, _ := netconfig.NewConfigFromConfigMap(networkConfig)
 	if diff := cmp.Diff(expectNetworkConfig, config.Network); diff != "" {
 		t.Error("Unexpected TLS mode (-want, +got):", diff)
 	}
