@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/google/go-cmp v0.7.0
-	go.uber.org/zap v1.27.0
+	go.uber.org/zap v1.27.1
 	golang.org/x/sync v0.18.0
 	google.golang.org/protobuf v1.36.8
 	istio.io/api v1.27.2-0.20251010085937-bc3692c751f3
@@ -12,9 +12,9 @@ require (
 	k8s.io/api v0.34.2
 	k8s.io/apimachinery v0.34.2
 	k8s.io/client-go v0.34.2
-	knative.dev/hack v0.0.0-20251117013754-67a5b048bc27
-	knative.dev/networking v0.0.0-20251117014740-e8506646d57f
-	knative.dev/pkg v0.0.0-20251124190527-7d24e8d1085f
+	knative.dev/hack v0.0.0-20251126013634-1484a9e9b641
+	knative.dev/networking v0.0.0-20251126014605-137d136bdf97
+	knative.dev/pkg v0.0.0-20251126013532-e853b1d1d6bb
 	sigs.k8s.io/yaml v1.6.0
 )
 
