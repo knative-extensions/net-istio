@@ -1113,7 +1113,6 @@ knative.dev/hack
 # knative.dev/networking v0.0.0-20251126014605-137d136bdf97
 ## explicit; go 1.24.0
 knative.dev/networking/config
-knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
 knative.dev/networking/pkg/apis/networking/v1alpha1
 knative.dev/networking/pkg/client/clientset/versioned
@@ -1141,8 +1140,6 @@ knative.dev/networking/pkg/config
 knative.dev/networking/pkg/http
 knative.dev/networking/pkg/http/header
 knative.dev/networking/pkg/http/probe
-knative.dev/networking/pkg/http/proxy
-knative.dev/networking/pkg/http/stats
 knative.dev/networking/pkg/ingress
 knative.dev/networking/pkg/k8s
 knative.dev/networking/pkg/prober
