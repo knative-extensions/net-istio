@@ -31,9 +31,12 @@ const (
     Deployment
     Gateway
     GatewayClass
+    HorizontalPodAutoscaler
+    MutatingWebhookConfiguration
     Namespace
     Node
     Pod
+    PodDisruptionBudget
     Service
     ServiceAccount
     ServiceEntry
@@ -51,18 +54,24 @@ func (r ResourceTypes) String() string {
 	case 4:
 		return "GatewayClass"
 	case 5:
-		return "Namespace"
+		return "HorizontalPodAutoscaler"
 	case 6:
-		return "Node"
+		return "MutatingWebhookConfiguration"
 	case 7:
-		return "Pod"
+		return "Namespace"
 	case 8:
-		return "Service"
+		return "Node"
 	case 9:
-		return "ServiceAccount"
+		return "Pod"
 	case 10:
-		return "ServiceEntry"
+		return "PodDisruptionBudget"
 	case 11:
+		return "Service"
+	case 12:
+		return "ServiceAccount"
+	case 13:
+		return "ServiceEntry"
+	case 14:
 		return "WorkloadEntry"
 	}
 	return "Unknown"
@@ -108,6 +117,25 @@ var (
 		},
 	}
 
+	IoK8sNetworkingGatewayGatewayClassName = Instance {
+		Name:          "gateway.networking.k8s.io/gateway-class-name",
+		Description:   "Automatically added to all resources [automatically "+
+                        "created](/docs/tasks/traffic-management/ingress/gateway-api/#automated-deployment) "+
+                        "by Istio Gateway controller to indicate which "+
+                        "`GatewayClass` resulted in the object creation. Users "+
+                        "should not set this label themselves.",
+		FeatureStatus: Stable,
+		Hidden:        false,
+		Deprecated:    false,
+		Resources: []ResourceTypes{
+			ServiceAccount,
+			Deployment,
+			Service,
+			PodDisruptionBudget,
+			HorizontalPodAutoscaler,
+		},
+	}
+
 	IoK8sNetworkingGatewayGatewayName = Instance {
 		Name:          "gateway.networking.k8s.io/gateway-name",
 		Description:   "Automatically added to all resources [automatically "+
@@ -122,6 +150,8 @@ var (
 			ServiceAccount,
 			Deployment,
 			Service,
+			PodDisruptionBudget,
+			HorizontalPodAutoscaler,
 		},
 	}
 
@@ -142,25 +172,27 @@ Note: users wishing to use sidecar mode should see the "istio-injection" label; 
 
 	IoIstioRev = Instance {
 		Name:          "istio.io/rev",
-		Description:   "Istio control plane revision associated with the "+
+		Description:   "Istio control plane revision or tag associated with the "+
                         "resource; e.g. `canary`",
-		FeatureStatus: Alpha,
+		FeatureStatus: Beta,
 		Hidden:        false,
 		Deprecated:    false,
 		Resources: []ResourceTypes{
 			Namespace,
+			Gateway,
+			Pod,
 		},
 	}
 
 	IoIstioTag = Instance {
 		Name:          "istio.io/tag",
-		Description:   "Istio control plane tag name associated with the "+
-                        "resource; e.g. `canary`",
+		Description:   "Istio control plane tag name associated with the resource "+
+                        "- for internal use only",
 		FeatureStatus: Alpha,
 		Hidden:        false,
 		Deprecated:    false,
 		Resources: []ResourceTypes{
-			Namespace,
+			MutatingWebhookConfiguration,
 		},
 	}
 
@@ -432,6 +464,7 @@ resources to help automate Istio's multi-network configuration.
 func AllResourceLabels() []*Instance {
 	return []*Instance {
 		&GatewayManaged,
+		&IoK8sNetworkingGatewayGatewayClassName,
 		&IoK8sNetworkingGatewayGatewayName,
 		&IoIstioDataplaneMode,
 		&IoIstioRev,
@@ -461,9 +494,12 @@ func AllResourceTypes() []string {
 		"Deployment",
 		"Gateway",
 		"GatewayClass",
+		"HorizontalPodAutoscaler",
+		"MutatingWebhookConfiguration",
 		"Namespace",
 		"Node",
 		"Pod",
+		"PodDisruptionBudget",
 		"Service",
 		"ServiceAccount",
 		"ServiceEntry",
