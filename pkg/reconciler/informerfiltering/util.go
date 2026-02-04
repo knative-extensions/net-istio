@@ -21,11 +21,15 @@ import (
 	"os"
 	"strconv"
 
+	istiofilteredFactory "knative.dev/net-istio/pkg/client/istio/injection/informers/factory/filtered"
 	"knative.dev/networking/pkg/apis/networking"
 	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 )
 
-const EnableSecretInformerFilteringByCertUIDEnv = "ENABLE_SECRET_INFORMER_FILTERING_BY_CERT_UID"
+const (
+	EnableSecretInformerFilteringByCertUIDEnv = "ENABLE_SECRET_INFORMER_FILTERING_BY_CERT_UID"
+	EnableVSInformerFilteringByLabelEnv       = "ENABLE_VS_INFORMER_FILTERING_BY_LABEL"
+)
 
 // ShouldFilterByCertificateUID allows to choose whether to apply filtering on certificate related secrets
 // when list by informers in this component. If not set or set to false no filtering is applied and instead informers
@@ -44,4 +48,25 @@ func GetContextWithFilteringLabelSelector(ctx context.Context) context.Context {
 		return filteredFactory.WithSelectors(ctx, networking.CertificateUIDLabelKey)
 	}
 	return filteredFactory.WithSelectors(ctx, "") // Allow all
+}
+
+// ShouldFilterVSByLabel allows opting into VirtualService informer filtering by label selector.
+// When the env var is unset or invalid, filtering is disabled (false).
+func ShouldFilterVSByLabel() bool {
+	if enable := os.Getenv(EnableVSInformerFilteringByLabelEnv); enable != "" {
+		b, err := strconv.ParseBool(enable)
+		if err != nil {
+			return false
+		}
+		return b
+	}
+	return false
+}
+
+// GetContextWithVSFilteringLabelSelector returns the passed context with the proper label key selector added to it.
+func GetContextWithVSFilteringLabelSelector(ctx context.Context) context.Context {
+	if ShouldFilterVSByLabel() {
+		return istiofilteredFactory.WithSelectors(ctx, networking.IngressLabelKey)
+	}
+	return istiofilteredFactory.WithSelectors(ctx, "") // Allow all
 }
