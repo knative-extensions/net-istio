@@ -33,7 +33,7 @@ func TestShouldFilterVSByLabelUnset(t *testing.T) {
 	}
 }
 
-func TestShouldFilterVSByLabelParse(t *testing.T) {
+func TestShouldEnableFromEnv(t *testing.T) {
 	tests := []struct {
 		name  string
 		value string
@@ -62,9 +62,68 @@ func TestShouldFilterVSByLabelParse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			const key = "ENABLE_TEST_FLAG"
+			t.Setenv(key, tt.value)
+			if got := shouldEnableFromEnv(key); got != tt.want {
+				t.Fatalf("shouldEnableFromEnv() = %v, want %v for value %q", got, tt.want, tt.value)
+			}
+		})
+	}
+}
+
+func TestShouldFilterVSByLabelParse(t *testing.T) {
+	tests := []struct {
+		name  string
+		value string
+		want  bool
+	}{{
+		name:  "true",
+		value: "true",
+		want:  true,
+	}, {
+		name:  "false",
+		value: "false",
+		want:  false,
+	}, {
+		name:  "invalid",
+		value: "notabool",
+		want:  false,
+	}}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Setenv(EnableVSInformerFilteringByLabelEnv, tt.value)
 			if got := ShouldFilterVSByLabel(); got != tt.want {
 				t.Fatalf("ShouldFilterVSByLabel() = %v, want %v for value %q", got, tt.want, tt.value)
+			}
+		})
+	}
+}
+
+func TestShouldFilterByCertificateUIDParse(t *testing.T) {
+	tests := []struct {
+		name  string
+		value string
+		want  bool
+	}{{
+		name:  "true",
+		value: "true",
+		want:  true,
+	}, {
+		name:  "false",
+		value: "false",
+		want:  false,
+	}, {
+		name:  "invalid",
+		value: "notabool",
+		want:  false,
+	}}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv(EnableSecretInformerFilteringByCertUIDEnv, tt.value)
+			if got := ShouldFilterByCertificateUID(); got != tt.want {
+				t.Fatalf("ShouldFilterByCertificateUID() = %v, want %v for value %q", got, tt.want, tt.value)
 			}
 		})
 	}
@@ -106,8 +165,8 @@ func unsetEnv(t *testing.T, key string) {
 	t.Cleanup(func() {
 		if ok {
 			_ = os.Setenv(key, value)
-		} else {
-			_ = os.Unsetenv(key)
+			return
 		}
+		_ = os.Unsetenv(key)
 	})
 }

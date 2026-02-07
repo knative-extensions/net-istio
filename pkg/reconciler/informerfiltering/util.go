@@ -35,11 +35,7 @@ const (
 // when list by informers in this component. If not set or set to false no filtering is applied and instead informers
 // will get any secret available in the cluster which may lead to mem issues in large clusters.
 func ShouldFilterByCertificateUID() bool {
-	if enable := os.Getenv(EnableSecretInformerFilteringByCertUIDEnv); enable != "" {
-		b, _ := strconv.ParseBool(enable)
-		return b
-	}
-	return false
+	return shouldEnableFromEnv(EnableSecretInformerFilteringByCertUIDEnv)
 }
 
 // GetContextWithFilteringLabelSelector returns the passed context with the proper label key selector added to it.
@@ -53,14 +49,7 @@ func GetContextWithFilteringLabelSelector(ctx context.Context) context.Context {
 // ShouldFilterVSByLabel allows opting into VirtualService informer filtering by label selector.
 // When the env var is unset or invalid, filtering is disabled (false).
 func ShouldFilterVSByLabel() bool {
-	if enable := os.Getenv(EnableVSInformerFilteringByLabelEnv); enable != "" {
-		b, err := strconv.ParseBool(enable)
-		if err != nil {
-			return false
-		}
-		return b
-	}
-	return false
+	return shouldEnableFromEnv(EnableVSInformerFilteringByLabelEnv)
 }
 
 // GetContextWithVSFilteringLabelSelector returns the passed context with the proper label key selector added to it.
@@ -69,4 +58,15 @@ func GetContextWithVSFilteringLabelSelector(ctx context.Context) context.Context
 		return istiofilteredFactory.WithSelectors(ctx, networking.IngressLabelKey)
 	}
 	return istiofilteredFactory.WithSelectors(ctx, "") // Allow all
+}
+
+func shouldEnableFromEnv(key string) bool {
+	if enable := os.Getenv(key); enable != "" {
+		b, err := strconv.ParseBool(enable)
+		if err != nil {
+			return false
+		}
+		return b
+	}
+	return false
 }
