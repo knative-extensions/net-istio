@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-	http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,8 +19,6 @@ package resources
 import (
 	"fmt"
 	"strings"
-
-	"go.uber.org/zap"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -157,8 +155,6 @@ func MakeVirtualServices(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVis
 }
 
 func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.Set[string], hosts sets.Set[string]) *istiov1beta1.VirtualService {
-	logger := zap.L().With(zap.String("namespace", ing.Namespace), zap.String("name", ing.Name))
-
 	spec := istiov1beta1.VirtualService{
 		Hosts: sets.List(hosts),
 	}
@@ -167,11 +163,12 @@ func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 	for _, rule := range ing.Spec.Rules {
 		for i := range rule.HTTP.Paths {
 			p := rule.HTTP.Paths[i]
+			intersectedHosts := hosts.Intersection(sets.New(rule.Hosts...))
 
-			// Skip host filtering for delegate VirtualServices
-			if len(hosts) == 0 || hosts.Intersection(sets.New(rule.Hosts...)).Len() != 0 {
-				logger.Debug("Creating HTTP route for path", zap.Int("pathIndex", i))
-				http := makeVirtualServiceRoute(hosts, &p, gateways, rule.Visibility)
+			// For delegate VirtualServices (empty hosts), include all routes.
+			// For normal VirtualServices, only include routes whose rule hosts intersect.
+			if len(hosts) == 0 || intersectedHosts.Len() != 0 {
+				http := makeVirtualServiceRoute(intersectedHosts, &p, gateways, rule.Visibility)
 				// Add all the Gateways that exist inside the http.match section of
 				// the VirtualService.
 				// This ensures that we are only using the Gateways that actually appear

@@ -335,6 +335,7 @@ func TestReconcile(t *testing.T) {
 		},
 		WantCreates: []runtime.Object{
 			resources.MakeMeshVirtualService(insertProbe(ing("reconcile-failed")), gateways),
+			resources.MakeDelegateVirtualService(insertProbe(ing("reconcile-failed"))),
 		},
 		WantUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: resources.MakeIngressVirtualService(insertProbe(ing("reconcile-failed")), makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
@@ -366,6 +367,7 @@ func TestReconcile(t *testing.T) {
 		WantEvents: []string{
 			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconcile-failed"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconcile-failed-mesh"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconcile-failed-delegate"),
 			Eventf(corev1.EventTypeWarning, "InternalError", "failed to update VirtualService: inducing failure for update virtualservices"),
 		},
 		WantPatches: []clientgotesting.PatchActionImpl{
@@ -407,6 +409,7 @@ func TestReconcile(t *testing.T) {
 		}},
 		WantCreates: []runtime.Object{
 			resources.MakeMeshVirtualService(insertProbe(ing("reconcile-virtualservice")), gateways),
+			resources.MakeDelegateVirtualService(insertProbe(ing("reconcile-virtualservice"))),
 		},
 		WantDeletes: []clientgotesting.DeleteActionImpl{{
 			ActionImpl: clientgotesting.ActionImpl{
@@ -450,6 +453,7 @@ func TestReconcile(t *testing.T) {
 		WantEvents: []string{
 			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconcile-virtualservice"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconcile-virtualservice-mesh"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconcile-virtualservice-delegate"),
 			Eventf(corev1.EventTypeNormal, "Updated", "Updated VirtualService %s/%s",
 				"test-ns", "reconcile-virtualservice-ingress"),
 		},
@@ -465,6 +469,7 @@ func TestReconcile(t *testing.T) {
 		Objects: []runtime.Object{
 			basicReconciledIngress("ingress-ready"),
 			resources.MakeMeshVirtualService(insertProbe(ing("ingress-ready")), makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
+			resources.MakeDelegateVirtualService(insertProbe(ing("ingress-ready"))),
 			resources.MakeIngressVirtualService(insertProbe(ing("ingress-ready")), makeGatewayMap([]string{"knative-testing/knative-test-gateway", "knative-testing/" + config.KnativeIngressGateway}, nil)),
 		},
 		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(0)},
@@ -504,6 +509,7 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 				withOwnerRef(ingressWithTLS("reconciling-ingress", externalIngressTLS)),
 				withLabels(gwLabels), withSelector(selector)),
 			resources.MakeMeshVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", externalIngressTLS)), externalIngressGateway),
+			resources.MakeDelegateVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", externalIngressTLS))),
 			resources.MakeIngressVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", externalIngressTLS)), makeGatewayMap([]string{"test-ns/" + externalIngressTLSGatewayName}, nil)),
 		},
 		WantPatches: []clientgotesting.PatchActionImpl{
@@ -544,6 +550,7 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 		WantEvents: []string{
 			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-delegate"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
 		},
 		Key:     "test-ns/reconciling-ingress",
@@ -566,6 +573,7 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 				withLabels(gwLabels), withSelector(selector)),
 
 			resources.MakeMeshVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", externalIngressTLS)), externalIngressGateway),
+			resources.MakeDelegateVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", externalIngressTLS))),
 			resources.MakeIngressVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", externalIngressTLS)), makeGatewayMap([]string{"test-ns/" + externalIngressTLSGatewayName}, nil)),
 		},
 		WantUpdates: []clientgotesting.UpdateActionImpl{{
@@ -611,6 +619,7 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 		WantEvents: []string{
 			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-delegate"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
 		},
 		Key:     "test-ns/reconciling-ingress",
@@ -632,6 +641,7 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 				withLabels(gwLabels), withSelector(selector)),
 
 			resources.MakeMeshVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", externalIngressTLS)), externalIngressGateway),
+			resources.MakeDelegateVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", externalIngressTLS))),
 			resources.MakeIngressVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", externalIngressTLS)), makeGatewayMap([]string{
 				"istio-system/" + resources.WildcardGatewayName(wildcardCert.Name, ingressService.Namespace, ingressService.Name),
 				"test-ns/" + externalIngressTLSGatewayName,
@@ -675,6 +685,7 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 		WantEvents: []string{
 			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-delegate"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
 		},
 		Key:     "test-ns/reconciling-ingress",
@@ -808,6 +819,7 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 				withLabels(gwLabels), withSelector(selector)),
 
 			resources.MakeMeshVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", ingressTLSWithSecretNamespace("knative-serving"))), externalIngressGateway),
+			resources.MakeDelegateVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", ingressTLSWithSecretNamespace("knative-serving")))),
 			resources.MakeIngressVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", ingressTLSWithSecretNamespace("knative-serving"))), makeGatewayMap([]string{"test-ns/" + externalIngressTLSGatewayName}, nil)),
 
 			// The secret copy under istio-system.
@@ -856,6 +868,7 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created Secret %s/%s", "istio-system", targetSecretName),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-delegate"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
 		},
 		Key:     "test-ns/reconciling-ingress",
@@ -898,6 +911,7 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 				withLabels(gwLabels), withSelector(selector)),
 
 			resources.MakeMeshVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", ingressTLSWithSecretNamespace("knative-serving"))), externalIngressGateway),
+			resources.MakeDelegateVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", ingressTLSWithSecretNamespace("knative-serving")))),
 			resources.MakeIngressVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", ingressTLSWithSecretNamespace("knative-serving"))), makeGatewayMap([]string{"test-ns/" + externalIngressTLSGatewayName}, nil)),
 		},
 		WantUpdates: []clientgotesting.UpdateActionImpl{{
@@ -954,6 +968,7 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
 			Eventf(corev1.EventTypeNormal, "Updated", "Updated Secret %s/%s", "istio-system", targetSecretName),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-delegate"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
 		},
 		Key:     "test-ns/reconciling-ingress",
@@ -967,6 +982,7 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 		},
 		WantCreates: []runtime.Object{
 			resources.MakeMeshVirtualService(insertProbe(ingressWithTLSClusterLocal("reconciling-ingress", externalIngressTLS)), externalIngressGateway),
+			resources.MakeDelegateVirtualService(insertProbe(ingressWithTLSClusterLocal("reconciling-ingress", externalIngressTLS))),
 		},
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: ingressWithTLSAndStatusClusterLocal("reconciling-ingress",
@@ -1003,6 +1019,7 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 		WantEvents: []string{
 			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-delegate"),
 		},
 		WantPatches: []clientgotesting.PatchActionImpl{
 			patchAddFinalizerAction("reconciling-ingress", ingressFinalizer),
@@ -1071,6 +1088,7 @@ func TestReconcile_ClusterLocalDomainTLS(t *testing.T) {
 				withOwnerRef(ingressWithTLS("reconciling-ingress", localIngressTLS)),
 				withLabels(gwLabels), withSelector(selector)),
 			resources.MakeMeshVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", localIngressTLS)), localIngressGateway),
+			resources.MakeDelegateVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", localIngressTLS))),
 			resources.MakeIngressVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", localIngressTLS)),
 				makeGatewayMap([]string{"knative-testing/" + config.KnativeIngressGateway}, []string{"knative-testing/" + config.KnativeLocalGateway, "test-ns/" + localIngressTLSGatewayName})),
 		},
@@ -1115,6 +1133,7 @@ func TestReconcile_ClusterLocalDomainTLS(t *testing.T) {
 		WantEvents: []string{
 			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-delegate"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
 		},
 		Key:     "test-ns/reconciling-ingress",
@@ -1137,6 +1156,7 @@ func TestReconcile_ClusterLocalDomainTLS(t *testing.T) {
 				withLabels(gwLabels), withSelector(selector)),
 
 			resources.MakeMeshVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", localIngressTLS)), localIngressGateway),
+			resources.MakeDelegateVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", localIngressTLS))),
 			resources.MakeIngressVirtualService(insertProbe(ingressWithTLS("reconciling-ingress", localIngressTLS)),
 				makeGatewayMap([]string{"knative-testing/" + config.KnativeIngressGateway}, []string{"knative-testing/" + config.KnativeLocalGateway, "test-ns/" + localIngressTLSGatewayName})),
 		},
@@ -1186,6 +1206,7 @@ func TestReconcile_ClusterLocalDomainTLS(t *testing.T) {
 		WantEvents: []string{
 			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "reconciling-ingress"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-mesh"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-delegate"),
 			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "reconciling-ingress-ingress"),
 		},
 		Key:     "test-ns/reconciling-ingress",
