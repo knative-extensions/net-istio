@@ -97,6 +97,14 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 				RouteNamespaceLabelKey:     "test-ns",
 			},
 		}, {
+			Name:      "test-delegate",
+			Namespace: system.Namespace(),
+			Labels: map[string]string{
+				networking.IngressLabelKey: "test",
+				RouteLabelKey:              "test-route",
+				RouteNamespaceLabelKey:     "test-ns",
+			},
+		}, {
 			Name:      "test-ingress",
 			Namespace: system.Namespace(),
 			Labels: map[string]string{
@@ -126,6 +134,14 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 			}}},
 		},
 		expected: []metav1.ObjectMeta{{
+			Name:      "test-delegate",
+			Namespace: system.Namespace(),
+			Labels: map[string]string{
+				networking.IngressLabelKey: "test",
+				RouteLabelKey:              "test-route",
+				RouteNamespaceLabelKey:     "test-ns",
+			},
+		}, {
 			Name:      "test-ingress",
 			Namespace: system.Namespace(),
 			Labels: map[string]string{
@@ -162,6 +178,14 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 				RouteLabelKey:              "test-route",
 				RouteNamespaceLabelKey:     "test-ns",
 			},
+		}, {
+			Name:      "test-ingress-delegate",
+			Namespace: system.Namespace(),
+			Labels: map[string]string{
+				networking.IngressLabelKey: "test-ingress",
+				RouteLabelKey:              "test-route",
+				RouteNamespaceLabelKey:     "test-ns",
+			},
 		}},
 	}, {
 		name:     "mesh only with namespace",
@@ -185,6 +209,14 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 		},
 		expected: []metav1.ObjectMeta{{
 			Name:      "test-ingress-mesh",
+			Namespace: "test-ns",
+			Labels: map[string]string{
+				networking.IngressLabelKey: "test-ingress",
+				RouteLabelKey:              "test-route",
+				RouteNamespaceLabelKey:     "test-ns",
+			},
+		}, {
+			Name:      "test-ingress-delegate",
 			Namespace: "test-ns",
 			Labels: map[string]string{
 				networking.IngressLabelKey: "test-ingress",

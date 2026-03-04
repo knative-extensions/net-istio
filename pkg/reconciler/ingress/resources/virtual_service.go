@@ -95,6 +95,33 @@ func MakeMeshVirtualService(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 	return vs
 }
 
+// MakeDelegateVirtualService creates a delegate Virtual Service
+func MakeDelegateVirtualService(ing *v1alpha1.Ingress) *v1beta1.VirtualService {
+	// Delegate VirtualServices should have empty hosts
+	hosts := sets.New[string]()
+
+	// Delegate VirtualServices should have no gateways specified
+	ownerRef := kmeta.NewControllerRef(ing)
+	// Pass an empty gateways map to makeVirtualServiceSpec
+	emptyGateways := map[v1alpha1.IngressVisibility]sets.Set[string]{}
+	vs := &v1beta1.VirtualService{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            names.DelegateVirtualService(ing),
+			Namespace:       VirtualServiceNamespace(ing),
+			OwnerReferences: []metav1.OwnerReference{*ownerRef},
+			Annotations:     ing.GetAnnotations(),
+		},
+		Spec: *makeVirtualServiceSpec(ing, emptyGateways, hosts), // Pass empty hosts and gateways for delegate
+	}
+	// Populate the Ingress labels.
+	vs.Labels = kmeta.FilterMap(ing.GetLabels(), func(k string) bool {
+		return k != RouteLabelKey && k != RouteNamespaceLabelKey
+	})
+	vs.Labels[networking.IngressLabelKey] = ing.Name
+
+	return vs
+}
+
 // MakeVirtualServices creates a mesh VirtualService and a virtual service for each gateway
 func MakeVirtualServices(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.Set[string]) ([]*v1beta1.VirtualService, error) {
 	// Insert probe header
@@ -106,6 +133,11 @@ func MakeVirtualServices(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVis
 	if meshVs := MakeMeshVirtualService(ing, gateways); meshVs != nil {
 		vss = append(vss, meshVs)
 	}
+
+	if delegateVs := MakeDelegateVirtualService(ing); delegateVs != nil {
+		vss = append(vss, delegateVs)
+	}
+
 	requiredGatewayCount := 0
 	if len(getPublicIngressRules(ing)) > 0 {
 		requiredGatewayCount += gateways[v1alpha1.IngressVisibilityExternalIP].Len()
@@ -131,9 +163,12 @@ func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 	for _, rule := range ing.Spec.Rules {
 		for i := range rule.HTTP.Paths {
 			p := rule.HTTP.Paths[i]
-			hosts := hosts.Intersection(sets.New(rule.Hosts...))
-			if hosts.Len() != 0 {
-				http := makeVirtualServiceRoute(hosts, &p, gateways, rule.Visibility)
+			intersectedHosts := hosts.Intersection(sets.New(rule.Hosts...))
+
+			// For delegate VirtualServices (empty hosts), include all routes.
+			// For normal VirtualServices, only include routes whose rule hosts intersect.
+			if len(hosts) == 0 || intersectedHosts.Len() != 0 {
+				http := makeVirtualServiceRoute(intersectedHosts, &p, gateways, rule.Visibility)
 				// Add all the Gateways that exist inside the http.match section of
 				// the VirtualService.
 				// This ensures that we are only using the Gateways that actually appear
@@ -151,11 +186,16 @@ func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 
 func makeVirtualServiceRoute(hosts sets.Set[string], http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.Set[string], visibility v1alpha1.IngressVisibility) *istiov1beta1.HTTPRoute {
 	matches := []*istiov1beta1.HTTPMatchRequest{}
-	// Deduplicate hosts to avoid excessive matches, which cause a combinatorial expansion in Istio
-	distinctHosts := getDistinctHostPrefixes(hosts)
 
-	for _, host := range sets.List(distinctHosts) {
-		matches = append(matches, makeMatch(host, http.Path, http.Headers, gateways[visibility]))
+	// Handle empty hosts for delegate VirtualServices
+	if len(hosts) == 0 {
+		matches = append(matches, makeMatch("", http.Path, http.Headers, gateways[visibility]))
+	} else {
+		// Deduplicate hosts to avoid excessive matches, which cause a combinatorial expansion in Istio
+		distinctHosts := getDistinctHostPrefixes(hosts)
+		for _, host := range sets.List(distinctHosts) {
+			matches = append(matches, makeMatch(host, http.Path, http.Headers, gateways[visibility]))
+		}
 	}
 
 	weights := []*istiov1beta1.HTTPRouteDestination{}
@@ -250,11 +290,16 @@ func keepLocalHostnames(hosts sets.Set[string]) sets.Set[string] {
 func makeMatch(host, path string, headers map[string]v1alpha1.HeaderMatch, gateways sets.Set[string]) *istiov1beta1.HTTPMatchRequest {
 	match := &istiov1beta1.HTTPMatchRequest{
 		Gateways: sets.List(gateways),
-		Authority: &istiov1beta1.StringMatch{
+	}
+
+	// Skip authority match for delegate VirtualServices
+	if host != "" {
+		match.Authority = &istiov1beta1.StringMatch{
 			// Do not use Regex as Istio 1.4 or later has 100 bytes limitation.
 			MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: host},
-		},
+		}
 	}
+
 	// Empty path is considered match all path. We only need to consider path
 	// when it's non-empty.
 	if path != "" {
