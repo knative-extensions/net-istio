@@ -58,6 +58,9 @@ const (
 
 	// IstioNamespace is the namespace containing Istio
 	IstioNamespace = "istio-system"
+
+	// enableGatewaysKey is the configmap key to enable or disable gateway creation.
+	enableGatewaysKey = "enable-gateways"
 )
 
 func defaultIngressGateways() []Gateway {
@@ -121,6 +124,11 @@ type Istio struct {
 
 	// LocalGateways specifies the gateway urls for public & private Ingress.
 	LocalGateways []Gateway
+
+	// EnableGateways specifies whether gateway creation and usage is enabled.
+	// When false, only mesh VirtualServices are created and probing targets
+	// destination service pods directly. Defaults to true.
+	EnableGateways bool
 }
 
 func (i Istio) Validate() error {
@@ -165,8 +173,20 @@ func defaultGateways(gtws []Gateway) []Gateway {
 
 // NewIstioFromConfigMap creates an Istio config from the supplied ConfigMap
 func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
-	ret := &Istio{}
+	ret := &Istio{
+		EnableGateways: true, // default to true for backward compatibility
+	}
 	var err error
+
+	// Parse the enable-gateways setting.
+	if val, ok := configMap.Data[enableGatewaysKey]; ok {
+		ret.EnableGateways = strings.EqualFold(val, "true")
+	}
+
+	// When gateways are disabled, skip gateway configuration entirely.
+	if !ret.EnableGateways {
+		return ret, nil
+	}
 
 	oldFormatDefined := isOldFormatDefined(configMap)
 	newFormatDefined := isNewFormatDefined(configMap)
@@ -182,8 +202,10 @@ func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse configmap: %w", err)
 		}
+		ret.EnableGateways = true
 	case oldFormatDefined:
 		ret = parseOldFormat(configMap)
+		ret.EnableGateways = true
 	default:
 		defaultValues(ret)
 	}
