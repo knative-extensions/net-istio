@@ -35,8 +35,11 @@ import (
 	"go.uber.org/zap/zaptest"
 	istiolisters "istio.io/client-go/pkg/listers/networking/v1beta1"
 	v1 "k8s.io/api/core/v1"
+	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 )
@@ -1619,6 +1622,139 @@ func TestListProbeTargets(t *testing.T) {
 			Port:    "8080",
 			URLs:    []*url.URL{{Scheme: "http", Host: "foo.bar.com:8080"}},
 		}},
+	}, {
+		name: "mesh-only mode - gateway not found, probes destination service",
+		ingressGateways: []config.Gateway{{
+			Name:      "gateway",
+			Namespace: "default",
+		}},
+		gatewayLister: &fakeGatewayLister{
+			gateways: []*v1beta1.Gateway{}, // No gateways exist
+		},
+		serviceLister: &fakeServiceLister{
+			services: []*v1.Service{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "my-service",
+				},
+				Spec: v1.ServiceSpec{
+					Ports: []v1.ServicePort{{
+						Name: "http",
+						Port: 80,
+					}},
+				},
+			}},
+		},
+		endpointsLister: &fakeEndpointsLister{
+			endpointses: []*v1.Endpoints{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "my-service",
+				},
+				Subsets: []v1.EndpointSubset{{
+					Ports: []v1.EndpointPort{{
+						Name: "http",
+						Port: 8080,
+					}},
+					Addresses: []v1.EndpointAddress{{
+						IP: "10.0.0.1",
+					}, {
+						IP: "10.0.0.2",
+					}},
+				}},
+			}},
+		},
+		ingress: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "default",
+				Name:      "whatever",
+			},
+			Spec: v1alpha1.IngressSpec{
+				Rules: []v1alpha1.IngressRule{{
+					Hosts: []string{
+						"my-service.default.svc.cluster.local",
+					},
+					Visibility: v1alpha1.IngressVisibilityClusterLocal,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceName:      "my-service",
+									ServiceNamespace: "default",
+									ServicePort:      intstr.FromInt32(80),
+								},
+								Percent: 100,
+							}},
+						}},
+					},
+				}},
+			},
+		},
+		results: []status.ProbeTarget{{
+			PodIPs:  sets.New("10.0.0.1", "10.0.0.2"),
+			PodPort: "8080",
+			Port:    "80",
+			URLs:    []*url.URL{{Scheme: "http", Host: "my-service.default.svc.cluster.local:80"}},
+		}},
+	}, {
+		name: "mesh-only mode - gateway not found, no destination endpoints",
+		ingressGateways: []config.Gateway{{
+			Name:      "gateway",
+			Namespace: "default",
+		}},
+		gatewayLister: &fakeGatewayLister{
+			gateways: []*v1beta1.Gateway{}, // No gateways exist
+		},
+		serviceLister: &fakeServiceLister{
+			services: []*v1.Service{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "my-service",
+				},
+				Spec: v1.ServiceSpec{
+					Ports: []v1.ServicePort{{
+						Name: "http",
+						Port: 80,
+					}},
+				},
+			}},
+		},
+		endpointsLister: &fakeEndpointsLister{
+			endpointses: []*v1.Endpoints{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "my-service",
+				},
+				Subsets: []v1.EndpointSubset{},
+			}},
+		},
+		ingress: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "default",
+				Name:      "whatever",
+			},
+			Spec: v1alpha1.IngressSpec{
+				Rules: []v1alpha1.IngressRule{{
+					Hosts: []string{
+						"my-service.default.svc.cluster.local",
+					},
+					Visibility: v1alpha1.IngressVisibilityClusterLocal,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceName:      "my-service",
+									ServiceNamespace: "default",
+									ServicePort:      intstr.FromInt32(80),
+								},
+								Percent: 100,
+							}},
+						}},
+					},
+				}},
+			},
+		},
+		results: []status.ProbeTarget{},
 	}}
 
 	for _, test := range tests {
@@ -1633,6 +1769,7 @@ func TestListProbeTargets(t *testing.T) {
 				Istio: &config.Istio{
 					IngressGateways: test.ingressGateways,
 					LocalGateways:   test.localGateways,
+					EnableGateways:  true,
 				},
 			})
 			results, err := lister.ListProbeTargets(ctx, test.ingress)
@@ -1645,6 +1782,110 @@ func TestListProbeTargets(t *testing.T) {
 			}
 			if len(test.results)+len(results) > 0 { // consider nil map == empty map
 				// Sort by port number
+				sort.Slice(results, func(i, j int) bool {
+					return results[i].Port < results[j].Port
+				})
+				if diff := cmp.Diff(test.results, results); diff != "" {
+					t.Error("Unexpected probe targets (-want +got):", diff)
+				}
+			}
+		})
+	}
+}
+
+func TestListProbeTargets_GatewaysDisabledViaConfig(t *testing.T) {
+	tests := []struct {
+		name            string
+		serviceLister   corev1listers.ServiceLister
+		endpointsLister corev1listers.EndpointsLister
+		ingress         *v1alpha1.Ingress
+		results         []status.ProbeTarget
+	}{{
+		name: "gateways disabled via config - probes destination service directly",
+		serviceLister: &fakeServiceLister{
+			services: []*v1.Service{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "my-service",
+				},
+				Spec: v1.ServiceSpec{
+					Ports: []v1.ServicePort{{
+						Name: "http",
+						Port: 80,
+					}},
+				},
+			}},
+		},
+		endpointsLister: &fakeEndpointsLister{
+			endpointses: []*v1.Endpoints{{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "my-service",
+				},
+				Subsets: []v1.EndpointSubset{{
+					Ports: []v1.EndpointPort{{
+						Name: "http",
+						Port: 8080,
+					}},
+					Addresses: []v1.EndpointAddress{{
+						IP: "10.0.0.1",
+					}},
+				}},
+			}},
+		},
+		ingress: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "default",
+				Name:      "whatever",
+			},
+			Spec: v1alpha1.IngressSpec{
+				Rules: []v1alpha1.IngressRule{{
+					Hosts: []string{
+						"my-service.default.svc.cluster.local",
+					},
+					Visibility: v1alpha1.IngressVisibilityClusterLocal,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceName:      "my-service",
+									ServiceNamespace: "default",
+									ServicePort:      intstr.FromInt32(80),
+								},
+								Percent: 100,
+							}},
+						}},
+					},
+				}},
+			},
+		},
+		results: []status.ProbeTarget{{
+			PodIPs:  sets.New("10.0.0.1"),
+			PodPort: "8080",
+			Port:    "80",
+			URLs:    []*url.URL{{Scheme: "http", Host: "my-service.default.svc.cluster.local:80"}},
+		}},
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			lister := gatewayPodTargetLister{
+				logger:          zaptest.NewLogger(t).Sugar(),
+				gatewayLister:   &fakeGatewayLister{}, // no gateways needed
+				endpointsLister: test.endpointsLister,
+				serviceLister:   test.serviceLister,
+			}
+			// EnableGateways is false - should go directly to mesh probing
+			ctx := config.ToContext(context.Background(), &config.Config{
+				Istio: &config.Istio{
+					EnableGateways: false,
+				},
+			})
+			results, err := lister.ListProbeTargets(ctx, test.ingress)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(test.results)+len(results) > 0 {
 				sort.Slice(results, func(i, j int) bool {
 					return results[i].Port < results[j].Port
 				})
@@ -1702,7 +1943,7 @@ func (l *fakeGatewayNamespaceLister) Get(name string) (*v1beta1.Gateway, error) 
 			return gateway, nil
 		}
 	}
-	return nil, errors.New("not found")
+	return nil, apierrs.NewNotFound(schema.GroupResource{Group: "networking.istio.io", Resource: "gateways"}, name)
 }
 
 type fakeEndpointsLister struct {
@@ -1751,8 +1992,19 @@ func (l *fakeServiceLister) List(selector labels.Selector) ([]*v1.Service, error
 }
 
 func (l *fakeServiceLister) Services(_ string) corev1listers.ServiceNamespaceLister {
-	log.Panic("not implemented")
-	return nil
+	return l
+}
+
+func (l *fakeServiceLister) Get(name string) (*v1.Service, error) {
+	if l.fails {
+		return nil, errors.New("failed to get Service")
+	}
+	for _, svc := range l.services {
+		if svc.Name == name {
+			return svc, nil
+		}
+	}
+	return nil, errors.New("not found")
 }
 
 func (l *fakeServiceLister) GetPodServices(_ *v1.Pod) ([]*v1.Service, error) {
