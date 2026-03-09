@@ -206,10 +206,10 @@ func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
 }
 
 func isNewFormatDefined(configMap *corev1.ConfigMap) bool {
-	_, hasGateway := configMap.Data[externalGatewaysKey]
-	_, hasLocalGateway := configMap.Data[localGatewaysKey]
+	gateway := configMap.Data[externalGatewaysKey]
+	localGateway := configMap.Data[localGatewaysKey]
 
-	return hasGateway || hasLocalGateway
+	return gateway != "" || localGateway != ""
 }
 
 func isOldFormatDefined(configMap *corev1.ConfigMap) bool {
@@ -225,34 +225,31 @@ func isOldFormatDefined(configMap *corev1.ConfigMap) bool {
 func parseNewFormat(configMap *corev1.ConfigMap) (*Istio, error) {
 	ret := &Istio{}
 
-	gatewaysStr, hasGateway := configMap.Data[externalGatewaysKey]
+	gatewaysStr := configMap.Data[externalGatewaysKey]
 
-	if hasGateway {
+	// An empty string (or absent key) means use defaults.
+	// An explicit non-empty value like "[]" means no gateways of that type.
+	if gatewaysStr != "" {
 		gateways, err := parseNewFormatGateways(gatewaysStr)
 		if err != nil {
 			return ret, fmt.Errorf("failed to parse %q gateways: %w", externalGatewaysKey, err)
 		}
 
 		ret.IngressGateways = gateways
+	} else {
+		ret.IngressGateways = defaultIngressGateways()
 	}
 
-	localGatewaysStr, hasLocalGateway := configMap.Data[localGatewaysKey]
+	localGatewaysStr := configMap.Data[localGatewaysKey]
 
-	if hasLocalGateway {
+	if localGatewaysStr != "" {
 		localGateways, err := parseNewFormatGateways(localGatewaysStr)
 		if err != nil {
 			return ret, fmt.Errorf("failed to parse %q gateways: %w", localGatewaysKey, err)
 		}
 
 		ret.LocalGateways = localGateways
-	}
-
-	// Only apply defaults for gateway types that were not explicitly defined.
-	// An explicit empty list (e.g. "[]") means no gateways of that type.
-	if !hasGateway {
-		ret.IngressGateways = defaultIngressGateways()
-	}
-	if !hasLocalGateway {
+	} else {
 		ret.LocalGateways = defaultLocalGateways()
 	}
 
