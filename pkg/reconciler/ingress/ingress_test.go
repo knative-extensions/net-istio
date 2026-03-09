@@ -1034,7 +1034,6 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 								Name:       config.KnativeIngressGateway,
 								ServiceURL: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system"),
 							}},
-							EnableGateways: true,
 						},
 						Network: &netconfig.Config{
 							HTTPProtocol:      netconfig.HTTPDisabled,
@@ -1254,7 +1253,6 @@ func TestReconcile_ClusterLocalDomainTLS(t *testing.T) {
 								Name:       config.KnativeLocalGateway,
 								ServiceURL: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system"),
 							}},
-							EnableGateways: true,
 						},
 						Network: &netconfig.Config{
 							ClusterLocalDomainTLS: netconfig.EncryptionEnabled,
@@ -1274,7 +1272,8 @@ var emptyGateways = map[v1alpha1.IngressVisibility]sets.Set[string]{
 func meshOnlyConfig() *config.Config {
 	return &config.Config{
 		Istio: &config.Istio{
-			EnableGateways: false,
+			IngressGateways: []config.Gateway{},
+			LocalGateways:   []config.Gateway{},
 		},
 		Network: &netconfig.Config{
 			ExternalDomainTLS: false,
@@ -1656,7 +1655,6 @@ func ReconcilerTestConfig() *config.Config {
 				Name:       config.KnativeIngressGateway,
 				ServiceURL: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system"),
 			}},
-			EnableGateways: true,
 		},
 		Network: &netconfig.Config{
 			ExternalDomainTLS: false,

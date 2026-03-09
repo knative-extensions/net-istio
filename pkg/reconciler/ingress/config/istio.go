@@ -59,8 +59,6 @@ const (
 	// IstioNamespace is the namespace containing Istio
 	IstioNamespace = "istio-system"
 
-	// enableGatewaysKey is the configmap key to enable or disable gateway creation.
-	enableGatewaysKey = "enable-gateways"
 )
 
 func defaultIngressGateways() []Gateway {
@@ -125,10 +123,6 @@ type Istio struct {
 	// LocalGateways specifies the gateway urls for public & private Ingress.
 	LocalGateways []Gateway
 
-	// EnableGateways specifies whether gateway creation and usage is enabled.
-	// When false, only mesh VirtualServices are created and probing targets
-	// destination service pods directly. Defaults to true.
-	EnableGateways bool
 }
 
 func (i Istio) Validate() error {
@@ -171,22 +165,17 @@ func defaultGateways(gtws []Gateway) []Gateway {
 	return ret
 }
 
+// GatewaysEnabled returns true if any ingress or local gateways are configured.
+// When both gateway lists are empty (e.g. via external-gateways: "[]" and
+// local-gateways: "[]"), this returns false, indicating mesh-only mode.
+func (i Istio) GatewaysEnabled() bool {
+	return len(i.IngressGateways) > 0 || len(i.LocalGateways) > 0
+}
+
 // NewIstioFromConfigMap creates an Istio config from the supplied ConfigMap
 func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
-	ret := &Istio{
-		EnableGateways: true, // default to true for backward compatibility
-	}
+	ret := &Istio{}
 	var err error
-
-	// Parse the enable-gateways setting.
-	if val, ok := configMap.Data[enableGatewaysKey]; ok {
-		ret.EnableGateways = strings.EqualFold(val, "true")
-	}
-
-	// When gateways are disabled, skip gateway configuration entirely.
-	if !ret.EnableGateways {
-		return ret, nil
-	}
 
 	oldFormatDefined := isOldFormatDefined(configMap)
 	newFormatDefined := isNewFormatDefined(configMap)
@@ -202,10 +191,8 @@ func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse configmap: %w", err)
 		}
-		ret.EnableGateways = true
 	case oldFormatDefined:
 		ret = parseOldFormat(configMap)
-		ret.EnableGateways = true
 	default:
 		defaultValues(ret)
 	}
@@ -260,13 +247,22 @@ func parseNewFormat(configMap *corev1.ConfigMap) (*Istio, error) {
 		ret.LocalGateways = localGateways
 	}
 
-	defaultValues(ret)
+	// Only apply defaults for gateway types that were not explicitly defined.
+	// An explicit empty list (e.g. "[]") means no gateways of that type.
+	if !hasGateway {
+		ret.IngressGateways = defaultIngressGateways()
+	}
+	if !hasLocalGateway {
+		ret.LocalGateways = defaultLocalGateways()
+	}
 
-	if len(ret.DefaultExternalGateways()) != 1 {
+	// Only validate the "exactly one default" constraint for gateway types
+	// that have entries. Empty lists are valid (mesh-only mode).
+	if len(ret.IngressGateways) > 0 && len(ret.DefaultExternalGateways()) != 1 {
 		return ret, fmt.Errorf("exactly one external gateway with no selector can be defined, here: %v", ret.DefaultExternalGateways())
 	}
 
-	if len(ret.DefaultLocalGateways()) != 1 {
+	if len(ret.LocalGateways) > 0 && len(ret.DefaultLocalGateways()) != 1 {
 		return ret, fmt.Errorf("exactly one local gateway with no selector can be defined, here: %v", ret.DefaultLocalGateways())
 	}
 

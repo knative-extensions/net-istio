@@ -69,9 +69,8 @@ data:
     # NOTE: This feature is currently experimental and should not be used in production.
     enable-virtualservice-status: "false"
 
-    # If false, disables Istio Gateway creation and usage. Only mesh
-    # VirtualServices will be created, and probing will target destination
-    # service pods directly. Use this when running Knative for mesh-only
-    # (service-to-service) traffic without external ingress gateways.
-    # Defaults to true.
-    enable-gateways: "true"
+    # To run in mesh-only mode (service-to-service traffic without external
+    # ingress gateways), set both gateway lists to empty:
+    #   external-gateways: "[]"
+    #   local-gateways: "[]"
+    # This disables gateway creation and probes destination service pods directly.

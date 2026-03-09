@@ -64,7 +64,6 @@ func TestGatewayConfiguration(t *testing.T) {
 		wantIstio: &Istio{
 			IngressGateways: defaultIngressGateways(),
 			LocalGateways:   defaultLocalGateways(),
-			EnableGateways:  true,
 		},
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -93,7 +92,6 @@ func TestGatewayConfiguration(t *testing.T) {
 				ServiceURL: "istio-ingressfreeway.istio-system.svc.cluster.local",
 			}},
 			LocalGateways:  defaultLocalGateways(),
-			EnableGateways: true,
 		},
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -113,7 +111,6 @@ func TestGatewayConfiguration(t *testing.T) {
 				ServiceURL: "istio-ingressfreeway.istio-system.svc.cluster.local.",
 			}},
 			LocalGateways:  defaultLocalGateways(),
-			EnableGateways: true,
 		},
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -133,7 +130,6 @@ func TestGatewayConfiguration(t *testing.T) {
 				ServiceURL: "istio-ingressfreeway.istio-system.svc.cluster.local",
 			}},
 			LocalGateways:  defaultLocalGateways(),
-			EnableGateways: true,
 		},
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -165,7 +161,6 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:       "knative-ingress-backroad",
 				ServiceURL: "istio-ingressbackroad.istio-system.svc.cluster.local",
 			}},
-			EnableGateways: true,
 		},
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -197,7 +192,6 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:       "custom-local-gateway",
 				ServiceURL: "istio-ingressbackroad.istio-system.svc.cluster.local",
 			}},
-			EnableGateways: true,
 		},
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -233,7 +227,6 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:       "gateway2",
 				ServiceURL: "istio-local-gateway.istio-system.svc.cluster.local",
 			}},
-			EnableGateways: true,
 		},
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -401,8 +394,7 @@ func TestGatewayConfiguration(t *testing.T) {
 				ServiceURL: "istio-local-gateway.istio-system.svc.cluster.local",
 			}},
 			IngressGateways: defaultIngressGateways(),
-			EnableGateways:  true,
-		},
+			},
 	}, {
 		name: "new format - missing local gateway configuration",
 		config: &corev1.ConfigMap{
@@ -424,7 +416,6 @@ func TestGatewayConfiguration(t *testing.T) {
 				ServiceURL: "istio-ingressbackroad.istio-system.svc.cluster.local",
 			}},
 			LocalGateways:  defaultLocalGateways(),
-			EnableGateways: true,
 		},
 	}, {
 		name: "new format - missing default gateway",
@@ -520,7 +511,6 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:       "gateway2",
 				ServiceURL: "istio-local-gateway.istio-system.svc.cluster.local",
 			}},
-			EnableGateways: true,
 		},
 	}, {
 		name: "local gateway with selector",
@@ -576,7 +566,6 @@ func TestGatewayConfiguration(t *testing.T) {
 					ServiceURL: "istio-local-gateway.istio-system.svc.cluster.local",
 				},
 			},
-			EnableGateways: true,
 		},
 	}, {
 		name: "new format - invalid label selector",
@@ -601,11 +590,10 @@ func TestGatewayConfiguration(t *testing.T) {
 		},
 		wantErr: true,
 	}, {
-		name: "enable-gateways explicitly true",
+		name: "new format - both gateways explicitly empty for mesh-only mode",
 		wantIstio: &Istio{
-			IngressGateways: defaultIngressGateways(),
-			LocalGateways:   defaultLocalGateways(),
-			EnableGateways:  true,
+			IngressGateways: []Gateway{},
+			LocalGateways:   []Gateway{},
 		},
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -613,13 +601,15 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:      IstioConfigName,
 			},
 			Data: map[string]string{
-				"enable-gateways": "true",
+				"external-gateways": "[]",
+				"local-gateways":    "[]",
 			},
 		},
 	}, {
-		name: "enable-gateways explicitly false",
+		name: "new format - only external gateways explicitly empty",
 		wantIstio: &Istio{
-			EnableGateways: false,
+			IngressGateways: []Gateway{},
+			LocalGateways:   defaultLocalGateways(),
 		},
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -627,20 +617,22 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:      IstioConfigName,
 			},
 			Data: map[string]string{
-				"enable-gateways": "false",
+				"external-gateways": "[]",
 			},
 		},
 	}, {
-		name: "enable-gateways defaults to true when not set",
+		name: "new format - only local gateways explicitly empty",
 		wantIstio: &Istio{
 			IngressGateways: defaultIngressGateways(),
-			LocalGateways:   defaultLocalGateways(),
-			EnableGateways:  true,
+			LocalGateways:   []Gateway{},
 		},
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: system.Namespace(),
 				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"local-gateways": "[]",
 			},
 		},
 	}}

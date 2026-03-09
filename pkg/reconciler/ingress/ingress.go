@@ -112,7 +112,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	cfg := config.FromContext(ctx)
 
 	// When gateways are disabled, take a simplified mesh-only path.
-	if !cfg.Istio.EnableGateways {
+	if !cfg.Istio.GatewaysEnabled() {
 		return r.reconcileMeshOnlyIngress(ctx, ing)
 	}
 
@@ -449,7 +449,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, ing *v1alpha1.Ingress) pk
 	logger := logging.FromContext(ctx)
 	istiocfg := config.FromContext(ctx).Istio
 
-	if istiocfg.EnableGateways {
+	if istiocfg.GatewaysEnabled() {
 		logger.Info("Cleaning up Gateway Servers")
 		for _, gws := range [][]config.Gateway{istiocfg.IngressGateways, istiocfg.LocalGateways} {
 			for _, gw := range gws {

@@ -1769,7 +1769,6 @@ func TestListProbeTargets(t *testing.T) {
 				Istio: &config.Istio{
 					IngressGateways: test.ingressGateways,
 					LocalGateways:   test.localGateways,
-					EnableGateways:  true,
 				},
 			})
 			results, err := lister.ListProbeTargets(ctx, test.ingress)
@@ -1875,10 +1874,11 @@ func TestListProbeTargets_GatewaysDisabledViaConfig(t *testing.T) {
 				endpointsLister: test.endpointsLister,
 				serviceLister:   test.serviceLister,
 			}
-			// EnableGateways is false - should go directly to mesh probing
+			// Empty gateway lists - should go directly to mesh probing
 			ctx := config.ToContext(context.Background(), &config.Config{
 				Istio: &config.Istio{
-					EnableGateways: false,
+					IngressGateways: []config.Gateway{},
+					LocalGateways:   []config.Gateway{},
 				},
 			})
 			results, err := lister.ListProbeTargets(ctx, test.ingress)

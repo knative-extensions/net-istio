@@ -68,7 +68,7 @@ func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1al
 
 	// When gateways are explicitly disabled, go directly to mesh-only probing.
 	cfg := config.FromContext(ctx)
-	if !cfg.Istio.EnableGateways {
+	if !cfg.Istio.GatewaysEnabled() {
 		l.logger.Info("Gateways disabled via config, using mesh-only probing")
 		meshTargets, err := l.listMeshProbeTargets(ing)
 		if err != nil {
