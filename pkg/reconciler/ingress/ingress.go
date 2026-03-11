@@ -283,11 +283,16 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 }
 
 // reconcileMeshOnlyIngress handles Ingress reconciliation when gateways are
-// disabled. It only creates mesh VirtualServices and probes destination
-// services directly.
+// disabled. It creates mesh VirtualServices and probes the top-level service
+// hostname via the controller's sidecar to verify mesh routing.
+//
+// IMPORTANT: Mesh-only mode requires a sidecar on the controller pod.
+// Without a sidecar, probes will fail because the top-level Knative service
+// has no endpoints — routing is handled entirely by the mesh VirtualService.
 func (r *Reconciler) reconcileMeshOnlyIngress(ctx context.Context, ing *v1alpha1.Ingress) error {
 	logger := logging.FromContext(ctx)
-	logger.Info("Gateways disabled, reconciling mesh-only ingress")
+	logger.Info("Gateways disabled, reconciling mesh-only ingress. " +
+		"Ensure the controller has an Istio sidecar for mesh probing to work.")
 
 	// Create only mesh VirtualServices with empty gateway names.
 	emptyGateways := map[v1alpha1.IngressVisibility]sets.Set[string]{

@@ -91,7 +91,7 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:       "knative-ingress-freeway",
 				ServiceURL: "istio-ingressfreeway.istio-system.svc.cluster.local",
 			}},
-			LocalGateways:  defaultLocalGateways(),
+			LocalGateways: defaultLocalGateways(),
 		},
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -110,7 +110,7 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:       "knative-ingress-freeway",
 				ServiceURL: "istio-ingressfreeway.istio-system.svc.cluster.local.",
 			}},
-			LocalGateways:  defaultLocalGateways(),
+			LocalGateways: defaultLocalGateways(),
 		},
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -129,7 +129,7 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:       "custom-gateway",
 				ServiceURL: "istio-ingressfreeway.istio-system.svc.cluster.local",
 			}},
-			LocalGateways:  defaultLocalGateways(),
+			LocalGateways: defaultLocalGateways(),
 		},
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -394,7 +394,7 @@ func TestGatewayConfiguration(t *testing.T) {
 				ServiceURL: "istio-local-gateway.istio-system.svc.cluster.local",
 			}},
 			IngressGateways: defaultIngressGateways(),
-			},
+		},
 	}, {
 		name: "new format - missing local gateway configuration",
 		config: &corev1.ConfigMap{
@@ -415,7 +415,7 @@ func TestGatewayConfiguration(t *testing.T) {
 				Name:       "gateway1",
 				ServiceURL: "istio-ingressbackroad.istio-system.svc.cluster.local",
 			}},
-			LocalGateways:  defaultLocalGateways(),
+			LocalGateways: defaultLocalGateways(),
 		},
 	}, {
 		name: "new format - missing default gateway",

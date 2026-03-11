@@ -19,9 +19,12 @@ package ingress
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"sort"
 	"strconv"
+	"sync"
+	"time"
 
 	"go.uber.org/zap"
 	istiov1beta1 "istio.io/api/networking/v1beta1"
@@ -29,7 +32,6 @@ import (
 	istiolisters "istio.io/client-go/pkg/listers/networking/v1beta1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
@@ -61,6 +63,10 @@ type gatewayPodTargetLister struct {
 	gatewayLister   istiolisters.GatewayLister
 	endpointsLister corev1listers.EndpointsLister
 	serviceLister   corev1listers.ServiceLister
+
+	sidecarCheckOnce sync.Once
+	sidecarPresent   bool
+	detectSidecarFn  func() bool // nil → use default TCP check
 }
 
 func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1alpha1.Ingress) ([]status.ProbeTarget, error) {
@@ -69,12 +75,9 @@ func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1al
 	// When gateways are explicitly disabled, go directly to mesh-only probing.
 	cfg := config.FromContext(ctx)
 	if !cfg.Istio.GatewaysEnabled() {
-		l.logger.Info("Gateways disabled via config, using mesh-only probing")
-		meshTargets, err := l.listMeshProbeTargets(ing)
-		if err != nil {
-			return nil, fmt.Errorf("failed to list mesh probe targets: %w", err)
-		}
-		return meshTargets, nil
+		l.logger.Info("Gateways disabled via config, using mesh-only probing. " +
+			"A sidecar on the controller is required for probes to reach the mesh VirtualService.")
+		return l.listMeshProbeTargets(ing), nil
 	}
 
 	gatewayQualifiedNames, err := resources.QualifiedGatewayNamesFromContext(ctx, ing)
@@ -127,12 +130,9 @@ func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1al
 	// If no gateways were found, fall back to mesh-only mode:
 	// probe the destination service pods directly to verify reachability.
 	if !gatewaysFound {
-		l.logger.Info("No gateways found, falling back to mesh-only probing of destination services")
-		meshTargets, err := l.listMeshProbeTargets(ing)
-		if err != nil {
-			return nil, fmt.Errorf("failed to list mesh probe targets: %w", err)
-		}
-		results = append(results, meshTargets...)
+		l.logger.Info("No gateways found, falling back to mesh-only probing. " +
+			"A sidecar on the controller is required for probes to reach the mesh VirtualService.")
+		results = append(results, l.listMeshProbeTargets(ing)...)
 	}
 
 	return results, nil
@@ -228,10 +228,30 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1beta1.Gateway) ([
 	return targets, nil
 }
 
-// listMeshProbeTargets builds probe targets from the Ingress spec's destination
-// services when no gateways are available (mesh-only mode). It resolves each
-// backend service to its Endpoints and probes the pods directly.
-func (l *gatewayPodTargetLister) listMeshProbeTargets(ing *v1alpha1.Ingress) ([]status.ProbeTarget, error) {
+// listMeshProbeTargets builds probe targets for mesh-only mode by using the
+// rule hosts from the Ingress spec as dial targets. The controller's sidecar
+// intercepts outbound traffic, matches the authority against the mesh
+// VirtualService, and routes to the correct revision service.
+//
+// If no sidecar is detected on the controller, probing is skipped and an
+// empty list is returned. This causes the ingress to be marked ready
+// immediately after VirtualService reconciliation.
+func (l *gatewayPodTargetLister) listMeshProbeTargets(ing *v1alpha1.Ingress) []status.ProbeTarget {
+	l.sidecarCheckOnce.Do(func() {
+		l.sidecarPresent = l.detectSidecar()
+		if l.sidecarPresent {
+			l.logger.Info("Istio sidecar detected on controller, mesh probing enabled.")
+		} else {
+			l.logger.Warn("No Istio sidecar detected on controller. " +
+				"Mesh probing is disabled — ingress will be marked ready after VirtualService reconciliation. " +
+				"To enable mesh probing, inject an Istio sidecar into the controller pod.")
+		}
+	})
+
+	if !l.sidecarPresent {
+		return nil
+	}
+
 	results := []status.ProbeTarget{}
 	seen := sets.New[string]()
 
@@ -239,81 +259,43 @@ func (l *gatewayPodTargetLister) listMeshProbeTargets(ing *v1alpha1.Ingress) ([]
 		if rule.HTTP == nil || len(rule.Hosts) == 0 {
 			continue
 		}
-		// Use the first host for the probe URL Host header.
+
 		host := rule.Hosts[0]
-
-		for _, path := range rule.HTTP.Paths {
-			for _, split := range path.Splits {
-				key := split.ServiceNamespace + "/" + split.ServiceName + ":" + split.ServicePort.String()
-				if seen.Has(key) {
-					continue
-				}
-				seen.Insert(key)
-
-				svc, err := l.serviceLister.Services(split.ServiceNamespace).Get(split.ServiceName)
-				if err != nil {
-					l.logger.Infof("Skipping service %s/%s for mesh probing: failed to get Service: %v",
-						split.ServiceNamespace, split.ServiceName, err)
-					continue
-				}
-
-				// Resolve the service port to a port name and number.
-				var portName string
-				var svcPortNumber int32
-				if split.ServicePort.Type == intstr.Int {
-					svcPortNumber = int32(split.ServicePort.IntValue())
-					portName, err = k8s.NameForPortNumber(svc, svcPortNumber)
-					if err != nil {
-						l.logger.Infof("Skipping service %s/%s port %d for mesh probing: %v",
-							split.ServiceNamespace, split.ServiceName, svcPortNumber, err)
-						continue
-					}
-				} else {
-					portName = split.ServicePort.String()
-					for _, p := range svc.Spec.Ports {
-						if p.Name == portName {
-							svcPortNumber = p.Port
-							break
-						}
-					}
-					if svcPortNumber == 0 {
-						l.logger.Infof("Skipping service %s/%s port %q for mesh probing: port name not found in Service",
-							split.ServiceNamespace, split.ServiceName, portName)
-						continue
-					}
-				}
-
-				endpoints, err := l.endpointsLister.Endpoints(split.ServiceNamespace).Get(split.ServiceName)
-				if err != nil {
-					l.logger.Infof("Skipping service %s/%s for mesh probing: failed to get Endpoints: %v",
-						split.ServiceNamespace, split.ServiceName, err)
-					continue
-				}
-
-				svcPort := strconv.Itoa(int(svcPortNumber))
-				for _, sub := range endpoints.Subsets {
-					podPort, err := k8s.PortNumberForName(sub, portName)
-					if err != nil {
-						l.logger.Infof("Skipping Subset for service %s/%s: port name %q not found in Endpoints",
-							split.ServiceNamespace, split.ServiceName, portName)
-						continue
-					}
-					target := status.ProbeTarget{
-						PodIPs:  sets.New[string](),
-						PodPort: strconv.Itoa(int(podPort)),
-						Port:    svcPort,
-						URLs: []*url.URL{{
-							Scheme: "http",
-							Host:   host + ":" + svcPort,
-						}},
-					}
-					for _, addr := range sub.Addresses {
-						target.PodIPs.Insert(addr.IP)
-					}
-					results = append(results, target)
-				}
-			}
+		if seen.Has(host) {
+			continue
 		}
+		seen.Insert(host)
+
+		port := "80"
+		if len(rule.HTTP.Paths) > 0 && len(rule.HTTP.Paths[0].Splits) > 0 {
+			port = rule.HTTP.Paths[0].Splits[0].ServicePort.String()
+		}
+
+		results = append(results, status.ProbeTarget{
+			PodIPs:  sets.New[string](host),
+			PodPort: port,
+			Port:    port,
+			URLs: []*url.URL{{
+				Scheme: "http",
+				Host:   host + ":" + port,
+			}},
+		})
 	}
-	return results, nil
+	return results
+}
+
+// detectSidecar checks if an Istio sidecar is present and ready on the
+// controller pod. Uses detectSidecarFn if set (for testing), otherwise
+// queries the pilot-agent health endpoint at localhost:15021/healthz/ready.
+func (l *gatewayPodTargetLister) detectSidecar() bool {
+	if l.detectSidecarFn != nil {
+		return l.detectSidecarFn()
+	}
+	client := &http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Get("http://localhost:15021/healthz/ready")
+	if err != nil {
+		return false
+	}
+	resp.Body.Close()
+	return resp.StatusCode == http.StatusOK
 }

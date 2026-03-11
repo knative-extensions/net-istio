@@ -58,7 +58,6 @@ const (
 
 	// IstioNamespace is the namespace containing Istio
 	IstioNamespace = "istio-system"
-
 )
 
 func defaultIngressGateways() []Gateway {
@@ -122,7 +121,6 @@ type Istio struct {
 
 	// LocalGateways specifies the gateway urls for public & private Ingress.
 	LocalGateways []Gateway
-
 }
 
 func (i Istio) Validate() error {
@@ -206,10 +204,10 @@ func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
 }
 
 func isNewFormatDefined(configMap *corev1.ConfigMap) bool {
-	gateway := configMap.Data[externalGatewaysKey]
-	localGateway := configMap.Data[localGatewaysKey]
+	_, hasGateway := configMap.Data[externalGatewaysKey]
+	_, hasLocalGateway := configMap.Data[localGatewaysKey]
 
-	return gateway != "" || localGateway != ""
+	return hasGateway || hasLocalGateway
 }
 
 func isOldFormatDefined(configMap *corev1.ConfigMap) bool {
@@ -227,9 +225,9 @@ func parseNewFormat(configMap *corev1.ConfigMap) (*Istio, error) {
 
 	gatewaysStr := configMap.Data[externalGatewaysKey]
 
-	// An empty string (or absent key) means use defaults.
+	// An empty/whitespace-only string (or absent key) means use defaults.
 	// An explicit non-empty value like "[]" means no gateways of that type.
-	if gatewaysStr != "" {
+	if strings.TrimSpace(gatewaysStr) != "" {
 		gateways, err := parseNewFormatGateways(gatewaysStr)
 		if err != nil {
 			return ret, fmt.Errorf("failed to parse %q gateways: %w", externalGatewaysKey, err)
@@ -242,7 +240,7 @@ func parseNewFormat(configMap *corev1.ConfigMap) (*Istio, error) {
 
 	localGatewaysStr := configMap.Data[localGatewaysKey]
 
-	if localGatewaysStr != "" {
+	if strings.TrimSpace(localGatewaysStr) != "" {
 		localGateways, err := parseNewFormatGateways(localGatewaysStr)
 		if err != nil {
 			return ret, fmt.Errorf("failed to parse %q gateways: %w", localGatewaysKey, err)

@@ -1623,7 +1623,7 @@ func TestListProbeTargets(t *testing.T) {
 			URLs:    []*url.URL{{Scheme: "http", Host: "foo.bar.com:8080"}},
 		}},
 	}, {
-		name: "mesh-only mode - gateway not found, probes destination service",
+		name: "mesh-only mode - gateway not found, probes via rule host",
 		ingressGateways: []config.Gateway{{
 			Name:      "gateway",
 			Namespace: "default",
@@ -1631,39 +1631,8 @@ func TestListProbeTargets(t *testing.T) {
 		gatewayLister: &fakeGatewayLister{
 			gateways: []*v1beta1.Gateway{}, // No gateways exist
 		},
-		serviceLister: &fakeServiceLister{
-			services: []*v1.Service{{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "default",
-					Name:      "my-service",
-				},
-				Spec: v1.ServiceSpec{
-					Ports: []v1.ServicePort{{
-						Name: "http",
-						Port: 80,
-					}},
-				},
-			}},
-		},
-		endpointsLister: &fakeEndpointsLister{
-			endpointses: []*v1.Endpoints{{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "default",
-					Name:      "my-service",
-				},
-				Subsets: []v1.EndpointSubset{{
-					Ports: []v1.EndpointPort{{
-						Name: "http",
-						Port: 8080,
-					}},
-					Addresses: []v1.EndpointAddress{{
-						IP: "10.0.0.1",
-					}, {
-						IP: "10.0.0.2",
-					}},
-				}},
-			}},
-		},
+		serviceLister:   &fakeServiceLister{},
+		endpointsLister: &fakeEndpointsLister{},
 		ingress: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "default",
@@ -1679,7 +1648,7 @@ func TestListProbeTargets(t *testing.T) {
 						Paths: []v1alpha1.HTTPIngressPath{{
 							Splits: []v1alpha1.IngressBackendSplit{{
 								IngressBackend: v1alpha1.IngressBackend{
-									ServiceName:      "my-service",
+									ServiceName:      "my-service-00001",
 									ServiceNamespace: "default",
 									ServicePort:      intstr.FromInt32(80),
 								},
@@ -1691,13 +1660,13 @@ func TestListProbeTargets(t *testing.T) {
 			},
 		},
 		results: []status.ProbeTarget{{
-			PodIPs:  sets.New("10.0.0.1", "10.0.0.2"),
-			PodPort: "8080",
+			PodIPs:  sets.New("my-service.default.svc.cluster.local"),
+			PodPort: "80",
 			Port:    "80",
 			URLs:    []*url.URL{{Scheme: "http", Host: "my-service.default.svc.cluster.local:80"}},
 		}},
 	}, {
-		name: "mesh-only mode - gateway not found, no destination endpoints",
+		name: "mesh-only mode - gateway not found, multiple rules deduplicated",
 		ingressGateways: []config.Gateway{{
 			Name:      "gateway",
 			Namespace: "default",
@@ -1705,29 +1674,8 @@ func TestListProbeTargets(t *testing.T) {
 		gatewayLister: &fakeGatewayLister{
 			gateways: []*v1beta1.Gateway{}, // No gateways exist
 		},
-		serviceLister: &fakeServiceLister{
-			services: []*v1.Service{{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "default",
-					Name:      "my-service",
-				},
-				Spec: v1.ServiceSpec{
-					Ports: []v1.ServicePort{{
-						Name: "http",
-						Port: 80,
-					}},
-				},
-			}},
-		},
-		endpointsLister: &fakeEndpointsLister{
-			endpointses: []*v1.Endpoints{{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "default",
-					Name:      "my-service",
-				},
-				Subsets: []v1.EndpointSubset{},
-			}},
-		},
+		serviceLister:   &fakeServiceLister{},
+		endpointsLister: &fakeEndpointsLister{},
 		ingress: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "default",
@@ -1743,7 +1691,24 @@ func TestListProbeTargets(t *testing.T) {
 						Paths: []v1alpha1.HTTPIngressPath{{
 							Splits: []v1alpha1.IngressBackendSplit{{
 								IngressBackend: v1alpha1.IngressBackend{
-									ServiceName:      "my-service",
+									ServiceName:      "my-service-00001",
+									ServiceNamespace: "default",
+									ServicePort:      intstr.FromInt32(80),
+								},
+								Percent: 100,
+							}},
+						}},
+					},
+				}, {
+					Hosts: []string{
+						"my-service.default.svc.cluster.local",
+					},
+					Visibility: v1alpha1.IngressVisibilityExternalIP,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceName:      "my-service-00001",
 									ServiceNamespace: "default",
 									ServicePort:      intstr.FromInt32(80),
 								},
@@ -1754,7 +1719,12 @@ func TestListProbeTargets(t *testing.T) {
 				}},
 			},
 		},
-		results: []status.ProbeTarget{},
+		results: []status.ProbeTarget{{
+			PodIPs:  sets.New("my-service.default.svc.cluster.local"),
+			PodPort: "80",
+			Port:    "80",
+			URLs:    []*url.URL{{Scheme: "http", Host: "my-service.default.svc.cluster.local:80"}},
+		}},
 	}}
 
 	for _, test := range tests {
@@ -1764,7 +1734,11 @@ func TestListProbeTargets(t *testing.T) {
 				gatewayLister:   test.gatewayLister,
 				endpointsLister: test.endpointsLister,
 				serviceLister:   test.serviceLister,
+				sidecarPresent:  true,
+				detectSidecarFn: func() bool { return true },
 			}
+			// Mark sidecar check as already done so mesh probing works in tests.
+			lister.sidecarCheckOnce.Do(func() {})
 			ctx := config.ToContext(context.Background(), &config.Config{
 				Istio: &config.Istio{
 					IngressGateways: test.ingressGateways,
@@ -1795,43 +1769,16 @@ func TestListProbeTargets(t *testing.T) {
 func TestListProbeTargets_GatewaysDisabledViaConfig(t *testing.T) {
 	tests := []struct {
 		name            string
+		sidecarPresent  bool
 		serviceLister   corev1listers.ServiceLister
 		endpointsLister corev1listers.EndpointsLister
 		ingress         *v1alpha1.Ingress
 		results         []status.ProbeTarget
 	}{{
-		name: "gateways disabled via config - probes destination service directly",
-		serviceLister: &fakeServiceLister{
-			services: []*v1.Service{{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "default",
-					Name:      "my-service",
-				},
-				Spec: v1.ServiceSpec{
-					Ports: []v1.ServicePort{{
-						Name: "http",
-						Port: 80,
-					}},
-				},
-			}},
-		},
-		endpointsLister: &fakeEndpointsLister{
-			endpointses: []*v1.Endpoints{{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "default",
-					Name:      "my-service",
-				},
-				Subsets: []v1.EndpointSubset{{
-					Ports: []v1.EndpointPort{{
-						Name: "http",
-						Port: 8080,
-					}},
-					Addresses: []v1.EndpointAddress{{
-						IP: "10.0.0.1",
-					}},
-				}},
-			}},
-		},
+		name:            "gateways disabled, sidecar present - probes via rule host",
+		sidecarPresent:  true,
+		serviceLister:   &fakeServiceLister{},
+		endpointsLister: &fakeEndpointsLister{},
 		ingress: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "default",
@@ -1847,7 +1794,7 @@ func TestListProbeTargets_GatewaysDisabledViaConfig(t *testing.T) {
 						Paths: []v1alpha1.HTTPIngressPath{{
 							Splits: []v1alpha1.IngressBackendSplit{{
 								IngressBackend: v1alpha1.IngressBackend{
-									ServiceName:      "my-service",
+									ServiceName:      "my-service-00001",
 									ServiceNamespace: "default",
 									ServicePort:      intstr.FromInt32(80),
 								},
@@ -1859,22 +1806,56 @@ func TestListProbeTargets_GatewaysDisabledViaConfig(t *testing.T) {
 			},
 		},
 		results: []status.ProbeTarget{{
-			PodIPs:  sets.New("10.0.0.1"),
-			PodPort: "8080",
+			PodIPs:  sets.New("my-service.default.svc.cluster.local"),
+			PodPort: "80",
 			Port:    "80",
 			URLs:    []*url.URL{{Scheme: "http", Host: "my-service.default.svc.cluster.local:80"}},
 		}},
+	}, {
+		name:            "gateways disabled, no sidecar - probing skipped",
+		sidecarPresent:  false,
+		serviceLister:   &fakeServiceLister{},
+		endpointsLister: &fakeEndpointsLister{},
+		ingress: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "default",
+				Name:      "whatever",
+			},
+			Spec: v1alpha1.IngressSpec{
+				Rules: []v1alpha1.IngressRule{{
+					Hosts: []string{
+						"my-service.default.svc.cluster.local",
+					},
+					Visibility: v1alpha1.IngressVisibilityClusterLocal,
+					HTTP: &v1alpha1.HTTPIngressRuleValue{
+						Paths: []v1alpha1.HTTPIngressPath{{
+							Splits: []v1alpha1.IngressBackendSplit{{
+								IngressBackend: v1alpha1.IngressBackend{
+									ServiceName:      "my-service-00001",
+									ServiceNamespace: "default",
+									ServicePort:      intstr.FromInt32(80),
+								},
+								Percent: 100,
+							}},
+						}},
+					},
+				}},
+			},
+		},
+		results: nil,
 	}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			lister := gatewayPodTargetLister{
 				logger:          zaptest.NewLogger(t).Sugar(),
-				gatewayLister:   &fakeGatewayLister{}, // no gateways needed
+				gatewayLister:   &fakeGatewayLister{},
 				endpointsLister: test.endpointsLister,
 				serviceLister:   test.serviceLister,
+				sidecarPresent:  test.sidecarPresent,
+				detectSidecarFn: func() bool { return test.sidecarPresent },
 			}
-			// Empty gateway lists - should go directly to mesh probing
+			lister.sidecarCheckOnce.Do(func() {})
 			ctx := config.ToContext(context.Background(), &config.Config{
 				Istio: &config.Istio{
 					IngressGateways: []config.Gateway{},

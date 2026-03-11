@@ -68,9 +68,3 @@ data:
     # endpoint readiness. Otherwise, probe as usual.
     # NOTE: This feature is currently experimental and should not be used in production.
     enable-virtualservice-status: "false"
-
-    # To run in mesh-only mode (service-to-service traffic without external
-    # ingress gateways), set both gateway lists to empty:
-    #   external-gateways: "[]"
-    #   local-gateways: "[]"
-    # This disables gateway creation and probes destination service pods directly.
