@@ -13,6 +13,10 @@
 # limitations under the License.
 
 # This is the shared Gateway for all Knative routes to use.
+#
+# In mesh-only mode (external-gateways: "[]" and local-gateways: "[]" in
+# config-istio), this resource is not referenced or reconciled by the
+# controller. It can be safely omitted from mesh-only deployments.
 apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
