@@ -15,6 +15,10 @@
 # A cluster local gateway to allow pods outside of the mesh to access
 # Services and Routes not exposing through an ingress.  If the users
 # do have a service mesh setup, this isn't required.
+#
+# In mesh-only mode (external-gateways: "[]" and local-gateways: "[]" in
+# config-istio), this resource is not referenced or reconciled by the
+# controller. It can be safely omitted from mesh-only deployments.
 apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:

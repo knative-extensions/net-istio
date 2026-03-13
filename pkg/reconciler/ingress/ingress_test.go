@@ -1263,6 +1263,255 @@ func TestReconcile_ClusterLocalDomainTLS(t *testing.T) {
 	}))
 }
 
+// emptyGateways is the gateway map used by reconcileMeshOnlyIngress
+var emptyGateways = map[v1alpha1.IngressVisibility]sets.Set[string]{
+	v1alpha1.IngressVisibilityClusterLocal: sets.New[string](),
+	v1alpha1.IngressVisibilityExternalIP:   sets.New[string](),
+}
+
+func meshOnlyConfig() *config.Config {
+	return &config.Config{
+		Istio: &config.Istio{
+			IngressGateways: []config.Gateway{},
+			LocalGateways:   []config.Gateway{},
+		},
+		Network: &netconfig.Config{
+			ExternalDomainTLS: false,
+		},
+	}
+}
+
+func meshOnlyReadyStatus() v1alpha1.IngressStatus {
+	return v1alpha1.IngressStatus{
+		PublicLoadBalancer: &v1alpha1.LoadBalancerStatus{
+			Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}},
+		},
+		PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{
+			Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}},
+		},
+		Status: duckv1.Status{
+			Conditions: duckv1.Conditions{{
+				Type:     v1alpha1.IngressConditionLoadBalancerReady,
+				Status:   corev1.ConditionTrue,
+				Severity: apis.ConditionSeverityError,
+			}, {
+				Type:     v1alpha1.IngressConditionNetworkConfigured,
+				Status:   corev1.ConditionTrue,
+				Severity: apis.ConditionSeverityError,
+			}, {
+				Type:     v1alpha1.IngressConditionReady,
+				Status:   corev1.ConditionTrue,
+				Severity: apis.ConditionSeverityError,
+			}},
+		},
+	}
+}
+
+func meshOnlyReconciledIngress(name string) *v1alpha1.Ingress {
+	return ingressWithStatusAndFinalizers(name, meshOnlyReadyStatus(),
+		[]string{"ingresses.networking.internal.knative.dev"})
+}
+
+func TestReconcile_MeshOnly(t *testing.T) {
+	table := TableTest{{
+		Name: "mesh-only: create new ingress creates only mesh VirtualService",
+		Objects: []runtime.Object{
+			ing("mesh-only-ingress"),
+		},
+		WantCreates: []runtime.Object{
+			resources.MakeMeshVirtualService(insertProbe(ing("mesh-only-ingress")), emptyGateways),
+		},
+		WantPatches: []clientgotesting.PatchActionImpl{
+			patchAddFinalizerAction("mesh-only-ingress", ingressFinalizer),
+		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ingressWithStatus("mesh-only-ingress", meshOnlyReadyStatus()),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "mesh-only-ingress"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "mesh-only-ingress-mesh"),
+		},
+		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(1)},
+		Key:            "test-ns/mesh-only-ingress",
+		CmpOpts:        defaultCmpOptsList,
+	}, {
+		Name:    "mesh-only: VirtualService update failure marks LoadBalancer failed",
+		WantErr: true,
+		WithReactors: []clientgotesting.ReactionFunc{
+			InduceFailure("update", "virtualservices"),
+		},
+		Objects: []runtime.Object{
+			ing("mesh-only-fail"),
+			&v1beta1.VirtualService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "mesh-only-fail-mesh",
+					Namespace: testNS,
+					Labels: map[string]string{
+						networking.IngressLabelKey: "mesh-only-fail",
+					},
+					OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing("mesh-only-fail"))},
+				},
+				Spec: istiov1beta1.VirtualService{},
+			},
+		},
+		WantUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: resources.MakeMeshVirtualService(insertProbe(ing("mesh-only-fail")), emptyGateways),
+		}},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ingressWithStatus("mesh-only-fail",
+				v1alpha1.IngressStatus{
+					Status: duckv1.Status{
+						Conditions: duckv1.Conditions{{
+							Type:     v1alpha1.IngressConditionLoadBalancerReady,
+							Reason:   virtualServiceNotReconciled,
+							Severity: apis.ConditionSeverityError,
+							Message:  "failed to update VirtualService: inducing failure for update virtualservices",
+							Status:   corev1.ConditionFalse,
+						}, {
+							Type:   v1alpha1.IngressConditionNetworkConfigured,
+							Status: corev1.ConditionUnknown,
+						}, {
+							Type:     v1alpha1.IngressConditionReady,
+							Status:   corev1.ConditionFalse,
+							Severity: apis.ConditionSeverityError,
+							Reason:   notReconciledReason,
+							Message:  notReconciledMessage,
+						}},
+					},
+				},
+			),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "mesh-only-fail"),
+			Eventf(corev1.EventTypeWarning, "InternalError", "failed to update VirtualService: inducing failure for update virtualservices"),
+		},
+		WantPatches: []clientgotesting.PatchActionImpl{
+			patchAddFinalizerAction("mesh-only-fail", "ingresses.networking.internal.knative.dev"),
+		},
+		Key:     "test-ns/mesh-only-fail",
+		CmpOpts: defaultCmpOptsList,
+	}, {
+		Name: "mesh-only: reconcile existing VS and delete stale ingress VS",
+		Objects: []runtime.Object{
+			ing("mesh-only-cleanup"),
+			// Existing mesh VS with stale spec
+			&v1beta1.VirtualService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "mesh-only-cleanup-mesh",
+					Namespace: testNS,
+					Labels: map[string]string{
+						networking.IngressLabelKey: "mesh-only-cleanup",
+					},
+					OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing("mesh-only-cleanup"))},
+				},
+				Spec: istiov1beta1.VirtualService{},
+			},
+			// Stale ingress VS that should be deleted in mesh-only mode
+			&v1beta1.VirtualService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "mesh-only-cleanup-ingress",
+					Namespace: testNS,
+					Labels: map[string]string{
+						networking.IngressLabelKey: "mesh-only-cleanup",
+					},
+					OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing("mesh-only-cleanup"))},
+				},
+				Spec: istiov1beta1.VirtualService{},
+			},
+		},
+		WantUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: resources.MakeMeshVirtualService(insertProbe(ing("mesh-only-cleanup")), emptyGateways),
+		}},
+		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: testNS,
+				Verb:      "delete",
+				Resource:  v1beta1.SchemeGroupVersion.WithResource("virtualservices"),
+			},
+			Name: "mesh-only-cleanup-ingress",
+		}},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ingressWithStatus("mesh-only-cleanup", meshOnlyReadyStatus()),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "mesh-only-cleanup"),
+			Eventf(corev1.EventTypeNormal, "Updated", "Updated VirtualService %s/%s",
+				"test-ns", "mesh-only-cleanup-mesh"),
+		},
+		WantPatches: []clientgotesting.PatchActionImpl{
+			patchAddFinalizerAction("mesh-only-cleanup", "ingresses.networking.internal.knative.dev"),
+		},
+		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(1)},
+		Key:            "test-ns/mesh-only-cleanup",
+		CmpOpts:        defaultCmpOptsList,
+	}, {
+		Name: "mesh-only: already ready ingress skips probe",
+		Objects: []runtime.Object{
+			meshOnlyReconciledIngress("mesh-only-ready"),
+			resources.MakeMeshVirtualService(insertProbe(ing("mesh-only-ready")), emptyGateways),
+		},
+		Key:            "test-ns/mesh-only-ready",
+		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(0)},
+		CmpOpts:        defaultCmpOptsList,
+	}, {
+		Name: "mesh-only: ingress with TLS but gateways disabled only creates mesh VS",
+		Objects: []runtime.Object{
+			ingressWithTLS("mesh-only-tls", externalIngressTLS),
+			originSecret("istio-system", "secret0"),
+			ingressService,
+		},
+		WantCreates: []runtime.Object{
+			resources.MakeMeshVirtualService(insertProbe(ingressWithTLS("mesh-only-tls", externalIngressTLS)), emptyGateways),
+		},
+		WantPatches: []clientgotesting.PatchActionImpl{
+			patchAddFinalizerAction("mesh-only-tls", ingressFinalizer),
+		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ingressWithTLSAndStatus("mesh-only-tls",
+				externalIngressTLS,
+				meshOnlyReadyStatus(),
+			),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "mesh-only-tls"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "mesh-only-tls-mesh"),
+		},
+		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(1)},
+		Key:            "test-ns/mesh-only-tls",
+		CmpOpts:        defaultCmpOptsList,
+	}, {
+		Name: "mesh-only: delete ingress skips gateway server cleanup",
+		Objects: []runtime.Object{
+			ingressWithFinalizers("mesh-only-delete", nil, []string{ingressFinalizer}, &deletionTime),
+		},
+		WantPatches: []clientgotesting.PatchActionImpl{
+			patchAddFinalizerAction("mesh-only-delete", ""),
+		},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "mesh-only-delete"),
+		},
+		Key:     "test-ns/mesh-only-delete",
+		CmpOpts: defaultCmpOptsList,
+	}}
+
+	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
+		r := &Reconciler{
+			kubeclient:           kubeclient.Get(ctx),
+			istioClientSet:       istioclient.Get(ctx),
+			virtualServiceLister: listers.GetVirtualServiceLister(),
+			gatewayLister:        listers.GetGatewayLister(),
+			statusManager:        ctx.Value(FakeStatusManagerKey).(status.Manager),
+		}
+
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakenetworkingclient.Get(ctx),
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, netconfig.IstioIngressClassName, controller.Options{
+				ConfigStore: &testConfigStore{
+					config: meshOnlyConfig(),
+				},
+			})
+	}))
+}
+
 func getGatewaysFromObjects(objects []runtime.Object) []*v1beta1.Gateway {
 	gateways := []*v1beta1.Gateway{}
 	for _, object := range objects {
