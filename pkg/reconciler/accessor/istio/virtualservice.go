@@ -59,15 +59,23 @@ func ReconcileVirtualService(ctx context.Context, owner kmeta.Accessor, desired 
 	vs, err := vsAccessor.GetVirtualServiceLister().VirtualServices(ns).Get(name)
 	if apierrs.IsNotFound(err) {
 		vs, err = vsAccessor.GetIstioClient().NetworkingV1beta1().VirtualServices(ns).Create(ctx, desired, metav1.CreateOptions{})
-		if err != nil {
+		if apierrs.IsAlreadyExists(err) {
+			vs, err = vsAccessor.GetIstioClient().NetworkingV1beta1().VirtualServices(ns).Get(ctx, name, metav1.GetOptions{})
+			if err != nil {
+				return nil, fmt.Errorf("failed to get existing VirtualService after AlreadyExists: %w", err)
+			}
+		} else if err != nil {
 			recorder.Eventf(owner, corev1.EventTypeWarning, "CreationFailed",
 				"Failed to create VirtualService %s/%s: %v", ns, name, err)
 			return nil, fmt.Errorf("failed to create VirtualService: %w", err)
+		} else {
+			recorder.Eventf(owner, corev1.EventTypeNormal, "Created", "Created VirtualService %q", desired.Name)
 		}
-		recorder.Eventf(owner, corev1.EventTypeNormal, "Created", "Created VirtualService %q", desired.Name)
 	} else if err != nil {
 		return nil, err
-	} else if !metav1.IsControlledBy(vs, owner) {
+	}
+
+	if !metav1.IsControlledBy(vs, owner) {
 		// Return an error with NotControlledBy information.
 		return nil, kaccessor.NewAccessorError(
 			fmt.Errorf("owner: %s with Type %T does not own VirtualService: %q", owner.GetName(), owner, name),
