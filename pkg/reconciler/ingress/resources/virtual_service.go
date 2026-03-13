@@ -126,14 +126,17 @@ func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 	spec := istiov1beta1.VirtualService{
 		Hosts: sets.List(hosts),
 	}
+	tagToHosts := TagToHosts(ing)
+	tagHostCoverage := getTagHostCoverage(ing, hosts, tagToHosts)
 
 	gw := sets.New[string]()
 	for _, rule := range ing.Spec.Rules {
+		ruleHosts := sets.New(rule.Hosts...)
 		for i := range rule.HTTP.Paths {
 			p := rule.HTTP.Paths[i]
-			hosts := hosts.Intersection(sets.New(rule.Hosts...))
-			if hosts.Len() != 0 {
-				http := makeVirtualServiceRoute(hosts, &p, gateways, rule.Visibility)
+			routeHosts := RouteHosts(ruleHosts, &p, rule.Visibility, tagToHosts).Intersection(hosts)
+			if routeHosts.Len() != 0 {
+				http := makeVirtualServiceRoute(routeHosts, &p, gateways, rule.Visibility)
 				// Add all the Gateways that exist inside the http.match section of
 				// the VirtualService.
 				// This ensures that we are only using the Gateways that actually appear
@@ -143,10 +146,53 @@ func makeVirtualServiceSpec(ing *v1alpha1.Ingress, gateways map[v1alpha1.Ingress
 				}
 				spec.Http = append(spec.Http, http)
 			}
+
+			tag := RouteTagHeaderValue(p.Headers)
+			if tag == "" {
+				continue
+			}
+
+			tagHosts := HostsForTag(tag, rule.Visibility, tagToHosts).Intersection(hosts)
+			if coveredHosts, ok := tagHostCoverage[tag]; ok {
+				tagHosts = tagHosts.Difference(coveredHosts)
+			}
+			if tagHosts.Len() == 0 {
+				continue
+			}
+
+			http := makeVirtualServiceRoute(tagHosts, MakeTagHostIngressPath(&p, tag), gateways, rule.Visibility)
+			for _, m := range http.GetMatch() {
+				gw = gw.Union(sets.New(m.GetGateways()...))
+			}
+			spec.Http = append(spec.Http, http)
 		}
 	}
 	spec.Gateways = sets.List(gw)
 	return &spec
+}
+
+func getTagHostCoverage(ing *v1alpha1.Ingress, hosts sets.Set[string], tagToHosts map[string]sets.Set[string]) map[string]sets.Set[string] {
+	coverage := make(map[string]sets.Set[string])
+	for _, rule := range ing.Spec.Rules {
+		ruleHosts := sets.New(rule.Hosts...)
+		for i := range rule.HTTP.Paths {
+			p := rule.HTTP.Paths[i]
+			tag := RouteTagAppendValue(p.AppendHeaders)
+			if tag == "" || RouteTagHeaderValue(p.Headers) != "" {
+				continue
+			}
+
+			pathHosts := RouteHosts(ruleHosts, &p, rule.Visibility, tagToHosts).Intersection(hosts)
+			if pathHosts.Len() == 0 {
+				continue
+			}
+			if _, ok := coverage[tag]; !ok {
+				coverage[tag] = sets.New[string]()
+			}
+			coverage[tag].Insert(sets.List(pathHosts)...)
+		}
+	}
+	return coverage
 }
 
 func makeVirtualServiceRoute(hosts sets.Set[string], http *v1alpha1.HTTPIngressPath, gateways map[v1alpha1.IngressVisibility]sets.Set[string], visibility v1alpha1.IngressVisibility) *istiov1beta1.HTTPRoute {
@@ -288,6 +334,9 @@ func getHosts(ing *v1alpha1.Ingress) sets.Set[string] {
 	hosts := sets.New[string]()
 	for _, rule := range ing.Spec.Rules {
 		hosts.Insert(rule.Hosts...)
+	}
+	for _, tagHosts := range TagToHosts(ing) {
+		hosts.Insert(sets.List(tagHosts)...)
 	}
 	return hosts
 }

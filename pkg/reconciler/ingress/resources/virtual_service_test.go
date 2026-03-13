@@ -27,6 +27,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
+	netheader "knative.dev/networking/pkg/http/header"
+	netingress "knative.dev/networking/pkg/ingress"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/system"
 	_ "knative.dev/pkg/system/testing"
@@ -782,6 +784,199 @@ func TestMakeVirtualServiceRoute_TwoTargets(t *testing.T) {
 	}
 	if diff := cmp.Diff(expected, route, defaultVSCmpOpts); diff != "" {
 		t.Error("Unexpected route  (-want +got):", diff)
+	}
+}
+
+func TestMakeVirtualServiceSpec_TagToHostAnnotationClusterLocal(t *testing.T) {
+	ing := &v1alpha1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{
+				networking.TagToHostAnnotationKey: `{"blue":["blue-test-route.test-ns.svc.cluster.local"]}`,
+			},
+		},
+		Spec: v1alpha1.IngressSpec{
+			Rules: []v1alpha1.IngressRule{{
+				Hosts:      []string{"test-route.test-ns.svc.cluster.local"},
+				Visibility: v1alpha1.IngressVisibilityClusterLocal,
+				HTTP: &v1alpha1.HTTPIngressRuleValue{
+					Paths: []v1alpha1.HTTPIngressPath{{
+						Headers: map[string]v1alpha1.HeaderMatch{
+							netheader.RouteTagKey: {Exact: "blue"},
+						},
+						Splits: []v1alpha1.IngressBackendSplit{{
+							IngressBackend: v1alpha1.IngressBackend{
+								ServiceNamespace: "test-ns",
+								ServiceName:      "blue-service",
+								ServicePort:      intstr.FromInt(80),
+							},
+							Percent: 100,
+						}},
+					}, {
+						Splits: []v1alpha1.IngressBackendSplit{{
+							IngressBackend: v1alpha1.IngressBackend{
+								ServiceNamespace: "test-ns",
+								ServiceName:      "default-service",
+								ServicePort:      intstr.FromInt(80),
+							},
+							Percent: 100,
+						}},
+					}},
+				},
+			}},
+		},
+	}
+
+	hosts := netingress.ExpandedHosts(getHosts(ing))
+	spec := makeVirtualServiceSpec(ing, makeGatewayMap(nil, []string{"knative-testing/private-gateway"}), hosts)
+
+	expectedHosts := sets.New(
+		"test-route.test-ns.svc.cluster.local",
+		"test-route.test-ns.svc",
+		"test-route.test-ns",
+		"blue-test-route.test-ns.svc.cluster.local",
+		"blue-test-route.test-ns.svc",
+		"blue-test-route.test-ns",
+	)
+	if got := sets.New(spec.Hosts...); !got.Equal(expectedHosts) {
+		t.Fatalf("Unexpected hosts (-want +got): %s", cmp.Diff(expectedHosts, got))
+	}
+
+	expectedRoutes := []*istiov1beta1.HTTPRoute{{
+		Retries: &istiov1beta1.HTTPRetry{},
+		Match: []*istiov1beta1.HTTPMatchRequest{{
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: "test-route.test-ns"},
+			},
+			Gateways: []string{"knative-testing/private-gateway"},
+			Headers: map[string]*istiov1beta1.StringMatch{
+				netheader.RouteTagKey: {
+					MatchType: &istiov1beta1.StringMatch_Exact{Exact: "blue"},
+				},
+			},
+		}},
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
+				Host: "blue-service.test-ns.svc.cluster.local",
+				Port: &istiov1beta1.PortSelector{Number: 80},
+			},
+			Weight: 100,
+		}},
+	}, {
+		Retries: &istiov1beta1.HTTPRetry{},
+		Match: []*istiov1beta1.HTTPMatchRequest{{
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: "blue-test-route.test-ns"},
+			},
+			Gateways: []string{"knative-testing/private-gateway"},
+		}},
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
+				Host: "blue-service.test-ns.svc.cluster.local",
+				Port: &istiov1beta1.PortSelector{Number: 80},
+			},
+			Weight: 100,
+		}},
+		Headers: &istiov1beta1.Headers{
+			Request: &istiov1beta1.Headers_HeaderOperations{
+				Set: map[string]string{
+					netheader.RouteTagKey: "blue",
+				},
+			},
+		},
+	}, {
+		Retries: &istiov1beta1.HTTPRetry{},
+		Match: []*istiov1beta1.HTTPMatchRequest{{
+			Authority: &istiov1beta1.StringMatch{
+				MatchType: &istiov1beta1.StringMatch_Prefix{Prefix: "test-route.test-ns"},
+			},
+			Gateways: []string{"knative-testing/private-gateway"},
+		}},
+		Route: []*istiov1beta1.HTTPRouteDestination{{
+			Destination: &istiov1beta1.Destination{
+				Host: "default-service.test-ns.svc.cluster.local",
+				Port: &istiov1beta1.PortSelector{Number: 80},
+			},
+			Weight: 100,
+		}},
+	}}
+
+	if diff := cmp.Diff(expectedRoutes, spec.Http, defaultVSCmpOpts); diff != "" {
+		t.Fatalf("Unexpected routes (-want +got):\n%s", diff)
+	}
+}
+
+func TestMakeVirtualServiceSpec_TagToHostAnnotationDoesNotDuplicateHostRoutes(t *testing.T) {
+	ing := &v1alpha1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{
+				networking.TagToHostAnnotationKey: `{"blue":["blue-test-route.test-ns.example.com"]}`,
+			},
+		},
+		Spec: v1alpha1.IngressSpec{
+			Rules: []v1alpha1.IngressRule{{
+				Hosts:      []string{"test-route.test-ns.example.com"},
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				HTTP: &v1alpha1.HTTPIngressRuleValue{
+					Paths: []v1alpha1.HTTPIngressPath{{
+						Headers: map[string]v1alpha1.HeaderMatch{
+							netheader.RouteTagKey: {Exact: "blue"},
+						},
+						Splits: []v1alpha1.IngressBackendSplit{{
+							IngressBackend: v1alpha1.IngressBackend{
+								ServiceNamespace: "test-ns",
+								ServiceName:      "blue-service",
+								ServicePort:      intstr.FromInt(80),
+							},
+							Percent: 100,
+						}},
+					}, {
+						Splits: []v1alpha1.IngressBackendSplit{{
+							IngressBackend: v1alpha1.IngressBackend{
+								ServiceNamespace: "test-ns",
+								ServiceName:      "default-service",
+								ServicePort:      intstr.FromInt(80),
+							},
+							Percent: 100,
+						}},
+					}},
+				},
+			}, {
+				Hosts:      []string{"blue-test-route.test-ns.example.com"},
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				HTTP: &v1alpha1.HTTPIngressRuleValue{
+					Paths: []v1alpha1.HTTPIngressPath{{
+						AppendHeaders: map[string]string{
+							netheader.RouteTagKey: "blue",
+						},
+						Splits: []v1alpha1.IngressBackendSplit{{
+							IngressBackend: v1alpha1.IngressBackend{
+								ServiceNamespace: "test-ns",
+								ServiceName:      "blue-service",
+								ServicePort:      intstr.FromInt(80),
+							},
+							Percent: 100,
+						}},
+					}},
+				},
+			}},
+		},
+	}
+
+	spec := makeVirtualServiceSpec(ing, makeGatewayMap([]string{"gateway.public"}, nil), netingress.ExpandedHosts(getHosts(ing)))
+	if got, want := len(spec.Http), 3; got != want {
+		t.Fatalf("Expected %d routes, got %d", want, got)
+	}
+
+	blueHostMatches := 0
+	for _, route := range spec.Http {
+		for _, match := range route.Match {
+			if match.GetAuthority().GetPrefix() == "blue-test-route.test-ns.example.com" {
+				blueHostMatches++
+			}
+		}
+	}
+	if blueHostMatches != 1 {
+		t.Fatalf("Expected a single host-based route for tag host, got %d", blueHostMatches)
 	}
 }
 
