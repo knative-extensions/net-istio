@@ -109,6 +109,13 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	ing.Status.InitializeConditions()
 	logger.Infof("Reconciling ingress: %#v", ing)
 
+	cfg := config.FromContext(ctx)
+
+	// When gateways are disabled, take a simplified mesh-only path.
+	if !cfg.Istio.GatewaysEnabled() {
+		return r.reconcileMeshOnlyIngress(ctx, ing)
+	}
+
 	defaultGateways, err := resources.GatewaysFromContext(ctx, ing)
 	if err != nil {
 		return err
@@ -170,7 +177,6 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 		gatewayNames[v1alpha1.IngressVisibilityExternalIP].Insert(resources.GetQualifiedGatewayNames(desiredWildcardGateways)...)
 	}
 
-	cfg := config.FromContext(ctx)
 	clusterLocalIngressGateways := []*v1beta1.Gateway{}
 	if cfg.Network.ClusterLocalDomainTLS == netconfig.EncryptionEnabled && shouldReconcileClusterLocalDomainTLS(ing) {
 		originSecrets, err := resources.GetSecrets(ing, v1alpha1.IngressVisibilityClusterLocal, r.secretLister)
@@ -273,6 +279,38 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 
 	// TODO(zhiminx): Mark Route status to indicate that Gateway is configured.
 	logger.Info("Ingress successfully synced")
+	return nil
+}
+
+// reconcileMeshOnlyIngress handles Ingress reconciliation when gateways are
+// disabled. It creates mesh VirtualServices and marks the ingress as ready
+// without probing, since there are no gateways to probe through.
+func (r *Reconciler) reconcileMeshOnlyIngress(ctx context.Context, ing *v1alpha1.Ingress) error {
+	logger := logging.FromContext(ctx)
+	logger.Info("Gateways disabled, reconciling mesh-only ingress")
+
+	emptyGateways := map[v1alpha1.IngressVisibility]sets.Set[string]{
+		v1alpha1.IngressVisibilityClusterLocal: sets.New[string](),
+		v1alpha1.IngressVisibilityExternalIP:   sets.New[string](),
+	}
+
+	vses, err := resources.MakeVirtualServices(ing, emptyGateways)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("Creating/Updating mesh VirtualServices")
+	if err := r.reconcileVirtualServices(ctx, ing, vses); err != nil {
+		ing.Status.MarkLoadBalancerFailed(virtualServiceNotReconciled, err.Error())
+		return err
+	}
+
+	ing.Status.MarkNetworkConfigured()
+
+	meshOnlyLbs := []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}}
+	ing.Status.MarkLoadBalancerReady(meshOnlyLbs, meshOnlyLbs)
+
+	logger.Info("Mesh-only ingress successfully synced")
 	return nil
 }
 
@@ -393,6 +431,12 @@ func (r *Reconciler) reconcileVirtualServices(ctx context.Context, ing *v1alpha1
 func (r *Reconciler) FinalizeKind(ctx context.Context, ing *v1alpha1.Ingress) pkgreconciler.Event {
 	logger := logging.FromContext(ctx)
 	istiocfg := config.FromContext(ctx).Istio
+
+	if !istiocfg.GatewaysEnabled() {
+		logger.Info("Gateways disabled, skipping Gateway Server cleanup")
+		return nil
+	}
+
 	logger.Info("Cleaning up Gateway Servers")
 	for _, gws := range [][]config.Gateway{istiocfg.IngressGateways, istiocfg.LocalGateways} {
 		for _, gw := range gws {

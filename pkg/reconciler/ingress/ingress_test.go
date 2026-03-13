@@ -1781,3 +1781,76 @@ func proberCalledTimes(n int) func(*testing.T, *TableRow) {
 		}
 	}
 }
+
+func meshOnlyTestConfig() *config.Config {
+	return &config.Config{
+		Istio: &config.Istio{
+			IngressGateways: []config.Gateway{},
+			LocalGateways:   []config.Gateway{},
+		},
+		Network: &netconfig.Config{
+			ExternalDomainTLS: false,
+		},
+	}
+}
+
+func TestReconcile_MeshOnlyMode(t *testing.T) {
+	emptyGateways := makeGatewayMap(nil, nil)
+
+	table := TableTest{{
+		Name: "mesh-only: create mesh VirtualService and mark ready",
+		Objects: []runtime.Object{
+			ing("mesh-only-ingress"),
+		},
+		WantCreates: []runtime.Object{
+			resources.MakeMeshVirtualService(insertProbe(ing("mesh-only-ingress")), emptyGateways),
+		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ingressWithStatus("mesh-only-ingress",
+				v1alpha1.IngressStatus{
+					Status: duckv1.Status{
+						Conditions: duckv1.Conditions{{
+							Type:   v1alpha1.IngressConditionLoadBalancerReady,
+							Status: corev1.ConditionTrue,
+						}, {
+							Type:   v1alpha1.IngressConditionNetworkConfigured,
+							Status: corev1.ConditionTrue,
+						}, {
+							Type:   v1alpha1.IngressConditionReady,
+							Status: corev1.ConditionTrue,
+						}},
+					},
+					PublicLoadBalancer:  &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}}},
+					PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}}},
+				},
+			),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "mesh-only-ingress"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "mesh-only-ingress-mesh"),
+		},
+		WantPatches: []clientgotesting.PatchActionImpl{
+			patchAddFinalizerAction("mesh-only-ingress", "ingresses.networking.internal.knative.dev"),
+		},
+		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(0)},
+		Key:            "test-ns/mesh-only-ingress",
+		CmpOpts:        defaultCmpOptsList,
+	}}
+
+	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
+		r := &Reconciler{
+			kubeclient:           kubeclient.Get(ctx),
+			istioClientSet:       istioclient.Get(ctx),
+			virtualServiceLister: listers.GetVirtualServiceLister(),
+			gatewayLister:        listers.GetGatewayLister(),
+			statusManager:        ctx.Value(FakeStatusManagerKey).(status.Manager),
+		}
+
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakenetworkingclient.Get(ctx),
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, netconfig.IstioIngressClassName, controller.Options{
+				ConfigStore: &testConfigStore{
+					config: meshOnlyTestConfig(),
+				},
+			})
+	}))
+}

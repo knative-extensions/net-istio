@@ -37,6 +37,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 )
@@ -1653,6 +1654,54 @@ func TestListProbeTargets(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestListProbeTargets_GatewaysDisabledViaConfig(t *testing.T) {
+	lister := gatewayPodTargetLister{
+		logger:          zaptest.NewLogger(t).Sugar(),
+		gatewayLister:   &fakeGatewayLister{},
+		endpointsLister: &fakeEndpointsLister{},
+		serviceLister:   &fakeServiceLister{},
+	}
+	ctx := config.ToContext(context.Background(), &config.Config{
+		Istio: &config.Istio{
+			IngressGateways: []config.Gateway{},
+			LocalGateways:   []config.Gateway{},
+		},
+	})
+	ing := &v1alpha1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "default",
+			Name:      "whatever",
+		},
+		Spec: v1alpha1.IngressSpec{
+			Rules: []v1alpha1.IngressRule{{
+				Hosts: []string{
+					"my-service.default.svc.cluster.local",
+				},
+				Visibility: v1alpha1.IngressVisibilityClusterLocal,
+				HTTP: &v1alpha1.HTTPIngressRuleValue{
+					Paths: []v1alpha1.HTTPIngressPath{{
+						Splits: []v1alpha1.IngressBackendSplit{{
+							IngressBackend: v1alpha1.IngressBackend{
+								ServiceName:      "my-service-00001",
+								ServiceNamespace: "default",
+								ServicePort:      intstr.FromInt32(80),
+							},
+							Percent: 100,
+						}},
+					}},
+				},
+			}},
+		},
+	}
+	results, err := lister.ListProbeTargets(ctx, ing)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(results) != 0 {
+		t.Errorf("expected empty results when gateways disabled, got %d targets", len(results))
 	}
 }
 

@@ -589,6 +589,52 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 		wantErr: true,
+	}, {
+		name: "new format - both gateways explicitly empty for mesh-only mode",
+		wantIstio: &Istio{
+			IngressGateways: []Gateway{},
+			LocalGateways:   []Gateway{},
+		},
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": "[]",
+				"local-gateways":    "[]",
+			},
+		},
+	}, {
+		name: "new format - only external gateways explicitly empty",
+		wantIstio: &Istio{
+			IngressGateways: []Gateway{},
+			LocalGateways:   defaultLocalGateways(),
+		},
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": "[]",
+			},
+		},
+	}, {
+		name: "new format - only local gateways explicitly empty",
+		wantIstio: &Istio{
+			IngressGateways: defaultIngressGateways(),
+			LocalGateways:   []Gateway{},
+		},
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"local-gateways": "[]",
+			},
+		},
 	}}
 
 	for _, tt := range gatewayConfigTests {
@@ -600,6 +646,50 @@ func TestGatewayConfiguration(t *testing.T) {
 
 			if diff := cmp.Diff(actualIstio, tt.wantIstio); diff != "" {
 				t.Fatalf("Want %+v, but got %+v", tt.wantIstio, actualIstio)
+			}
+		})
+	}
+}
+
+func TestGatewaysEnabled(t *testing.T) {
+	tests := []struct {
+		name string
+		cfg  Istio
+		want bool
+	}{{
+		name: "both gateways configured",
+		cfg: Istio{
+			IngressGateways: defaultIngressGateways(),
+			LocalGateways:   defaultLocalGateways(),
+		},
+		want: true,
+	}, {
+		name: "only ingress gateways",
+		cfg: Istio{
+			IngressGateways: defaultIngressGateways(),
+			LocalGateways:   []Gateway{},
+		},
+		want: true,
+	}, {
+		name: "only local gateways",
+		cfg: Istio{
+			IngressGateways: []Gateway{},
+			LocalGateways:   defaultLocalGateways(),
+		},
+		want: true,
+	}, {
+		name: "both empty - mesh-only mode",
+		cfg: Istio{
+			IngressGateways: []Gateway{},
+			LocalGateways:   []Gateway{},
+		},
+		want: false,
+	}}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.cfg.GatewaysEnabled(); got != tt.want {
+				t.Errorf("GatewaysEnabled() = %v, want %v", got, tt.want)
 			}
 		})
 	}
