@@ -283,8 +283,9 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 }
 
 // reconcileMeshOnlyIngress handles Ingress reconciliation when gateways are
-// disabled. It creates mesh VirtualServices and marks the ingress as ready
-// without probing, since there are no gateways to probe through.
+// disabled. It creates mesh VirtualServices, cleans up any leftover gateway
+// resources from a previous gateway-enabled configuration, and marks the
+// ingress as ready without probing.
 func (r *Reconciler) reconcileMeshOnlyIngress(ctx context.Context, ing *v1alpha1.Ingress) error {
 	logger := logging.FromContext(ctx)
 	logger.Info("Gateways disabled, reconciling mesh-only ingress")
@@ -300,8 +301,15 @@ func (r *Reconciler) reconcileMeshOnlyIngress(ctx context.Context, ing *v1alpha1
 	}
 
 	logger.Info("Creating/Updating mesh VirtualServices")
+	// This also deletes any old ingress VirtualServices that referenced gateways.
 	if err := r.reconcileVirtualServices(ctx, ing, vses); err != nil {
 		ing.Status.MarkLoadBalancerFailed(virtualServiceNotReconciled, err.Error())
+		return err
+	}
+
+	// Clean up any per-ingress Gateways that were created for TLS when
+	// gateways were previously enabled.
+	if err := r.cleanupIngressGateways(ctx, ing); err != nil {
 		return err
 	}
 
@@ -311,6 +319,31 @@ func (r *Reconciler) reconcileMeshOnlyIngress(ctx context.Context, ing *v1alpha1
 	ing.Status.MarkLoadBalancerReady(meshOnlyLbs, meshOnlyLbs)
 
 	logger.Info("Mesh-only ingress successfully synced")
+	return nil
+}
+
+// cleanupIngressGateways deletes any per-ingress Istio Gateways owned by the
+// given Ingress. These are created during TLS reconciliation and must be
+// removed when switching to mesh-only mode.
+func (r *Reconciler) cleanupIngressGateways(ctx context.Context, ing *v1alpha1.Ingress) error {
+	logger := logging.FromContext(ctx)
+
+	gateways, err := r.gatewayLister.Gateways(ing.GetNamespace()).List(
+		labels.SelectorFromSet(labels.Set{networking.IngressLabelKey: ing.GetName()}))
+	if err != nil {
+		return fmt.Errorf("failed to list Gateways for ingress %s/%s: %w", ing.GetNamespace(), ing.GetName(), err)
+	}
+
+	for _, gw := range gateways {
+		if !metav1.IsControlledBy(gw, ing) {
+			continue
+		}
+		logger.Infof("Deleting leftover Gateway %s/%s", gw.Namespace, gw.Name)
+		if err := r.istioClientSet.NetworkingV1beta1().Gateways(gw.Namespace).Delete(ctx, gw.Name, metav1.DeleteOptions{}); err != nil && !apierrs.IsNotFound(err) {
+			return fmt.Errorf("failed to delete Gateway %s/%s: %w", gw.Namespace, gw.Name, err)
+		}
+	}
+
 	return nil
 }
 
