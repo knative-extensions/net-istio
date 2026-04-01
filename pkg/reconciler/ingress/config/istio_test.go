@@ -589,6 +589,52 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 		wantErr: true,
+	}, {
+		name: "new format - both gateways explicitly empty for mesh-only mode",
+		wantIstio: &Istio{
+			IngressGateways: []Gateway{},
+			LocalGateways:   []Gateway{},
+		},
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": "[]",
+				"local-gateways":    "[]",
+			},
+		},
+	}, {
+		name: "new format - only external gateways explicitly empty",
+		wantIstio: &Istio{
+			IngressGateways: []Gateway{},
+			LocalGateways:   defaultLocalGateways(),
+		},
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"external-gateways": "[]",
+			},
+		},
+	}, {
+		name: "new format - only local gateways explicitly empty",
+		wantIstio: &Istio{
+			IngressGateways: defaultIngressGateways(),
+			LocalGateways:   []Gateway{},
+		},
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"local-gateways": "[]",
+			},
+		},
 	}}
 
 	for _, tt := range gatewayConfigTests {

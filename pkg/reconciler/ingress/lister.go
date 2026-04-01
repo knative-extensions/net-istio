@@ -19,18 +19,23 @@ package ingress
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"sort"
 	"strconv"
+	"sync"
+	"time"
 
 	"go.uber.org/zap"
 	istiov1beta1 "istio.io/api/networking/v1beta1"
 	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	istiolisters "istio.io/client-go/pkg/listers/networking/v1beta1"
+	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/ingress"
@@ -58,10 +63,23 @@ type gatewayPodTargetLister struct {
 	gatewayLister   istiolisters.GatewayLister
 	endpointsLister corev1listers.EndpointsLister
 	serviceLister   corev1listers.ServiceLister
+
+	sidecarCheckOnce sync.Once
+	sidecarPresent   bool
+	detectSidecarFn  func() bool // nil → use default TCP check
 }
 
 func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1alpha1.Ingress) ([]status.ProbeTarget, error) {
 	results := []status.ProbeTarget{}
+
+	// When gateways are explicitly disabled, go directly to mesh-only probing.
+	cfg := config.FromContext(ctx)
+	if !cfg.Istio.GatewaysEnabled() {
+		l.logger.Info("Gateways disabled via config, using mesh-only probing. " +
+			"A sidecar on the controller is required for probes to reach the mesh VirtualService.")
+		return l.listMeshProbeTargets(ing), nil
+	}
+
 	gatewayQualifiedNames, err := resources.QualifiedGatewayNamesFromContext(ctx, ing)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get gateways for ingress: %w", err)
@@ -74,11 +92,17 @@ func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1al
 
 	// Sort the gateway names for a consistent ordering.
 	sort.Strings(gatewayNames)
+	gatewaysFound := false
 	for _, gatewayName := range gatewayNames {
 		gateway, err := l.getGateway(gatewayName)
 		if err != nil {
+			if apierrs.IsNotFound(err) {
+				l.logger.Infof("Skipping Gateway %q because it doesn't exist", gatewayName)
+				continue
+			}
 			return nil, fmt.Errorf("failed to get Gateway %q: %w", gatewayName, err)
 		}
+		gatewaysFound = true
 		targets, err := l.listGatewayTargets(gateway)
 		if err != nil {
 			return nil, fmt.Errorf("failed to list the probing URLs of Gateway %q: %w", gatewayName, err)
@@ -102,6 +126,15 @@ func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1al
 			results = append(results, qualifiedTarget)
 		}
 	}
+
+	// If no gateways were found, fall back to mesh-only mode:
+	// probe the destination service pods directly to verify reachability.
+	if !gatewaysFound {
+		l.logger.Info("No gateways found, falling back to mesh-only probing. " +
+			"A sidecar on the controller is required for probes to reach the mesh VirtualService.")
+		results = append(results, l.listMeshProbeTargets(ing)...)
+	}
+
 	return results, nil
 }
 
@@ -193,4 +226,76 @@ func (l *gatewayPodTargetLister) listGatewayTargets(gateway *v1beta1.Gateway) ([
 		}
 	}
 	return targets, nil
+}
+
+// listMeshProbeTargets builds probe targets for mesh-only mode by using the
+// rule hosts from the Ingress spec as dial targets. The controller's sidecar
+// intercepts outbound traffic, matches the authority against the mesh
+// VirtualService, and routes to the correct revision service.
+//
+// If no sidecar is detected on the controller, probing is skipped and an
+// empty list is returned. This causes the ingress to be marked ready
+// immediately after VirtualService reconciliation.
+func (l *gatewayPodTargetLister) listMeshProbeTargets(ing *v1alpha1.Ingress) []status.ProbeTarget {
+	l.sidecarCheckOnce.Do(func() {
+		l.sidecarPresent = l.detectSidecar()
+		if l.sidecarPresent {
+			l.logger.Info("Istio sidecar detected on controller, mesh probing enabled.")
+		} else {
+			l.logger.Warn("No Istio sidecar detected on controller. " +
+				"Mesh probing is disabled — ingress will be marked ready after VirtualService reconciliation. " +
+				"To enable mesh probing, inject an Istio sidecar into the controller pod.")
+		}
+	})
+
+	if !l.sidecarPresent {
+		return nil
+	}
+
+	results := []status.ProbeTarget{}
+	seen := sets.New[string]()
+
+	for _, rule := range ing.Spec.Rules {
+		if rule.HTTP == nil || len(rule.Hosts) == 0 {
+			continue
+		}
+
+		host := rule.Hosts[0]
+		if seen.Has(host) {
+			continue
+		}
+		seen.Insert(host)
+
+		port := "80"
+		if len(rule.HTTP.Paths) > 0 && len(rule.HTTP.Paths[0].Splits) > 0 {
+			port = rule.HTTP.Paths[0].Splits[0].ServicePort.String()
+		}
+
+		results = append(results, status.ProbeTarget{
+			PodIPs:  sets.New[string](host),
+			PodPort: port,
+			Port:    port,
+			URLs: []*url.URL{{
+				Scheme: "http",
+				Host:   host + ":" + port,
+			}},
+		})
+	}
+	return results
+}
+
+// detectSidecar checks if an Istio sidecar is present and ready on the
+// controller pod. Uses detectSidecarFn if set (for testing), otherwise
+// queries the pilot-agent health endpoint at localhost:15021/healthz/ready.
+func (l *gatewayPodTargetLister) detectSidecar() bool {
+	if l.detectSidecarFn != nil {
+		return l.detectSidecarFn()
+	}
+	client := &http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Get("http://localhost:15021/healthz/ready")
+	if err != nil {
+		return false
+	}
+	resp.Body.Close()
+	return resp.StatusCode == http.StatusOK
 }

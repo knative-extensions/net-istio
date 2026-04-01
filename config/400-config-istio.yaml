@@ -62,6 +62,15 @@ data:
     # If labelSelector is specified, the external gateway will be used by the knative service with matching labels.
     # See https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ for more details about labelSelector.
     # Only one external gateway can be specified without a selector. It will act as the default external gateway.
+    #
+    # To use mesh-only mode (no external ingress gateways), set to an empty list:
+    #   external-gateways: "[]"
+    # Both external-gateways and local-gateways must be set to "[]" for mesh-only mode.
+    # Mesh-only mode requires an Istio sidecar on the net-istio controller pod.
+    #
+    # IMPORTANT: Do not add or remove gateways after Knative Services have been
+    # created. Existing services will not be updated to reflect the new gateway
+    # configuration and may become unreachable.
     external-gateways: |
       - name: knative-ingress-gateway
         namespace: knative-serving
@@ -105,6 +114,14 @@ data:
     # If labelSelector is specified, the local gateway will be used by the knative service with matching labels.
     # See https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ for more details about labelSelector.
     # Only one local gateway can be specified without a selector. It will act as the default local gateway.
+    #
+    # To use mesh-only mode (no local gateways), set to an empty list:
+    #   local-gateways: "[]"
+    # Both external-gateways and local-gateways must be set to "[]" for mesh-only mode.
+    #
+    # IMPORTANT: Do not add or remove gateways after Knative Services have been
+    # created. Existing services will not be updated to reflect the new gateway
+    # configuration and may become unreachable.
     local-gateways: |
       - name: knative-local-gateway
         namespace: knative-serving
