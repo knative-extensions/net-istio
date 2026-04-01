@@ -313,6 +313,12 @@ func (r *Reconciler) reconcileMeshOnlyIngress(ctx context.Context, ing *v1alpha1
 		return err
 	}
 
+	// Clean up any TLS certificate secrets that were copied to the gateway
+	// service namespace when gateways were previously enabled.
+	if err := r.cleanupTLSSecrets(ctx, ing); err != nil {
+		return err
+	}
+
 	ing.Status.MarkNetworkConfigured()
 
 	meshOnlyLbs := []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}}
@@ -345,6 +351,32 @@ func (r *Reconciler) cleanupIngressGateways(ctx context.Context, ing *v1alpha1.I
 	}
 
 	return nil
+}
+
+// cleanupTLSSecrets deletes any TLS certificate secrets that were copied to the
+// gateway service namespace. These copies are identified by their origin labels.
+func (r *Reconciler) cleanupTLSSecrets(ctx context.Context, ing *v1alpha1.Ingress) error {
+	if !shouldReconcileExternalDomainTLS(ing) && !shouldReconcileClusterLocalDomainTLS(ing) {
+		return nil
+	}
+
+	logger := logging.FromContext(ctx)
+	errs := []error{}
+	for _, tls := range ing.Spec.TLS {
+		selector := labels.SelectorFromSet(resources.MakeTargetSecretLabels(tls.SecretName, tls.SecretNamespace))
+		secrets, err := r.secretLister.List(selector)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		for _, secret := range secrets {
+			logger.Infof("Deleting leftover TLS secret %s/%s", secret.Namespace, secret.Name)
+			if err := r.kubeclient.CoreV1().Secrets(secret.Namespace).Delete(ctx, secret.Name, metav1.DeleteOptions{}); err != nil && !apierrs.IsNotFound(err) {
+				errs = append(errs, err)
+			}
+		}
+	}
+	return errors.NewAggregate(errs)
 }
 
 func getPublicHosts(ing *v1alpha1.Ingress) []string {
