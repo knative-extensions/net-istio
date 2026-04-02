@@ -1781,3 +1781,201 @@ func proberCalledTimes(n int) func(*testing.T, *TableRow) {
 		}
 	}
 }
+
+func meshOnlyTestConfig() *config.Config {
+	return &config.Config{
+		Istio: &config.Istio{
+			IngressGateways: []config.Gateway{},
+			LocalGateways:   []config.Gateway{},
+		},
+		Network: &netconfig.Config{
+			ExternalDomainTLS: false,
+		},
+	}
+}
+
+func TestReconcile_MeshOnlyMode(t *testing.T) {
+	emptyGateways := makeGatewayMap(nil, nil)
+
+	meshOnlyReadyStatus := v1alpha1.IngressStatus{
+		Status: duckv1.Status{
+			Conditions: duckv1.Conditions{{
+				Type:   v1alpha1.IngressConditionLoadBalancerReady,
+				Status: corev1.ConditionTrue,
+			}, {
+				Type:   v1alpha1.IngressConditionNetworkConfigured,
+				Status: corev1.ConditionTrue,
+			}, {
+				Type:   v1alpha1.IngressConditionReady,
+				Status: corev1.ConditionTrue,
+			}},
+		},
+		PublicLoadBalancer:  &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}}},
+		PrivateLoadBalancer: &v1alpha1.LoadBalancerStatus{Ingress: []v1alpha1.LoadBalancerIngressStatus{{MeshOnly: true}}},
+	}
+
+	table := TableTest{{
+		Name: "mesh-only: create mesh VirtualService and mark ready",
+		Objects: []runtime.Object{
+			ing("mesh-only-ingress"),
+		},
+		WantCreates: []runtime.Object{
+			resources.MakeMeshVirtualService(insertProbe(ing("mesh-only-ingress")), emptyGateways),
+		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ingressWithStatus("mesh-only-ingress", meshOnlyReadyStatus),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "mesh-only-ingress"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "mesh-only-ingress-mesh"),
+		},
+		WantPatches: []clientgotesting.PatchActionImpl{
+			patchAddFinalizerAction("mesh-only-ingress", "ingresses.networking.internal.knative.dev"),
+		},
+		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(0)},
+		Key:            "test-ns/mesh-only-ingress",
+		CmpOpts:        defaultCmpOptsList,
+	}, {
+		Name: "mesh-only: clean up leftover ingress VirtualService from gateway mode",
+		Objects: []runtime.Object{
+			ing("mesh-only-ingress"),
+			resources.MakeMeshVirtualService(insertProbe(ing("mesh-only-ingress")), emptyGateways),
+			// Leftover ingress VS from when gateways were enabled.
+			&v1beta1.VirtualService{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "mesh-only-ingress-ingress",
+					Namespace: testNS,
+					Labels: map[string]string{
+						networking.IngressLabelKey: "mesh-only-ingress",
+					},
+					OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing("mesh-only-ingress"))},
+				},
+				Spec: istiov1beta1.VirtualService{},
+			},
+		},
+		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: testNS,
+				Verb:      "delete",
+				Resource:  v1beta1.SchemeGroupVersion.WithResource("virtualservices"),
+			},
+			Name: "mesh-only-ingress-ingress",
+		}},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ingressWithStatus("mesh-only-ingress", meshOnlyReadyStatus),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "mesh-only-ingress"),
+		},
+		WantPatches: []clientgotesting.PatchActionImpl{
+			patchAddFinalizerAction("mesh-only-ingress", "ingresses.networking.internal.knative.dev"),
+		},
+		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(0)},
+		Key:            "test-ns/mesh-only-ingress",
+		CmpOpts:        defaultCmpOptsList,
+	}, {
+		Name: "mesh-only: clean up leftover per-ingress TLS gateway",
+		Objects: []runtime.Object{
+			ing("mesh-only-ingress"),
+			// Leftover per-ingress TLS gateway from when gateways were enabled.
+			&v1beta1.Gateway{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "mesh-only-ingress-external-istio-ingressgateway",
+					Namespace: testNS,
+					Labels: map[string]string{
+						networking.IngressLabelKey: "mesh-only-ingress",
+					},
+					OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(ing("mesh-only-ingress"))},
+				},
+				Spec: istiov1beta1.Gateway{
+					Selector: selector,
+				},
+			},
+		},
+		WantCreates: []runtime.Object{
+			resources.MakeMeshVirtualService(insertProbe(ing("mesh-only-ingress")), emptyGateways),
+		},
+		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: testNS,
+				Verb:      "delete",
+				Resource:  v1beta1.SchemeGroupVersion.WithResource("gateways"),
+			},
+			Name: "mesh-only-ingress-external-istio-ingressgateway",
+		}},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ingressWithStatus("mesh-only-ingress", meshOnlyReadyStatus),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "mesh-only-ingress"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "mesh-only-ingress-mesh"),
+		},
+		WantPatches: []clientgotesting.PatchActionImpl{
+			patchAddFinalizerAction("mesh-only-ingress", "ingresses.networking.internal.knative.dev"),
+		},
+		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(0)},
+		Key:            "test-ns/mesh-only-ingress",
+		CmpOpts:        defaultCmpOptsList,
+	}, {
+		Name:                    "mesh-only: clean up leftover TLS secret copies",
+		SkipNamespaceValidation: true,
+		Objects: []runtime.Object{
+			ingressWithTLS("mesh-only-ingress", externalIngressTLS),
+			// Leftover TLS secret copy in the gateway service namespace.
+			&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      targetSecretName,
+					Namespace: "istio-system",
+					Labels:    resources.MakeTargetSecretLabels("secret0", "istio-system"),
+				},
+				Data: map[string][]byte{
+					"tls.crt": []byte("cert"),
+					"tls.key": []byte("key"),
+				},
+				Type: corev1.SecretTypeTLS,
+			},
+		},
+		WantCreates: []runtime.Object{
+			resources.MakeMeshVirtualService(insertProbe(ingressWithTLS("mesh-only-ingress", externalIngressTLS)), emptyGateways),
+		},
+		WantDeletes: []clientgotesting.DeleteActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: "istio-system",
+				Verb:      "delete",
+				Resource:  corev1.SchemeGroupVersion.WithResource("secrets"),
+			},
+			Name: targetSecretName,
+		}},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: ingressWithTLSAndStatus("mesh-only-ingress", externalIngressTLS, meshOnlyReadyStatus),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", "mesh-only-ingress"),
+			Eventf(corev1.EventTypeNormal, "Created", "Created VirtualService %q", "mesh-only-ingress-mesh"),
+		},
+		WantPatches: []clientgotesting.PatchActionImpl{
+			patchAddFinalizerAction("mesh-only-ingress", "ingresses.networking.internal.knative.dev"),
+		},
+		PostConditions: []func(*testing.T, *TableRow){proberCalledTimes(0)},
+		Key:            "test-ns/mesh-only-ingress",
+		CmpOpts:        defaultCmpOptsList,
+	}}
+
+	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
+		r := &Reconciler{
+			kubeclient:           kubeclient.Get(ctx),
+			istioClientSet:       istioclient.Get(ctx),
+			virtualServiceLister: listers.GetVirtualServiceLister(),
+			gatewayLister:        listers.GetGatewayLister(),
+			secretLister:         listers.GetSecretLister(),
+			statusManager:        ctx.Value(FakeStatusManagerKey).(status.Manager),
+		}
+
+		return ingressreconciler.NewReconciler(ctx, logging.FromContext(ctx), fakenetworkingclient.Get(ctx),
+			listers.GetIngressLister(), controller.GetEventRecorder(ctx), r, netconfig.IstioIngressClassName, controller.Options{
+				ConfigStore: &testConfigStore{
+					config: meshOnlyTestConfig(),
+				},
+			})
+	}))
+}

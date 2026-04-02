@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/net-istio/pkg/reconciler/ingress/resources"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/ingress"
@@ -62,6 +63,15 @@ type gatewayPodTargetLister struct {
 
 func (l *gatewayPodTargetLister) ListProbeTargets(ctx context.Context, ing *v1alpha1.Ingress) ([]status.ProbeTarget, error) {
 	results := []status.ProbeTarget{}
+
+	// When gateways are disabled, skip probing entirely.
+	// The ingress will be marked ready after VirtualService reconciliation.
+	cfg := config.FromContext(ctx)
+	if !cfg.Istio.GatewaysEnabled() {
+		l.logger.Info("Gateways disabled via config, skipping probing")
+		return results, nil
+	}
+
 	gatewayQualifiedNames, err := resources.QualifiedGatewayNamesFromContext(ctx, ing)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get gateways for ingress: %w", err)

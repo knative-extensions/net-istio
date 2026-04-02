@@ -163,6 +163,13 @@ func defaultGateways(gtws []Gateway) []Gateway {
 	return ret
 }
 
+// GatewaysEnabled returns true if any ingress or local gateways are configured.
+// When both gateway lists are empty (e.g. via external-gateways: "[]" and
+// local-gateways: "[]"), this returns false, indicating mesh-only mode.
+func (i Istio) GatewaysEnabled() bool {
+	return len(i.IngressGateways) > 0 || len(i.LocalGateways) > 0
+}
+
 // NewIstioFromConfigMap creates an Istio config from the supplied ConfigMap
 func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
 	ret := &Istio{}
@@ -216,35 +223,41 @@ func isOldFormatDefined(configMap *corev1.ConfigMap) bool {
 func parseNewFormat(configMap *corev1.ConfigMap) (*Istio, error) {
 	ret := &Istio{}
 
-	gatewaysStr, hasGateway := configMap.Data[externalGatewaysKey]
+	gatewaysStr := configMap.Data[externalGatewaysKey]
 
-	if hasGateway {
+	// An empty/whitespace-only string (or absent key) means use defaults.
+	// An explicit non-empty value like "[]" means no gateways of that type.
+	if strings.TrimSpace(gatewaysStr) != "" {
 		gateways, err := parseNewFormatGateways(gatewaysStr)
 		if err != nil {
 			return ret, fmt.Errorf("failed to parse %q gateways: %w", externalGatewaysKey, err)
 		}
 
 		ret.IngressGateways = gateways
+	} else {
+		ret.IngressGateways = defaultIngressGateways()
 	}
 
-	localGatewaysStr, hasLocalGateway := configMap.Data[localGatewaysKey]
+	localGatewaysStr := configMap.Data[localGatewaysKey]
 
-	if hasLocalGateway {
+	if strings.TrimSpace(localGatewaysStr) != "" {
 		localGateways, err := parseNewFormatGateways(localGatewaysStr)
 		if err != nil {
 			return ret, fmt.Errorf("failed to parse %q gateways: %w", localGatewaysKey, err)
 		}
 
 		ret.LocalGateways = localGateways
+	} else {
+		ret.LocalGateways = defaultLocalGateways()
 	}
 
-	defaultValues(ret)
-
-	if len(ret.DefaultExternalGateways()) != 1 {
+	// Only validate the "exactly one default" constraint for gateway types
+	// that have entries. Empty lists are valid (mesh-only mode).
+	if len(ret.IngressGateways) > 0 && len(ret.DefaultExternalGateways()) != 1 {
 		return ret, fmt.Errorf("exactly one external gateway with no selector can be defined, here: %v", ret.DefaultExternalGateways())
 	}
 
-	if len(ret.DefaultLocalGateways()) != 1 {
+	if len(ret.LocalGateways) > 0 && len(ret.DefaultLocalGateways()) != 1 {
 		return ret, fmt.Errorf("exactly one local gateway with no selector can be defined, here: %v", ret.DefaultLocalGateways())
 	}
 

@@ -29,9 +29,10 @@ spec:
   template:
     metadata:
       labels:
-        # This must be outside of the mesh to probe the gateways.
-        # NOTE: this is allowed here and not elsewhere because
-        # this is the Istio controller, and so it may be Istio-aware.
+        # In gateway mode, this must be "false" so the controller can
+        # directly probe the gateway pods outside of the mesh.
+        # In mesh-only mode (external-gateways: "[]", local-gateways: "[]"),
+        # probing is skipped entirely so this value does not matter.
         sidecar.istio.io/inject: "false"
         app: net-istio-controller
         app.kubernetes.io/component: net-istio
