@@ -12,8 +12,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: base-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: base-1.29.1
   name: authorizationpolicies.security.istio.io
 spec:
   group: security.istio.io
@@ -753,8 +753,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: base-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: base-1.29.1
   name: destinationrules.networking.istio.io
 spec:
   group: networking.istio.io
@@ -6003,8 +6003,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: base-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: base-1.29.1
   name: envoyfilters.networking.istio.io
 spec:
   group: networking.istio.io
@@ -6421,8 +6421,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: base-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: base-1.29.1
   name: gateways.networking.istio.io
 spec:
   group: networking.istio.io
@@ -7183,8 +7183,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: base-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: base-1.29.1
   name: peerauthentications.security.istio.io
 spec:
   group: security.istio.io
@@ -7510,8 +7510,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: base-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: base-1.29.1
   name: proxyconfigs.networking.istio.io
 spec:
   group: networking.istio.io
@@ -7656,8 +7656,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: base-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: base-1.29.1
   name: requestauthentications.security.istio.io
 spec:
   group: security.istio.io
@@ -8219,8 +8219,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: base-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: base-1.29.1
   name: serviceentries.networking.istio.io
 spec:
   group: networking.istio.io
@@ -9065,8 +9065,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: base-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: base-1.29.1
   name: sidecars.networking.istio.io
 spec:
   group: networking.istio.io
@@ -10623,8 +10623,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: base-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: base-1.29.1
   name: telemetries.telemetry.istio.io
 spec:
   group: telemetry.istio.io
@@ -11526,8 +11526,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: base-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: base-1.29.1
   name: virtualservices.networking.istio.io
 spec:
   group: networking.istio.io
@@ -14388,8 +14388,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: base-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: base-1.29.1
   name: wasmplugins.extensions.istio.io
 spec:
   group: extensions.istio.io
@@ -14731,8 +14731,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: base-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: base-1.29.1
   name: workloadentries.networking.istio.io
 spec:
   group: networking.istio.io
@@ -15193,8 +15193,8 @@ metadata:
     app.kubernetes.io/instance: istio
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: base-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: base-1.29.1
   name: workloadgroups.networking.istio.io
 spec:
   group: networking.istio.io
@@ -16072,8 +16072,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-ingressgateway
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istio-ingress-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istio-ingress-1.29.1
     install.operator.istio.io/owning-resource: unknown
     istio: ingressgateway
     istio.io/rev: default
@@ -16091,8 +16091,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-reader
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: base-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: base-1.29.1
     release: istio
   name: istio-reader-service-account
   namespace: istio-system
@@ -16106,8 +16106,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     release: istio
   name: istiod
   namespace: istio-system
@@ -16121,8 +16121,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-reader
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     release: istio
   name: istio-reader-clusterrole-istio-system
 rules:
@@ -16236,8 +16236,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     release: istio
   name: istiod-clusterrole-istio-system
 rules:
@@ -16480,8 +16480,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     release: istio
   name: istiod-gateway-controller-istio-system
 rules:
@@ -16555,8 +16555,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-reader
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     release: istio
   name: istio-reader-clusterrole-istio-system
 roleRef:
@@ -16577,8 +16577,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     release: istio
   name: istiod-clusterrole-istio-system
 roleRef:
@@ -16599,8 +16599,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     release: istio
   name: istiod-gateway-controller-istio-system
 roleRef:
@@ -16621,8 +16621,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     istio: istiod
     istio.io/rev: default
     release: istio
@@ -16678,8 +16678,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Pilot
@@ -16723,7 +16723,7 @@ data:
             {{- end }}
           {{- else }}
             {{- if .Values.global.proxy.resources }}
-              {{ toYaml .Values.global.proxy.resources | indent 6 }}
+              {{ toYaml (omitNil .Values.global.proxy.resources) | indent 6 }}
             {{- end }}
           {{- end }}
         {{- end }}
@@ -17620,7 +17620,7 @@ data:
             {{- end }}
           {{- else }}
             {{- if .Values.global.proxy.resources }}
-              {{ toYaml .Values.global.proxy.resources | indent 6 }}
+              {{ toYaml (omitNil .Values.global.proxy.resources) | indent 6 }}
             {{- end }}
           {{- end }}
         {{- end }}
@@ -18135,7 +18135,7 @@ data:
                 {{- end }}
                 {{- if .Values.global.waypoint.resources }}
                 resources:
-                {{- toYaml .Values.global.waypoint.resources | nindent 10 }}
+                {{- toYaml (omitNil .Values.global.waypoint.resources) | nindent 10 }}
                 {{- end }}
                 startupProbe:
                   failureThreshold: 30
@@ -18419,7 +18419,7 @@ data:
               {{- end }}
                 {{- if .Values.global.proxy.resources }}
                 resources:
-                  {{- toYaml .Values.global.proxy.resources | nindent 10 }}
+                  {{- toYaml (omitNil .Values.global.proxy.resources) | nindent 10 }}
                 {{- end }}
                 {{with .Values.global.imagePullPolicy }}imagePullPolicy: "{{.}}"{{end}}
                 securityContext:
@@ -18826,7 +18826,7 @@ data:
               {{- end }}
                 {{- if .Values.global.proxy.resources }}
                 resources:
-                  {{- toYaml .Values.global.proxy.resources | nindent 10 }}
+                  {{- toYaml (omitNil .Values.global.proxy.resources) | nindent 10 }}
                 {{- end }}
                 {{with .Values.global.imagePullPolicy }}imagePullPolicy: "{{.}}"{{end}}
                 securityContext:
@@ -19136,7 +19136,7 @@ data:
         "sts": {
           "servicePort": 0
         },
-        "tag": "1.29.0",
+        "tag": "1.29.1",
         "variant": "",
         "waypoint": {
           "affinity": {},
@@ -19181,8 +19181,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Pilot
@@ -19319,7 +19319,7 @@ data:
         "sts": {
           "servicePort": 0
         },
-        "tag": "1.29.0",
+        "tag": "1.29.1",
         "variant": "",
         "waypoint": {
           "affinity": {},
@@ -19448,7 +19448,7 @@ data:
         "proxy": {
           "autoInject": "enabled"
         },
-        "tag": "1.29.0"
+        "tag": "1.29.1"
       },
       "meshConfig": {
         "defaultConfig": {
@@ -19479,8 +19479,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Pilot
@@ -19497,8 +19497,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Pilot
@@ -19655,8 +19655,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-ingressgateway
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istio-ingress-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istio-ingress-1.29.1
     install.operator.istio.io/owning-resource: unknown
     istio: ingressgateway
     istio.io/dataplane-mode: none
@@ -19689,9 +19689,9 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: istio-ingressgateway
         app.kubernetes.io/part-of: istio
-        app.kubernetes.io/version: 1.29.0
+        app.kubernetes.io/version: 1.29.1
         chart: gateways
-        helm.sh/chart: istio-ingress-1.29.0
+        helm.sh/chart: istio-ingress-1.29.1
         heritage: Tiller
         install.operator.istio.io/owning-resource: unknown
         istio: ingressgateway
@@ -19771,7 +19771,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        image: docker.io/istio/proxyv2:1.29.0
+        image: docker.io/istio/proxyv2:1.29.1
         name: istio-proxy
         ports:
         - containerPort: 15021
@@ -19890,8 +19890,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     install.operator.istio.io/owning-resource: unknown
     istio: pilot
     istio.io/rev: default
@@ -19919,8 +19919,8 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: istiod
         app.kubernetes.io/part-of: istio
-        app.kubernetes.io/version: 1.29.0
-        helm.sh/chart: istiod-1.29.0
+        app.kubernetes.io/version: 1.29.1
+        helm.sh/chart: istiod-1.29.1
         install.operator.istio.io/owning-resource: unknown
         istio: pilot
         istio.io/dataplane-mode: none
@@ -19974,7 +19974,7 @@ spec:
               resource: limits.cpu
         - name: PLATFORM
           value: ""
-        image: docker.io/istio/pilot:1.29.0
+        image: docker.io/istio/pilot:1.29.1
         name: discovery
         ports:
         - containerPort: 8080
@@ -20069,8 +20069,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-ingressgateway
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istio-ingress-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istio-ingress-1.29.1
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: IngressGateways
@@ -20096,8 +20096,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     release: istio
   name: istiod
   namespace: istio-system
@@ -20143,8 +20143,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-ingressgateway
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istio-ingress-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istio-ingress-1.29.1
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: IngressGateways
@@ -20168,8 +20168,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     release: istio
   name: istiod
   namespace: istio-system
@@ -20191,8 +20191,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Pilot
@@ -20224,8 +20224,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istio-ingressgateway
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istio-ingress-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istio-ingress-1.29.1
     install.operator.istio.io/owning-resource: unknown
     istio: ingressgateway
     istio.io/rev: default
@@ -20261,8 +20261,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: istiod
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: 1.29.0
-    helm.sh/chart: istiod-1.29.0
+    app.kubernetes.io/version: 1.29.1
+    helm.sh/chart: istiod-1.29.1
     install.operator.istio.io/owning-resource: unknown
     istio: pilot
     istio.io/rev: default
