@@ -33,3 +33,10 @@ func IngressVirtualService(i kmeta.Accessor) string {
 func MeshVirtualService(i kmeta.Accessor) string {
 	return kmeta.ChildName(i.GetName(), "-mesh")
 }
+
+// DelegateVirtualService returns the name of the VirtualService child
+// resource for given Ingress that programs traffic for
+// delegate the route for other VirtualServices.
+func DelegateVirtualService(i kmeta.Accessor) string {
+	return kmeta.ChildName(i.GetName(), "-delegate")
+}
