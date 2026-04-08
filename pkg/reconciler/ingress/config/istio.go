@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -58,6 +59,9 @@ const (
 
 	// IstioNamespace is the namespace containing Istio
 	IstioNamespace = "istio-system"
+
+	// EnableDelegateVirtualServiceKey is the configmap key to enable delegate VirtualService creation.
+	EnableDelegateVirtualServiceKey = "enable-delegate-virtual-service"
 )
 
 func defaultIngressGateways() []Gateway {
@@ -121,6 +125,10 @@ type Istio struct {
 
 	// LocalGateways specifies the gateway urls for public & private Ingress.
 	LocalGateways []Gateway
+
+	// EnableDelegateVirtualService enables the creation of delegate VirtualServices
+	// that allow direct ingress to Knative services.
+	EnableDelegateVirtualService bool
 }
 
 func (i Istio) Validate() error {
@@ -186,6 +194,13 @@ func NewIstioFromConfigMap(configMap *corev1.ConfigMap) (*Istio, error) {
 		ret = parseOldFormat(configMap)
 	default:
 		defaultValues(ret)
+	}
+
+	if v, ok := configMap.Data[EnableDelegateVirtualServiceKey]; ok {
+		ret.EnableDelegateVirtualService, err = strconv.ParseBool(v)
+		if err != nil {
+			return nil, fmt.Errorf("failed parsing %q: %w", EnableDelegateVirtualServiceKey, err)
+		}
 	}
 
 	err = ret.Validate()

@@ -63,13 +63,15 @@ var (
 
 func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 	for _, tc := range []struct {
-		name     string
-		gateways map[v1alpha1.IngressVisibility]sets.Set[string]
-		ci       *v1alpha1.Ingress
-		expected []metav1.ObjectMeta
+		name             string
+		gateways         map[v1alpha1.IngressVisibility]sets.Set[string]
+		ci               *v1alpha1.Ingress
+		enableDelegateVS bool
+		expected         []metav1.ObjectMeta
 	}{{
-		name:     "mesh and ingress",
-		gateways: makeGatewayMap([]string{"gateway"}, []string{"private-gateway"}),
+		name:             "mesh and ingress",
+		gateways:         makeGatewayMap([]string{"gateway"}, []string{"private-gateway"}),
+		enableDelegateVS: true,
 		ci: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
@@ -114,8 +116,9 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 			},
 		}},
 	}, {
-		name:     "ingress only",
-		gateways: makeGatewayMap([]string{"gateway"}, []string{"private-gateway"}),
+		name:             "ingress only",
+		gateways:         makeGatewayMap([]string{"gateway"}, []string{"private-gateway"}),
+		enableDelegateVS: true,
 		ci: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
@@ -151,8 +154,9 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 			},
 		}},
 	}, {
-		name:     "mesh only",
-		gateways: nil,
+		name:             "mesh only",
+		gateways:         nil,
+		enableDelegateVS: true,
 		ci: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-ingress",
@@ -188,8 +192,9 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 			},
 		}},
 	}, {
-		name:     "mesh only with namespace",
-		gateways: nil,
+		name:             "mesh only with namespace",
+		gateways:         nil,
+		enableDelegateVS: true,
 		ci: &v1alpha1.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-ingress",
@@ -224,9 +229,48 @@ func TestMakeVirtualServices_CorrectMetadata(t *testing.T) {
 				RouteNamespaceLabelKey:     "test-ns",
 			},
 		}},
+	}, {
+		name:             "delegate disabled - mesh and ingress",
+		gateways:         makeGatewayMap([]string{"gateway"}, []string{"private-gateway"}),
+		enableDelegateVS: false,
+		ci: &v1alpha1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: system.Namespace(),
+				Labels: map[string]string{
+					networking.IngressLabelKey: "test-ingress",
+					RouteLabelKey:              "test-route",
+					RouteNamespaceLabelKey:     "test-ns",
+				},
+			},
+			Spec: v1alpha1.IngressSpec{Rules: []v1alpha1.IngressRule{{
+				Hosts: []string{
+					"test-route.test-ns.svc.cluster.local",
+				},
+				Visibility: v1alpha1.IngressVisibilityExternalIP,
+				HTTP:       &v1alpha1.HTTPIngressRuleValue{},
+			}}},
+		},
+		expected: []metav1.ObjectMeta{{
+			Name:      "test-mesh",
+			Namespace: system.Namespace(),
+			Labels: map[string]string{
+				networking.IngressLabelKey: "test",
+				RouteLabelKey:              "test-route",
+				RouteNamespaceLabelKey:     "test-ns",
+			},
+		}, {
+			Name:      "test-ingress",
+			Namespace: system.Namespace(),
+			Labels: map[string]string{
+				networking.IngressLabelKey: "test",
+				RouteLabelKey:              "test-route",
+				RouteNamespaceLabelKey:     "test-ns",
+			},
+		}},
 	}} {
 		t.Run(tc.name, func(t *testing.T) {
-			vss, err := MakeVirtualServices(tc.ci, tc.gateways)
+			vss, err := MakeVirtualServices(tc.ci, tc.gateways, tc.enableDelegateVS)
 			if err != nil {
 				t.Fatal("MakeVirtualServices failed:", err)
 			}

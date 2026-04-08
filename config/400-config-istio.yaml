@@ -119,3 +119,9 @@ data:
     # Please use the new configuration format `local-gateways` for future compatibility.
     # This configuration will raise an error if either `external-gateways` or `local-gateways` is defined.
     local-gateway.knative-serving.knative-local-gateway: "knative-local-gateway.istio-system.svc.cluster.local"
+
+    # enable-delegate-virtual-service controls whether a delegate VirtualService
+    # is created for each Ingress. When enabled, a VirtualService with no hosts
+    # or gateways is created, allowing other VirtualServices to delegate routing
+    # directly to Knative services. Disabled by default.
+    enable-delegate-virtual-service: "false"

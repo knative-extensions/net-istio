@@ -589,6 +589,50 @@ func TestGatewayConfiguration(t *testing.T) {
 			},
 		},
 		wantErr: true,
+	}, {
+		name: "enable-delegate-virtual-service set to true",
+		wantIstio: &Istio{
+			IngressGateways:              defaultIngressGateways(),
+			LocalGateways:                defaultLocalGateways(),
+			EnableDelegateVirtualService: true,
+		},
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"enable-delegate-virtual-service": "true",
+			},
+		},
+	}, {
+		name: "enable-delegate-virtual-service set to false",
+		wantIstio: &Istio{
+			IngressGateways:              defaultIngressGateways(),
+			LocalGateways:                defaultLocalGateways(),
+			EnableDelegateVirtualService: false,
+		},
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"enable-delegate-virtual-service": "false",
+			},
+		},
+	}, {
+		name:    "enable-delegate-virtual-service with invalid value",
+		wantErr: true,
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace(),
+				Name:      IstioConfigName,
+			},
+			Data: map[string]string{
+				"enable-delegate-virtual-service": "notabool",
+			},
+		},
 	}}
 
 	for _, tt := range gatewayConfigTests {

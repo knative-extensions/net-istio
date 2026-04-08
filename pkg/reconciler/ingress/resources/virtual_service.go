@@ -123,7 +123,7 @@ func MakeDelegateVirtualService(ing *v1alpha1.Ingress) *v1beta1.VirtualService {
 }
 
 // MakeVirtualServices creates a mesh VirtualService and a virtual service for each gateway
-func MakeVirtualServices(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.Set[string]) ([]*v1beta1.VirtualService, error) {
+func MakeVirtualServices(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVisibility]sets.Set[string], enableDelegateVS bool) ([]*v1beta1.VirtualService, error) {
 	// Insert probe header
 	ing = ing.DeepCopy()
 	if _, err := ingress.InsertProbe(ing); err != nil {
@@ -134,8 +134,10 @@ func MakeVirtualServices(ing *v1alpha1.Ingress, gateways map[v1alpha1.IngressVis
 		vss = append(vss, meshVs)
 	}
 
-	if delegateVs := MakeDelegateVirtualService(ing); delegateVs != nil {
-		vss = append(vss, delegateVs)
+	if enableDelegateVS {
+		if delegateVs := MakeDelegateVirtualService(ing); delegateVs != nil {
+			vss = append(vss, delegateVs)
+		}
 	}
 
 	requiredGatewayCount := 0

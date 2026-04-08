@@ -1063,6 +1063,7 @@ func TestReconcile_ExternalDomainTLS(t *testing.T) {
 								Name:       config.KnativeIngressGateway,
 								ServiceURL: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system"),
 							}},
+							EnableDelegateVirtualService: true,
 						},
 						Network: &netconfig.Config{
 							HTTPProtocol:      netconfig.HTTPDisabled,
@@ -1286,6 +1287,7 @@ func TestReconcile_ClusterLocalDomainTLS(t *testing.T) {
 								Name:       config.KnativeLocalGateway,
 								ServiceURL: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system"),
 							}},
+							EnableDelegateVirtualService: true,
 						},
 						Network: &netconfig.Config{
 							ClusterLocalDomainTLS: netconfig.EncryptionEnabled,
@@ -1439,6 +1441,7 @@ func ReconcilerTestConfig() *config.Config {
 				Name:       config.KnativeIngressGateway,
 				ServiceURL: pkgnet.GetServiceHostname("istio-ingressgateway", "istio-system"),
 			}},
+			EnableDelegateVirtualService: true,
 		},
 		Network: &netconfig.Config{
 			ExternalDomainTLS: false,

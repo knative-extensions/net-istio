@@ -224,7 +224,7 @@ func (r *Reconciler) reconcileIngress(ctx context.Context, ing *v1alpha1.Ingress
 	}
 	gatewayNames[v1alpha1.IngressVisibilityClusterLocal].Insert(resources.GetQualifiedGatewayNames(clusterLocalIngressGateways)...)
 
-	vses, err := resources.MakeVirtualServices(ing, gatewayNames)
+	vses, err := resources.MakeVirtualServices(ing, gatewayNames, cfg.Istio.EnableDelegateVirtualService)
 	if err != nil {
 		return err
 	}
