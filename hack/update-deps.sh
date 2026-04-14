@@ -19,7 +19,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-ISTIO_VERSION="1.28.5"
+ISTIO_VERSION="1.28.6"
 
 source $(dirname "$0")/library.sh
 
