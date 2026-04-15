@@ -8,7 +8,7 @@ require (
 	golang.org/x/sync v0.17.0
 	google.golang.org/protobuf v1.36.8
 	istio.io/api v1.27.8-0.20260228163850-469b1b2d2cfa
-	istio.io/client-go v1.27.8
+	istio.io/client-go v1.27.9
 	k8s.io/api v0.33.5
 	k8s.io/apimachinery v0.33.5
 	k8s.io/client-go v0.33.5
