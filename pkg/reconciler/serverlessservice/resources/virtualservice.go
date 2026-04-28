@@ -21,6 +21,7 @@ import (
 
 	istiov1beta1 "istio.io/api/networking/v1beta1"
 	"istio.io/client-go/pkg/apis/networking/v1beta1"
+	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
 	"knative.dev/networking/pkg/http/header"
 	"knative.dev/pkg/kmeta"
@@ -38,6 +39,7 @@ func MakeVirtualService(sks *v1alpha1.ServerlessService) *v1beta1.VirtualService
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            name,
 			Namespace:       sks.Namespace,
+			Labels:          map[string]string{networking.IngressLabelKey: sks.Name},
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(sks)},
 		},
 		Spec: istiov1beta1.VirtualService{

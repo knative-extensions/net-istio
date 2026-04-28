@@ -157,6 +157,37 @@ func TestReconcileVirtualService_Update(t *testing.T) {
 	}
 }
 
+func TestReconcileVirtualService_AlreadyExistsFallback(t *testing.T) {
+	ctx, _ := SetupFakeContext(t)
+	ctx, cancel := context.WithCancel(ctx)
+
+	istioClient := fakeistioclient.Get(ctx)
+	if _, err := istioClient.NetworkingV1beta1().VirtualServices(origin.Namespace).Create(ctx, origin, metav1.CreateOptions{}); err != nil {
+		t.Fatalf("failed to create VirtualService in client: %v", err)
+	}
+
+	accessor, waitInformers := setup(ctx, []*v1beta1.VirtualService{}, istioClient, t)
+	defer func() {
+		cancel()
+		waitInformers()
+	}()
+
+	h := NewHooks()
+	h.OnUpdate(&istioClient.Fake, "virtualservices", func(obj runtime.Object) HookResult {
+		got := obj.(*v1beta1.VirtualService)
+		if diff := cmp.Diff(got, desired, protocmp.Transform()); diff != "" {
+			t.Log("Unexpected VirtualService (-want, +got):", diff)
+			return HookIncomplete
+		}
+		return HookComplete
+	})
+
+	ReconcileVirtualService(ctx, ownerObj, desired, accessor)
+	if err := h.WaitForHooks(3 * time.Second); err != nil {
+		t.Error("Failed to Reconcile VirtualService:", err)
+	}
+}
+
 func TestReconcileVirtualService_NotOwnedFailure(t *testing.T) {
 	ctx, _ := SetupFakeContext(t)
 	ctx, cancel := context.WithCancel(ctx)
