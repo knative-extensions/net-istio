@@ -28,5 +28,6 @@ import (
 
 func main() {
 	ctx := informerfiltering.GetContextWithFilteringLabelSelector(signals.NewContext())
+	ctx = informerfiltering.GetContextWithVSFilteringLabelSelector(ctx)
 	sharedmain.MainWithContext(ctx, "net-istio-controller", ingress.NewController, serverlessservice.NewController)
 }

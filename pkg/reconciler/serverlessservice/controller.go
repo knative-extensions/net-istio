@@ -19,10 +19,14 @@ package serverlessservice
 import (
 	"context"
 
+	istioinformer "istio.io/client-go/pkg/informers/externalversions/networking/v1beta1"
 	"k8s.io/client-go/tools/cache"
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
+	istiofilteredFactory "knative.dev/net-istio/pkg/client/istio/injection/informers/factory/filtered"
 	destinationruleinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/destinationrule"
 	virtualserviceinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/virtualservice"
+	virtualservicefilteredinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/virtualservice/filtered"
+	"knative.dev/net-istio/pkg/reconciler/informerfiltering"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	netv1alpha1 "knative.dev/networking/pkg/apis/networking/v1alpha1"
 	sksinformer "knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/serverlessservice"
@@ -40,7 +44,7 @@ func NewController(
 ) *controller.Impl {
 	logger := logging.FromContext(ctx)
 	sksInformer := sksinformer.Get(ctx)
-	virtualServiceInformer := virtualserviceinformer.Get(ctx)
+	virtualServiceInformer := getVirtualServiceInformer(ctx)
 	destinationRuleInformer := destinationruleinformer.Get(ctx)
 
 	c := &reconciler{
@@ -74,4 +78,12 @@ func NewController(
 	destinationRuleInformer.Informer().AddEventHandler(handleMatchingControllers)
 
 	return impl
+}
+
+func getVirtualServiceInformer(ctx context.Context) istioinformer.VirtualServiceInformer {
+	if informerfiltering.ShouldFilterVSByLabel() {
+		untyped := ctx.Value(istiofilteredFactory.LabelKey{}) // This should always be not nil and have exactly one selector
+		return virtualservicefilteredinformer.Get(ctx, untyped.([]string)[0])
+	}
+	return virtualserviceinformer.Get(ctx)
 }

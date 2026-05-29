@@ -20,10 +20,14 @@ import (
 	"context"
 
 	"go.uber.org/zap"
+	istioinformer "istio.io/client-go/pkg/informers/externalversions/networking/v1beta1"
 	v1 "k8s.io/client-go/informers/core/v1"
 	istioclient "knative.dev/net-istio/pkg/client/istio/injection/client"
+	istiofilteredFactory "knative.dev/net-istio/pkg/client/istio/injection/informers/factory/filtered"
 	gatewayinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/gateway"
 	virtualserviceinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/virtualservice"
+	virtualservicefilteredinformer "knative.dev/net-istio/pkg/client/istio/injection/informers/networking/v1beta1/virtualservice/filtered"
+	"knative.dev/net-istio/pkg/reconciler/informerfiltering"
 	"knative.dev/net-istio/pkg/reconciler/ingress/config"
 	"knative.dev/networking/pkg/apis/networking"
 	"knative.dev/networking/pkg/apis/networking/v1alpha1"
@@ -80,7 +84,7 @@ func newControllerWithOptions(
 ) *controller.Impl {
 	ctx = AnnotateLoggerWithName(ctx, controllerAgentName)
 	logger := logging.FromContext(ctx)
-	virtualServiceInformer := virtualserviceinformer.Get(ctx)
+	virtualServiceInformer := getVirtualServiceInformer(ctx)
 	gatewayInformer := gatewayinformer.Get(ctx)
 	secretInformer := getSecretInformer(ctx)
 	serviceInformer := serviceinformer.Get(ctx)
@@ -184,4 +188,12 @@ func combineFunc(functions ...func(interface{})) func(interface{}) {
 func getSecretInformer(ctx context.Context) v1.SecretInformer {
 	untyped := ctx.Value(filteredFactory.LabelKey{}) // This should always be not nil and have exactly one selector
 	return secretfilteredinformer.Get(ctx, untyped.([]string)[0])
+}
+
+func getVirtualServiceInformer(ctx context.Context) istioinformer.VirtualServiceInformer {
+	if informerfiltering.ShouldFilterVSByLabel() {
+		untyped := ctx.Value(istiofilteredFactory.LabelKey{}) // This should always be not nil and have exactly one selector
+		return virtualservicefilteredinformer.Get(ctx, untyped.([]string)[0])
+	}
+	return virtualserviceinformer.Get(ctx)
 }
