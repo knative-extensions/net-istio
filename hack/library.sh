@@ -28,7 +28,7 @@ function download_istio() {
   # Download and unpack Istio
 
   if [ "$1" = "HEAD" ]; then
-    ISTIO_VERSION=$(curl https://storage.googleapis.com/istio-build/dev/latest)
+    ISTIO_VERSION=$(curl https://blob.istio.io/istio-build/dev/latest)
   else
     ISTIO_VERSION=$1
   fi
@@ -36,7 +36,7 @@ function download_istio() {
   ISTIO_TARBALL=istio-${ISTIO_VERSION}-${ARCH}.tar.gz
 
   if [ "$1" = "HEAD" ]; then
-    DOWNLOAD_URL=https://storage.googleapis.com/istio-build/dev/${ISTIO_VERSION}/${ISTIO_TARBALL}
+    DOWNLOAD_URL=https://blob.istio.io/istio-build/dev/${ISTIO_VERSION}/${ISTIO_TARBALL}
   else
     DOWNLOAD_URL=https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/${ISTIO_TARBALL}
   fi
