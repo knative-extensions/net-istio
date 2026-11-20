@@ -93,4 +93,3 @@ Run the following command to install net-istio components
 ```shell
 ko apply -f config/
 ```
-
